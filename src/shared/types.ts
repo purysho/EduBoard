@@ -215,4 +215,10 @@ export interface BackupInfo {
   filePath: string
   sizeBytes: number
   createdAt: string
+  automatic: boolean
+}
+
+export interface BackupPreview {
+  backup: { students: number; classes: number; scores: number; attendanceRecords: number }
+  current: { students: number; classes: number; scores: number; attendanceRecords: number }
 }

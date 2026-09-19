@@ -177,6 +177,9 @@ export function registerIpcHandlers(): void {
   // --- Backup -------------------------------------------------------------------------------
   handle(IpcChannels.backup.create, () => backupService.createBackup())
   handle(IpcChannels.backup.list, () => backupService.listBackups())
+  handle(IpcChannels.backup.preview, (_e, filePath: string) =>
+    backupService.previewBackup(filePath)
+  )
   handle(IpcChannels.backup.restore, (_e, filePath: string) =>
     backupService.restoreBackup(filePath)
   )

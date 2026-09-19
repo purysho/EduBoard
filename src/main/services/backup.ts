@@ -1,9 +1,16 @@
 import { app } from 'electron'
-import { copyFileSync, readdirSync, statSync } from 'fs'
+import { copyFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'fs'
 import { join } from 'path'
+import Database from 'better-sqlite3'
 import { resolveBackupsDir, resolveDbPath } from '../db/path'
 import { closeDb, getSqlite } from '../db/client'
-import type { BackupInfo } from '@shared/types'
+import type { BackupInfo, BackupPreview } from '@shared/types'
+
+/** Kept indefinitely by manual "Back up now" and pruning alike; only auto-backups
+ * beyond this count are ever deleted, so a manual backup a teacher wants to keep
+ * is safe as long as they don't create 30 more auto-backups after it. */
+const MAX_AUTO_BACKUPS = 10
+const AUTO_BACKUP_PREFIX = 'eduboard-autobackup-'
 
 function timestampForFileName(): string {
   return new Date().toISOString().replace(/[:.]/g, '-')
@@ -21,7 +28,69 @@ export function createBackup(): BackupInfo {
   copyFileSync(dbPath, filePath)
   const stats = statSync(filePath)
 
-  return { fileName, filePath, sizeBytes: stats.size, createdAt: new Date().toISOString() }
+  return {
+    fileName,
+    filePath,
+    sizeBytes: stats.size,
+    createdAt: new Date().toISOString(),
+    automatic: false
+  }
+}
+
+/** Runs once per app launch, right after the DB is ready. Silently backs up the
+ * current database before the user can touch it — a bad import, a fumbled Restore,
+ * or a corrupted USB stick can then always be undone. Never throws: a failed
+ * auto-backup should not block the app from opening. */
+export function createAutoBackupOnLaunch(): void {
+  try {
+    const dbPath = resolveDbPath()
+    if (!existsSync(dbPath)) return // first-ever launch, nothing to back up yet
+
+    getSqlite().pragma('wal_checkpoint(TRUNCATE)')
+
+    const backupsDir = resolveBackupsDir()
+    const fileName = `${AUTO_BACKUP_PREFIX}${timestampForFileName()}.db`
+    copyFileSync(dbPath, join(backupsDir, fileName))
+
+    pruneAutoBackups(backupsDir)
+  } catch (err) {
+    console.error('Auto-backup on launch failed:', err)
+  }
+}
+
+function pruneAutoBackups(backupsDir: string): void {
+  const autoBackups = readdirSync(backupsDir)
+    .filter((f) => f.startsWith(AUTO_BACKUP_PREFIX) && f.endsWith('.db'))
+    .sort()
+  const excess = autoBackups.length - MAX_AUTO_BACKUPS
+  for (let i = 0; i < excess; i++) {
+    unlinkSync(join(backupsDir, autoBackups[i]))
+  }
+}
+
+/** Opens a backup file read-only (never touches the live DB connection) and reports
+ * what's in it, alongside the live database's current counts, so a teacher can see
+ * what they're about to overwrite before confirming a restore. */
+export function previewBackup(backupFilePath: string): BackupPreview {
+  const backupCounts = countRows(backupFilePath)
+  const liveCounts = countRows(resolveDbPath())
+  return { backup: backupCounts, current: liveCounts }
+}
+
+function countRows(dbPath: string): BackupPreview['backup'] {
+  const db = new Database(dbPath, { readonly: true, fileMustExist: true })
+  try {
+    const count = (table: string): number =>
+      (db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c
+    return {
+      students: count('students'),
+      classes: count('classes'),
+      scores: count('scores'),
+      attendanceRecords: count('attendance_records')
+    }
+  } finally {
+    db.close()
+  }
 }
 
 /** Overwrites the live database with a backup file, then relaunches the app so every
@@ -40,7 +109,13 @@ export function listBackups(): BackupInfo[] {
     .map((fileName) => {
       const filePath = join(backupsDir, fileName)
       const stats = statSync(filePath)
-      return { fileName, filePath, sizeBytes: stats.size, createdAt: stats.mtime.toISOString() }
+      return {
+        fileName,
+        filePath,
+        sizeBytes: stats.size,
+        createdAt: stats.mtime.toISOString(),
+        automatic: fileName.startsWith(AUTO_BACKUP_PREFIX)
+      }
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }

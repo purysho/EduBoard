@@ -74,6 +74,7 @@ export const IpcChannels = {
   backup: {
     create: 'backup:create',
     list: 'backup:list',
+    preview: 'backup:preview',
     restore: 'backup:restore',
     revealFolder: 'backup:revealFolder'
   },

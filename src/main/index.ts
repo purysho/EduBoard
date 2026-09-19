@@ -3,6 +3,7 @@ import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { initDb } from './db/client'
 import { registerIpcHandlers } from './ipc/register'
 import { createMainWindow } from './windows'
+import { createAutoBackupOnLaunch } from './services/backup'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')
@@ -12,6 +13,7 @@ app.whenReady().then(() => {
   })
 
   initDb()
+  createAutoBackupOnLaunch()
   registerIpcHandlers()
   createMainWindow()
 

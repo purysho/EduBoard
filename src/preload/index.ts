@@ -84,6 +84,7 @@ const api: EduBoardApi = {
   backup: {
     create: () => invoke(IpcChannels.backup.create),
     list: () => invoke(IpcChannels.backup.list),
+    preview: (filePath) => invoke(IpcChannels.backup.preview, filePath),
     restore: (filePath) => invoke(IpcChannels.backup.restore, filePath),
     revealFolder: () => invoke(IpcChannels.backup.revealFolder)
   },

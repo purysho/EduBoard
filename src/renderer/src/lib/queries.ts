@@ -525,3 +525,11 @@ export function useCreateBackup() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.backups })
   })
 }
+
+export function useBackupPreview(filePath: string | null) {
+  return useQuery({
+    queryKey: [...queryKeys.backups, 'preview', filePath],
+    queryFn: () => api().backup.preview(filePath as string),
+    enabled: !!filePath
+  })
+}

@@ -7,6 +7,7 @@ import type {
   AttendanceRecord,
   AttendanceSummary,
   BackupInfo,
+  BackupPreview,
   ClassReport,
   ClassRosterRow,
   ClassSection,
@@ -111,6 +112,7 @@ export interface EduBoardApi {
   backup: {
     create(): Promise<BackupInfo>
     list(): Promise<BackupInfo[]>
+    preview(filePath: string): Promise<BackupPreview>
     restore(filePath: string): Promise<void>
     revealFolder(): Promise<void>
   }
