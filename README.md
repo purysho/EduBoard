@@ -68,13 +68,9 @@ npm run build:linux   # Linux AppImage
 
 Tagging a commit `vX.Y.Z` and pushing the tag triggers [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds all three platforms on their native runners and publishes a draft GitHub Release with every installer attached — that's the intended way to cut a release, since cross-compiling a Windows/macOS build from another OS isn't reliable.
 
-### Code signing (not set up yet)
+### Code signing
 
-Builds are currently unsigned, which is why Windows SmartScreen and macOS Gatekeeper warn on first launch (see the [User Guide](docs/USER_GUIDE.md#installing)). electron-builder already auto-detects standard signing env vars with no config changes needed beyond what's below, so turning it on later is just:
-
-- **Windows**: buy a code-signing certificate, set it as `CSC_LINK` (a base64-encoded `.pfx`, or a URL to one) and `CSC_KEY_PASSWORD` as GitHub Actions repo secrets, and pass them into the `windows-latest` job's `env:` in `release.yml`.
-- **macOS**: enroll in the Apple Developer Program, set `CSC_LINK`/`CSC_KEY_PASSWORD` (a Developer ID Application certificate) plus `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID` as repo secrets, pass them into the `macos-latest` job's `env:`, and flip `notarize: false` to `notarize: true` in `electron-builder.yml`.
-- **Linux** AppImages don't need code signing — no changes needed there.
+Builds are unsigned until you add the relevant secrets, which is why Windows SmartScreen and macOS Gatekeeper warn on first launch (see the [User Guide](docs/USER_GUIDE.md#installing)). The release workflow and `electron-builder.yml` are already wired to sign and notarize automatically the moment the right repo secrets exist — see [`docs/CODE_SIGNING.md`](docs/CODE_SIGNING.md) for exactly what to add and where to get it. Linux AppImages don't need code signing.
 
 ## How it's built
 
