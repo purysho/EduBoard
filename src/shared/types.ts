@@ -180,12 +180,23 @@ export interface RubricScore {
 export const STUDENT_LOG_TYPES = ['note', 'positive', 'concern', 'contact'] as const
 export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
 
+export const CONTACT_METHODS = ['phone', 'email', 'in-person', 'other'] as const
+export type ContactMethod = (typeof CONTACT_METHODS)[number]
+
 export interface StudentLogEntry {
   id: string
   studentId: string
   type: StudentLogType
   text: string
+  // Only meaningful when type === 'contact' — a parent-communication entry.
+  contactMethod: ContactMethod | null
+  followUpNeeded: boolean
+  followUpDone: boolean
   createdAt: string
+}
+
+export interface ParentCommunicationEntry extends StudentLogEntry {
+  studentName: string
 }
 
 export const LESSON_RESOURCE_TYPES = ['link', 'file', 'note'] as const

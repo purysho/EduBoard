@@ -129,7 +129,9 @@ const api: EduBoardApi = {
   studentLogEntries: {
     listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
     create: (input) => invoke(IpcChannels.studentLogEntries.create, input),
-    remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id)
+    update: (id, patch) => invoke(IpcChannels.studentLogEntries.update, id, patch),
+    remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id),
+    listParentCommunications: () => invoke(IpcChannels.studentLogEntries.listParentCommunications)
   },
   lessonResources: {
     list: () => invoke(IpcChannels.lessonResources.list),

@@ -292,8 +292,16 @@ export function registerIpcHandlers(): void {
     (_e, input: studentLogEntriesRepo.CreateStudentLogEntryInput) =>
       studentLogEntriesRepo.createStudentLogEntry(input)
   )
+  handle(
+    IpcChannels.studentLogEntries.update,
+    (_e, id: string, patch: studentLogEntriesRepo.UpdateStudentLogEntryInput) =>
+      studentLogEntriesRepo.updateStudentLogEntry(id, patch)
+  )
   handle(IpcChannels.studentLogEntries.remove, (_e, id: string) =>
     studentLogEntriesRepo.deleteStudentLogEntry(id)
+  )
+  handle(IpcChannels.studentLogEntries.listParentCommunications, () =>
+    studentLogEntriesRepo.listParentCommunications()
   )
 
   // --- Lesson resources -------------------------------------------------------------------

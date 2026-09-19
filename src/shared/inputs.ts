@@ -93,7 +93,15 @@ export type SaveRubricScoresInput = {
   comment?: string | null
 }
 
-export type CreateStudentLogEntryInput = Omit<StudentLogEntry, 'id' | 'createdAt'>
+export type CreateStudentLogEntryInput = Omit<
+  StudentLogEntry,
+  'id' | 'createdAt' | 'contactMethod' | 'followUpNeeded' | 'followUpDone'
+> &
+  Partial<Pick<StudentLogEntry, 'contactMethod' | 'followUpNeeded' | 'followUpDone'>>
+
+export type UpdateStudentLogEntryInput = Partial<
+  Pick<StudentLogEntry, 'followUpNeeded' | 'followUpDone'>
+>
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

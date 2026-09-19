@@ -22,6 +22,7 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
+  UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
   UpsertExitTicketInput
@@ -61,6 +62,7 @@ export const queryKeys = {
   rubricScores: (assessmentId: string, studentId: string) =>
     ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
   studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
+  parentCommunications: ['parentCommunications'] as const,
   lessonResources: ['lessonResources'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
@@ -693,6 +695,35 @@ export function useDeleteStudentLogEntry(studentId: string) {
   return useMutation({
     mutationFn: (id: string) => api().studentLogEntries.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
+  })
+}
+
+/** Used from both the per-student log panel and the standalone Communications page — the
+ * caller passes the owning studentId so both views' caches invalidate correctly. */
+export function useUpdateStudentLogEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch
+    }: {
+      id: string
+      studentId: string
+      patch: UpdateStudentLogEntryInput
+    }) => api().studentLogEntries.update(id, patch),
+    onSuccess: (_data, { studentId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.parentCommunications })
+    }
+  })
+}
+
+// ---- Parent communications -----------------------------------------------------------------
+
+export function useParentCommunications() {
+  return useQuery({
+    queryKey: queryKeys.parentCommunications,
+    queryFn: () => api().studentLogEntries.listParentCommunications()
   })
 }
 

@@ -292,6 +292,17 @@ const migrations: Migration[] = [
           ON exit_ticket_responses(exit_ticket_id, submitted_at);
       `)
     }
+  },
+  {
+    id: 7,
+    name: 'student_log_contact_fields',
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE student_log_entries ADD COLUMN contact_method TEXT;
+        ALTER TABLE student_log_entries ADD COLUMN follow_up_needed INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE student_log_entries ADD COLUMN follow_up_done INTEGER NOT NULL DEFAULT 0;
+      `)
+    }
   }
 ]
 

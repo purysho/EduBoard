@@ -287,6 +287,9 @@ export const studentLogEntries = sqliteTable(
       .references(() => students.id, { onDelete: 'cascade' }),
     type: text('type').notNull().default('note'),
     text: text('text').notNull(),
+    contactMethod: text('contact_method'),
+    followUpNeeded: integer('follow_up_needed', { mode: 'boolean' }).notNull().default(false),
+    followUpDone: integer('follow_up_done', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').notNull()
   },
   (t) => ({

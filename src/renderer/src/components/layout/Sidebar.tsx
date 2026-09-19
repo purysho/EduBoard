@@ -4,6 +4,7 @@ import {
   FolderOpen,
   GraduationCap,
   LayoutGrid,
+  MessageCircle,
   Settings2,
   ShieldCheck,
   Users
@@ -16,6 +17,7 @@ const navItems = [
   { to: '/students', label: 'Students', icon: Users },
   { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
   { to: '/resources', label: 'Resources', icon: FolderOpen },
+  { to: '/communications', label: 'Communications', icon: MessageCircle },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]
 

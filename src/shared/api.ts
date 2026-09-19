@@ -26,6 +26,7 @@ import type {
   RubricWithCriteria,
   RubricScore,
   StudentLogEntry,
+  ParentCommunicationEntry,
   LessonResource,
   ExitTicket,
   ExitTicketResponse,
@@ -53,6 +54,7 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
+  UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
   UpsertExitTicketInput
@@ -173,7 +175,9 @@ export interface EduBoardApi {
   studentLogEntries: {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>
     create(input: CreateStudentLogEntryInput): Promise<StudentLogEntry>
+    update(id: string, patch: UpdateStudentLogEntryInput): Promise<StudentLogEntry>
     remove(id: string): Promise<void>
+    listParentCommunications(): Promise<ParentCommunicationEntry[]>
   }
   lessonResources: {
     list(): Promise<LessonResource[]>

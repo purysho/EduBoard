@@ -107,10 +107,6 @@ src/
 
 A class defines its own grade categories and weights (or none, for a flat points-based grade). Assessments belong to a category and carry their own max score. A student's grade in a category is `points earned ÷ points possible` for everything graded so far in that category; the class grade blends category percentages by weight, renormalized across categories that actually have graded work. Attendance counts Present and Late as attended, excludes Excused (and unmarked days) from the rate entirely.
 
-## Not in this version
-
-Multi-term/annual composite grading, assignment file submissions, seating charts, and a parent-communication log are reasonable next steps but out of scope for this pass — the current model is a single-term class with a flat or category-weighted grade.
-
 ## License
 
 MIT
