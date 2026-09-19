@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
+import { ClipboardList, Plus } from 'lucide-react'
 import type { Assessment, ClassSection, Score } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -43,22 +44,26 @@ export function GradebookTab(): React.JSX.Element {
     <div>
       <div className="mb-4 flex justify-end">
         <Button variant="primary" onClick={() => setShowAdd(true)}>
-          + Assessment
+          <Plus size={15} className="mr-1 inline" aria-hidden />
+          Assessment
         </Button>
       </div>
 
       {!assessments?.length ? (
         <EmptyState
+          icon={ClipboardList}
           title="No assessments yet"
           description="Add an assessment (quiz, homework, exam…) to start entering grades."
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
-              + Assessment
+              <Plus size={15} className="mr-1 inline" aria-hidden />
+              Assessment
             </Button>
           }
         />
       ) : !roster?.length ? (
         <EmptyState
+          icon={ClipboardList}
           title="No students enrolled"
           description="Enroll students from the Roster tab before entering grades."
         />

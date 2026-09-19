@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FolderOpen, HardDriveDownload, ShieldCheck } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
@@ -18,9 +19,13 @@ export function BackupPanel(): React.JSX.Element {
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Backups</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <ShieldCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+          Backups
+        </h2>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => window.api.backup.revealFolder()}>
+            <FolderOpen size={14} className="mr-1 inline" aria-hidden />
             Open folder
           </Button>
           <Button
@@ -29,6 +34,7 @@ export function BackupPanel(): React.JSX.Element {
             onClick={() => createBackup.mutate()}
             disabled={createBackup.isPending}
           >
+            <HardDriveDownload size={14} className="mr-1 inline" aria-hidden />
             {createBackup.isPending ? 'Backing up…' : 'Back up now'}
           </Button>
         </div>

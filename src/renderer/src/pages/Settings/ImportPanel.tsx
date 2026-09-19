@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CheckCircle2, FileUp, Upload, XCircle } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Select } from '@renderer/components/ui/Field'
@@ -32,7 +33,10 @@ export function ImportPanel(): React.JSX.Element {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-sm font-semibold">Import a roster</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <FileUp size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+          Import a roster
+        </h2>
       </CardHeader>
       <CardBody className="space-y-4">
         <p className="text-sm text-[var(--color-text-muted)]">
@@ -54,17 +58,22 @@ export function ImportPanel(): React.JSX.Element {
           </Select>
         </FormRow>
         <Button variant="primary" onClick={handleImport} disabled={importing}>
+          <Upload size={15} className="mr-1 inline" aria-hidden />
           {importing ? 'Importing…' : 'Choose file & import'}
         </Button>
         {result && (
           <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 text-sm">
-            <p>
+            <p className="flex items-center gap-1.5">
+              <CheckCircle2 size={15} className="text-[var(--color-success)]" aria-hidden />
               Imported {result.imported}, skipped {result.skipped}.
             </p>
             {result.errors.length > 0 && (
-              <ul className="mt-1 list-disc pl-4 text-[var(--color-danger)]">
+              <ul className="mt-2 space-y-1">
                 {result.errors.map((err, i) => (
-                  <li key={i}>{err}</li>
+                  <li key={i} className="flex items-start gap-1.5 text-[var(--color-danger)]">
+                    <XCircle size={14} className="mt-0.5 shrink-0" aria-hidden />
+                    {err}
+                  </li>
                 ))}
               </ul>
             )}

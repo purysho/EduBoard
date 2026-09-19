@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
+import { UserPlus, Users } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
+import { Avatar } from '@renderer/components/ui/Avatar'
 import { letterTone } from '@renderer/lib/grade'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
@@ -21,7 +23,8 @@ export function RosterTab(): React.JSX.Element {
     <div>
       <div className="mb-4 flex justify-end">
         <Button variant="primary" onClick={() => setShowEnroll(true)}>
-          + Enroll students
+          <UserPlus size={15} className="mr-1 inline" aria-hidden />
+          Enroll students
         </Button>
       </div>
 
@@ -29,11 +32,13 @@ export function RosterTab(): React.JSX.Element {
         <Spinner />
       ) : !roster?.length ? (
         <EmptyState
+          icon={Users}
           title="No students enrolled yet"
           description="Enroll existing students or add new ones to this class."
           action={
             <Button variant="primary" onClick={() => setShowEnroll(true)}>
-              + Enroll students
+              <UserPlus size={15} className="mr-1 inline" aria-hidden />
+              Enroll students
             </Button>
           }
         />
@@ -59,8 +64,9 @@ export function RosterTab(): React.JSX.Element {
                   <td className="px-4 py-2.5">
                     <Link
                       to={`/students/${row.student.id}`}
-                      className="font-medium hover:text-[var(--color-primary)]"
+                      className="flex items-center gap-2.5 font-medium hover:text-[var(--color-primary)]"
                     >
+                      <Avatar name={studentFullName(row.student)} size="sm" />
                       {studentFullName(row.student)}
                     </Link>
                   </td>

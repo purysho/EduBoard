@@ -19,35 +19,36 @@ win:
     - target: nsis
       arch: [x64]
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${productName}-Setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 portable:
-  artifactName: ${name}-${version}-portable.${ext}
+  artifactName: ${productName}-Portable.${ext}
 mac:
   target:
     - target: dmg
-      arch: [x64, arm64]
+      arch: [universal]
     - target: zip
-      arch: [x64, arm64]
+      arch: [universal]
+  artifactName: ${productName}.${ext}
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: EduBoard stores your class data in a local database file.
     - NSDownloadsFolderUsageDescription: EduBoard can export reports and backups to your Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}.${ext}
 linux:
   target:
     - AppImage
   category: Education
   syncDesktopName: true
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}.${ext}
 npmRebuild: false
 publish:
   provider: github
   owner: purysho
   repo: EduBoard
-  releaseType: draft
+  releaseType: release

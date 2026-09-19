@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus, Search, Users } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
+import { Avatar } from '@renderer/components/ui/Avatar'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useStudents } from '@renderer/lib/queries'
 import { studentFullName } from '@renderer/lib/format'
@@ -31,22 +33,31 @@ export function StudentsListPage(): React.JSX.Element {
         description="Your full student directory, across every class and club."
         actions={
           <Button variant="primary" onClick={() => setShowAddModal(true)}>
-            + Add student
+            <Plus size={15} className="mr-1 inline" aria-hidden />
+            Add student
           </Button>
         }
       />
 
-      <Input
-        placeholder="Search by name, ID, or grade level…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 max-w-sm"
-      />
+      <div className="relative mb-4 max-w-sm">
+        <Search
+          size={15}
+          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+          aria-hidden
+        />
+        <Input
+          placeholder="Search by name, ID, or grade level…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-8"
+        />
+      </div>
 
       {isLoading ? (
         <Spinner />
       ) : filtered.length === 0 ? (
         <EmptyState
+          icon={Users}
           title={students?.length ? 'No students match your search' : 'No students yet'}
           description={
             students?.length
@@ -56,7 +67,8 @@ export function StudentsListPage(): React.JSX.Element {
           action={
             !students?.length ? (
               <Button variant="primary" onClick={() => setShowAddModal(true)}>
-                + Add student
+                <Plus size={15} className="mr-1 inline" aria-hidden />
+                Add student
               </Button>
             ) : undefined
           }
@@ -81,8 +93,9 @@ export function StudentsListPage(): React.JSX.Element {
                   <td className="px-4 py-2.5">
                     <Link
                       to={`/students/${student.id}`}
-                      className="font-medium text-[var(--color-text)] hover:text-[var(--color-primary)]"
+                      className="flex items-center gap-2.5 font-medium text-[var(--color-text)] hover:text-[var(--color-primary)]"
                     >
+                      <Avatar name={studentFullName(student)} size="sm" />
                       {studentFullName(student)}
                     </Link>
                   </td>

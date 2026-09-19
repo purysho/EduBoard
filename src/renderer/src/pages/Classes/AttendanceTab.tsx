@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
+import { CalendarCheck, Plus } from 'lucide-react'
 import type { AttendanceRecord, ClassSection } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
@@ -38,6 +39,7 @@ export function AttendanceTab(): React.JSX.Element {
   if (!roster?.length) {
     return (
       <EmptyState
+        icon={CalendarCheck}
         title="No students enrolled"
         description="Enroll students from the Roster tab first."
       />
@@ -58,7 +60,8 @@ export function AttendanceTab(): React.JSX.Element {
             className="w-40"
           />
           <Button variant="secondary" onClick={addDate}>
-            + Add date
+            <Plus size={15} className="mr-1 inline" aria-hidden />
+            Add date
           </Button>
         </div>
       </div>

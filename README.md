@@ -23,13 +23,19 @@ Your data lives in a single database file next to the app, so the whole thing �
 
 ## Download
 
-Grab the latest build for your platform from the [Releases page](https://github.com/purysho/EduBoard/releases):
+<p>
+  <a href="https://github.com/purysho/EduBoard/releases/latest/download/EduBoard-Portable.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/purysho/EduBoard/releases/latest/download/EduBoard.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/purysho/EduBoard/releases/latest/download/EduBoard.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"></a>
+</p>
 
-- **Windows** — `EduBoard-<version>-portable.exe`. No install, no admin rights: copy it to a USB stick and double-click it anywhere. EduBoard creates an `EduBoard-data` folder next to the exe and keeps your database there, so the whole thing travels together. (An installer, `EduBoard-<version>-setup.exe`, is also published if you'd rather install it normally — in that case your data lives in your Windows user profile instead.)
-- **macOS** — `eduboard-<version>.dmg` (or the `.zip`). Universal build, works on Intel and Apple Silicon.
-- **Linux** — `eduboard-<version>.AppImage`.
+Each button always grabs the newest release, no version numbers to track. New here? Start with the **[User Guide](docs/USER_GUIDE.md)** for a full walkthrough after installing.
 
-> Builds aren't code-signed (that costs money neither of us needs to spend for a personal tool). Windows SmartScreen and macOS Gatekeeper will warn you the first time you open it — on Windows choose **More info → Run anyway**; on macOS right-click the app → **Open** the first time.
+- **Windows** — the button above downloads `EduBoard-Portable.exe`: no install, no admin rights, copy it to a USB stick and double-click it anywhere. EduBoard keeps its database in an `EduBoard-data` folder next to the exe, so the whole thing travels together. Prefer a normal install instead? Grab `EduBoard-Setup.exe` from the [Releases page](https://github.com/purysho/EduBoard/releases/latest) — in that case your data lives in your Windows user profile instead.
+- **macOS** — the button above downloads the `.dmg` (universal, works on Intel and Apple Silicon). A `.zip` is also on the [Releases page](https://github.com/purysho/EduBoard/releases/latest) if you'd rather not mount a disk image.
+- **Linux** — the button above downloads the `.AppImage`: make it executable (`chmod +x EduBoard.AppImage`) and run it directly.
+
+> Builds aren't code-signed (that costs money neither of us needs to spend for a personal tool). Windows SmartScreen and macOS Gatekeeper will warn you the first time you open it — on Windows choose **More info → Run anyway**; on macOS right-click the app → **Open** the first time. Details and screenshots of both are in the [User Guide](docs/USER_GUIDE.md#installing).
 
 ## Everyday use
 
