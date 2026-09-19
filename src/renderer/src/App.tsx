@@ -14,6 +14,7 @@ import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
 import { RubricsPage } from './pages/Rubrics/RubricsPage'
+import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
 
 function App(): React.JSX.Element {
@@ -35,6 +36,7 @@ function App(): React.JSX.Element {
         </Route>
         <Route path="/rubrics" element={<RubricsPage />} />
         <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

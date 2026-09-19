@@ -16,6 +16,7 @@ import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
+import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -291,4 +292,26 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.studentLogEntries.remove, (_e, id: string) =>
     studentLogEntriesRepo.deleteStudentLogEntry(id)
   )
+
+  // --- Lesson resources -------------------------------------------------------------------
+  handle(IpcChannels.lessonResources.list, () => lessonResourcesRepo.listLessonResources())
+  handle(
+    IpcChannels.lessonResources.create,
+    (_e, input: lessonResourcesRepo.CreateLessonResourceInput) =>
+      lessonResourcesRepo.createLessonResource(input)
+  )
+  handle(
+    IpcChannels.lessonResources.update,
+    (_e, id: string, patch: lessonResourcesRepo.UpdateLessonResourceInput) =>
+      lessonResourcesRepo.updateLessonResource(id, patch)
+  )
+  handle(IpcChannels.lessonResources.remove, (_e, id: string) =>
+    lessonResourcesRepo.deleteLessonResource(id)
+  )
+  handle(IpcChannels.lessonResources.pickFile, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
+  handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
 }

@@ -292,3 +292,22 @@ export const studentLogEntries = sqliteTable(
     studentIdx: index('student_log_entries_student_idx').on(t.studentId, t.createdAt)
   })
 )
+
+export const lessonResources = sqliteTable(
+  'lesson_resources',
+  {
+    id: text('id').primaryKey(),
+    title: text('title').notNull(),
+    type: text('type').notNull(),
+    url: text('url'),
+    filePath: text('file_path'),
+    notes: text('notes'),
+    tags: text('tags', { mode: 'json' }).notNull().$type<string[]>(),
+    standardId: text('standard_id').references(() => standards.id, { onDelete: 'set null' }),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    standardIdx: index('lesson_resources_standard_idx').on(t.standardId)
+  })
+)

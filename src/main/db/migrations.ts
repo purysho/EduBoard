@@ -244,6 +244,27 @@ const migrations: Migration[] = [
           ON student_log_entries(student_id, created_at);
       `)
     }
+  },
+  {
+    id: 5,
+    name: 'lesson_resources',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE lesson_resources (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          type TEXT NOT NULL,
+          url TEXT,
+          file_path TEXT,
+          notes TEXT,
+          tags TEXT NOT NULL,
+          standard_id TEXT REFERENCES standards(id) ON DELETE SET NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX lesson_resources_standard_idx ON lesson_resources(standard_id);
+      `)
+    }
   }
 ]
 

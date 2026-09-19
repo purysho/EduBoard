@@ -21,7 +21,9 @@ import type {
   CreateRubricInput,
   UpdateRubricInput,
   SaveRubricScoresInput,
-  CreateStudentLogEntryInput
+  CreateStudentLogEntryInput,
+  CreateLessonResourceInput,
+  UpdateLessonResourceInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -57,7 +59,8 @@ export const queryKeys = {
   rubric: (id: string) => ['rubrics', id] as const,
   rubricScores: (assessmentId: string, studentId: string) =>
     ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
-  studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const
+  studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
+  lessonResources: ['lessonResources'] as const
 }
 
 // ---- Students -----------------------------------------------------------------------
@@ -685,5 +688,39 @@ export function useDeleteStudentLogEntry(studentId: string) {
   return useMutation({
     mutationFn: (id: string) => api().studentLogEntries.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
+  })
+}
+
+// ---- Lesson resources ---------------------------------------------------------------------
+
+export function useLessonResources() {
+  return useQuery({
+    queryKey: queryKeys.lessonResources,
+    queryFn: () => api().lessonResources.list()
+  })
+}
+
+export function useCreateLessonResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateLessonResourceInput) => api().lessonResources.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+export function useUpdateLessonResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateLessonResourceInput }) =>
+      api().lessonResources.update(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+export function useDeleteLessonResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().lessonResources.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
   })
 }

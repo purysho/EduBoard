@@ -188,6 +188,22 @@ export interface StudentLogEntry {
   createdAt: string
 }
 
+export const LESSON_RESOURCE_TYPES = ['link', 'file', 'note'] as const
+export type LessonResourceType = (typeof LESSON_RESOURCE_TYPES)[number]
+
+export interface LessonResource {
+  id: string
+  title: string
+  type: LessonResourceType
+  url: string | null
+  filePath: string | null
+  notes: string | null
+  tags: string[]
+  standardId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

@@ -11,7 +11,8 @@ import type {
   Term,
   Assessment,
   Standard,
-  StudentLogEntry
+  StudentLogEntry,
+  LessonResource
 } from './types'
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
@@ -92,3 +93,6 @@ export type SaveRubricScoresInput = {
 }
 
 export type CreateStudentLogEntryInput = Omit<StudentLogEntry, 'id' | 'createdAt'>
+
+export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
+export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

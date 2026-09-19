@@ -113,5 +113,14 @@ export const IpcChannels = {
     listByStudent: 'studentLogEntries:listByStudent',
     create: 'studentLogEntries:create',
     remove: 'studentLogEntries:remove'
+  },
+  lessonResources: {
+    list: 'lessonResources:list',
+    create: 'lessonResources:create',
+    update: 'lessonResources:update',
+    remove: 'lessonResources:remove',
+    pickFile: 'lessonResources:pickFile',
+    openPath: 'lessonResources:openPath',
+    openExternal: 'lessonResources:openExternal'
   }
 } as const

@@ -25,7 +25,8 @@ import type {
   Standard,
   RubricWithCriteria,
   RubricScore,
-  StudentLogEntry
+  StudentLogEntry,
+  LessonResource
 } from './types'
 import type {
   CreateAssessmentInput,
@@ -48,7 +49,9 @@ import type {
   CreateRubricInput,
   UpdateRubricInput,
   SaveRubricScoresInput,
-  CreateStudentLogEntryInput
+  CreateStudentLogEntryInput,
+  CreateLessonResourceInput,
+  UpdateLessonResourceInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -167,5 +170,14 @@ export interface EduBoardApi {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>
     create(input: CreateStudentLogEntryInput): Promise<StudentLogEntry>
     remove(id: string): Promise<void>
+  }
+  lessonResources: {
+    list(): Promise<LessonResource[]>
+    create(input: CreateLessonResourceInput): Promise<LessonResource>
+    update(id: string, patch: UpdateLessonResourceInput): Promise<LessonResource>
+    remove(id: string): Promise<void>
+    pickFile(): Promise<string | null>
+    openPath(filePath: string): Promise<void>
+    openExternal(url: string): Promise<void>
   }
 }

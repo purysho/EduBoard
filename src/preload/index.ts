@@ -130,6 +130,15 @@ const api: EduBoardApi = {
     listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
     create: (input) => invoke(IpcChannels.studentLogEntries.create, input),
     remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id)
+  },
+  lessonResources: {
+    list: () => invoke(IpcChannels.lessonResources.list),
+    create: (input) => invoke(IpcChannels.lessonResources.create, input),
+    update: (id, patch) => invoke(IpcChannels.lessonResources.update, id, patch),
+    remove: (id) => invoke(IpcChannels.lessonResources.remove, id),
+    pickFile: () => invoke(IpcChannels.lessonResources.pickFile),
+    openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
+    openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
   }
 }
 
