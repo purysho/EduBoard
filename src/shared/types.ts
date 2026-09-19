@@ -107,6 +107,18 @@ export interface Score {
   updatedAt: string
 }
 
+export interface ScoreHistoryEntry {
+  id: string
+  scoreId: string
+  assessmentId: string
+  studentId: string
+  previousPoints: number | null
+  newPoints: number | null
+  previousExcused: boolean
+  newExcused: boolean
+  changedAt: string
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

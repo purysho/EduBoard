@@ -8,6 +8,7 @@ import type {
   AttendanceSummary,
   BackupInfo,
   BackupPreview,
+  ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
   ClassSection,
@@ -84,6 +85,7 @@ export interface EduBoardApi {
     listByStudentAndClass(studentId: string, classId: string): Promise<Score[]>
     upsert(input: UpsertScoreInput): Promise<Score>
     upsertBulk(inputs: UpsertScoreInput[]): Promise<void>
+    history(assessmentId: string, studentId: string): Promise<ScoreHistoryEntry[]>
   }
   attendance: {
     listByClass(classId: string): Promise<AttendanceRecord[]>

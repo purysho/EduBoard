@@ -129,6 +129,31 @@ export const scores = sqliteTable(
   })
 )
 
+export const scoreHistory = sqliteTable(
+  'score_history',
+  {
+    id: text('id').primaryKey(),
+    scoreId: text('score_id').notNull(),
+    assessmentId: text('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    previousPoints: real('previous_points'),
+    newPoints: real('new_points'),
+    previousExcused: integer('previous_excused', { mode: 'boolean' }).notNull(),
+    newExcused: integer('new_excused', { mode: 'boolean' }).notNull(),
+    changedAt: text('changed_at').notNull()
+  },
+  (t) => ({
+    assessmentStudentIdx: index('score_history_assessment_student_idx').on(
+      t.assessmentId,
+      t.studentId
+    )
+  })
+)
+
 export const attendanceRecords = sqliteTable(
   'attendance_records',
   {

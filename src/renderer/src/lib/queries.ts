@@ -327,6 +327,18 @@ export function useScoresByStudentClass(
   })
 }
 
+export function useScoreHistory(
+  assessmentId: string | undefined,
+  studentId: string | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: ['scoreHistory', assessmentId, studentId],
+    queryFn: () => api().scores.history(assessmentId!, studentId!),
+    enabled: enabled && !!assessmentId && !!studentId
+  })
+}
+
 export function useUpsertScore(classId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -337,6 +349,7 @@ export function useUpsertScore(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({ queryKey: ['scoreHistory', vars.assessmentId, vars.studentId] })
     }
   })
 }

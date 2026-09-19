@@ -1,6 +1,7 @@
 import { KeyboardEvent, useState } from 'react'
 import type { Score } from '@shared/types'
 import { useUpsertScore } from '@renderer/lib/queries'
+import { ScoreHistoryPopover } from './ScoreHistoryPopover'
 
 export function ScoreCell({
   classId,
@@ -45,17 +46,24 @@ export function ScoreCell({
   const isExcused = score?.excused ?? false
 
   return (
-    <input
-      type="number"
-      min={0}
-      max={maxScore}
-      value={isExcused ? '' : value}
-      placeholder={isExcused ? 'Exc.' : ''}
-      disabled={isExcused}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={commit}
-      onKeyDown={handleKeyDown}
-      className="w-16 rounded border border-transparent bg-transparent px-1.5 py-1 text-center text-sm hover:border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none disabled:text-[var(--color-text-muted)]"
-    />
+    <span className="group/cell relative inline-flex items-center">
+      <input
+        type="number"
+        min={0}
+        max={maxScore}
+        value={isExcused ? '' : value}
+        placeholder={isExcused ? 'Exc.' : ''}
+        disabled={isExcused}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={handleKeyDown}
+        className="w-16 rounded border border-transparent bg-transparent px-1.5 py-1 text-center text-sm hover:border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none disabled:text-[var(--color-text-muted)]"
+      />
+      {score && (
+        <span className="absolute -right-3 opacity-0 transition-opacity group-hover/cell:opacity-100">
+          <ScoreHistoryPopover assessmentId={assessmentId} studentId={studentId} />
+        </span>
+      )}
+    </span>
   )
 }
