@@ -1,12 +1,13 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { AlertTriangle, Pencil, Plus, Tags } from 'lucide-react'
+import { AlertTriangle, Archive, ArchiveRestore, CopyPlus, Pencil, Plus, Tags } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input } from '@renderer/components/ui/Field'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
+  useCreateClass,
   useDeleteClass,
   useDeleteGradeCategory,
   useGradeCategories,
@@ -22,6 +23,38 @@ export function ClassSettingsTab(): React.JSX.Element {
   const updateClass = useUpdateClass()
   const deleteClass = useDeleteClass()
   const deleteCategory = useDeleteGradeCategory(classSection.id)
+  const createClass = useCreateClass()
+  const [duplicating, setDuplicating] = useState(false)
+
+  async function handleDuplicateForNewTerm(): Promise<void> {
+    setDuplicating(true)
+    try {
+      const newClass = await createClass.mutateAsync({
+        name: classSection.name,
+        subject: classSection.subject,
+        levelType: classSection.levelType,
+        gradeLevel: classSection.gradeLevel,
+        termId: null,
+        schedule: classSection.schedule,
+        room: classSection.room,
+        color: classSection.color,
+        passMark: classSection.passMark,
+        maxScore: classSection.maxScore,
+        gradeThresholds: classSection.gradeThresholds
+      })
+      for (const cat of categories ?? []) {
+        await window.api.gradeCategories.create({
+          classId: newClass.id,
+          name: cat.name,
+          weightPercent: cat.weightPercent,
+          sortOrder: cat.sortOrder
+        })
+      }
+      navigate(`/classes/${newClass.id}`)
+    } finally {
+      setDuplicating(false)
+    }
+  }
 
   const [passMark, setPassMark] = useState(classSection.passMark)
   const [maxScore, setMaxScore] = useState(classSection.maxScore)
@@ -59,10 +92,22 @@ export function ClassSettingsTab(): React.JSX.Element {
       <Card className="col-span-2 h-fit">
         <CardHeader className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Class details</h2>
-          <Button variant="secondary" size="sm" onClick={() => setShowEditClass(true)}>
-            <Pencil size={13} className="mr-1 inline" aria-hidden />
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleDuplicateForNewTerm}
+              disabled={duplicating}
+              title="Copy this class's setup (grading scale, categories) into a new class for the next term — roster, grades, and attendance are not carried over"
+            >
+              <CopyPlus size={13} className="mr-1 inline" aria-hidden />
+              {duplicating ? 'Duplicating…' : 'Duplicate for new term'}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowEditClass(true)}>
+              <Pencil size={13} className="mr-1 inline" aria-hidden />
+              Edit
+            </Button>
+          </div>
         </CardHeader>
         <CardBody className="grid grid-cols-4 gap-4 text-sm">
           <DetailItem label="Subject" value={classSection.subject} />
@@ -183,6 +228,46 @@ export function ClassSettingsTab(): React.JSX.Element {
               )}
             </>
           )}
+        </CardBody>
+      </Card>
+
+      <Card className="col-span-2 h-fit">
+        <CardHeader>
+          <h2 className="text-sm font-semibold">Archive</h2>
+        </CardHeader>
+        <CardBody className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">
+              {classSection.archived ? 'This class is archived' : 'Archive this class'}
+            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {classSection.archived
+                ? 'Hidden from the active classes list. All its data is kept, and it can be unarchived any time.'
+                : 'Hides it from the active classes list at the end of a term, without deleting anything — roster, gradebook, attendance, and lesson plans are all kept.'}
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              updateClass.mutate({
+                id: classSection.id,
+                patch: { archived: !classSection.archived }
+              })
+            }
+            disabled={updateClass.isPending}
+          >
+            {classSection.archived ? (
+              <>
+                <ArchiveRestore size={14} className="mr-1 inline" aria-hidden />
+                Unarchive
+              </>
+            ) : (
+              <>
+                <Archive size={14} className="mr-1 inline" aria-hidden />
+                Archive
+              </>
+            )}
+          </Button>
         </CardBody>
       </Card>
 
