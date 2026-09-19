@@ -13,15 +13,23 @@ interface RestoreDialogProps {
   onCancel: () => void
 }
 
-function Row({ label, from, to }: { label: string; from: number; to: number }): React.JSX.Element {
-  const changed = from !== to
+function Row({
+  label,
+  current,
+  backup
+}: {
+  label: string
+  current: number
+  backup: number
+}): React.JSX.Element {
+  const changed = current !== backup
   return (
     <div className="flex items-center justify-between py-1 text-sm">
       <span className="text-[var(--color-text-muted)]">{label}</span>
       <span className={changed ? 'font-medium text-[var(--color-danger)]' : 'font-medium'}>
-        {to} <span className="text-[var(--color-text-muted)]">now</span>
+        {current} <span className="text-[var(--color-text-muted)]">now</span>
         {' -> '}
-        {from} <span className="text-[var(--color-text-muted)]">in backup</span>
+        {backup} <span className="text-[var(--color-text-muted)]">in backup</span>
       </span>
     </div>
   )
@@ -80,13 +88,25 @@ export function RestoreDialog({
           <Spinner />
         ) : preview ? (
           <div className="rounded-lg border border-[var(--color-border)] p-3">
-            <Row label="Students" from={preview.backup.students} to={preview.current.students} />
-            <Row label="Classes" from={preview.backup.classes} to={preview.current.classes} />
-            <Row label="Scores recorded" from={preview.backup.scores} to={preview.current.scores} />
+            <Row
+              label="Students"
+              current={preview.current.students}
+              backup={preview.backup.students}
+            />
+            <Row
+              label="Classes"
+              current={preview.current.classes}
+              backup={preview.backup.classes}
+            />
+            <Row
+              label="Scores recorded"
+              current={preview.current.scores}
+              backup={preview.backup.scores}
+            />
             <Row
               label="Attendance records"
-              from={preview.backup.attendanceRecords}
-              to={preview.current.attendanceRecords}
+              current={preview.current.attendanceRecords}
+              backup={preview.backup.attendanceRecords}
             />
           </div>
         ) : null}
