@@ -11,6 +11,7 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,tsconfig.node.tsbuildinfo,tsconfig.web.tsbuildinfo}'
 asarUnpack:
   - resources/**
+  - node_modules/better-sqlite3/**
 win:
   executableName: EduBoard
   target:
@@ -32,6 +33,12 @@ mac:
     - target: zip
       arch: [universal]
   artifactName: ${productName}.${ext}
+  # better-sqlite3 ships prebuilt native binaries for every platform as plain
+  # package content (unrelated to the one @electron/rebuild actually compiles
+  # for this Electron ABI). Those extra files are byte-identical between the
+  # x64 and arm64 halves of a universal build, which @electron/universal
+  # otherwise refuses to merge — this tells it that's expected.
+  x64ArchFiles: 'Contents/Resources/app.asar.unpacked/node_modules/better-sqlite3/**'
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: EduBoard stores your class data in a local database file.
