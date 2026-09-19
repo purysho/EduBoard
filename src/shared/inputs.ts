@@ -25,8 +25,13 @@ export type CreateStudentInput = Omit<Student, 'id' | 'createdAt' | 'updatedAt' 
 }
 export type UpdateStudentInput = Partial<Omit<Student, 'id' | 'createdAt'>>
 
-export type CreateClassInput = Omit<ClassSection, 'id' | 'createdAt' | 'updatedAt' | 'archived'> & {
+export type CreateClassInput = Omit<
+  ClassSection,
+  'id' | 'createdAt' | 'updatedAt' | 'archived' | 'seatingRows' | 'seatingCols'
+> & {
   archived?: boolean
+  seatingRows?: number
+  seatingCols?: number
 }
 export type UpdateClassInput = Partial<Omit<ClassSection, 'id' | 'createdAt'>>
 

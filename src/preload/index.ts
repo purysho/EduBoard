@@ -142,6 +142,14 @@ const api: EduBoardApi = {
     openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
     openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
   },
+  seatAssignments: {
+    listByClass: (classId) => invoke(IpcChannels.seatAssignments.listByClass, classId),
+    assignSeat: (classId, studentId, row, col) =>
+      invoke(IpcChannels.seatAssignments.assignSeat, classId, studentId, row, col),
+    unassignSeat: (classId, studentId) =>
+      invoke(IpcChannels.seatAssignments.unassignSeat, classId, studentId),
+    clear: (classId) => invoke(IpcChannels.seatAssignments.clear, classId)
+  },
   assignmentSubmissions: {
     listByAssessment: (assessmentId) =>
       invoke(IpcChannels.assignmentSubmissions.listByAssessment, assessmentId),

@@ -51,6 +51,8 @@ export const classes = sqliteTable('classes', {
   passMark: real('pass_mark').notNull().default(60),
   maxScore: real('max_score').notNull().default(100),
   gradeThresholds: text('grade_thresholds', { mode: 'json' }).notNull(),
+  seatingRows: integer('seating_rows').notNull().default(5),
+  seatingCols: integer('seating_cols').notNull().default(6),
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
@@ -126,6 +128,29 @@ export const assignmentSubmissions = sqliteTable(
       t.assessmentId,
       t.studentId
     )
+  })
+)
+
+export const seatAssignments = sqliteTable(
+  'seat_assignments',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    row: integer('row').notNull(),
+    col: integer('col').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    classStudentUnique: uniqueIndex('seat_assignments_class_student_unique').on(
+      t.classId,
+      t.studentId
+    ),
+    classIdx: index('seat_assignments_class_idx').on(t.classId)
   })
 )
 

@@ -321,6 +321,28 @@ const migrations: Migration[] = [
           ON assignment_submissions(assessment_id, student_id);
       `)
     }
+  },
+  {
+    id: 9,
+    name: 'seating_charts',
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE classes ADD COLUMN seating_rows INTEGER NOT NULL DEFAULT 5;
+        ALTER TABLE classes ADD COLUMN seating_cols INTEGER NOT NULL DEFAULT 6;
+
+        CREATE TABLE seat_assignments (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          row INTEGER NOT NULL,
+          col INTEGER NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX seat_assignments_class_student_unique
+          ON seat_assignments(class_id, student_id);
+        CREATE INDEX seat_assignments_class_idx ON seat_assignments(class_id);
+      `)
+    }
   }
 ]
 

@@ -18,6 +18,7 @@ import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
+import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -326,6 +327,22 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Seat assignments -------------------------------------------------------------------
+  handle(IpcChannels.seatAssignments.listByClass, (_e, classId: string) =>
+    seatAssignmentsRepo.listSeatAssignments(classId)
+  )
+  handle(
+    IpcChannels.seatAssignments.assignSeat,
+    (_e, classId: string, studentId: string, row: number, col: number) =>
+      seatAssignmentsRepo.assignSeat(classId, studentId, row, col)
+  )
+  handle(IpcChannels.seatAssignments.unassignSeat, (_e, classId: string, studentId: string) =>
+    seatAssignmentsRepo.unassignSeat(classId, studentId)
+  )
+  handle(IpcChannels.seatAssignments.clear, (_e, classId: string) =>
+    seatAssignmentsRepo.clearSeatingChart(classId)
+  )
 
   // --- Assignment submissions --------------------------------------------------------------
   handle(IpcChannels.assignmentSubmissions.listByAssessment, (_e, assessmentId: string) =>

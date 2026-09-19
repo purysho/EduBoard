@@ -24,6 +24,8 @@ export function createClass(input: CreateClassInput): ClassSection {
     createdAt: now,
     updatedAt: now,
     archived: false,
+    seatingRows: 5,
+    seatingCols: 6,
     ...input
   }
   getDb().insert(classes).values(row).run()

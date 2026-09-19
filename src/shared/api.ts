@@ -29,6 +29,7 @@ import type {
   ParentCommunicationEntry,
   LessonResource,
   AssignmentSubmission,
+  SeatAssignment,
   ExitTicket,
   ExitTicketResponse,
   ExitTicketServerInfo
@@ -189,6 +190,12 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  seatAssignments: {
+    listByClass(classId: string): Promise<SeatAssignment[]>
+    assignSeat(classId: string, studentId: string, row: number, col: number): Promise<void>
+    unassignSeat(classId: string, studentId: string): Promise<void>
+    clear(classId: string): Promise<void>
   }
   assignmentSubmissions: {
     listByAssessment(assessmentId: string): Promise<AssignmentSubmission[]>

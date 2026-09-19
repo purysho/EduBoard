@@ -58,6 +58,8 @@ export interface ClassSection {
   color: string | null
   passMark: number
   maxScore: number
+  seatingRows: number
+  seatingCols: number
   gradeThresholds: GradeThresholds
   archived: boolean
   createdAt: string
@@ -94,6 +96,15 @@ export interface Assessment {
   isFinal: boolean
   sortOrder: number
   createdAt: string
+  updatedAt: string
+}
+
+export interface SeatAssignment {
+  id: string
+  classId: string
+  studentId: string
+  row: number
+  col: number
   updatedAt: string
 }
 

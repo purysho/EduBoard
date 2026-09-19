@@ -9,6 +9,7 @@ import { RosterTab } from './pages/Classes/RosterTab'
 import { GradebookTab } from './pages/Classes/GradebookTab'
 import { AttendanceTab } from './pages/Classes/AttendanceTab'
 import { LessonPlannerTab } from './pages/Classes/LessonPlannerTab'
+import { SeatingChartTab } from './pages/Classes/SeatingChartTab'
 import { ExitTicketTab } from './pages/Classes/ExitTicketTab'
 import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
@@ -33,6 +34,7 @@ function App(): React.JSX.Element {
           <Route path="gradebook" element={<GradebookTab />} />
           <Route path="attendance" element={<AttendanceTab />} />
           <Route path="lessons" element={<LessonPlannerTab />} />
+          <Route path="seating" element={<SeatingChartTab />} />
           <Route path="exit-ticket" element={<ExitTicketTab />} />
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />

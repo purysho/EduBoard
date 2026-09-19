@@ -68,6 +68,7 @@ export const queryKeys = {
   assignmentSubmissions: (assessmentId: string) =>
     ['assessments', assessmentId, 'submissions'] as const,
   assignmentSubmissionsByClass: (classId: string) => ['classes', classId, 'submissions'] as const,
+  seatAssignments: (classId: string) => ['classes', classId, 'seatAssignments'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
     ['exitTickets', exitTicketId, 'responses'] as const,
@@ -762,6 +763,41 @@ export function useDeleteLessonResource() {
   return useMutation({
     mutationFn: (id: string) => api().lessonResources.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+// ---- Seat assignments -------------------------------------------------------------------------
+
+export function useSeatAssignments(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.seatAssignments(classId ?? ''),
+    queryFn: () => api().seatAssignments.listByClass(classId!),
+    enabled: !!classId
+  })
+}
+
+export function useAssignSeat(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studentId, row, col }: { studentId: string; row: number; col: number }) =>
+      api().seatAssignments.assignSeat(classId, studentId, row, col),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
+  })
+}
+
+export function useUnassignSeat(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (studentId: string) => api().seatAssignments.unassignSeat(classId, studentId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
+  })
+}
+
+export function useClearSeatingChart(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().seatAssignments.clear(classId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
   })
 }
 
