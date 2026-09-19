@@ -14,6 +14,7 @@ import * as lessonPlansRepo from '../repositories/lessonPlans'
 import * as settingsRepo from '../repositories/settingsRepo'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
+import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
@@ -187,6 +188,9 @@ export function registerIpcHandlers(): void {
     backupService.restoreBackup(filePath)
   )
   handle(IpcChannels.backup.revealFolder, () => shell.openPath(resolveBackupsDir()))
+
+  // --- Device sync ----------------------------------------------------------------------
+  handle(IpcChannels.deviceSync.check, () => getDeviceSyncStatus())
 
   // --- Import / export -----------------------------------------------------------------------
   handle(IpcChannels.importExport.pickImportFile, async () => {

@@ -8,6 +8,7 @@ import type {
   AttendanceSummary,
   BackupInfo,
   BackupPreview,
+  DeviceSyncStatus,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -117,6 +118,9 @@ export interface EduBoardApi {
     preview(filePath: string): Promise<BackupPreview>
     restore(filePath: string): Promise<void>
     revealFolder(): Promise<void>
+  }
+  deviceSync: {
+    check(): Promise<DeviceSyncStatus>
   }
   importExport: {
     pickImportFile(): Promise<string | null>

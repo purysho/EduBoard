@@ -222,6 +222,12 @@ export interface ClassReport {
   attendanceTrend: { date: string; rate: number | null }[]
 }
 
+export interface DeviceSyncStatus {
+  openedOnAnotherDevice: boolean
+  previousDeviceLabel?: string
+  previousOpenedAt?: string
+}
+
 export interface BackupInfo {
   fileName: string
   filePath: string

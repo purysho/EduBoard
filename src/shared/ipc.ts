@@ -79,6 +79,9 @@ export const IpcChannels = {
     restore: 'backup:restore',
     revealFolder: 'backup:revealFolder'
   },
+  deviceSync: {
+    check: 'deviceSync:check'
+  },
   importExport: {
     importRoster: 'importExport:importRoster',
     exportGradebook: 'importExport:exportGradebook',

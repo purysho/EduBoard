@@ -90,6 +90,9 @@ const api: EduBoardApi = {
     restore: (filePath) => invoke(IpcChannels.backup.restore, filePath),
     revealFolder: () => invoke(IpcChannels.backup.revealFolder)
   },
+  deviceSync: {
+    check: () => invoke(IpcChannels.deviceSync.check)
+  },
   importExport: {
     pickImportFile: () => invoke(IpcChannels.importExport.pickImportFile),
     pickExportPath: (defaultFileName) =>
