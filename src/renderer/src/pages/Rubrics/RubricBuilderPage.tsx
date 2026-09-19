@@ -34,12 +34,16 @@ export function RubricBuilderPage(): React.JSX.Element {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [criteria, setCriteria] = useState<RubricCriterionDraft[]>([emptyCriterion()])
-  const [loaded, setLoaded] = useState(isNew)
+  // Keyed to the rubric id (not a plain boolean) so navigating from one existing
+  // rubric's edit page directly to another's — React Router reuses this component
+  // instance, only the :rubricId param changes — re-hydrates instead of leaving the
+  // previous rubric's data on screen under the new rubric's title.
+  const [loadedForId, setLoadedForId] = useState<string | null>(isNew ? 'new' : null)
 
   // Hydrate the edit buffer from the fetched rubric during render (not an effect) so
   // it can't fight with what the user is typing — same pattern as ScoreCell.
-  if (!isNew && existing && !loaded) {
-    setLoaded(true)
+  if (!isNew && existing && loadedForId !== rubricId) {
+    setLoadedForId(rubricId ?? null)
     setName(existing.name)
     setDescription(existing.description ?? '')
     setCriteria(

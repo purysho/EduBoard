@@ -33,6 +33,10 @@ export function AssessmentFormModal({
   const [rubricId, setRubricId] = useState(assessment?.rubricId ?? '')
 
   const selectedRubric = rubrics?.find((r) => r.id === rubricId)
+  // A rubric is chosen but the rubrics list hasn't resolved yet — block saving rather
+  // than let maxScore silently fall back to the plain-number path while the picker
+  // still shows the rubric selected.
+  const rubricPending = !!rubricId && !rubrics
 
   function handleRubricChange(id: string): void {
     setRubricId(id)
@@ -44,6 +48,7 @@ export function AssessmentFormModal({
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
+    if (rubricPending) return
     const payload = {
       classId,
       categoryId: categoryId || null,
@@ -73,8 +78,13 @@ export function AssessmentFormModal({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit" form="assessment-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+          <Button
+            variant="primary"
+            type="submit"
+            form="assessment-form"
+            disabled={saving || rubricPending}
+          >
+            {saving ? 'Saving…' : rubricPending ? 'Loading rubric…' : 'Save'}
           </Button>
         </>
       }

@@ -10,7 +10,7 @@ import { enrollStudent } from '../enrollments'
 import { createAssessment } from '../assessments'
 import { createRubric, deleteRubric, getRubric, updateRubric } from '../rubrics'
 import { saveRubricScores } from '../rubricScores'
-import { listScoreHistory, listScoresByAssessment } from '../scores'
+import { listScoreHistory, listScoresByAssessment, upsertScore } from '../scores'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let tempDir: string
@@ -206,6 +206,65 @@ describe('rubrics', () => {
     expect(history).toHaveLength(1)
     expect(history[0].previousPoints).toBe(7)
     expect(history[0].newPoints).toBe(8)
+  })
+
+  it('re-grading a rubric assessment does not clear an existing excused flag', () => {
+    const student = createStudent({
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      preferredName: null,
+      studentNumber: null,
+      dateOfBirth: null,
+      gradeLevel: null,
+      guardianName: null,
+      guardianContact: null,
+      email: null,
+      notes: null
+    })
+    const cls = createClass({
+      name: 'History',
+      subject: null,
+      levelType: 'k12',
+      gradeLevel: null,
+      termId: null,
+      schedule: null,
+      room: null,
+      color: null,
+      passMark: 60,
+      maxScore: 100,
+      gradeThresholds: DEFAULT_GRADE_THRESHOLDS
+    })
+    const rubric = createRubric({
+      name: 'Quick check',
+      criteria: [{ name: 'A', levels: [{ label: 'Yes', points: 1 }] }]
+    })
+    const assessment = createAssessment({
+      classId: cls.id,
+      categoryId: null,
+      rubricId: rubric.id,
+      name: 'Check',
+      description: null,
+      assessmentDate: null,
+      maxScore: 1
+    })
+
+    // Student is marked excused some other way (e.g. the plain gradebook cell) before
+    // ever being rubric-graded.
+    upsertScore({
+      assessmentId: assessment.id,
+      studentId: student.id,
+      pointsEarned: null,
+      excused: true
+    })
+
+    saveRubricScores({
+      assessmentId: assessment.id,
+      studentId: student.id,
+      selections: [{ criterionId: rubric.criteria[0].id, levelId: rubric.criteria[0].levels[0].id }]
+    })
+
+    const [score] = listScoresByAssessment(assessment.id)
+    expect(score.excused).toBe(true)
   })
 
   it('detaches from assessments (SET NULL) when the rubric is deleted', () => {

@@ -58,11 +58,13 @@ export function saveRubricScores(input: SaveRubricScoresInput): { pointsEarned: 
     : []
   const pointsEarned = levels.reduce((sum, level) => sum + level.points, 0)
 
+  // excused is intentionally omitted: upsertScore falls back to the existing score's
+  // excused flag when it's not passed, so re-grading a rubric assessment doesn't
+  // silently clear an excused mark the teacher set some other way.
   upsertScore({
     assessmentId: input.assessmentId,
     studentId: input.studentId,
-    pointsEarned,
-    excused: false
+    pointsEarned
   })
 
   return { pointsEarned }
