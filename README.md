@@ -10,7 +10,8 @@ Your data lives in a single database file next to the app, so the whole thing �
 
 - **Students** — one directory across every class, with guardian contact info and notes.
 - **Classes** — K-12, university, or club sections, each with its own grading scale (weighted categories, A–F thresholds, pass mark).
-- **Gradebook** — a spreadsheet-style grid per class; grades and letter grades compute live as you type.
+- **Gradebook** — a spreadsheet-style grid per class with keyboard navigation and a per-score change history; grades and letter grades compute live as you type.
+- **Rubrics & standards** — build reusable grading rubrics (criteria × performance levels, optionally tagged to your own standards) once and reuse them across any class's assessments; rubric scores flow into the normal grade calculation automatically.
 - **Attendance** — click-to-cycle Present/Late/Absent/Excused grid, with attendance rate per student.
 - **Lesson planner** — a running list of lessons per class: objectives, materials, activities, homework, linked to an assessment.
 - **Reports** — class averages, pass rate, grade distribution, category breakdown, and attendance trend charts; printable per-student report cards (PDF).
@@ -108,7 +109,7 @@ A class defines its own grade categories and weights (or none, for a flat points
 
 ## Not in this version
 
-Multi-term/annual composite grading, a rubric builder, assignment file submissions, seating charts, a parent-communication log, and a standards library are reasonable next steps but out of scope for this pass — the current model is a single-term class with a flat or category-weighted grade.
+Multi-term/annual composite grading, assignment file submissions, seating charts, and a parent-communication log are reasonable next steps but out of scope for this pass — the current model is a single-term class with a flat or category-weighted grade.
 
 ## License
 

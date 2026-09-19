@@ -15,7 +15,12 @@ import type {
   UpdateLessonPlanInput,
   UpdateStudentInput,
   UpdateTermInput,
-  UpsertScoreInput
+  UpsertScoreInput,
+  CreateStandardInput,
+  UpdateStandardInput,
+  CreateRubricInput,
+  UpdateRubricInput,
+  SaveRubricScoresInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -45,7 +50,12 @@ export const queryKeys = {
   studentClassGrade: (studentId: string, classId: string) =>
     ['students', studentId, 'classes', classId, 'grade'] as const,
   settings: ['settings'] as const,
-  backups: ['backups'] as const
+  backups: ['backups'] as const,
+  standards: ['standards'] as const,
+  rubrics: ['rubrics'] as const,
+  rubric: (id: string) => ['rubrics', id] as const,
+  rubricScores: (assessmentId: string, studentId: string) =>
+    ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const
 }
 
 // ---- Students -----------------------------------------------------------------------
@@ -544,5 +554,108 @@ export function useBackupPreview(filePath: string | null) {
     queryKey: [...queryKeys.backups, 'preview', filePath],
     queryFn: () => api().backup.preview(filePath as string),
     enabled: !!filePath
+  })
+}
+
+// ---- Standards --------------------------------------------------------------------------
+
+export function useStandards() {
+  return useQuery({ queryKey: queryKeys.standards, queryFn: () => api().standards.list() })
+}
+
+export function useCreateStandard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateStandardInput) => api().standards.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.standards })
+  })
+}
+
+export function useUpdateStandard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateStandardInput }) =>
+      api().standards.update(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.standards })
+  })
+}
+
+export function useDeleteStandard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().standards.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.standards })
+  })
+}
+
+// ---- Rubrics ------------------------------------------------------------------------------
+
+export function useRubrics() {
+  return useQuery({ queryKey: queryKeys.rubrics, queryFn: () => api().rubrics.list() })
+}
+
+export function useRubric(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.rubric(id ?? ''),
+    queryFn: () => api().rubrics.get(id!),
+    enabled: !!id
+  })
+}
+
+export function useCreateRubric() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateRubricInput) => api().rubrics.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.rubrics })
+  })
+}
+
+export function useUpdateRubric() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateRubricInput }) =>
+      api().rubrics.update(id, input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.rubrics })
+      qc.invalidateQueries({ queryKey: queryKeys.rubric(vars.id) })
+    }
+  })
+}
+
+export function useDeleteRubric() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().rubrics.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.rubrics })
+  })
+}
+
+// ---- Rubric scores --------------------------------------------------------------------------
+
+export function useRubricScores(assessmentId: string | undefined, studentId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.rubricScores(assessmentId ?? '', studentId ?? ''),
+    queryFn: () => api().rubricScores.list(assessmentId!, studentId!),
+    enabled: !!assessmentId && !!studentId
+  })
+}
+
+export function useSaveRubricScores(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: SaveRubricScoresInput) => api().rubricScores.save(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.rubricScores(vars.assessmentId, vars.studentId)
+      })
+      qc.invalidateQueries({ queryKey: queryKeys.scoresByAssessment(vars.assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.scoresByClass(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({
+        queryKey: ['scoreHistory', vars.assessmentId, vars.studentId]
+      })
+    }
   })
 }

@@ -86,6 +86,7 @@ export interface Assessment {
   id: string
   classId: string
   categoryId: string | null
+  rubricId: string | null
   name: string
   description: string | null
   assessmentDate: string | null
@@ -117,6 +118,63 @@ export interface ScoreHistoryEntry {
   previousExcused: boolean
   newExcused: boolean
   changedAt: string
+}
+
+export interface Standard {
+  id: string
+  code: string
+  description: string
+  subject: string | null
+  createdAt: string
+}
+
+export interface Rubric {
+  id: string
+  name: string
+  description: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RubricCriterion {
+  id: string
+  rubricId: string
+  standardId: string | null
+  name: string
+  description: string | null
+  sortOrder: number
+  createdAt: string
+}
+
+export interface RubricLevel {
+  id: string
+  criterionId: string
+  label: string
+  points: number
+  description: string | null
+  sortOrder: number
+}
+
+/** A criterion with its performance levels attached — the shape the rubric builder
+ * and rubric-scoring UI both work with, rather than three flat lists. */
+export interface RubricCriterionWithLevels extends RubricCriterion {
+  levels: RubricLevel[]
+}
+
+/** A full rubric ready to render/score — the library list only needs `Rubric`, but
+ * the builder and the scoring modal need the whole tree. */
+export interface RubricWithCriteria extends Rubric {
+  criteria: RubricCriterionWithLevels[]
+  maxPoints: number
+}
+
+export interface RubricScore {
+  id: string
+  assessmentId: string
+  studentId: string
+  criterionId: string
+  levelId: string
+  updatedAt: string
 }
 
 export interface AttendanceRecord {

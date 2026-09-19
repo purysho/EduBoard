@@ -170,6 +170,63 @@ const migrations: Migration[] = [
           ON score_history(assessment_id, student_id);
       `)
     }
+  },
+  {
+    id: 3,
+    name: 'rubrics',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE standards (
+          id TEXT PRIMARY KEY,
+          code TEXT NOT NULL,
+          description TEXT NOT NULL,
+          subject TEXT,
+          created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE rubrics (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE rubric_criteria (
+          id TEXT PRIMARY KEY,
+          rubric_id TEXT NOT NULL REFERENCES rubrics(id) ON DELETE CASCADE,
+          standard_id TEXT REFERENCES standards(id) ON DELETE SET NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX rubric_criteria_rubric_idx ON rubric_criteria(rubric_id);
+
+        CREATE TABLE rubric_levels (
+          id TEXT PRIMARY KEY,
+          criterion_id TEXT NOT NULL REFERENCES rubric_criteria(id) ON DELETE CASCADE,
+          label TEXT NOT NULL,
+          points REAL NOT NULL,
+          description TEXT,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX rubric_levels_criterion_idx ON rubric_levels(criterion_id);
+
+        ALTER TABLE assessments ADD COLUMN rubric_id TEXT REFERENCES rubrics(id) ON DELETE SET NULL;
+
+        CREATE TABLE rubric_scores (
+          id TEXT PRIMARY KEY,
+          assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          criterion_id TEXT NOT NULL REFERENCES rubric_criteria(id) ON DELETE CASCADE,
+          level_id TEXT NOT NULL REFERENCES rubric_levels(id) ON DELETE CASCADE,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX rubric_scores_assessment_student_criterion_unique
+          ON rubric_scores(assessment_id, student_id, criterion_id);
+      `)
+    }
   }
 ]
 

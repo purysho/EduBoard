@@ -12,6 +12,9 @@ import * as scoresRepo from '../repositories/scores'
 import * as attendanceRepo from '../repositories/attendanceRecords'
 import * as lessonPlansRepo from '../repositories/lessonPlans'
 import * as settingsRepo from '../repositories/settingsRepo'
+import * as standardsRepo from '../repositories/standards'
+import * as rubricsRepo from '../repositories/rubrics'
+import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -244,5 +247,34 @@ export function registerIpcHandlers(): void {
         win.destroy()
       }
     }
+  )
+
+  // --- Standards ------------------------------------------------------------------------
+  handle(IpcChannels.standards.list, () => standardsRepo.listStandards())
+  handle(IpcChannels.standards.create, (_e, input: standardsRepo.CreateStandardInput) =>
+    standardsRepo.createStandard(input)
+  )
+  handle(IpcChannels.standards.update, (_e, id: string, patch: standardsRepo.UpdateStandardInput) =>
+    standardsRepo.updateStandard(id, patch)
+  )
+  handle(IpcChannels.standards.remove, (_e, id: string) => standardsRepo.deleteStandard(id))
+
+  // --- Rubrics --------------------------------------------------------------------------
+  handle(IpcChannels.rubrics.list, () => rubricsRepo.listRubrics())
+  handle(IpcChannels.rubrics.get, (_e, id: string) => rubricsRepo.getRubric(id))
+  handle(IpcChannels.rubrics.create, (_e, input: rubricsRepo.CreateRubricInput) =>
+    rubricsRepo.createRubric(input)
+  )
+  handle(IpcChannels.rubrics.update, (_e, id: string, input: rubricsRepo.UpdateRubricInput) =>
+    rubricsRepo.updateRubric(id, input)
+  )
+  handle(IpcChannels.rubrics.remove, (_e, id: string) => rubricsRepo.deleteRubric(id))
+
+  // --- Rubric scores ----------------------------------------------------------------------
+  handle(IpcChannels.rubricScores.list, (_e, assessmentId: string, studentId: string) =>
+    rubricScoresRepo.listRubricScores(assessmentId, studentId)
+  )
+  handle(IpcChannels.rubricScores.save, (_e, input: rubricScoresRepo.SaveRubricScoresInput) =>
+    rubricScoresRepo.saveRubricScores(input)
   )
 }

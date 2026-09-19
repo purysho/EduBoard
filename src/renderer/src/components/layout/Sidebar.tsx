@@ -1,11 +1,19 @@
 import { NavLink } from 'react-router-dom'
-import { GraduationCap, LayoutGrid, Settings2, ShieldCheck, Users } from 'lucide-react'
+import {
+  ClipboardCheck,
+  GraduationCap,
+  LayoutGrid,
+  Settings2,
+  ShieldCheck,
+  Users
+} from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
   { to: '/classes', label: 'Classes', icon: GraduationCap },
   { to: '/students', label: 'Students', icon: Users },
+  { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]
 

@@ -107,6 +107,24 @@ const api: EduBoardApi = {
   print: {
     printStudentReport: (studentId, classId, suggestedFileName) =>
       invoke(IpcChannels.print.printStudentReport, studentId, classId, suggestedFileName)
+  },
+  standards: {
+    list: () => invoke(IpcChannels.standards.list),
+    create: (input) => invoke(IpcChannels.standards.create, input),
+    update: (id, patch) => invoke(IpcChannels.standards.update, id, patch),
+    remove: (id) => invoke(IpcChannels.standards.remove, id)
+  },
+  rubrics: {
+    list: () => invoke(IpcChannels.rubrics.list),
+    get: (id) => invoke(IpcChannels.rubrics.get, id),
+    create: (input) => invoke(IpcChannels.rubrics.create, input),
+    update: (id, input) => invoke(IpcChannels.rubrics.update, id, input),
+    remove: (id) => invoke(IpcChannels.rubrics.remove, id)
+  },
+  rubricScores: {
+    list: (assessmentId, studentId) =>
+      invoke(IpcChannels.rubricScores.list, assessmentId, studentId),
+    save: (input) => invoke(IpcChannels.rubricScores.save, input)
   }
 }
 
