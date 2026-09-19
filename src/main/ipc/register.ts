@@ -15,6 +15,7 @@ import * as settingsRepo from '../repositories/settingsRepo'
 import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
+import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -276,5 +277,18 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.rubricScores.save, (_e, input: rubricScoresRepo.SaveRubricScoresInput) =>
     rubricScoresRepo.saveRubricScores(input)
+  )
+
+  // --- Student log entries ---------------------------------------------------------------
+  handle(IpcChannels.studentLogEntries.listByStudent, (_e, studentId: string) =>
+    studentLogEntriesRepo.listStudentLogEntries(studentId)
+  )
+  handle(
+    IpcChannels.studentLogEntries.create,
+    (_e, input: studentLogEntriesRepo.CreateStudentLogEntryInput) =>
+      studentLogEntriesRepo.createStudentLogEntry(input)
+  )
+  handle(IpcChannels.studentLogEntries.remove, (_e, id: string) =>
+    studentLogEntriesRepo.deleteStudentLogEntry(id)
   )
 }

@@ -10,7 +10,8 @@ import type {
   Student,
   Term,
   Assessment,
-  Standard
+  Standard,
+  StudentLogEntry
 } from './types'
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
@@ -89,3 +90,5 @@ export type SaveRubricScoresInput = {
   selections: { criterionId: string; levelId: string }[]
   comment?: string | null
 }
+
+export type CreateStudentLogEntryInput = Omit<StudentLogEntry, 'id' | 'createdAt'>

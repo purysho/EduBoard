@@ -177,6 +177,17 @@ export interface RubricScore {
   updatedAt: string
 }
 
+export const STUDENT_LOG_TYPES = ['note', 'positive', 'concern', 'contact'] as const
+export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
+
+export interface StudentLogEntry {
+  id: string
+  studentId: string
+  type: StudentLogType
+  text: string
+  createdAt: string
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

@@ -276,3 +276,19 @@ export const rubricScores = sqliteTable(
     ).on(t.assessmentId, t.studentId, t.criterionId)
   })
 )
+
+export const studentLogEntries = sqliteTable(
+  'student_log_entries',
+  {
+    id: text('id').primaryKey(),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    type: text('type').notNull().default('note'),
+    text: text('text').notNull(),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    studentIdx: index('student_log_entries_student_idx').on(t.studentId, t.createdAt)
+  })
+)

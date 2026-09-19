@@ -227,6 +227,23 @@ const migrations: Migration[] = [
           ON rubric_scores(assessment_id, student_id, criterion_id);
       `)
     }
+  },
+  {
+    id: 4,
+    name: 'student_log_entries',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE student_log_entries (
+          id TEXT PRIMARY KEY,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          type TEXT NOT NULL DEFAULT 'note',
+          text TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX student_log_entries_student_idx
+          ON student_log_entries(student_id, created_at);
+      `)
+    }
   }
 ]
 

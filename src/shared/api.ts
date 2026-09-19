@@ -24,7 +24,8 @@ import type {
   Term,
   Standard,
   RubricWithCriteria,
-  RubricScore
+  RubricScore,
+  StudentLogEntry
 } from './types'
 import type {
   CreateAssessmentInput,
@@ -46,7 +47,8 @@ import type {
   UpdateStandardInput,
   CreateRubricInput,
   UpdateRubricInput,
-  SaveRubricScoresInput
+  SaveRubricScoresInput,
+  CreateStudentLogEntryInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -160,5 +162,10 @@ export interface EduBoardApi {
   rubricScores: {
     list(assessmentId: string, studentId: string): Promise<RubricScore[]>
     save(input: SaveRubricScoresInput): Promise<{ pointsEarned: number }>
+  }
+  studentLogEntries: {
+    listByStudent(studentId: string): Promise<StudentLogEntry[]>
+    create(input: CreateStudentLogEntryInput): Promise<StudentLogEntry>
+    remove(id: string): Promise<void>
   }
 }

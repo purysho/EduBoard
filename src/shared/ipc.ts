@@ -108,5 +108,10 @@ export const IpcChannels = {
   rubricScores: {
     list: 'rubricScores:list',
     save: 'rubricScores:save'
+  },
+  studentLogEntries: {
+    listByStudent: 'studentLogEntries:listByStudent',
+    create: 'studentLogEntries:create',
+    remove: 'studentLogEntries:remove'
   }
 } as const

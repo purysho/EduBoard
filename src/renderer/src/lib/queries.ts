@@ -20,7 +20,8 @@ import type {
   UpdateStandardInput,
   CreateRubricInput,
   UpdateRubricInput,
-  SaveRubricScoresInput
+  SaveRubricScoresInput,
+  CreateStudentLogEntryInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -55,7 +56,8 @@ export const queryKeys = {
   rubrics: ['rubrics'] as const,
   rubric: (id: string) => ['rubrics', id] as const,
   rubricScores: (assessmentId: string, studentId: string) =>
-    ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const
+    ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
+  studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const
 }
 
 // ---- Students -----------------------------------------------------------------------
@@ -657,5 +659,31 @@ export function useSaveRubricScores(classId: string) {
         queryKey: ['scoreHistory', vars.assessmentId, vars.studentId]
       })
     }
+  })
+}
+
+// ---- Student log entries -----------------------------------------------------------------
+
+export function useStudentLogEntries(studentId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.studentLogEntries(studentId ?? ''),
+    queryFn: () => api().studentLogEntries.listByStudent(studentId!),
+    enabled: !!studentId
+  })
+}
+
+export function useCreateStudentLogEntry(studentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateStudentLogEntryInput) => api().studentLogEntries.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
+  })
+}
+
+export function useDeleteStudentLogEntry(studentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().studentLogEntries.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
   })
 }
