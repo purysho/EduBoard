@@ -9,6 +9,12 @@ Signing is entirely opt-in: with none of the secrets below set, nothing about th
 changes. `electron-builder.yml` never has to be touched to turn it on or off — it reacts
 to whichever of these environment variables are present.
 
+Add secrets in **complete pairs/sets**, not individually — `CSC_LINK` without
+`CSC_KEY_PASSWORD` (or vice versa) makes electron-builder try to sign with an incomplete
+credential, which fails the build with an unlock/decrypt error rather than silently
+skipping signing. Same for macOS notarization: set all three of `APPLE_ID`,
+`APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID` together, or none of them.
+
 ## Windows
 
 You need a code-signing certificate from a CA (DigiCert, Sectigo, etc. — expect
