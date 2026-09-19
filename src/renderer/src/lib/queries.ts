@@ -23,7 +23,8 @@ import type {
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
   CreateLessonResourceInput,
-  UpdateLessonResourceInput
+  UpdateLessonResourceInput,
+  UpsertExitTicketInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -60,7 +61,11 @@ export const queryKeys = {
   rubricScores: (assessmentId: string, studentId: string) =>
     ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
   studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
-  lessonResources: ['lessonResources'] as const
+  lessonResources: ['lessonResources'] as const,
+  exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
+  exitTicketResponses: (exitTicketId: string) =>
+    ['exitTickets', exitTicketId, 'responses'] as const,
+  exitTicketServerInfo: ['exitTicketServerInfo'] as const
 }
 
 // ---- Students -----------------------------------------------------------------------
@@ -722,5 +727,61 @@ export function useDeleteLessonResource() {
   return useMutation({
     mutationFn: (id: string) => api().lessonResources.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+// ---- Exit tickets ---------------------------------------------------------------------------
+
+export function useExitTicket(classId: string) {
+  return useQuery({
+    queryKey: queryKeys.exitTicketByClass(classId),
+    queryFn: () => api().exitTickets.getByClass(classId)
+  })
+}
+
+export function useUpsertExitTicket(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpsertExitTicketInput) => api().exitTickets.upsert(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exitTicketByClass(classId) })
+  })
+}
+
+export function useSetExitTicketOpen(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, isOpen }: { id: string; isOpen: boolean }) =>
+      api().exitTickets.setOpen(id, isOpen),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.exitTicketByClass(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.exitTicketServerInfo })
+    }
+  })
+}
+
+/** Polls while a session is open so the teacher sees responses land live, without
+ * needing any push mechanism from the local server. */
+export function useExitTicketResponses(exitTicketId: string | undefined, isOpen: boolean) {
+  return useQuery({
+    queryKey: queryKeys.exitTicketResponses(exitTicketId ?? ''),
+    queryFn: () => api().exitTickets.listResponses(exitTicketId!),
+    enabled: !!exitTicketId,
+    refetchInterval: isOpen ? 3000 : false
+  })
+}
+
+export function useClearExitTicketResponses(exitTicketId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().exitTickets.clearResponses(exitTicketId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.exitTicketResponses(exitTicketId) })
+  })
+}
+
+export function useExitTicketServerInfo(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.exitTicketServerInfo,
+    queryFn: () => api().exitTickets.getServerInfo(),
+    enabled
   })
 }

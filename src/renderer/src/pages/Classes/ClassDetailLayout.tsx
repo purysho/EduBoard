@@ -4,6 +4,7 @@ import {
   BarChart3,
   CalendarCheck,
   ClipboardList,
+  MonitorSmartphone,
   NotebookPen,
   Settings2,
   Users
@@ -17,6 +18,7 @@ const TABS = [
   { to: 'gradebook', label: 'Gradebook', icon: ClipboardList },
   { to: 'attendance', label: 'Attendance', icon: CalendarCheck },
   { to: 'lessons', label: 'Lesson plans', icon: NotebookPen },
+  { to: 'exit-ticket', label: 'Exit ticket', icon: MonitorSmartphone },
   { to: 'report', label: 'Report', icon: BarChart3 },
   { to: 'settings', label: 'Settings', icon: Settings2 }
 ]

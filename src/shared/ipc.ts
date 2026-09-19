@@ -122,5 +122,14 @@ export const IpcChannels = {
     pickFile: 'lessonResources:pickFile',
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
+  },
+  exitTickets: {
+    getByClass: 'exitTickets:getByClass',
+    upsert: 'exitTickets:upsert',
+    setOpen: 'exitTickets:setOpen',
+    listResponses: 'exitTickets:listResponses',
+    clearResponses: 'exitTickets:clearResponses',
+    getServerInfo: 'exitTickets:getServerInfo',
+    getQrDataUrl: 'exitTickets:getQrDataUrl'
   }
 } as const

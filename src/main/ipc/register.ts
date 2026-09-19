@@ -17,6 +17,9 @@ import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as exitTicketsRepo from '../repositories/exitTickets'
+import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
+import QRCode from 'qrcode'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -314,4 +317,24 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Exit tickets -----------------------------------------------------------------------
+  handle(IpcChannels.exitTickets.getByClass, (_e, classId: string) =>
+    exitTicketsRepo.getExitTicketByClass(classId)
+  )
+  handle(IpcChannels.exitTickets.upsert, (_e, input: exitTicketsRepo.UpsertExitTicketInput) =>
+    exitTicketsRepo.upsertExitTicket(input)
+  )
+  handle(IpcChannels.exitTickets.setOpen, (_e, id: string, isOpen: boolean) => {
+    if (isOpen) startExitTicketServer()
+    return exitTicketsRepo.setExitTicketOpen(id, isOpen)
+  })
+  handle(IpcChannels.exitTickets.listResponses, (_e, exitTicketId: string) =>
+    exitTicketsRepo.listExitTicketResponses(exitTicketId)
+  )
+  handle(IpcChannels.exitTickets.clearResponses, (_e, exitTicketId: string) =>
+    exitTicketsRepo.clearExitTicketResponses(exitTicketId)
+  )
+  handle(IpcChannels.exitTickets.getServerInfo, () => getExitTicketServerInfo())
+  handle(IpcChannels.exitTickets.getQrDataUrl, (_e, url: string) => QRCode.toDataURL(url))
 }

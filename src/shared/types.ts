@@ -204,6 +204,41 @@ export interface LessonResource {
   updatedAt: string
 }
 
+export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const
+export type ExitTicketQuestionType = (typeof EXIT_TICKET_QUESTION_TYPES)[number]
+
+export interface ExitTicketQuestion {
+  id: string
+  prompt: string
+  type: ExitTicketQuestionType
+  options?: string[]
+}
+
+export interface ExitTicket {
+  id: string
+  classId: string
+  title: string
+  questions: ExitTicketQuestion[]
+  isOpen: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ExitTicketResponse {
+  id: string
+  exitTicketId: string
+  studentName: string
+  answers: Record<string, string>
+  submittedAt: string
+}
+
+export interface ExitTicketServerInfo {
+  running: boolean
+  url: string | null
+  port: number | null
+  lanIp: string | null
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

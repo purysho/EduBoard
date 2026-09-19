@@ -26,7 +26,10 @@ import type {
   RubricWithCriteria,
   RubricScore,
   StudentLogEntry,
-  LessonResource
+  LessonResource,
+  ExitTicket,
+  ExitTicketResponse,
+  ExitTicketServerInfo
 } from './types'
 import type {
   CreateAssessmentInput,
@@ -51,7 +54,8 @@ import type {
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
   CreateLessonResourceInput,
-  UpdateLessonResourceInput
+  UpdateLessonResourceInput,
+  UpsertExitTicketInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -179,5 +183,14 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  exitTickets: {
+    getByClass(classId: string): Promise<ExitTicket | undefined>
+    upsert(input: UpsertExitTicketInput): Promise<ExitTicket>
+    setOpen(id: string, isOpen: boolean): Promise<ExitTicket>
+    listResponses(exitTicketId: string): Promise<ExitTicketResponse[]>
+    clearResponses(exitTicketId: string): Promise<void>
+    getServerInfo(): Promise<ExitTicketServerInfo>
+    getQrDataUrl(url: string): Promise<string>
   }
 }

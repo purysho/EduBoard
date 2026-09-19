@@ -12,7 +12,8 @@ import type {
   Assessment,
   Standard,
   StudentLogEntry,
-  LessonResource
+  LessonResource,
+  ExitTicketQuestion
 } from './types'
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
@@ -96,3 +97,17 @@ export type CreateStudentLogEntryInput = Omit<StudentLogEntry, 'id' | 'createdAt
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>
+
+/** The teacher's editable exit-ticket setup for a class — title + question list. Saved
+ * as a whole (like a rubric's criteria) since questions are always authored together. */
+export type UpsertExitTicketInput = {
+  classId: string
+  title: string
+  questions: ExitTicketQuestion[]
+}
+
+export type SubmitExitTicketResponseInput = {
+  exitTicketId: string
+  studentName: string
+  answers: Record<string, string>
+}
