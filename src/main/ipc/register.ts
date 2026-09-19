@@ -201,9 +201,14 @@ export function registerIpcHandlers(): void {
     return canceled ? null : filePaths[0]
   })
   handle(IpcChannels.importExport.pickExportPath, async (_e, defaultFileName: string) => {
+    const isCsv = defaultFileName.toLowerCase().endsWith('.csv')
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: defaultFileName,
-      filters: [{ name: 'Excel Workbook', extensions: ['xlsx'] }]
+      filters: [
+        isCsv
+          ? { name: 'CSV file', extensions: ['csv'] }
+          : { name: 'Excel Workbook', extensions: ['xlsx'] }
+      ]
     })
     return canceled ? null : filePath
   })
@@ -212,6 +217,9 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.importExport.exportGradebook, (_e, classId: string, filePath: string) =>
     importExportService.exportGradebookXlsx(classId, filePath)
+  )
+  handle(IpcChannels.importExport.exportAttendance, (_e, classId: string, filePath: string) =>
+    importExportService.exportAttendanceCsv(classId, filePath)
   )
 
   // --- Print --------------------------------------------------------------------------------

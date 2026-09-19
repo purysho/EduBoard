@@ -1,9 +1,11 @@
+import { writeFile } from 'fs/promises'
 import ExcelJS from 'exceljs'
 import { createStudent } from '../repositories/students'
 import { enrollStudent } from '../repositories/enrollments'
 import { getClass } from '../repositories/classes'
 import { listAssessmentsByClass } from '../repositories/assessments'
 import { listScoresByClass } from '../repositories/scores'
+import { listAttendanceByClass } from '../repositories/attendanceRecords'
 import { getClassRoster } from './reports'
 import type { RosterImportResult } from '@shared/importExportTypes'
 
@@ -148,4 +150,40 @@ export async function exportGradebookXlsx(classId: string, filePath: string): Pr
   })
 
   await workbook.xlsx.writeFile(filePath)
+}
+
+function csvField(value: string): string {
+  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+/** Exports a class's attendance grid (every date column, one status per cell) to .csv —
+ * useful for handing raw attendance data to an administrator who just wants the numbers,
+ * without opening the app. */
+export async function exportAttendanceCsv(classId: string, filePath: string): Promise<void> {
+  const cls = getClass(classId)
+  if (!cls) throw new Error('Class not found')
+
+  const roster = getClassRoster(classId)
+  const records = listAttendanceByClass(classId)
+  const dates = Array.from(new Set(records.map((r) => r.date))).sort()
+
+  const statusByKey = new Map(records.map((r) => [`${r.studentId}:${r.date}`, r.status]))
+
+  const lines: string[] = []
+  lines.push(['Last Name', 'First Name', 'Student #', ...dates].map(csvField).join(','))
+  for (const row of roster) {
+    lines.push(
+      [
+        row.student.lastName,
+        row.student.firstName,
+        row.student.studentNumber ?? '',
+        ...dates.map((d) => statusByKey.get(`${row.student.id}:${d}`) ?? '')
+      ]
+        .map(csvField)
+        .join(',')
+    )
+  }
+
+  await writeFile(filePath, lines.join('\n'), 'utf-8')
 }

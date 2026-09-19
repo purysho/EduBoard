@@ -100,7 +100,9 @@ const api: EduBoardApi = {
     importRoster: (filePath, classId) =>
       invoke(IpcChannels.importExport.importRoster, filePath, classId),
     exportGradebook: (classId, filePath) =>
-      invoke(IpcChannels.importExport.exportGradebook, classId, filePath)
+      invoke(IpcChannels.importExport.exportGradebook, classId, filePath),
+    exportAttendance: (classId, filePath) =>
+      invoke(IpcChannels.importExport.exportAttendance, classId, filePath)
   },
   print: {
     printStudentReport: (studentId, classId, suggestedFileName) =>
