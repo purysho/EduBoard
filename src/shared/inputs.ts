@@ -87,4 +87,5 @@ export type SaveRubricScoresInput = {
   assessmentId: string
   studentId: string
   selections: { criterionId: string; levelId: string }[]
+  comment?: string | null
 }
