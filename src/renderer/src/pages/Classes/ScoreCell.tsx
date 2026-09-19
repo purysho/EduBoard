@@ -8,13 +8,17 @@ export function ScoreCell({
   assessmentId,
   studentId,
   maxScore,
-  score
+  score,
+  row,
+  col
 }: {
   classId: string
   assessmentId: string
   studentId: string
   maxScore: number
   score: Score | undefined
+  row: number
+  col: number
 }): React.JSX.Element {
   const upsertScore = useUpsertScore(classId)
   const [value, setValue] = useState(score?.pointsEarned?.toString() ?? '')
@@ -39,8 +43,42 @@ export function ScoreCell({
     upsertScore.mutate({ assessmentId, studentId, pointsEarned, excused: score?.excused ?? false })
   }
 
+  function focusCell(targetRow: number, targetCol: number): void {
+    const target = document.querySelector<HTMLInputElement>(
+      `[data-row="${targetRow}"][data-col="${targetCol}"]`
+    )
+    if (target) {
+      target.focus()
+      target.select()
+    }
+  }
+
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>): void {
-    if (e.key === 'Enter') e.currentTarget.blur()
+    switch (e.key) {
+      case 'Enter':
+        e.currentTarget.blur()
+        focusCell(row + 1, col)
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        focusCell(row - 1, col)
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        focusCell(row + 1, col)
+        break
+      // Number inputs don't expose selectionStart/selectionEnd in Chromium (always null),
+      // so there's no reliable way to tell "cursor at the edge" from "cursor in the middle" —
+      // Left/Right always move cells here, spreadsheet-style, rather than the text cursor.
+      case 'ArrowLeft':
+        e.preventDefault()
+        focusCell(row, col - 1)
+        break
+      case 'ArrowRight':
+        e.preventDefault()
+        focusCell(row, col + 1)
+        break
+    }
   }
 
   const isExcused = score?.excused ?? false
@@ -51,6 +89,8 @@ export function ScoreCell({
         type="number"
         min={0}
         max={maxScore}
+        data-row={row}
+        data-col={col}
         value={isExcused ? '' : value}
         placeholder={isExcused ? 'Exc.' : ''}
         disabled={isExcused}
