@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+import { NotebookPen, Pencil, Plus, Trash2 } from 'lucide-react'
 import type { ClassSection, LessonPlan } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -32,17 +33,20 @@ export function LessonPlannerTab(): React.JSX.Element {
     <div>
       <div className="mb-4 flex justify-end">
         <Button variant="primary" onClick={() => setShowAdd(true)}>
-          + Lesson plan
+          <Plus size={15} className="mr-1 inline" aria-hidden />
+          Lesson plan
         </Button>
       </div>
 
       {!plans?.length ? (
         <EmptyState
+          icon={NotebookPen}
           title="No lesson plans yet"
           description="Sketch out what you'll teach and when."
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
-              + Lesson plan
+              <Plus size={15} className="mr-1 inline" aria-hidden />
+              Lesson plan
             </Button>
           }
         />
@@ -65,9 +69,11 @@ export function LessonPlannerTab(): React.JSX.Element {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Button variant="secondary" size="sm" onClick={() => setEditingPlan(plan)}>
+                    <Pencil size={13} className="mr-1 inline" aria-hidden />
                     Edit
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPendingDelete(plan)}>
+                    <Trash2 size={13} className="mr-1 inline" aria-hidden />
                     Delete
                   </Button>
                 </div>

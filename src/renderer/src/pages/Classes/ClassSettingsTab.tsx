@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
+import { AlertTriangle, Pencil, Plus, Tags } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -59,6 +60,7 @@ export function ClassSettingsTab(): React.JSX.Element {
         <CardHeader className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Class details</h2>
           <Button variant="secondary" size="sm" onClick={() => setShowEditClass(true)}>
+            <Pencil size={13} className="mr-1 inline" aria-hidden />
             Edit
           </Button>
         </CardHeader>
@@ -134,9 +136,13 @@ export function ClassSettingsTab(): React.JSX.Element {
 
       <Card className="h-fit">
         <CardHeader className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Grade categories</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Tags size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            Grade categories
+          </h2>
           <Button variant="secondary" size="sm" onClick={() => setShowAddCategory(true)}>
-            + Category
+            <Plus size={13} className="mr-1 inline" aria-hidden />
+            Category
           </Button>
         </CardHeader>
         <CardBody>
@@ -182,7 +188,10 @@ export function ClassSettingsTab(): React.JSX.Element {
 
       <Card className="col-span-2 border-[var(--color-danger)]/30">
         <CardHeader>
-          <h2 className="text-sm font-semibold text-[var(--color-danger)]">Danger zone</h2>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-danger)]">
+            <AlertTriangle size={15} aria-hidden />
+            Danger zone
+          </h2>
         </CardHeader>
         <CardBody className="flex items-center justify-between">
           <div>

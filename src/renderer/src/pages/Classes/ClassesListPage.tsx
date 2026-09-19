@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GraduationCap, Plus } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
@@ -17,7 +18,8 @@ export function ClassesListPage(): React.JSX.Element {
         description="Every class, section, and club you teach."
         actions={
           <Button variant="primary" onClick={() => setShowAddModal(true)}>
-            + New class
+            <Plus size={15} className="mr-1 inline" aria-hidden />
+            New class
           </Button>
         }
       />
@@ -26,11 +28,13 @@ export function ClassesListPage(): React.JSX.Element {
         <Spinner />
       ) : !classes?.length ? (
         <EmptyState
+          icon={GraduationCap}
           title="No classes yet"
           description="Create your first class to start tracking a roster, gradebook, and lesson plans."
           action={
             <Button variant="primary" onClick={() => setShowAddModal(true)}>
-              + New class
+              <Plus size={15} className="mr-1 inline" aria-hidden />
+              New class
             </Button>
           }
         />

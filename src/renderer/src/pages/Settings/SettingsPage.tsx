@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import type { AppSettings } from '@shared/types'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
@@ -39,7 +40,10 @@ export function SettingsPage(): React.JSX.Element {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <h2 className="text-sm font-semibold">General</h2>
+            <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+              <SlidersHorizontal size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+              General
+            </h2>
           </CardHeader>
           <CardBody>
             <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">

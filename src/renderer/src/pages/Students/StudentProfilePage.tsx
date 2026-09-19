@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Pencil, Trash2, Users } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
+import { Avatar } from '@renderer/components/ui/Avatar'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
@@ -29,21 +31,24 @@ export function StudentProfilePage(): React.JSX.Element {
   const student = students?.find((s) => s.id === studentId)
 
   if (isLoading) return <Spinner />
-  if (!student) return <EmptyState title="Student not found" />
+  if (!student) return <EmptyState icon={Users} title="Student not found" />
 
   const classById = new Map((classes ?? []).map((c) => [c.id, c]))
 
   return (
     <div>
       <PageHeader
+        leading={<Avatar name={studentFullName(student)} size="lg" />}
         title={studentFullName(student)}
         description={student.gradeLevel ?? undefined}
         actions={
           <>
             <Button variant="secondary" onClick={() => setEditOpen(true)}>
+              <Pencil size={14} className="mr-1 inline" aria-hidden />
               Edit
             </Button>
             <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+              <Trash2 size={14} className="mr-1 inline" aria-hidden />
               Delete
             </Button>
           </>

@@ -12,9 +12,18 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
+import {
+  BarChart3,
+  CalendarCheck,
+  CheckCircle2,
+  Download,
+  FileDown,
+  TrendingUp
+} from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { StatCard } from '@renderer/components/ui/StatCard'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
+import { Avatar } from '@renderer/components/ui/Avatar'
 import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useClassReport, useClassRoster } from '@renderer/lib/queries'
@@ -51,7 +60,7 @@ export function ReportTab(): React.JSX.Element {
   }
 
   if (isLoading) return <Spinner />
-  if (!report) return <EmptyState title="No report available" />
+  if (!report) return <EmptyState icon={BarChart3} title="No report available" />
 
   const hasData = report.gradeDistribution.some((d) => d.count > 0)
 
@@ -59,14 +68,30 @@ export function ReportTab(): React.JSX.Element {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button variant="secondary" onClick={handleExport} disabled={exporting}>
+          <Download size={15} className="mr-1 inline" aria-hidden />
           {exporting ? 'Exporting…' : 'Export gradebook (.xlsx)'}
         </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Class average" value={formatPercent(report.averagePercent)} />
-        <StatCard label="Pass rate" value={formatRate(report.passRate)} />
-        <StatCard label="Average attendance" value={formatRate(report.averageAttendanceRate)} />
+        <StatCard
+          label="Class average"
+          value={formatPercent(report.averagePercent)}
+          icon={TrendingUp}
+          tone="success"
+        />
+        <StatCard
+          label="Pass rate"
+          value={formatRate(report.passRate)}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <StatCard
+          label="Average attendance"
+          value={formatRate(report.averageAttendanceRate)}
+          icon={CalendarCheck}
+          tone="warning"
+        />
       </div>
 
       {!hasData ? (
@@ -211,12 +236,16 @@ export function ReportTab(): React.JSX.Element {
           ) : (
             roster.map((row) => (
               <div key={row.student.id} className="flex items-center justify-between text-sm">
-                <span>{studentFullName(row.student)}</span>
+                <span className="flex items-center gap-2.5">
+                  <Avatar name={studentFullName(row.student)} size="sm" />
+                  {studentFullName(row.student)}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handlePrint(row.student.id, studentFullName(row.student))}
                 >
+                  <FileDown size={14} className="mr-1 inline" aria-hidden />
                   Print PDF
                 </Button>
               </div>

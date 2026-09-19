@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { CalendarRange, Plus } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input } from '@renderer/components/ui/Field'
@@ -33,7 +34,10 @@ export function TermsPanel(): React.JSX.Element {
   return (
     <Card>
       <CardHeader>
-        <h2 className="text-sm font-semibold">Terms</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <CalendarRange size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+          Terms
+        </h2>
       </CardHeader>
       <CardBody className="space-y-4">
         {!!terms?.length && (
@@ -73,7 +77,8 @@ export function TermsPanel(): React.JSX.Element {
           </FormRow>
           <div className="col-span-4">
             <Button variant="secondary" type="submit" disabled={createTerm.isPending}>
-              + Add term
+              <Plus size={14} className="mr-1 inline" aria-hidden />
+              Add term
             </Button>
           </div>
         </form>
