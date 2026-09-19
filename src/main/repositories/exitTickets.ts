@@ -29,7 +29,7 @@ export function upsertExitTicket(input: UpsertExitTicketInput): ExitTicket {
       .set({ title: input.title, questions: input.questions, updatedAt: now })
       .where(eq(exitTickets.id, existing.id))
       .run()
-    return { ...existing, title: input.title, questions: input.questions, updatedAt: now }
+    return getExitTicket(existing.id) as ExitTicket
   }
 
   const row: ExitTicket = {

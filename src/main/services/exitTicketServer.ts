@@ -144,7 +144,10 @@ export function startExitTicketServer(): void {
   if (server) return
 
   const s = createServer((req, res) => {
-    const url = req.url ?? '/'
+    // Collapse any accidental repeated slashes (e.g. a trailing-slash page path plus the
+    // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
+    // genuine request.
+    const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
     const match = url.match(/^\/t\/([^/]+)(\/submit)?\/?$/)
 
     if (!match) {
@@ -211,14 +214,18 @@ export function startExitTicketServer(): void {
     console.error('Exit ticket server error:', err)
   })
 
-  tryListen(s, 0)
   server = s
+  tryListen(s, 0)
 }
 
 function tryListen(s: Server, portIndex: number): void {
   const port = CANDIDATE_PORTS[portIndex]
   if (port === undefined) {
     console.error('Exit ticket server: no available port among candidates')
+    // Give up this attempt entirely so a later startExitTicketServer() call (e.g. after
+    // whatever was holding the ports frees up) can retry instead of no-op'ing forever.
+    s.removeAllListeners()
+    if (server === s) server = null
     return
   }
   // Bind to all interfaces (0.0.0.0), not just localhost — student devices on the

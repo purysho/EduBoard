@@ -105,7 +105,7 @@ export function ScoreCell({
           <ScoreHistoryPopover assessmentId={assessmentId} studentId={studentId} />
         </span>
       )}
-      {(score?.comment || score) && (
+      {score && (
         <span
           className={`absolute -right-3 top-3 flex flex-col transition-opacity ${
             score?.comment ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
