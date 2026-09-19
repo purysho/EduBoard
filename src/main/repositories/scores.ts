@@ -1,8 +1,8 @@
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
-import { assessments, scores } from '../db/schema'
+import { assessments, scoreHistory, scores } from '../db/schema'
 import { newId, nowIso } from '../db/util'
-import type { Score } from '@shared/types'
+import type { Score, ScoreHistoryEntry } from '@shared/types'
 import type { UpsertScoreInput } from '@shared/inputs'
 
 export type { UpsertScoreInput }
@@ -50,7 +50,26 @@ export function upsertScore(input: UpsertScoreInput): Score {
       comment: input.comment ?? existing.comment,
       updatedAt: now
     }
-    db.update(scores).set(patch).where(eq(scores.id, existing.id)).run()
+    const valueChanged =
+      patch.pointsEarned !== existing.pointsEarned || patch.excused !== existing.excused
+    db.transaction(() => {
+      db.update(scores).set(patch).where(eq(scores.id, existing.id)).run()
+      if (valueChanged) {
+        db.insert(scoreHistory)
+          .values({
+            id: newId(),
+            scoreId: existing.id,
+            assessmentId: existing.assessmentId,
+            studentId: existing.studentId,
+            previousPoints: existing.pointsEarned,
+            newPoints: patch.pointsEarned,
+            previousExcused: existing.excused,
+            newExcused: patch.excused,
+            changedAt: now
+          })
+          .run()
+      }
+    })
     return { ...existing, ...patch }
   }
 
@@ -72,4 +91,13 @@ export function upsertScoresBulk(inputs: UpsertScoreInput[]): void {
   getDb().transaction(() => {
     for (const input of inputs) upsertScore(input)
   })
+}
+
+export function listScoreHistory(assessmentId: string, studentId: string): ScoreHistoryEntry[] {
+  return getDb()
+    .select()
+    .from(scoreHistory)
+    .where(and(eq(scoreHistory.assessmentId, assessmentId), eq(scoreHistory.studentId, studentId)))
+    .orderBy(desc(scoreHistory.changedAt))
+    .all() as ScoreHistoryEntry[]
 }

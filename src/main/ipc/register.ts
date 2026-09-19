@@ -14,6 +14,7 @@ import * as lessonPlansRepo from '../repositories/lessonPlans'
 import * as settingsRepo from '../repositories/settingsRepo'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
+import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
@@ -123,6 +124,9 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.scores.upsertBulk, (_e, inputs: scoresRepo.UpsertScoreInput[]) =>
     scoresRepo.upsertScoresBulk(inputs)
   )
+  handle(IpcChannels.scores.history, (_e, assessmentId: string, studentId: string) =>
+    scoresRepo.listScoreHistory(assessmentId, studentId)
+  )
 
   // --- Attendance -----------------------------------------------------------------------
   handle(IpcChannels.attendance.listByClass, (_e, classId: string) =>
@@ -177,10 +181,16 @@ export function registerIpcHandlers(): void {
   // --- Backup -------------------------------------------------------------------------------
   handle(IpcChannels.backup.create, () => backupService.createBackup())
   handle(IpcChannels.backup.list, () => backupService.listBackups())
+  handle(IpcChannels.backup.preview, (_e, filePath: string) =>
+    backupService.previewBackup(filePath)
+  )
   handle(IpcChannels.backup.restore, (_e, filePath: string) =>
     backupService.restoreBackup(filePath)
   )
   handle(IpcChannels.backup.revealFolder, () => shell.openPath(resolveBackupsDir()))
+
+  // --- Device sync ----------------------------------------------------------------------
+  handle(IpcChannels.deviceSync.check, () => getDeviceSyncStatus())
 
   // --- Import / export -----------------------------------------------------------------------
   handle(IpcChannels.importExport.pickImportFile, async () => {
@@ -191,9 +201,14 @@ export function registerIpcHandlers(): void {
     return canceled ? null : filePaths[0]
   })
   handle(IpcChannels.importExport.pickExportPath, async (_e, defaultFileName: string) => {
+    const isCsv = defaultFileName.toLowerCase().endsWith('.csv')
     const { canceled, filePath } = await dialog.showSaveDialog({
       defaultPath: defaultFileName,
-      filters: [{ name: 'Excel Workbook', extensions: ['xlsx'] }]
+      filters: [
+        isCsv
+          ? { name: 'CSV file', extensions: ['csv'] }
+          : { name: 'Excel Workbook', extensions: ['xlsx'] }
+      ]
     })
     return canceled ? null : filePath
   })
@@ -202,6 +217,9 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.importExport.exportGradebook, (_e, classId: string, filePath: string) =>
     importExportService.exportGradebookXlsx(classId, filePath)
+  )
+  handle(IpcChannels.importExport.exportAttendance, (_e, classId: string, filePath: string) =>
+    importExportService.exportAttendanceCsv(classId, filePath)
   )
 
   // --- Print --------------------------------------------------------------------------------

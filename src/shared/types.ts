@@ -107,6 +107,18 @@ export interface Score {
   updatedAt: string
 }
 
+export interface ScoreHistoryEntry {
+  id: string
+  scoreId: string
+  assessmentId: string
+  studentId: string
+  previousPoints: number | null
+  newPoints: number | null
+  previousExcused: boolean
+  newExcused: boolean
+  changedAt: string
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string
@@ -210,9 +222,21 @@ export interface ClassReport {
   attendanceTrend: { date: string; rate: number | null }[]
 }
 
+export interface DeviceSyncStatus {
+  openedOnAnotherDevice: boolean
+  previousDeviceLabel?: string
+  previousOpenedAt?: string
+}
+
 export interface BackupInfo {
   fileName: string
   filePath: string
   sizeBytes: number
   createdAt: string
+  automatic: boolean
+}
+
+export interface BackupPreview {
+  backup: { students: number; classes: number; scores: number; attendanceRecords: number }
+  current: { students: number; classes: number; scores: number; attendanceRecords: number }
 }

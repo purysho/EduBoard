@@ -7,6 +7,9 @@ import type {
   AttendanceRecord,
   AttendanceSummary,
   BackupInfo,
+  BackupPreview,
+  DeviceSyncStatus,
+  ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
   ClassSection,
@@ -83,6 +86,7 @@ export interface EduBoardApi {
     listByStudentAndClass(studentId: string, classId: string): Promise<Score[]>
     upsert(input: UpsertScoreInput): Promise<Score>
     upsertBulk(inputs: UpsertScoreInput[]): Promise<void>
+    history(assessmentId: string, studentId: string): Promise<ScoreHistoryEntry[]>
   }
   attendance: {
     listByClass(classId: string): Promise<AttendanceRecord[]>
@@ -111,14 +115,19 @@ export interface EduBoardApi {
   backup: {
     create(): Promise<BackupInfo>
     list(): Promise<BackupInfo[]>
+    preview(filePath: string): Promise<BackupPreview>
     restore(filePath: string): Promise<void>
     revealFolder(): Promise<void>
+  }
+  deviceSync: {
+    check(): Promise<DeviceSyncStatus>
   }
   importExport: {
     pickImportFile(): Promise<string | null>
     pickExportPath(defaultFileName: string): Promise<string | null>
     importRoster(filePath: string, classId?: string): Promise<RosterImportResult>
     exportGradebook(classId: string, filePath: string): Promise<void>
+    exportAttendance(classId: string, filePath: string): Promise<void>
   }
   print: {
     printStudentReport(

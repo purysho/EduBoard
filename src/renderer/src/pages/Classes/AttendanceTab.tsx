@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { CalendarCheck, Plus } from 'lucide-react'
+import { CalendarCheck, Download, Plus } from 'lucide-react'
 import type { AttendanceRecord, ClassSection } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
@@ -15,6 +15,19 @@ export function AttendanceTab(): React.JSX.Element {
   const { data: records } = useAttendanceByClass(classSection.id)
   const [extraDates, setExtraDates] = useState<string[]>([todayIso()])
   const [newDate, setNewDate] = useState('')
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExportCsv(): Promise<void> {
+    setExporting(true)
+    try {
+      const path = await window.api.importExport.pickExportPath(
+        `${classSection.name.replace(/[^\w -]/g, '')}-attendance.csv`
+      )
+      if (path) await window.api.importExport.exportAttendance(classSection.id, path)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const dates = useMemo(() => {
     const set = new Set(extraDates)
@@ -62,6 +75,10 @@ export function AttendanceTab(): React.JSX.Element {
           <Button variant="secondary" onClick={addDate}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
             Add date
+          </Button>
+          <Button variant="secondary" onClick={handleExportCsv} disabled={exporting}>
+            <Download size={15} className="mr-1 inline" aria-hidden />
+            {exporting ? 'Exporting…' : 'Export .csv'}
           </Button>
         </div>
       </div>

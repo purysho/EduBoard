@@ -45,7 +45,8 @@ export const IpcChannels = {
     listByClass: 'scores:listByClass',
     listByStudentAndClass: 'scores:listByStudentAndClass',
     upsert: 'scores:upsert',
-    upsertBulk: 'scores:upsertBulk'
+    upsertBulk: 'scores:upsertBulk',
+    history: 'scores:history'
   },
   attendance: {
     listByClass: 'attendance:listByClass',
@@ -74,12 +75,17 @@ export const IpcChannels = {
   backup: {
     create: 'backup:create',
     list: 'backup:list',
+    preview: 'backup:preview',
     restore: 'backup:restore',
     revealFolder: 'backup:revealFolder'
+  },
+  deviceSync: {
+    check: 'deviceSync:check'
   },
   importExport: {
     importRoster: 'importExport:importRoster',
     exportGradebook: 'importExport:exportGradebook',
+    exportAttendance: 'importExport:exportAttendance',
     pickImportFile: 'importExport:pickImportFile',
     pickExportPath: 'importExport:pickExportPath'
   },

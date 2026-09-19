@@ -149,6 +149,27 @@ const migrations: Migration[] = [
         CREATE INDEX lesson_plans_class_date_idx ON lesson_plans(class_id, date);
       `)
     }
+  },
+  {
+    id: 2,
+    name: 'score_history',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE score_history (
+          id TEXT PRIMARY KEY,
+          score_id TEXT NOT NULL,
+          assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          previous_points REAL,
+          new_points REAL,
+          previous_excused INTEGER NOT NULL,
+          new_excused INTEGER NOT NULL,
+          changed_at TEXT NOT NULL
+        );
+        CREATE INDEX score_history_assessment_student_idx
+          ON score_history(assessment_id, student_id);
+      `)
+    }
   }
 ]
 

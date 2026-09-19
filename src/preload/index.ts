@@ -51,7 +51,9 @@ const api: EduBoardApi = {
     listByStudentAndClass: (studentId, classId) =>
       invoke(IpcChannels.scores.listByStudentAndClass, studentId, classId),
     upsert: (input) => invoke(IpcChannels.scores.upsert, input),
-    upsertBulk: (inputs) => invoke(IpcChannels.scores.upsertBulk, inputs)
+    upsertBulk: (inputs) => invoke(IpcChannels.scores.upsertBulk, inputs),
+    history: (assessmentId, studentId) =>
+      invoke(IpcChannels.scores.history, assessmentId, studentId)
   },
   attendance: {
     listByClass: (classId) => invoke(IpcChannels.attendance.listByClass, classId),
@@ -84,8 +86,12 @@ const api: EduBoardApi = {
   backup: {
     create: () => invoke(IpcChannels.backup.create),
     list: () => invoke(IpcChannels.backup.list),
+    preview: (filePath) => invoke(IpcChannels.backup.preview, filePath),
     restore: (filePath) => invoke(IpcChannels.backup.restore, filePath),
     revealFolder: () => invoke(IpcChannels.backup.revealFolder)
+  },
+  deviceSync: {
+    check: () => invoke(IpcChannels.deviceSync.check)
   },
   importExport: {
     pickImportFile: () => invoke(IpcChannels.importExport.pickImportFile),
@@ -94,7 +100,9 @@ const api: EduBoardApi = {
     importRoster: (filePath, classId) =>
       invoke(IpcChannels.importExport.importRoster, filePath, classId),
     exportGradebook: (classId, filePath) =>
-      invoke(IpcChannels.importExport.exportGradebook, classId, filePath)
+      invoke(IpcChannels.importExport.exportGradebook, classId, filePath),
+    exportAttendance: (classId, filePath) =>
+      invoke(IpcChannels.importExport.exportAttendance, classId, filePath)
   },
   print: {
     printStudentReport: (studentId, classId, suggestedFileName) =>

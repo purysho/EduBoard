@@ -105,7 +105,7 @@ export function GradebookTab(): React.JSX.Element {
               </tr>
             </thead>
             <tbody>
-              {roster.map((row) => (
+              {roster.map((row, rowIndex) => (
                 <tr key={row.student.id} className="border-t border-[var(--color-border)]">
                   <td className="sticky left-0 z-10 border-r border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-1.5 font-medium">
                     <Link
@@ -115,7 +115,7 @@ export function GradebookTab(): React.JSX.Element {
                       {studentFullName(row.student)}
                     </Link>
                   </td>
-                  {assessments.map((a) => (
+                  {assessments.map((a, colIndex) => (
                     <td key={a.id} className="px-2 py-1 text-center">
                       <ScoreCell
                         classId={classSection.id}
@@ -123,6 +123,8 @@ export function GradebookTab(): React.JSX.Element {
                         studentId={row.student.id}
                         maxScore={a.maxScore}
                         score={scoreMap.get(`${a.id}:${row.student.id}`)}
+                        row={rowIndex}
+                        col={colIndex}
                       />
                     </td>
                   ))}

@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { FolderOpen, HardDriveDownload, ShieldCheck } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
+import { RestoreDialog } from './RestoreDialog'
 import { useBackups, useCreateBackup } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+
+const AUTO_BACKUP_RETENTION_HINT = '10'
 
 function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -41,8 +43,9 @@ export function BackupPanel(): React.JSX.Element {
       </CardHeader>
       <CardBody>
         <p className="mb-3 text-sm text-[var(--color-text-muted)]">
-          A backup is a full copy of your database. Keep a recent one on a USB stick in case this
-          laptop is lost or damaged.
+          EduBoard automatically backs up your database every time it starts (the last{' '}
+          {AUTO_BACKUP_RETENTION_HINT} are kept), on top of anything you back up manually here. Keep
+          a recent one on a USB stick in case this laptop is lost or damaged.
         </p>
         {!backups?.length ? (
           <p className="text-sm text-[var(--color-text-muted)]">No backups yet.</p>
@@ -55,6 +58,11 @@ export function BackupPanel(): React.JSX.Element {
                   <span className="text-[var(--color-text-muted)]">
                     · {formatSize(b.sizeBytes)}
                   </span>
+                  {b.automatic && (
+                    <span className="ml-1.5 rounded-full bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
+                      Auto
+                    </span>
+                  )}
                 </span>
                 <button
                   className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
@@ -68,12 +76,8 @@ export function BackupPanel(): React.JSX.Element {
         )}
       </CardBody>
 
-      <ConfirmDialog
-        open={!!restoreTarget}
-        title="Restore backup"
-        message="This replaces everything currently in EduBoard with this backup, then restarts the app. Any changes made since this backup was taken will be lost."
-        confirmLabel="Restore & restart"
-        danger
+      <RestoreDialog
+        backupFilePath={restoreTarget}
         onConfirm={() => {
           if (restoreTarget) window.api.backup.restore(restoreTarget)
           setRestoreTarget(null)
