@@ -9,11 +9,13 @@ import { RosterTab } from './pages/Classes/RosterTab'
 import { GradebookTab } from './pages/Classes/GradebookTab'
 import { AttendanceTab } from './pages/Classes/AttendanceTab'
 import { LessonPlannerTab } from './pages/Classes/LessonPlannerTab'
+import { ExitTicketTab } from './pages/Classes/ExitTicketTab'
 import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
 import { RubricsPage } from './pages/Rubrics/RubricsPage'
+import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
 
 function App(): React.JSX.Element {
@@ -30,11 +32,13 @@ function App(): React.JSX.Element {
           <Route path="gradebook" element={<GradebookTab />} />
           <Route path="attendance" element={<AttendanceTab />} />
           <Route path="lessons" element={<LessonPlannerTab />} />
+          <Route path="exit-ticket" element={<ExitTicketTab />} />
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />
         </Route>
         <Route path="/rubrics" element={<RubricsPage />} />
         <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

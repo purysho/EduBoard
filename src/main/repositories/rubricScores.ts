@@ -60,11 +60,14 @@ export function saveRubricScores(input: SaveRubricScoresInput): { pointsEarned: 
 
   // excused is intentionally omitted: upsertScore falls back to the existing score's
   // excused flag when it's not passed, so re-grading a rubric assessment doesn't
-  // silently clear an excused mark the teacher set some other way.
+  // silently clear an excused mark the teacher set some other way. comment is passed
+  // through as given (including explicit null to clear it); omitting it here too would
+  // make it impossible to ever clear a comment from this path.
   upsertScore({
     assessmentId: input.assessmentId,
     studentId: input.studentId,
-    pointsEarned
+    pointsEarned,
+    ...(input.comment !== undefined ? { comment: input.comment } : {})
   })
 
   return { pointsEarned }

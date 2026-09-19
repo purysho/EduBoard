@@ -108,5 +108,28 @@ export const IpcChannels = {
   rubricScores: {
     list: 'rubricScores:list',
     save: 'rubricScores:save'
+  },
+  studentLogEntries: {
+    listByStudent: 'studentLogEntries:listByStudent',
+    create: 'studentLogEntries:create',
+    remove: 'studentLogEntries:remove'
+  },
+  lessonResources: {
+    list: 'lessonResources:list',
+    create: 'lessonResources:create',
+    update: 'lessonResources:update',
+    remove: 'lessonResources:remove',
+    pickFile: 'lessonResources:pickFile',
+    openPath: 'lessonResources:openPath',
+    openExternal: 'lessonResources:openExternal'
+  },
+  exitTickets: {
+    getByClass: 'exitTickets:getByClass',
+    upsert: 'exitTickets:upsert',
+    setOpen: 'exitTickets:setOpen',
+    listResponses: 'exitTickets:listResponses',
+    clearResponses: 'exitTickets:clearResponses',
+    getServerInfo: 'exitTickets:getServerInfo',
+    getQrDataUrl: 'exitTickets:getQrDataUrl'
   }
 } as const

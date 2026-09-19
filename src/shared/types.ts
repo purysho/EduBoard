@@ -177,6 +177,68 @@ export interface RubricScore {
   updatedAt: string
 }
 
+export const STUDENT_LOG_TYPES = ['note', 'positive', 'concern', 'contact'] as const
+export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
+
+export interface StudentLogEntry {
+  id: string
+  studentId: string
+  type: StudentLogType
+  text: string
+  createdAt: string
+}
+
+export const LESSON_RESOURCE_TYPES = ['link', 'file', 'note'] as const
+export type LessonResourceType = (typeof LESSON_RESOURCE_TYPES)[number]
+
+export interface LessonResource {
+  id: string
+  title: string
+  type: LessonResourceType
+  url: string | null
+  filePath: string | null
+  notes: string | null
+  tags: string[]
+  standardId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const
+export type ExitTicketQuestionType = (typeof EXIT_TICKET_QUESTION_TYPES)[number]
+
+export interface ExitTicketQuestion {
+  id: string
+  prompt: string
+  type: ExitTicketQuestionType
+  options?: string[]
+}
+
+export interface ExitTicket {
+  id: string
+  classId: string
+  title: string
+  questions: ExitTicketQuestion[]
+  isOpen: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ExitTicketResponse {
+  id: string
+  exitTicketId: string
+  studentName: string
+  answers: Record<string, string>
+  submittedAt: string
+}
+
+export interface ExitTicketServerInfo {
+  running: boolean
+  url: string | null
+  port: number | null
+  lanIp: string | null
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

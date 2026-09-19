@@ -5,6 +5,7 @@ import { registerIpcHandlers } from './ipc/register'
 import { createMainWindow } from './windows'
 import { createAutoBackupOnLaunch } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
+import { stopExitTicketServer } from './services/exitTicketServer'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')
@@ -33,4 +34,11 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+// The exit-ticket HTTP server (see services/exitTicketServer.ts) is only started
+// lazily when a teacher opens an exit-ticket session, but must be shut down cleanly
+// on quit rather than left to the OS to reclaim.
+app.on('before-quit', () => {
+  stopExitTicketServer()
 })

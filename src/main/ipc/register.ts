@@ -15,6 +15,11 @@ import * as settingsRepo from '../repositories/settingsRepo'
 import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
+import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
+import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as exitTicketsRepo from '../repositories/exitTickets'
+import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
+import QRCode from 'qrcode'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -277,4 +282,59 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.rubricScores.save, (_e, input: rubricScoresRepo.SaveRubricScoresInput) =>
     rubricScoresRepo.saveRubricScores(input)
   )
+
+  // --- Student log entries ---------------------------------------------------------------
+  handle(IpcChannels.studentLogEntries.listByStudent, (_e, studentId: string) =>
+    studentLogEntriesRepo.listStudentLogEntries(studentId)
+  )
+  handle(
+    IpcChannels.studentLogEntries.create,
+    (_e, input: studentLogEntriesRepo.CreateStudentLogEntryInput) =>
+      studentLogEntriesRepo.createStudentLogEntry(input)
+  )
+  handle(IpcChannels.studentLogEntries.remove, (_e, id: string) =>
+    studentLogEntriesRepo.deleteStudentLogEntry(id)
+  )
+
+  // --- Lesson resources -------------------------------------------------------------------
+  handle(IpcChannels.lessonResources.list, () => lessonResourcesRepo.listLessonResources())
+  handle(
+    IpcChannels.lessonResources.create,
+    (_e, input: lessonResourcesRepo.CreateLessonResourceInput) =>
+      lessonResourcesRepo.createLessonResource(input)
+  )
+  handle(
+    IpcChannels.lessonResources.update,
+    (_e, id: string, patch: lessonResourcesRepo.UpdateLessonResourceInput) =>
+      lessonResourcesRepo.updateLessonResource(id, patch)
+  )
+  handle(IpcChannels.lessonResources.remove, (_e, id: string) =>
+    lessonResourcesRepo.deleteLessonResource(id)
+  )
+  handle(IpcChannels.lessonResources.pickFile, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
+  handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Exit tickets -----------------------------------------------------------------------
+  handle(IpcChannels.exitTickets.getByClass, (_e, classId: string) =>
+    exitTicketsRepo.getExitTicketByClass(classId)
+  )
+  handle(IpcChannels.exitTickets.upsert, (_e, input: exitTicketsRepo.UpsertExitTicketInput) =>
+    exitTicketsRepo.upsertExitTicket(input)
+  )
+  handle(IpcChannels.exitTickets.setOpen, (_e, id: string, isOpen: boolean) => {
+    if (isOpen) startExitTicketServer()
+    return exitTicketsRepo.setExitTicketOpen(id, isOpen)
+  })
+  handle(IpcChannels.exitTickets.listResponses, (_e, exitTicketId: string) =>
+    exitTicketsRepo.listExitTicketResponses(exitTicketId)
+  )
+  handle(IpcChannels.exitTickets.clearResponses, (_e, exitTicketId: string) =>
+    exitTicketsRepo.clearExitTicketResponses(exitTicketId)
+  )
+  handle(IpcChannels.exitTickets.getServerInfo, () => getExitTicketServerInfo())
+  handle(IpcChannels.exitTickets.getQrDataUrl, (_e, url: string) => QRCode.toDataURL(url))
 }

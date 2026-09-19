@@ -125,6 +125,29 @@ const api: EduBoardApi = {
     list: (assessmentId, studentId) =>
       invoke(IpcChannels.rubricScores.list, assessmentId, studentId),
     save: (input) => invoke(IpcChannels.rubricScores.save, input)
+  },
+  studentLogEntries: {
+    listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
+    create: (input) => invoke(IpcChannels.studentLogEntries.create, input),
+    remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id)
+  },
+  lessonResources: {
+    list: () => invoke(IpcChannels.lessonResources.list),
+    create: (input) => invoke(IpcChannels.lessonResources.create, input),
+    update: (id, patch) => invoke(IpcChannels.lessonResources.update, id, patch),
+    remove: (id) => invoke(IpcChannels.lessonResources.remove, id),
+    pickFile: () => invoke(IpcChannels.lessonResources.pickFile),
+    openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
+    openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
+  },
+  exitTickets: {
+    getByClass: (classId) => invoke(IpcChannels.exitTickets.getByClass, classId),
+    upsert: (input) => invoke(IpcChannels.exitTickets.upsert, input),
+    setOpen: (id, isOpen) => invoke(IpcChannels.exitTickets.setOpen, id, isOpen),
+    listResponses: (exitTicketId) => invoke(IpcChannels.exitTickets.listResponses, exitTicketId),
+    clearResponses: (exitTicketId) => invoke(IpcChannels.exitTickets.clearResponses, exitTicketId),
+    getServerInfo: () => invoke(IpcChannels.exitTickets.getServerInfo),
+    getQrDataUrl: (url) => invoke(IpcChannels.exitTickets.getQrDataUrl, url)
   }
 }
 

@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
+import type { ExitTicketQuestion } from '@shared/types'
 
 // NOTE: this file defines the Drizzle ORM shape of the database for typed queries.
 // The actual DDL used to create/evolve the tables lives in ./migrations.ts — the two
@@ -274,5 +275,69 @@ export const rubricScores = sqliteTable(
     assessmentStudentCriterionUnique: uniqueIndex(
       'rubric_scores_assessment_student_criterion_unique'
     ).on(t.assessmentId, t.studentId, t.criterionId)
+  })
+)
+
+export const studentLogEntries = sqliteTable(
+  'student_log_entries',
+  {
+    id: text('id').primaryKey(),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    type: text('type').notNull().default('note'),
+    text: text('text').notNull(),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    studentIdx: index('student_log_entries_student_idx').on(t.studentId, t.createdAt)
+  })
+)
+
+export const lessonResources = sqliteTable(
+  'lesson_resources',
+  {
+    id: text('id').primaryKey(),
+    title: text('title').notNull(),
+    type: text('type').notNull(),
+    url: text('url'),
+    filePath: text('file_path'),
+    notes: text('notes'),
+    tags: text('tags', { mode: 'json' }).notNull().$type<string[]>(),
+    standardId: text('standard_id').references(() => standards.id, { onDelete: 'set null' }),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    standardIdx: index('lesson_resources_standard_idx').on(t.standardId)
+  })
+)
+
+export const exitTickets = sqliteTable('exit_tickets', {
+  id: text('id').primaryKey(),
+  classId: text('class_id')
+    .notNull()
+    .unique()
+    .references(() => classes.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  questions: text('questions', { mode: 'json' }).notNull().$type<ExitTicketQuestion[]>(),
+  isOpen: integer('is_open', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
+export const exitTicketResponses = sqliteTable(
+  'exit_ticket_responses',
+  {
+    id: text('id').primaryKey(),
+    exitTicketId: text('exit_ticket_id')
+      .notNull()
+      .references(() => exitTickets.id, { onDelete: 'cascade' }),
+    studentName: text('student_name').notNull(),
+    answers: text('answers', { mode: 'json' }).notNull().$type<Record<string, string>>(),
+    submittedAt: text('submitted_at').notNull()
+  },
+  (t) => ({
+    ticketIdx: index('exit_ticket_responses_ticket_idx').on(t.exitTicketId, t.submittedAt)
   })
 )

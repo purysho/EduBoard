@@ -24,7 +24,12 @@ import type {
   Term,
   Standard,
   RubricWithCriteria,
-  RubricScore
+  RubricScore,
+  StudentLogEntry,
+  LessonResource,
+  ExitTicket,
+  ExitTicketResponse,
+  ExitTicketServerInfo
 } from './types'
 import type {
   CreateAssessmentInput,
@@ -46,7 +51,11 @@ import type {
   UpdateStandardInput,
   CreateRubricInput,
   UpdateRubricInput,
-  SaveRubricScoresInput
+  SaveRubricScoresInput,
+  CreateStudentLogEntryInput,
+  CreateLessonResourceInput,
+  UpdateLessonResourceInput,
+  UpsertExitTicketInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -160,5 +169,28 @@ export interface EduBoardApi {
   rubricScores: {
     list(assessmentId: string, studentId: string): Promise<RubricScore[]>
     save(input: SaveRubricScoresInput): Promise<{ pointsEarned: number }>
+  }
+  studentLogEntries: {
+    listByStudent(studentId: string): Promise<StudentLogEntry[]>
+    create(input: CreateStudentLogEntryInput): Promise<StudentLogEntry>
+    remove(id: string): Promise<void>
+  }
+  lessonResources: {
+    list(): Promise<LessonResource[]>
+    create(input: CreateLessonResourceInput): Promise<LessonResource>
+    update(id: string, patch: UpdateLessonResourceInput): Promise<LessonResource>
+    remove(id: string): Promise<void>
+    pickFile(): Promise<string | null>
+    openPath(filePath: string): Promise<void>
+    openExternal(url: string): Promise<void>
+  }
+  exitTickets: {
+    getByClass(classId: string): Promise<ExitTicket | undefined>
+    upsert(input: UpsertExitTicketInput): Promise<ExitTicket>
+    setOpen(id: string, isOpen: boolean): Promise<ExitTicket>
+    listResponses(exitTicketId: string): Promise<ExitTicketResponse[]>
+    clearResponses(exitTicketId: string): Promise<void>
+    getServerInfo(): Promise<ExitTicketServerInfo>
+    getQrDataUrl(url: string): Promise<string>
   }
 }

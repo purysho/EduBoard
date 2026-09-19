@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { RubricWithCriteria } from '@shared/types'
+import type { RubricWithCriteria, Score } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { Spinner } from '@renderer/components/ui/EmptyState'
@@ -13,7 +13,8 @@ export function RubricScoringModal({
   assessmentId,
   studentId,
   studentName,
-  rubric
+  rubric,
+  score
 }: {
   open: boolean
   onClose: () => void
@@ -22,6 +23,7 @@ export function RubricScoringModal({
   studentId: string
   studentName: string
   rubric: RubricWithCriteria
+  score: Score | undefined
 }): React.JSX.Element {
   const { data: existing, isLoading } = useRubricScores(
     open ? assessmentId : undefined,
@@ -30,6 +32,7 @@ export function RubricScoringModal({
   const saveScores = useSaveRubricScores(classId)
 
   const [selections, setSelections] = useState<Record<string, string>>({})
+  const [comment, setComment] = useState('')
 
   // Sync the edit buffer from the fetched scores during render (not an effect) so it
   // can't fight with what the user just clicked — same pattern as ScoreCell's
@@ -41,9 +44,11 @@ export function RubricScoringModal({
     const map: Record<string, string> = {}
     for (const s of existing) map[s.criterionId] = s.levelId
     setSelections(map)
+    setComment(score?.comment ?? '')
   } else if (!open && lastSeenKey !== null) {
     setLastSeenKey(null)
     setSelections({})
+    setComment('')
   }
 
   const total = rubric.criteria.reduce((sum, c) => {
@@ -58,7 +63,8 @@ export function RubricScoringModal({
     await saveScores.mutateAsync({
       assessmentId,
       studentId,
-      selections: rubric.criteria.map((c) => ({ criterionId: c.id, levelId: selections[c.id] }))
+      selections: rubric.criteria.map((c) => ({ criterionId: c.id, levelId: selections[c.id] })),
+      comment: comment.trim() || null
     })
     onClose()
   }
@@ -121,6 +127,16 @@ export function RubricScoringModal({
               </div>
             </div>
           ))}
+          <div>
+            <p className="mb-1.5 text-sm font-semibold">Comment (optional)</p>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={2}
+              placeholder="A note for yourself about this grade…"
+              className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
+            />
+          </div>
         </div>
       )}
     </Modal>

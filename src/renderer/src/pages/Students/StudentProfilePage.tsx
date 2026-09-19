@@ -16,6 +16,7 @@ import {
 import { formatDate, studentFullName } from '@renderer/lib/format'
 import { StudentFormModal } from './StudentFormModal'
 import { StudentClassRow } from './StudentClassRow'
+import { StudentLogPanel } from './StudentLogPanel'
 
 export function StudentProfilePage(): React.JSX.Element {
   const { studentId } = useParams<{ studentId: string }>()
@@ -113,6 +114,8 @@ export function StudentProfilePage(): React.JSX.Element {
             </table>
           )}
         </Card>
+
+        <StudentLogPanel studentId={student.id} />
       </div>
 
       <StudentFormModal open={editOpen} onClose={() => setEditOpen(false)} student={student} />

@@ -227,6 +227,71 @@ const migrations: Migration[] = [
           ON rubric_scores(assessment_id, student_id, criterion_id);
       `)
     }
+  },
+  {
+    id: 4,
+    name: 'student_log_entries',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE student_log_entries (
+          id TEXT PRIMARY KEY,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          type TEXT NOT NULL DEFAULT 'note',
+          text TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX student_log_entries_student_idx
+          ON student_log_entries(student_id, created_at);
+      `)
+    }
+  },
+  {
+    id: 5,
+    name: 'lesson_resources',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE lesson_resources (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          type TEXT NOT NULL,
+          url TEXT,
+          file_path TEXT,
+          notes TEXT,
+          tags TEXT NOT NULL,
+          standard_id TEXT REFERENCES standards(id) ON DELETE SET NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX lesson_resources_standard_idx ON lesson_resources(standard_id);
+      `)
+    }
+  },
+  {
+    id: 6,
+    name: 'exit_tickets',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE exit_tickets (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL UNIQUE REFERENCES classes(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          questions TEXT NOT NULL,
+          is_open INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE exit_ticket_responses (
+          id TEXT PRIMARY KEY,
+          exit_ticket_id TEXT NOT NULL REFERENCES exit_tickets(id) ON DELETE CASCADE,
+          student_name TEXT NOT NULL,
+          answers TEXT NOT NULL,
+          submitted_at TEXT NOT NULL
+        );
+        CREATE INDEX exit_ticket_responses_ticket_idx
+          ON exit_ticket_responses(exit_ticket_id, submitted_at);
+      `)
+    }
   }
 ]
 
