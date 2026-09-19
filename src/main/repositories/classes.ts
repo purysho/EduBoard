@@ -26,6 +26,8 @@ export function createClass(input: CreateClassInput): ClassSection {
     archived: false,
     seatingRows: 5,
     seatingCols: 6,
+    courseGroupId: null,
+    termWeight: 1,
     ...input
   }
   getDb().insert(classes).values(row).run()
@@ -45,4 +47,12 @@ export function updateClass(id: string, patch: UpdateClassInput): ClassSection {
 
 export function deleteClass(id: string): void {
   getDb().delete(classes).where(eq(classes.id, id)).run()
+}
+
+export function listClassesByCourseGroup(courseGroupId: string): ClassSection[] {
+  return getDb()
+    .select()
+    .from(classes)
+    .where(eq(classes.courseGroupId, courseGroupId))
+    .all() as ClassSection[]
 }

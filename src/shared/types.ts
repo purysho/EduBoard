@@ -46,6 +46,12 @@ export interface Student {
   updatedAt: string
 }
 
+export interface CourseGroup {
+  id: string
+  name: string
+  createdAt: string
+}
+
 export interface ClassSection {
   id: string
   name: string
@@ -53,6 +59,12 @@ export interface ClassSection {
   levelType: LevelType
   gradeLevel: string | null
   termId: string | null
+  /** Groups this class together with the same course's sections in other terms — the
+   * basis for a multi-term composite grade. Null means it isn't part of one. */
+  courseGroupId: string | null
+  /** How much this class's grade counts toward the course group's composite, relative
+   * to the group's other classes (default 1 — every term counts equally). */
+  termWeight: number
   schedule: string | null
   room: string | null
   color: string | null
@@ -324,6 +336,24 @@ export interface StudentClassGrade {
   percent: number | null
   letter: string | null
   categoryBreakdown: { categoryId: string | null; categoryName: string; percent: number | null }[]
+}
+
+export interface CompositeGradeClassEntry {
+  classId: string
+  className: string
+  termId: string | null
+  termName: string | null
+  termWeight: number
+  percent: number | null
+  letter: string | null
+}
+
+export interface StudentCompositeGrade {
+  studentId: string
+  studentName: string
+  classes: CompositeGradeClassEntry[]
+  compositePercent: number | null
+  compositeLetter: string | null
 }
 
 export interface ClassRosterRow {

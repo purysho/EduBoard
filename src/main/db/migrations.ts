@@ -343,6 +343,25 @@ const migrations: Migration[] = [
         CREATE INDEX seat_assignments_class_idx ON seat_assignments(class_id);
       `)
     }
+  },
+  {
+    id: 10,
+    name: 'course_groups',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE course_groups (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+
+        ALTER TABLE classes ADD COLUMN course_group_id TEXT
+          REFERENCES course_groups(id) ON DELETE SET NULL;
+        ALTER TABLE classes ADD COLUMN term_weight REAL NOT NULL DEFAULT 1;
+
+        CREATE INDEX classes_course_group_idx ON classes(course_group_id);
+      `)
+    }
   }
 ]
 

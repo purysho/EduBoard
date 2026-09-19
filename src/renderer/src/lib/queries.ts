@@ -26,7 +26,8 @@ import type {
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
   UpsertExitTicketInput,
-  UpsertAssignmentSubmissionInput
+  UpsertAssignmentSubmissionInput,
+  CreateCourseGroupInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -69,6 +70,9 @@ export const queryKeys = {
     ['assessments', assessmentId, 'submissions'] as const,
   assignmentSubmissionsByClass: (classId: string) => ['classes', classId, 'submissions'] as const,
   seatAssignments: (classId: string) => ['classes', classId, 'seatAssignments'] as const,
+  courseGroups: ['courseGroups'] as const,
+  courseGroupComposite: (courseGroupId: string) =>
+    ['courseGroups', courseGroupId, 'composite'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
     ['exitTickets', exitTicketId, 'responses'] as const,
@@ -763,6 +767,47 @@ export function useDeleteLessonResource() {
   return useMutation({
     mutationFn: (id: string) => api().lessonResources.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+// ---- Course groups / composite grades -----------------------------------------------------
+
+export function useCourseGroups() {
+  return useQuery({ queryKey: queryKeys.courseGroups, queryFn: () => api().courseGroups.list() })
+}
+
+export function useCreateCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateCourseGroupInput) => api().courseGroups.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+  })
+}
+
+export function useRenameCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => api().courseGroups.rename(id, name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+  })
+}
+
+export function useDeleteCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().courseGroups.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+      qc.invalidateQueries({ queryKey: queryKeys.classes })
+    }
+  })
+}
+
+export function useCourseGroupComposite(courseGroupId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.courseGroupComposite(courseGroupId ?? ''),
+    queryFn: () => api().courseGroups.getComposite(courseGroupId!),
+    enabled: !!courseGroupId
   })
 }
 

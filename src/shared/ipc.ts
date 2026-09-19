@@ -125,6 +125,13 @@ export const IpcChannels = {
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
   },
+  courseGroups: {
+    list: 'courseGroups:list',
+    create: 'courseGroups:create',
+    rename: 'courseGroups:rename',
+    remove: 'courseGroups:remove',
+    getComposite: 'courseGroups:getComposite'
+  },
   seatAssignments: {
     listByClass: 'seatAssignments:listByClass',
     assignSeat: 'seatAssignments:assignSeat',

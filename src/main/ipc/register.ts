@@ -19,6 +19,8 @@ import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
+import * as courseGroupsRepo from '../repositories/courseGroups'
+import { getCourseGroupComposite } from '../services/compositeGrades'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -327,6 +329,21 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Course groups / composite grades ----------------------------------------------------
+  handle(IpcChannels.courseGroups.list, () => courseGroupsRepo.listCourseGroups())
+  handle(IpcChannels.courseGroups.create, (_e, input: courseGroupsRepo.CreateCourseGroupInput) =>
+    courseGroupsRepo.createCourseGroup(input)
+  )
+  handle(IpcChannels.courseGroups.rename, (_e, id: string, name: string) =>
+    courseGroupsRepo.renameCourseGroup(id, name)
+  )
+  handle(IpcChannels.courseGroups.remove, (_e, id: string) =>
+    courseGroupsRepo.deleteCourseGroup(id)
+  )
+  handle(IpcChannels.courseGroups.getComposite, (_e, courseGroupId: string) =>
+    getCourseGroupComposite(courseGroupId)
+  )
 
   // --- Seat assignments -------------------------------------------------------------------
   handle(IpcChannels.seatAssignments.listByClass, (_e, classId: string) =>

@@ -21,6 +21,12 @@ export const terms = sqliteTable('terms', {
   updatedAt: text('updated_at').notNull()
 })
 
+export const courseGroups = sqliteTable('course_groups', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: text('created_at').notNull()
+})
+
 export const students = sqliteTable('students', {
   id: text('id').primaryKey(),
   firstName: text('first_name').notNull(),
@@ -45,6 +51,10 @@ export const classes = sqliteTable('classes', {
   levelType: text('level_type').notNull().default('k12'),
   gradeLevel: text('grade_level'),
   termId: text('term_id').references(() => terms.id, { onDelete: 'set null' }),
+  courseGroupId: text('course_group_id').references(() => courseGroups.id, {
+    onDelete: 'set null'
+  }),
+  termWeight: real('term_weight').notNull().default(1),
   schedule: text('schedule'),
   room: text('room'),
   color: text('color'),

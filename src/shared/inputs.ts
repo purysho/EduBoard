@@ -4,6 +4,7 @@
 import type {
   AttendanceRecord,
   ClassSection,
+  CourseGroup,
   Enrollment,
   GradeCategory,
   LessonPlan,
@@ -17,6 +18,8 @@ import type {
   AssignmentSubmission
 } from './types'
 
+export type CreateCourseGroupInput = Omit<CourseGroup, 'id' | 'createdAt'>
+
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateTermInput = Partial<CreateTermInput>
 
@@ -27,11 +30,20 @@ export type UpdateStudentInput = Partial<Omit<Student, 'id' | 'createdAt'>>
 
 export type CreateClassInput = Omit<
   ClassSection,
-  'id' | 'createdAt' | 'updatedAt' | 'archived' | 'seatingRows' | 'seatingCols'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'archived'
+  | 'seatingRows'
+  | 'seatingCols'
+  | 'courseGroupId'
+  | 'termWeight'
 > & {
   archived?: boolean
   seatingRows?: number
   seatingCols?: number
+  courseGroupId?: string | null
+  termWeight?: number
 }
 export type UpdateClassInput = Partial<Omit<ClassSection, 'id' | 'createdAt'>>
 

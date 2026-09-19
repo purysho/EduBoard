@@ -19,6 +19,7 @@ import { RubricsPage } from './pages/Rubrics/RubricsPage'
 import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
 import { CommunicationsPage } from './pages/Communications/CommunicationsPage'
+import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage'
 
 function App(): React.JSX.Element {
   return (
@@ -43,6 +44,7 @@ function App(): React.JSX.Element {
         <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/communications" element={<CommunicationsPage />} />
+        <Route path="/composite-grades" element={<CompositeGradesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

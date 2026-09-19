@@ -13,6 +13,8 @@ import type {
   ClassReport,
   ClassRosterRow,
   ClassSection,
+  CourseGroup,
+  StudentCompositeGrade,
   DashboardStats,
   Enrollment,
   EnrollmentStatus,
@@ -60,7 +62,8 @@ import type {
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
   UpsertExitTicketInput,
-  UpsertAssignmentSubmissionInput
+  UpsertAssignmentSubmissionInput,
+  CreateCourseGroupInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -190,6 +193,13 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  courseGroups: {
+    list(): Promise<CourseGroup[]>
+    create(input: CreateCourseGroupInput): Promise<CourseGroup>
+    rename(id: string, name: string): Promise<CourseGroup>
+    remove(id: string): Promise<void>
+    getComposite(courseGroupId: string): Promise<StudentCompositeGrade[]>
   }
   seatAssignments: {
     listByClass(classId: string): Promise<SeatAssignment[]>
