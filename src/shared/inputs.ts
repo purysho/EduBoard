@@ -9,7 +9,8 @@ import type {
   LessonPlan,
   Student,
   Term,
-  Assessment
+  Assessment,
+  Standard
 } from './types'
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
@@ -34,8 +35,8 @@ export type CreateEnrollmentInput = Omit<Enrollment, 'id' | 'createdAt' | 'statu
 
 export type CreateAssessmentInput = Omit<
   Assessment,
-  'id' | 'createdAt' | 'updatedAt' | 'isFinal' | 'sortOrder'
-> & { isFinal?: boolean; sortOrder?: number }
+  'id' | 'createdAt' | 'updatedAt' | 'isFinal' | 'sortOrder' | 'rubricId'
+> & { isFinal?: boolean; sortOrder?: number; rubricId?: string | null }
 export type UpdateAssessmentInput = Partial<Omit<Assessment, 'id' | 'classId' | 'createdAt'>>
 
 export type UpsertScoreInput = {
@@ -60,3 +61,30 @@ export type CreateLessonPlanInput = Omit<
   'id' | 'createdAt' | 'updatedAt' | 'status'
 > & { status?: LessonPlan['status'] }
 export type UpdateLessonPlanInput = Partial<Omit<LessonPlan, 'id' | 'classId' | 'createdAt'>>
+
+export type CreateStandardInput = Omit<Standard, 'id' | 'createdAt'>
+export type UpdateStandardInput = Partial<Omit<Standard, 'id' | 'createdAt'>>
+
+/** A criterion as submitted by the rubric builder — its levels inline, since a rubric
+ * is always authored and saved as one whole tree rather than criterion-by-criterion. */
+export type RubricCriterionDraft = {
+  id?: string
+  name: string
+  description?: string | null
+  standardId?: string | null
+  levels: { id?: string; label: string; points: number; description?: string | null }[]
+}
+
+export type CreateRubricInput = {
+  name: string
+  description?: string | null
+  criteria: RubricCriterionDraft[]
+}
+export type UpdateRubricInput = CreateRubricInput
+
+/** One student's full rubric grading for one assessment — a level choice per criterion. */
+export type SaveRubricScoresInput = {
+  assessmentId: string
+  studentId: string
+  selections: { criterionId: string; levelId: string }[]
+}

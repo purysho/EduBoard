@@ -93,6 +93,7 @@ export const assessments = sqliteTable(
       .notNull()
       .references(() => classes.id, { onDelete: 'cascade' }),
     categoryId: text('category_id').references(() => gradeCategories.id, { onDelete: 'set null' }),
+    rubricId: text('rubric_id').references(() => rubrics.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     description: text('description'),
     assessmentDate: text('assessment_date'),
@@ -202,4 +203,76 @@ export const lessonPlans = sqliteTable(
     updatedAt: text('updated_at').notNull()
   },
   (t) => ({ classDateIdx: index('lesson_plans_class_date_idx').on(t.classId, t.date) })
+)
+
+export const standards = sqliteTable('standards', {
+  id: text('id').primaryKey(),
+  code: text('code').notNull(),
+  description: text('description').notNull(),
+  subject: text('subject'),
+  createdAt: text('created_at').notNull()
+})
+
+export const rubrics = sqliteTable('rubrics', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
+export const rubricCriteria = sqliteTable(
+  'rubric_criteria',
+  {
+    id: text('id').primaryKey(),
+    rubricId: text('rubric_id')
+      .notNull()
+      .references(() => rubrics.id, { onDelete: 'cascade' }),
+    standardId: text('standard_id').references(() => standards.id, { onDelete: 'set null' }),
+    name: text('name').notNull(),
+    description: text('description'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({ rubricIdx: index('rubric_criteria_rubric_idx').on(t.rubricId) })
+)
+
+export const rubricLevels = sqliteTable(
+  'rubric_levels',
+  {
+    id: text('id').primaryKey(),
+    criterionId: text('criterion_id')
+      .notNull()
+      .references(() => rubricCriteria.id, { onDelete: 'cascade' }),
+    label: text('label').notNull(),
+    points: real('points').notNull(),
+    description: text('description'),
+    sortOrder: integer('sort_order').notNull().default(0)
+  },
+  (t) => ({ criterionIdx: index('rubric_levels_criterion_idx').on(t.criterionId) })
+)
+
+export const rubricScores = sqliteTable(
+  'rubric_scores',
+  {
+    id: text('id').primaryKey(),
+    assessmentId: text('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    criterionId: text('criterion_id')
+      .notNull()
+      .references(() => rubricCriteria.id, { onDelete: 'cascade' }),
+    levelId: text('level_id')
+      .notNull()
+      .references(() => rubricLevels.id, { onDelete: 'cascade' }),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    assessmentStudentCriterionUnique: uniqueIndex(
+      'rubric_scores_assessment_student_criterion_unique'
+    ).on(t.assessmentId, t.studentId, t.criterionId)
+  })
 )

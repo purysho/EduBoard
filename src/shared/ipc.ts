@@ -91,5 +91,22 @@ export const IpcChannels = {
   },
   print: {
     printStudentReport: 'print:printStudentReport'
+  },
+  standards: {
+    list: 'standards:list',
+    create: 'standards:create',
+    update: 'standards:update',
+    remove: 'standards:remove'
+  },
+  rubrics: {
+    list: 'rubrics:list',
+    get: 'rubrics:get',
+    create: 'rubrics:create',
+    update: 'rubrics:update',
+    remove: 'rubrics:remove'
+  },
+  rubricScores: {
+    list: 'rubricScores:list',
+    save: 'rubricScores:save'
   }
 } as const

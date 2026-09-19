@@ -29,6 +29,7 @@ export function createAssessment(input: CreateAssessmentInput): Assessment {
     updatedAt: now,
     isFinal: false,
     sortOrder: 0,
+    rubricId: null,
     ...input
   }
   getDb().insert(assessments).values(row).run()
