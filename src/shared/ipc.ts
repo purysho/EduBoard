@@ -112,7 +112,9 @@ export const IpcChannels = {
   studentLogEntries: {
     listByStudent: 'studentLogEntries:listByStudent',
     create: 'studentLogEntries:create',
-    remove: 'studentLogEntries:remove'
+    update: 'studentLogEntries:update',
+    remove: 'studentLogEntries:remove',
+    listParentCommunications: 'studentLogEntries:listParentCommunications'
   },
   lessonResources: {
     list: 'lessonResources:list',
@@ -122,6 +124,27 @@ export const IpcChannels = {
     pickFile: 'lessonResources:pickFile',
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
+  },
+  courseGroups: {
+    list: 'courseGroups:list',
+    create: 'courseGroups:create',
+    rename: 'courseGroups:rename',
+    remove: 'courseGroups:remove',
+    getComposite: 'courseGroups:getComposite'
+  },
+  seatAssignments: {
+    listByClass: 'seatAssignments:listByClass',
+    assignSeat: 'seatAssignments:assignSeat',
+    unassignSeat: 'seatAssignments:unassignSeat',
+    clear: 'seatAssignments:clear'
+  },
+  assignmentSubmissions: {
+    listByAssessment: 'assignmentSubmissions:listByAssessment',
+    listByClass: 'assignmentSubmissions:listByClass',
+    pickFile: 'assignmentSubmissions:pickFile',
+    upsert: 'assignmentSubmissions:upsert',
+    remove: 'assignmentSubmissions:remove',
+    openPath: 'assignmentSubmissions:openPath'
   },
   exitTickets: {
     getByClass: 'exitTickets:getByClass',

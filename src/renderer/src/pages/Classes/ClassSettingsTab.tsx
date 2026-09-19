@@ -1,13 +1,24 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { AlertTriangle, Archive, ArchiveRestore, CopyPlus, Pencil, Plus, Tags } from 'lucide-react'
+import {
+  AlertTriangle,
+  Archive,
+  ArchiveRestore,
+  CopyPlus,
+  Layers,
+  Pencil,
+  Plus,
+  Tags
+} from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { FormRow, Input } from '@renderer/components/ui/Field'
+import { FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
+  useCourseGroups,
   useCreateClass,
+  useCreateCourseGroup,
   useDeleteClass,
   useDeleteGradeCategory,
   useGradeCategories,
@@ -16,15 +27,34 @@ import {
 import { ClassFormModal } from './ClassFormModal'
 import { CategoryFormModal } from './CategoryFormModal'
 
+const NEW_COURSE_GROUP_VALUE = '__new__'
+
 export function ClassSettingsTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const navigate = useNavigate()
   const { data: categories } = useGradeCategories(classSection.id)
+  const { data: courseGroups } = useCourseGroups()
   const updateClass = useUpdateClass()
   const deleteClass = useDeleteClass()
   const deleteCategory = useDeleteGradeCategory(classSection.id)
   const createClass = useCreateClass()
+  const createCourseGroup = useCreateCourseGroup()
   const [duplicating, setDuplicating] = useState(false)
+  const [termWeight, setTermWeight] = useState(classSection.termWeight)
+
+  async function handleCourseGroupChange(value: string): Promise<void> {
+    if (value === NEW_COURSE_GROUP_VALUE) {
+      const name = window.prompt('Name this course (e.g. "Algebra I")')?.trim()
+      if (!name) return
+      const group = await createCourseGroup.mutateAsync({ name })
+      await updateClass.mutateAsync({ id: classSection.id, patch: { courseGroupId: group.id } })
+      return
+    }
+    await updateClass.mutateAsync({
+      id: classSection.id,
+      patch: { courseGroupId: value || null }
+    })
+  }
 
   async function handleDuplicateForNewTerm(): Promise<void> {
     setDuplicating(true)
@@ -35,6 +65,8 @@ export function ClassSettingsTab(): React.JSX.Element {
         levelType: classSection.levelType,
         gradeLevel: classSection.gradeLevel,
         termId: null,
+        courseGroupId: classSection.courseGroupId,
+        termWeight: classSection.termWeight,
         schedule: classSection.schedule,
         room: classSection.room,
         color: classSection.color,
@@ -176,6 +208,60 @@ export function ClassSettingsTab(): React.JSX.Element {
               {updateClass.isPending ? 'Saving…' : 'Save grading scale'}
             </Button>
           </form>
+        </CardBody>
+      </Card>
+
+      <Card className="h-fit">
+        <CardHeader>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Layers size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            Course group
+          </h2>
+        </CardHeader>
+        <CardBody className="space-y-4">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Link this class to the same course&apos;s other terms (e.g. Fall + Spring) to see a
+            combined grade for each student on the Composite Grades page.
+          </p>
+          <FormRow label="Course">
+            <Select
+              value={classSection.courseGroupId ?? ''}
+              onChange={(e) => handleCourseGroupChange(e.target.value)}
+            >
+              <option value="">Not part of a course group</option>
+              {(courseGroups ?? []).map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+              <option value={NEW_COURSE_GROUP_VALUE}>+ New course…</option>
+            </Select>
+          </FormRow>
+          {classSection.courseGroupId && (
+            <FormRow
+              label="Weight in composite"
+              hint="How much this term counts relative to the group's other terms — 1 means equally"
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={termWeight}
+                  onChange={(e) => setTermWeight(Number(e.target.value))}
+                  className="w-24"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => updateClass.mutate({ id: classSection.id, patch: { termWeight } })}
+                  disabled={updateClass.isPending || termWeight === classSection.termWeight}
+                >
+                  Save
+                </Button>
+              </div>
+            </FormRow>
+          )}
         </CardBody>
       </Card>
 

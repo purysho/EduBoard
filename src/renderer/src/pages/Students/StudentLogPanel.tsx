@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NotebookText, Trash2 } from 'lucide-react'
-import type { StudentLogType } from '@shared/types'
+import type { ContactMethod, StudentLogType } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -9,9 +9,11 @@ import type { Tone } from '@renderer/lib/grade'
 import {
   useCreateStudentLogEntry,
   useDeleteStudentLogEntry,
-  useStudentLogEntries
+  useStudentLogEntries,
+  useUpdateStudentLogEntry
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { CONTACT_METHOD_LABELS } from '@renderer/lib/parentComms'
 
 const TYPE_META: Record<StudentLogType, { label: string; tone: Tone }> = {
   note: { label: 'Note', tone: 'neutral' },
@@ -20,28 +22,53 @@ const TYPE_META: Record<StudentLogType, { label: string; tone: Tone }> = {
   contact: { label: 'Contact', tone: 'primary' }
 }
 
-const QUICK_ADD: { label: string; type: StudentLogType; text: string }[] = [
+const QUICK_ADD: {
+  label: string
+  type: StudentLogType
+  text: string
+  contactMethod?: ContactMethod
+}[] = [
   { label: 'Missed homework', type: 'concern', text: 'Missed homework.' },
   { label: 'Great participation', type: 'positive', text: 'Great participation in class today.' },
   { label: 'Late to class', type: 'concern', text: 'Arrived late to class.' },
-  { label: 'Called home', type: 'contact', text: 'Called home to discuss progress.' },
-  { label: 'Emailed guardian', type: 'contact', text: 'Emailed guardian.' }
+  {
+    label: 'Called home',
+    type: 'contact',
+    text: 'Called home to discuss progress.',
+    contactMethod: 'phone'
+  },
+  { label: 'Emailed guardian', type: 'contact', text: 'Emailed guardian.', contactMethod: 'email' }
 ]
 
 export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX.Element {
   const { data: entries } = useStudentLogEntries(studentId)
   const createEntry = useCreateStudentLogEntry(studentId)
   const deleteEntry = useDeleteStudentLogEntry(studentId)
+  const updateEntry = useUpdateStudentLogEntry()
 
   const [text, setText] = useState('')
   const [type, setType] = useState<StudentLogType>('note')
+  const [contactMethod, setContactMethod] = useState<ContactMethod>('phone')
+  const [followUpNeeded, setFollowUpNeeded] = useState(false)
 
-  async function handleAdd(overrideText?: string, overrideType?: StudentLogType): Promise<void> {
+  async function handleAdd(
+    overrideText?: string,
+    overrideType?: StudentLogType,
+    overrideContactMethod?: ContactMethod
+  ): Promise<void> {
     const finalText = (overrideText ?? text).trim()
     if (!finalText) return
-    await createEntry.mutateAsync({ studentId, type: overrideType ?? type, text: finalText })
+    const finalType = overrideType ?? type
+    await createEntry.mutateAsync({
+      studentId,
+      type: finalType,
+      text: finalText,
+      contactMethod: finalType === 'contact' ? (overrideContactMethod ?? contactMethod) : null,
+      followUpNeeded: finalType === 'contact' ? followUpNeeded : false
+    })
     setText('')
     setType('note')
+    setFollowUpNeeded(false)
   }
 
   return (
@@ -58,7 +85,7 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
             <button
               key={q.label}
               type="button"
-              onClick={() => handleAdd(q.text, q.type)}
+              onClick={() => handleAdd(q.text, q.type, q.contactMethod)}
               disabled={createEntry.isPending}
               className="rounded-full border border-[var(--color-border)] px-2.5 py-1 text-xs text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
             >
@@ -79,6 +106,19 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
               </option>
             ))}
           </select>
+          {type === 'contact' && (
+            <select
+              value={contactMethod}
+              onChange={(e) => setContactMethod(e.target.value as ContactMethod)}
+              className="w-28 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
+            >
+              {Object.entries(CONTACT_METHOD_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          )}
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -94,6 +134,16 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
             Add
           </Button>
         </div>
+        {type === 'contact' && (
+          <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+            <input
+              type="checkbox"
+              checked={followUpNeeded}
+              onChange={(e) => setFollowUpNeeded(e.target.checked)}
+            />
+            Needs follow-up
+          </label>
+        )}
 
         {!entries?.length ? (
           <p className="text-sm text-[var(--color-text-muted)]">No log entries yet.</p>
@@ -104,11 +154,31 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
                 <div>
                   <div className="mb-1 flex items-center gap-2">
                     <Badge tone={TYPE_META[entry.type].tone}>{TYPE_META[entry.type].label}</Badge>
+                    {entry.contactMethod && (
+                      <Badge tone="neutral">{CONTACT_METHOD_LABELS[entry.contactMethod]}</Badge>
+                    )}
+                    {entry.followUpNeeded && !entry.followUpDone && (
+                      <Badge tone="warning">Follow-up needed</Badge>
+                    )}
                     <span className="text-xs text-[var(--color-text-muted)]">
                       {formatDate(entry.createdAt, 'MMM d, yyyy p')}
                     </span>
                   </div>
                   <p className="whitespace-pre-wrap">{entry.text}</p>
+                  {entry.followUpNeeded && (
+                    <button
+                      className="mt-1 text-xs text-[var(--color-primary)] hover:underline"
+                      onClick={() =>
+                        updateEntry.mutate({
+                          id: entry.id,
+                          studentId,
+                          patch: { followUpDone: !entry.followUpDone }
+                        })
+                      }
+                    >
+                      Mark follow-up {entry.followUpDone ? 'needed' : 'done'}
+                    </button>
+                  )}
                 </div>
                 <button
                   className="shrink-0 rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-danger)]"

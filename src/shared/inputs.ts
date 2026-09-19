@@ -4,6 +4,7 @@
 import type {
   AttendanceRecord,
   ClassSection,
+  CourseGroup,
   Enrollment,
   GradeCategory,
   LessonPlan,
@@ -13,8 +14,11 @@ import type {
   Standard,
   StudentLogEntry,
   LessonResource,
-  ExitTicketQuestion
+  ExitTicketQuestion,
+  AssignmentSubmission
 } from './types'
+
+export type CreateCourseGroupInput = Omit<CourseGroup, 'id' | 'createdAt'>
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateTermInput = Partial<CreateTermInput>
@@ -24,8 +28,22 @@ export type CreateStudentInput = Omit<Student, 'id' | 'createdAt' | 'updatedAt' 
 }
 export type UpdateStudentInput = Partial<Omit<Student, 'id' | 'createdAt'>>
 
-export type CreateClassInput = Omit<ClassSection, 'id' | 'createdAt' | 'updatedAt' | 'archived'> & {
+export type CreateClassInput = Omit<
+  ClassSection,
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'archived'
+  | 'seatingRows'
+  | 'seatingCols'
+  | 'courseGroupId'
+  | 'termWeight'
+> & {
   archived?: boolean
+  seatingRows?: number
+  seatingCols?: number
+  courseGroupId?: string | null
+  termWeight?: number
 }
 export type UpdateClassInput = Partial<Omit<ClassSection, 'id' | 'createdAt'>>
 
@@ -93,7 +111,17 @@ export type SaveRubricScoresInput = {
   comment?: string | null
 }
 
-export type CreateStudentLogEntryInput = Omit<StudentLogEntry, 'id' | 'createdAt'>
+export type CreateStudentLogEntryInput = Omit<
+  StudentLogEntry,
+  'id' | 'createdAt' | 'contactMethod' | 'followUpNeeded' | 'followUpDone'
+> &
+  Partial<Pick<StudentLogEntry, 'contactMethod' | 'followUpNeeded' | 'followUpDone'>>
+
+export type UpdateStudentLogEntryInput = Partial<
+  Pick<StudentLogEntry, 'followUpNeeded' | 'followUpDone'>
+>
+
+export type UpsertAssignmentSubmissionInput = Omit<AssignmentSubmission, 'id' | 'submittedAt'>
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

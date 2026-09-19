@@ -13,6 +13,9 @@ asarUnpack:
   - resources/**
   - node_modules/better-sqlite3/**
 win:
+  # electron-builder signs automatically when CSC_LINK/CSC_KEY_PASSWORD are set in the
+  # environment (see docs/CODE_SIGNING.md) — no explicit certificateFile config needed,
+  # and builds without those env vars stay unsigned exactly as before.
   executableName: EduBoard
   target:
     - target: portable
@@ -43,7 +46,11 @@ mac:
   extendInfo:
     - NSDocumentsFolderUsageDescription: EduBoard stores your class data in a local database file.
     - NSDownloadsFolderUsageDescription: EduBoard can export reports and backups to your Downloads folder.
-  notarize: false
+  # Hardened runtime is required for notarization. Actual signing/notarization only
+  # happens when the relevant env vars are present (see docs/CODE_SIGNING.md) — with
+  # none set, electron-builder falls back to an unsigned, non-notarized build exactly
+  # as before, so this is a no-op for anyone who hasn't set up a certificate.
+  hardenedRuntime: true
 dmg:
   artifactName: ${productName}.${ext}
 linux:

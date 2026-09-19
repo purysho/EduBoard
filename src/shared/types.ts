@@ -46,6 +46,12 @@ export interface Student {
   updatedAt: string
 }
 
+export interface CourseGroup {
+  id: string
+  name: string
+  createdAt: string
+}
+
 export interface ClassSection {
   id: string
   name: string
@@ -53,11 +59,19 @@ export interface ClassSection {
   levelType: LevelType
   gradeLevel: string | null
   termId: string | null
+  /** Groups this class together with the same course's sections in other terms — the
+   * basis for a multi-term composite grade. Null means it isn't part of one. */
+  courseGroupId: string | null
+  /** How much this class's grade counts toward the course group's composite, relative
+   * to the group's other classes (default 1 — every term counts equally). */
+  termWeight: number
   schedule: string | null
   room: string | null
   color: string | null
   passMark: number
   maxScore: number
+  seatingRows: number
+  seatingCols: number
   gradeThresholds: GradeThresholds
   archived: boolean
   createdAt: string
@@ -95,6 +109,24 @@ export interface Assessment {
   sortOrder: number
   createdAt: string
   updatedAt: string
+}
+
+export interface SeatAssignment {
+  id: string
+  classId: string
+  studentId: string
+  row: number
+  col: number
+  updatedAt: string
+}
+
+export interface AssignmentSubmission {
+  id: string
+  assessmentId: string
+  studentId: string
+  filePath: string
+  fileName: string
+  submittedAt: string
 }
 
 export interface Score {
@@ -180,12 +212,23 @@ export interface RubricScore {
 export const STUDENT_LOG_TYPES = ['note', 'positive', 'concern', 'contact'] as const
 export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
 
+export const CONTACT_METHODS = ['phone', 'email', 'in-person', 'other'] as const
+export type ContactMethod = (typeof CONTACT_METHODS)[number]
+
 export interface StudentLogEntry {
   id: string
   studentId: string
   type: StudentLogType
   text: string
+  // Only meaningful when type === 'contact' — a parent-communication entry.
+  contactMethod: ContactMethod | null
+  followUpNeeded: boolean
+  followUpDone: boolean
   createdAt: string
+}
+
+export interface ParentCommunicationEntry extends StudentLogEntry {
+  studentName: string
 }
 
 export const LESSON_RESOURCE_TYPES = ['link', 'file', 'note'] as const
@@ -293,6 +336,24 @@ export interface StudentClassGrade {
   percent: number | null
   letter: string | null
   categoryBreakdown: { categoryId: string | null; categoryName: string; percent: number | null }[]
+}
+
+export interface CompositeGradeClassEntry {
+  classId: string
+  className: string
+  termId: string | null
+  termName: string | null
+  termWeight: number
+  percent: number | null
+  letter: string | null
+}
+
+export interface StudentCompositeGrade {
+  studentId: string
+  studentName: string
+  classes: CompositeGradeClassEntry[]
+  compositePercent: number | null
+  compositeLetter: string | null
 }
 
 export interface ClassRosterRow {

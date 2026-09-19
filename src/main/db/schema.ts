@@ -21,6 +21,12 @@ export const terms = sqliteTable('terms', {
   updatedAt: text('updated_at').notNull()
 })
 
+export const courseGroups = sqliteTable('course_groups', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: text('created_at').notNull()
+})
+
 export const students = sqliteTable('students', {
   id: text('id').primaryKey(),
   firstName: text('first_name').notNull(),
@@ -45,12 +51,18 @@ export const classes = sqliteTable('classes', {
   levelType: text('level_type').notNull().default('k12'),
   gradeLevel: text('grade_level'),
   termId: text('term_id').references(() => terms.id, { onDelete: 'set null' }),
+  courseGroupId: text('course_group_id').references(() => courseGroups.id, {
+    onDelete: 'set null'
+  }),
+  termWeight: real('term_weight').notNull().default(1),
   schedule: text('schedule'),
   room: text('room'),
   color: text('color'),
   passMark: real('pass_mark').notNull().default(60),
   maxScore: real('max_score').notNull().default(100),
   gradeThresholds: text('grade_thresholds', { mode: 'json' }).notNull(),
+  seatingRows: integer('seating_rows').notNull().default(5),
+  seatingCols: integer('seating_cols').notNull().default(6),
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
@@ -105,6 +117,51 @@ export const assessments = sqliteTable(
     updatedAt: text('updated_at').notNull()
   },
   (t) => ({ classIdx: index('assessments_class_idx').on(t.classId) })
+)
+
+export const assignmentSubmissions = sqliteTable(
+  'assignment_submissions',
+  {
+    id: text('id').primaryKey(),
+    assessmentId: text('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    filePath: text('file_path').notNull(),
+    fileName: text('file_name').notNull(),
+    submittedAt: text('submitted_at').notNull()
+  },
+  (t) => ({
+    assessmentStudentUnique: uniqueIndex('assignment_submissions_assessment_student_unique').on(
+      t.assessmentId,
+      t.studentId
+    )
+  })
+)
+
+export const seatAssignments = sqliteTable(
+  'seat_assignments',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    row: integer('row').notNull(),
+    col: integer('col').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    classStudentUnique: uniqueIndex('seat_assignments_class_student_unique').on(
+      t.classId,
+      t.studentId
+    ),
+    classIdx: index('seat_assignments_class_idx').on(t.classId)
+  })
 )
 
 export const scores = sqliteTable(
@@ -287,6 +344,9 @@ export const studentLogEntries = sqliteTable(
       .references(() => students.id, { onDelete: 'cascade' }),
     type: text('type').notNull().default('note'),
     text: text('text').notNull(),
+    contactMethod: text('contact_method'),
+    followUpNeeded: integer('follow_up_needed', { mode: 'boolean' }).notNull().default(false),
+    followUpDone: integer('follow_up_done', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').notNull()
   },
   (t) => ({

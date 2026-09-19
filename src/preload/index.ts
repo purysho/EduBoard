@@ -129,7 +129,9 @@ const api: EduBoardApi = {
   studentLogEntries: {
     listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
     create: (input) => invoke(IpcChannels.studentLogEntries.create, input),
-    remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id)
+    update: (id, patch) => invoke(IpcChannels.studentLogEntries.update, id, patch),
+    remove: (id) => invoke(IpcChannels.studentLogEntries.remove, id),
+    listParentCommunications: () => invoke(IpcChannels.studentLogEntries.listParentCommunications)
   },
   lessonResources: {
     list: () => invoke(IpcChannels.lessonResources.list),
@@ -139,6 +141,30 @@ const api: EduBoardApi = {
     pickFile: () => invoke(IpcChannels.lessonResources.pickFile),
     openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
     openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
+  },
+  courseGroups: {
+    list: () => invoke(IpcChannels.courseGroups.list),
+    create: (input) => invoke(IpcChannels.courseGroups.create, input),
+    rename: (id, name) => invoke(IpcChannels.courseGroups.rename, id, name),
+    remove: (id) => invoke(IpcChannels.courseGroups.remove, id),
+    getComposite: (courseGroupId) => invoke(IpcChannels.courseGroups.getComposite, courseGroupId)
+  },
+  seatAssignments: {
+    listByClass: (classId) => invoke(IpcChannels.seatAssignments.listByClass, classId),
+    assignSeat: (classId, studentId, row, col) =>
+      invoke(IpcChannels.seatAssignments.assignSeat, classId, studentId, row, col),
+    unassignSeat: (classId, studentId) =>
+      invoke(IpcChannels.seatAssignments.unassignSeat, classId, studentId),
+    clear: (classId) => invoke(IpcChannels.seatAssignments.clear, classId)
+  },
+  assignmentSubmissions: {
+    listByAssessment: (assessmentId) =>
+      invoke(IpcChannels.assignmentSubmissions.listByAssessment, assessmentId),
+    listByClass: (classId) => invoke(IpcChannels.assignmentSubmissions.listByClass, classId),
+    pickFile: () => invoke(IpcChannels.assignmentSubmissions.pickFile),
+    upsert: (input) => invoke(IpcChannels.assignmentSubmissions.upsert, input),
+    remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
+    openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
   },
   exitTickets: {
     getByClass: (classId) => invoke(IpcChannels.exitTickets.getByClass, classId),

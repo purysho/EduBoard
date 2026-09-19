@@ -22,9 +22,12 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
+  UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
-  UpsertExitTicketInput
+  UpsertExitTicketInput,
+  UpsertAssignmentSubmissionInput,
+  CreateCourseGroupInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -61,7 +64,15 @@ export const queryKeys = {
   rubricScores: (assessmentId: string, studentId: string) =>
     ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
   studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
+  parentCommunications: ['parentCommunications'] as const,
   lessonResources: ['lessonResources'] as const,
+  assignmentSubmissions: (assessmentId: string) =>
+    ['assessments', assessmentId, 'submissions'] as const,
+  assignmentSubmissionsByClass: (classId: string) => ['classes', classId, 'submissions'] as const,
+  seatAssignments: (classId: string) => ['classes', classId, 'seatAssignments'] as const,
+  courseGroups: ['courseGroups'] as const,
+  courseGroupComposite: (courseGroupId: string) =>
+    ['courseGroups', courseGroupId, 'composite'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
     ['exitTickets', exitTicketId, 'responses'] as const,
@@ -696,6 +707,35 @@ export function useDeleteStudentLogEntry(studentId: string) {
   })
 }
 
+/** Used from both the per-student log panel and the standalone Communications page — the
+ * caller passes the owning studentId so both views' caches invalidate correctly. */
+export function useUpdateStudentLogEntry() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch
+    }: {
+      id: string
+      studentId: string
+      patch: UpdateStudentLogEntryInput
+    }) => api().studentLogEntries.update(id, patch),
+    onSuccess: (_data, { studentId }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(studentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.parentCommunications })
+    }
+  })
+}
+
+// ---- Parent communications -----------------------------------------------------------------
+
+export function useParentCommunications() {
+  return useQuery({
+    queryKey: queryKeys.parentCommunications,
+    queryFn: () => api().studentLogEntries.listParentCommunications()
+  })
+}
+
 // ---- Lesson resources ---------------------------------------------------------------------
 
 export function useLessonResources() {
@@ -727,6 +767,123 @@ export function useDeleteLessonResource() {
   return useMutation({
     mutationFn: (id: string) => api().lessonResources.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+// ---- Course groups / composite grades -----------------------------------------------------
+
+export function useCourseGroups() {
+  return useQuery({ queryKey: queryKeys.courseGroups, queryFn: () => api().courseGroups.list() })
+}
+
+export function useCreateCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateCourseGroupInput) => api().courseGroups.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+  })
+}
+
+export function useRenameCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => api().courseGroups.rename(id, name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+  })
+}
+
+export function useDeleteCourseGroup() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().courseGroups.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.courseGroups })
+      qc.invalidateQueries({ queryKey: queryKeys.classes })
+    }
+  })
+}
+
+export function useCourseGroupComposite(courseGroupId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.courseGroupComposite(courseGroupId ?? ''),
+    queryFn: () => api().courseGroups.getComposite(courseGroupId!),
+    enabled: !!courseGroupId
+  })
+}
+
+// ---- Seat assignments -------------------------------------------------------------------------
+
+export function useSeatAssignments(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.seatAssignments(classId ?? ''),
+    queryFn: () => api().seatAssignments.listByClass(classId!),
+    enabled: !!classId
+  })
+}
+
+export function useAssignSeat(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studentId, row, col }: { studentId: string; row: number; col: number }) =>
+      api().seatAssignments.assignSeat(classId, studentId, row, col),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
+  })
+}
+
+export function useUnassignSeat(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (studentId: string) => api().seatAssignments.unassignSeat(classId, studentId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
+  })
+}
+
+export function useClearSeatingChart(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().seatAssignments.clear(classId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.seatAssignments(classId) })
+  })
+}
+
+// ---- Assignment submissions -----------------------------------------------------------------
+
+export function useAssignmentSubmissions(assessmentId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.assignmentSubmissions(assessmentId ?? ''),
+    queryFn: () => api().assignmentSubmissions.listByAssessment(assessmentId!),
+    enabled: !!assessmentId
+  })
+}
+
+export function useAssignmentSubmissionsByClass(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.assignmentSubmissionsByClass(classId ?? ''),
+    queryFn: () => api().assignmentSubmissions.listByClass(classId!),
+    enabled: !!classId
+  })
+}
+
+export function useUpsertAssignmentSubmission(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpsertAssignmentSubmissionInput) =>
+      api().assignmentSubmissions.upsert(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissions(vars.assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissionsByClass(classId) })
+    }
+  })
+}
+
+export function useDeleteAssignmentSubmission(classId: string, assessmentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().assignmentSubmissions.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissions(assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissionsByClass(classId) })
+    }
   })
 }
 

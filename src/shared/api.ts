@@ -13,6 +13,8 @@ import type {
   ClassReport,
   ClassRosterRow,
   ClassSection,
+  CourseGroup,
+  StudentCompositeGrade,
   DashboardStats,
   Enrollment,
   EnrollmentStatus,
@@ -26,7 +28,10 @@ import type {
   RubricWithCriteria,
   RubricScore,
   StudentLogEntry,
+  ParentCommunicationEntry,
   LessonResource,
+  AssignmentSubmission,
+  SeatAssignment,
   ExitTicket,
   ExitTicketResponse,
   ExitTicketServerInfo
@@ -53,9 +58,12 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   CreateStudentLogEntryInput,
+  UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
-  UpsertExitTicketInput
+  UpsertExitTicketInput,
+  UpsertAssignmentSubmissionInput,
+  CreateCourseGroupInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -173,7 +181,9 @@ export interface EduBoardApi {
   studentLogEntries: {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>
     create(input: CreateStudentLogEntryInput): Promise<StudentLogEntry>
+    update(id: string, patch: UpdateStudentLogEntryInput): Promise<StudentLogEntry>
     remove(id: string): Promise<void>
+    listParentCommunications(): Promise<ParentCommunicationEntry[]>
   }
   lessonResources: {
     list(): Promise<LessonResource[]>
@@ -183,6 +193,27 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  courseGroups: {
+    list(): Promise<CourseGroup[]>
+    create(input: CreateCourseGroupInput): Promise<CourseGroup>
+    rename(id: string, name: string): Promise<CourseGroup>
+    remove(id: string): Promise<void>
+    getComposite(courseGroupId: string): Promise<StudentCompositeGrade[]>
+  }
+  seatAssignments: {
+    listByClass(classId: string): Promise<SeatAssignment[]>
+    assignSeat(classId: string, studentId: string, row: number, col: number): Promise<void>
+    unassignSeat(classId: string, studentId: string): Promise<void>
+    clear(classId: string): Promise<void>
+  }
+  assignmentSubmissions: {
+    listByAssessment(assessmentId: string): Promise<AssignmentSubmission[]>
+    listByClass(classId: string): Promise<AssignmentSubmission[]>
+    pickFile(): Promise<string | null>
+    upsert(input: UpsertAssignmentSubmissionInput): Promise<AssignmentSubmission>
+    remove(id: string): Promise<void>
+    openPath(filePath: string): Promise<void>
   }
   exitTickets: {
     getByClass(classId: string): Promise<ExitTicket | undefined>

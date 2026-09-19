@@ -17,6 +17,10 @@ import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
+import * as seatAssignmentsRepo from '../repositories/seatAssignments'
+import * as courseGroupsRepo from '../repositories/courseGroups'
+import { getCourseGroupComposite } from '../services/compositeGrades'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -292,8 +296,16 @@ export function registerIpcHandlers(): void {
     (_e, input: studentLogEntriesRepo.CreateStudentLogEntryInput) =>
       studentLogEntriesRepo.createStudentLogEntry(input)
   )
+  handle(
+    IpcChannels.studentLogEntries.update,
+    (_e, id: string, patch: studentLogEntriesRepo.UpdateStudentLogEntryInput) =>
+      studentLogEntriesRepo.updateStudentLogEntry(id, patch)
+  )
   handle(IpcChannels.studentLogEntries.remove, (_e, id: string) =>
     studentLogEntriesRepo.deleteStudentLogEntry(id)
+  )
+  handle(IpcChannels.studentLogEntries.listParentCommunications, () =>
+    studentLogEntriesRepo.listParentCommunications()
   )
 
   // --- Lesson resources -------------------------------------------------------------------
@@ -317,6 +329,60 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Course groups / composite grades ----------------------------------------------------
+  handle(IpcChannels.courseGroups.list, () => courseGroupsRepo.listCourseGroups())
+  handle(IpcChannels.courseGroups.create, (_e, input: courseGroupsRepo.CreateCourseGroupInput) =>
+    courseGroupsRepo.createCourseGroup(input)
+  )
+  handle(IpcChannels.courseGroups.rename, (_e, id: string, name: string) =>
+    courseGroupsRepo.renameCourseGroup(id, name)
+  )
+  handle(IpcChannels.courseGroups.remove, (_e, id: string) =>
+    courseGroupsRepo.deleteCourseGroup(id)
+  )
+  handle(IpcChannels.courseGroups.getComposite, (_e, courseGroupId: string) =>
+    getCourseGroupComposite(courseGroupId)
+  )
+
+  // --- Seat assignments -------------------------------------------------------------------
+  handle(IpcChannels.seatAssignments.listByClass, (_e, classId: string) =>
+    seatAssignmentsRepo.listSeatAssignments(classId)
+  )
+  handle(
+    IpcChannels.seatAssignments.assignSeat,
+    (_e, classId: string, studentId: string, row: number, col: number) =>
+      seatAssignmentsRepo.assignSeat(classId, studentId, row, col)
+  )
+  handle(IpcChannels.seatAssignments.unassignSeat, (_e, classId: string, studentId: string) =>
+    seatAssignmentsRepo.unassignSeat(classId, studentId)
+  )
+  handle(IpcChannels.seatAssignments.clear, (_e, classId: string) =>
+    seatAssignmentsRepo.clearSeatingChart(classId)
+  )
+
+  // --- Assignment submissions --------------------------------------------------------------
+  handle(IpcChannels.assignmentSubmissions.listByAssessment, (_e, assessmentId: string) =>
+    assignmentSubmissionsRepo.listSubmissionsByAssessment(assessmentId)
+  )
+  handle(IpcChannels.assignmentSubmissions.listByClass, (_e, classId: string) =>
+    assignmentSubmissionsRepo.listSubmissionsByClass(classId)
+  )
+  handle(IpcChannels.assignmentSubmissions.pickFile, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(
+    IpcChannels.assignmentSubmissions.upsert,
+    (_e, input: assignmentSubmissionsRepo.UpsertAssignmentSubmissionInput) =>
+      assignmentSubmissionsRepo.upsertAssignmentSubmission(input)
+  )
+  handle(IpcChannels.assignmentSubmissions.remove, (_e, id: string) =>
+    assignmentSubmissionsRepo.deleteAssignmentSubmission(id)
+  )
+  handle(IpcChannels.assignmentSubmissions.openPath, (_e, filePath: string) =>
+    shell.openPath(filePath)
+  )
 
   // --- Exit tickets -----------------------------------------------------------------------
   handle(IpcChannels.exitTickets.getByClass, (_e, classId: string) =>

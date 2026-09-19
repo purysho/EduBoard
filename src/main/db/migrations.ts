@@ -292,6 +292,76 @@ const migrations: Migration[] = [
           ON exit_ticket_responses(exit_ticket_id, submitted_at);
       `)
     }
+  },
+  {
+    id: 7,
+    name: 'student_log_contact_fields',
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE student_log_entries ADD COLUMN contact_method TEXT;
+        ALTER TABLE student_log_entries ADD COLUMN follow_up_needed INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE student_log_entries ADD COLUMN follow_up_done INTEGER NOT NULL DEFAULT 0;
+      `)
+    }
+  },
+  {
+    id: 8,
+    name: 'assignment_submissions',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE assignment_submissions (
+          id TEXT PRIMARY KEY,
+          assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          file_path TEXT NOT NULL,
+          file_name TEXT NOT NULL,
+          submitted_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX assignment_submissions_assessment_student_unique
+          ON assignment_submissions(assessment_id, student_id);
+      `)
+    }
+  },
+  {
+    id: 9,
+    name: 'seating_charts',
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE classes ADD COLUMN seating_rows INTEGER NOT NULL DEFAULT 5;
+        ALTER TABLE classes ADD COLUMN seating_cols INTEGER NOT NULL DEFAULT 6;
+
+        CREATE TABLE seat_assignments (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          row INTEGER NOT NULL,
+          col INTEGER NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX seat_assignments_class_student_unique
+          ON seat_assignments(class_id, student_id);
+        CREATE INDEX seat_assignments_class_idx ON seat_assignments(class_id);
+      `)
+    }
+  },
+  {
+    id: 10,
+    name: 'course_groups',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE course_groups (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+
+        ALTER TABLE classes ADD COLUMN course_group_id TEXT
+          REFERENCES course_groups(id) ON DELETE SET NULL;
+        ALTER TABLE classes ADD COLUMN term_weight REAL NOT NULL DEFAULT 1;
+
+        CREATE INDEX classes_course_group_idx ON classes(course_group_id);
+      `)
+    }
   }
 ]
 

@@ -9,6 +9,7 @@ import { RosterTab } from './pages/Classes/RosterTab'
 import { GradebookTab } from './pages/Classes/GradebookTab'
 import { AttendanceTab } from './pages/Classes/AttendanceTab'
 import { LessonPlannerTab } from './pages/Classes/LessonPlannerTab'
+import { SeatingChartTab } from './pages/Classes/SeatingChartTab'
 import { ExitTicketTab } from './pages/Classes/ExitTicketTab'
 import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
@@ -17,6 +18,8 @@ import { StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
 import { RubricsPage } from './pages/Rubrics/RubricsPage'
 import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
+import { CommunicationsPage } from './pages/Communications/CommunicationsPage'
+import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage'
 
 function App(): React.JSX.Element {
   return (
@@ -32,6 +35,7 @@ function App(): React.JSX.Element {
           <Route path="gradebook" element={<GradebookTab />} />
           <Route path="attendance" element={<AttendanceTab />} />
           <Route path="lessons" element={<LessonPlannerTab />} />
+          <Route path="seating" element={<SeatingChartTab />} />
           <Route path="exit-ticket" element={<ExitTicketTab />} />
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />
@@ -39,6 +43,8 @@ function App(): React.JSX.Element {
         <Route path="/rubrics" element={<RubricsPage />} />
         <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/communications" element={<CommunicationsPage />} />
+        <Route path="/composite-grades" element={<CompositeGradesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

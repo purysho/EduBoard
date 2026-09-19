@@ -3,7 +3,9 @@ import {
   ClipboardCheck,
   FolderOpen,
   GraduationCap,
+  Layers,
   LayoutGrid,
+  MessageCircle,
   Settings2,
   ShieldCheck,
   Users
@@ -16,6 +18,8 @@ const navItems = [
   { to: '/students', label: 'Students', icon: Users },
   { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
   { to: '/resources', label: 'Resources', icon: FolderOpen },
+  { to: '/communications', label: 'Communications', icon: MessageCircle },
+  { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]
 
