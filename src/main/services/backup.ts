@@ -58,13 +58,18 @@ export function createAutoBackupOnLaunch(): void {
   }
 }
 
-function pruneAutoBackups(backupsDir: string): void {
+export function pruneAutoBackups(backupsDir: string): void {
+  // Sort by actual file mtime, not the timestamp embedded in the filename — the
+  // filename format is just this file's convention, and if it ever changes, a
+  // lexicographic sort of names could silently delete the newest backups instead of
+  // the oldest ones. mtime is what "oldest" actually means here regardless of naming.
   const autoBackups = readdirSync(backupsDir)
     .filter((f) => f.startsWith(AUTO_BACKUP_PREFIX) && f.endsWith('.db'))
-    .sort()
+    .map((f) => ({ name: f, mtimeMs: statSync(join(backupsDir, f)).mtimeMs }))
+    .sort((a, b) => a.mtimeMs - b.mtimeMs)
   const excess = autoBackups.length - MAX_AUTO_BACKUPS
   for (let i = 0; i < excess; i++) {
-    unlinkSync(join(backupsDir, autoBackups[i]))
+    unlinkSync(join(backupsDir, autoBackups[i].name))
   }
 }
 

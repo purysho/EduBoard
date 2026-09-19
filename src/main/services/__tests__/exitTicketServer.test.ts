@@ -2,7 +2,8 @@ import { randomUUID } from 'crypto'
 import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createServer } from 'http'
 import { closeDb, initDb, setDbPathForTesting } from '../../db/client'
 import { createClass } from '../../repositories/classes'
 import {
@@ -132,5 +133,32 @@ describe('exit ticket local HTTP server', () => {
     const base = await waitForServer()
     const res = await fetch(`${base}/definitely-not-a-real-path`)
     expect(res.status).toBe(404)
+  })
+
+  it('logs an EADDRINUSE retry at most once, not once per listener', async () => {
+    // The real server (started in beforeEach) is already bound to the first candidate
+    // port. Occupy the exact same port with a throwaway server, then start a second
+    // real exit-ticket server so it has to retry past that port — this is exactly the
+    // scenario a previous version double-logged (a persistent `on('error')` handler
+    // plus a retry-specific `once('error')` handler both firing for one EADDRINUSE).
+    const info = await waitForServer()
+    const occupiedPort = Number(new URL(info).port)
+    stopExitTicketServer()
+
+    const blocker = createServer()
+    await new Promise<void>((resolve) => blocker.listen(occupiedPort, '0.0.0.0', resolve))
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      startExitTicketServer()
+      await waitForServer()
+      const eaddrinuseLogs = errorSpy.mock.calls.filter(
+        (call) => String(call[1]?.code ?? call[1]) === 'EADDRINUSE'
+      )
+      expect(eaddrinuseLogs).toHaveLength(0) // a mid-retry EADDRINUSE is never logged at all
+    } finally {
+      errorSpy.mockRestore()
+      await new Promise<void>((resolve) => blocker.close(() => resolve()))
+    }
   })
 })

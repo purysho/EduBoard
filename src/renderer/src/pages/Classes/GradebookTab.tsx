@@ -140,6 +140,8 @@ export function GradebookTab(): React.JSX.Element {
                             studentName={studentFullName(row.student)}
                             rubric={rubric}
                             score={scoreMap.get(`${a.id}:${row.student.id}`)}
+                            row={rowIndex}
+                            col={colIndex}
                           />
                         ) : (
                           <ScoreCell
