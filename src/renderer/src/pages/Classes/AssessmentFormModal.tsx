@@ -1,9 +1,10 @@
 import { FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Assessment, GradeCategory } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
-import { useCreateAssessment, useUpdateAssessment } from '@renderer/lib/queries'
+import { useCreateAssessment, useRubrics, useUpdateAssessment } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 
 export function AssessmentFormModal({
@@ -22,12 +23,22 @@ export function AssessmentFormModal({
   const isEdit = !!assessment
   const createAssessment = useCreateAssessment(classId)
   const updateAssessment = useUpdateAssessment(classId)
+  const { data: rubrics } = useRubrics()
 
   const [name, setName] = useState(assessment?.name ?? '')
   const [categoryId, setCategoryId] = useState(assessment?.categoryId ?? '')
   const [assessmentDate, setAssessmentDate] = useState(assessment?.assessmentDate ?? todayIso())
   const [maxScore, setMaxScore] = useState(assessment?.maxScore ?? 100)
   const [isFinal, setIsFinal] = useState(assessment?.isFinal ?? false)
+  const [rubricId, setRubricId] = useState(assessment?.rubricId ?? '')
+
+  const selectedRubric = rubrics?.find((r) => r.id === rubricId)
+
+  function handleRubricChange(id: string): void {
+    setRubricId(id)
+    const rubric = rubrics?.find((r) => r.id === id)
+    if (rubric) setMaxScore(rubric.maxPoints)
+  }
 
   const saving = createAssessment.isPending || updateAssessment.isPending
 
@@ -36,10 +47,11 @@ export function AssessmentFormModal({
     const payload = {
       classId,
       categoryId: categoryId || null,
+      rubricId: rubricId || null,
       name: name.trim(),
       description: assessment?.description ?? null,
       assessmentDate: assessmentDate || null,
-      maxScore: Number(maxScore) || 100,
+      maxScore: selectedRubric ? selectedRubric.maxPoints : Number(maxScore) || 100,
       isFinal
     }
 
@@ -86,8 +98,9 @@ export function AssessmentFormModal({
             <Input
               type="number"
               min={1}
-              value={maxScore}
+              value={selectedRubric ? selectedRubric.maxPoints : maxScore}
               onChange={(e) => setMaxScore(Number(e.target.value))}
+              disabled={!!selectedRubric}
             />
           </FormRow>
           <FormRow label="Date">
@@ -108,6 +121,29 @@ export function AssessmentFormModal({
             </label>
           </FormRow>
         </div>
+        <FormRow
+          label="Grade with a rubric (optional)"
+          hint={
+            selectedRubric
+              ? `Max score is set from the rubric (${selectedRubric.maxPoints} pts).`
+              : undefined
+          }
+        >
+          <Select value={rubricId} onChange={(e) => handleRubricChange(e.target.value)}>
+            <option value="">None — enter a plain score</option>
+            {rubrics?.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} ({r.maxPoints} pts)
+              </option>
+            ))}
+          </Select>
+          <Link
+            to="/rubrics/new"
+            className="mt-1 inline-block text-xs text-[var(--color-primary)] hover:underline"
+          >
+            + Build a new rubric
+          </Link>
+        </FormRow>
       </form>
     </Modal>
   )

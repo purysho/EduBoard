@@ -13,6 +13,8 @@ import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
 import { SettingsPage } from './pages/Settings/SettingsPage'
 import { StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
+import { RubricsPage } from './pages/Rubrics/RubricsPage'
+import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
 
 function App(): React.JSX.Element {
   return (
@@ -31,6 +33,8 @@ function App(): React.JSX.Element {
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />
         </Route>
+        <Route path="/rubrics" element={<RubricsPage />} />
+        <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

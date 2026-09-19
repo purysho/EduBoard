@@ -12,11 +12,13 @@ import {
   useClassRoster,
   useDeleteAssessment,
   useGradeCategories,
+  useRubrics,
   useScoresByClass
 } from '@renderer/lib/queries'
 import { formatDate, formatPercent, studentFullName } from '@renderer/lib/format'
 import { AssessmentFormModal } from './AssessmentFormModal'
 import { ScoreCell } from './ScoreCell'
+import { RubricScoreCell } from './RubricScoreCell'
 
 export function GradebookTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -24,7 +26,10 @@ export function GradebookTab(): React.JSX.Element {
   const { data: assessments, isLoading } = useAssessments(classSection.id)
   const { data: roster } = useClassRoster(classSection.id)
   const { data: scores } = useScoresByClass(classSection.id)
+  const { data: rubrics } = useRubrics()
   const deleteAssessment = useDeleteAssessment(classSection.id)
+
+  const rubricsById = useMemo(() => new Map((rubrics ?? []).map((r) => [r.id, r])), [rubrics])
 
   const [showAdd, setShowAdd] = useState(false)
   const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null)
@@ -115,19 +120,33 @@ export function GradebookTab(): React.JSX.Element {
                       {studentFullName(row.student)}
                     </Link>
                   </td>
-                  {assessments.map((a, colIndex) => (
-                    <td key={a.id} className="px-2 py-1 text-center">
-                      <ScoreCell
-                        classId={classSection.id}
-                        assessmentId={a.id}
-                        studentId={row.student.id}
-                        maxScore={a.maxScore}
-                        score={scoreMap.get(`${a.id}:${row.student.id}`)}
-                        row={rowIndex}
-                        col={colIndex}
-                      />
-                    </td>
-                  ))}
+                  {assessments.map((a, colIndex) => {
+                    const rubric = a.rubricId ? rubricsById.get(a.rubricId) : undefined
+                    return (
+                      <td key={a.id} className="px-2 py-1 text-center">
+                        {rubric ? (
+                          <RubricScoreCell
+                            classId={classSection.id}
+                            assessmentId={a.id}
+                            studentId={row.student.id}
+                            studentName={studentFullName(row.student)}
+                            rubric={rubric}
+                            score={scoreMap.get(`${a.id}:${row.student.id}`)}
+                          />
+                        ) : (
+                          <ScoreCell
+                            classId={classSection.id}
+                            assessmentId={a.id}
+                            studentId={row.student.id}
+                            maxScore={a.maxScore}
+                            score={scoreMap.get(`${a.id}:${row.student.id}`)}
+                            row={rowIndex}
+                            col={colIndex}
+                          />
+                        )}
+                      </td>
+                    )
+                  })}
                   <td className="px-3 py-1.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <span>{formatPercent(row.grade.percent)}</span>

@@ -77,6 +77,44 @@ describe('rubrics', () => {
     expect(updated.maxPoints).toBe(10)
   })
 
+  it('preserves criterion/level ids across an edit that keeps them, so existing rubric scores stay intact', () => {
+    const rubric = createRubric({
+      name: 'Essay rubric',
+      criteria: [
+        {
+          name: 'Thesis',
+          levels: [
+            { label: 'Excellent', points: 4 },
+            { label: 'Good', points: 3 }
+          ]
+        }
+      ]
+    })
+    const originalCriterionId = rubric.criteria[0].id
+    const originalLevelId = rubric.criteria[0].levels[0].id
+
+    // Edit: fix a typo in the criterion name, keep both ids, add a third level.
+    const updated = updateRubric(rubric.id, {
+      name: rubric.name,
+      criteria: [
+        {
+          id: originalCriterionId,
+          name: 'Thesis statement',
+          levels: [
+            { id: originalLevelId, label: 'Excellent', points: 4 },
+            { id: rubric.criteria[0].levels[1].id, label: 'Good', points: 3 },
+            { label: 'Poor', points: 1 }
+          ]
+        }
+      ]
+    })
+
+    expect(updated.criteria[0].id).toBe(originalCriterionId)
+    expect(updated.criteria[0].name).toBe('Thesis statement')
+    expect(updated.criteria[0].levels[0].id).toBe(originalLevelId)
+    expect(updated.criteria[0].levels).toHaveLength(3)
+  })
+
   it('scoring a rubric-graded assessment computes points into the normal scores table and audit trail', () => {
     const student = createStudent({
       firstName: 'Ada',

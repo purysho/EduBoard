@@ -56,38 +56,104 @@ export function getRubric(id: string): RubricWithCriteria | undefined {
   return row ? attachCriteria(row) : undefined
 }
 
-/** Replaces a rubric's whole criteria/levels tree in one transaction — the builder
- * always saves the complete tree rather than diffing individual rows, since criteria
- * and levels are edited together as a unit and there's no meaningful "partial" save. */
+/** Saves a rubric's whole criteria/levels tree in one transaction — the builder always
+ * submits the complete tree rather than diffing individual rows client-side, since
+ * criteria and levels are edited together as a unit. Server-side, though, this reuses
+ * ids the caller already had (an existing criterion/level being edited) rather than
+ * deleting and recreating everything: rubric_scores references criterion/level ids, so
+ * blanket delete-and-recreate would cascade-delete a class's existing rubric grading
+ * detail (the computed score in `scores` would survive, but the per-criterion
+ * breakdown would silently vanish) every time a teacher just fixed a typo. Only
+ * criteria/levels actually removed from the draft are deleted. */
 function writeCriteriaTree(rubricId: string, criteria: CreateRubricInput['criteria']): void {
   const db = getDb()
-  db.delete(rubricCriteria).where(eq(rubricCriteria.rubricId, rubricId)).run()
+
+  const existingCriterionIds = new Set(
+    (
+      db
+        .select({ id: rubricCriteria.id })
+        .from(rubricCriteria)
+        .where(eq(rubricCriteria.rubricId, rubricId))
+        .all() as { id: string }[]
+    ).map((c) => c.id)
+  )
+  const keptCriterionIds = new Set(criteria.map((c) => c.id).filter((id): id is string => !!id))
+  const removedCriterionIds = [...existingCriterionIds].filter((id) => !keptCriterionIds.has(id))
+  if (removedCriterionIds.length) {
+    db.delete(rubricCriteria).where(inArray(rubricCriteria.id, removedCriterionIds)).run()
+  }
 
   criteria.forEach((criterion, criterionIndex) => {
-    const criterionId = newId()
-    db.insert(rubricCriteria)
-      .values({
-        id: criterionId,
-        rubricId,
-        standardId: criterion.standardId ?? null,
-        name: criterion.name,
-        description: criterion.description ?? null,
-        sortOrder: criterionIndex,
-        createdAt: nowIso()
-      })
-      .run()
+    const criterionId = criterion.id ?? newId()
+    const isExistingCriterion = criterion.id && existingCriterionIds.has(criterion.id)
 
-    criterion.levels.forEach((level, levelIndex) => {
-      db.insert(rubricLevels)
+    if (isExistingCriterion) {
+      db.update(rubricCriteria)
+        .set({
+          standardId: criterion.standardId ?? null,
+          name: criterion.name,
+          description: criterion.description ?? null,
+          sortOrder: criterionIndex
+        })
+        .where(eq(rubricCriteria.id, criterionId))
+        .run()
+    } else {
+      db.insert(rubricCriteria)
         .values({
-          id: newId(),
-          criterionId,
-          label: level.label,
-          points: level.points,
-          description: level.description ?? null,
-          sortOrder: levelIndex
+          id: criterionId,
+          rubricId,
+          standardId: criterion.standardId ?? null,
+          name: criterion.name,
+          description: criterion.description ?? null,
+          sortOrder: criterionIndex,
+          createdAt: nowIso()
         })
         .run()
+    }
+
+    const existingLevelIds = new Set(
+      (
+        db
+          .select({ id: rubricLevels.id })
+          .from(rubricLevels)
+          .where(eq(rubricLevels.criterionId, criterionId))
+          .all() as { id: string }[]
+      ).map((l) => l.id)
+    )
+    const keptLevelIds = new Set(
+      criterion.levels.map((l) => l.id).filter((id): id is string => !!id)
+    )
+    const removedLevelIds = [...existingLevelIds].filter((id) => !keptLevelIds.has(id))
+    if (removedLevelIds.length) {
+      db.delete(rubricLevels).where(inArray(rubricLevels.id, removedLevelIds)).run()
+    }
+
+    criterion.levels.forEach((level, levelIndex) => {
+      const levelId = level.id ?? newId()
+      const isExistingLevel = level.id && existingLevelIds.has(level.id)
+
+      if (isExistingLevel) {
+        db.update(rubricLevels)
+          .set({
+            label: level.label,
+            points: level.points,
+            description: level.description ?? null,
+            sortOrder: levelIndex
+          })
+          .where(eq(rubricLevels.id, levelId))
+          .run()
+      } else {
+        db.insert(rubricLevels)
+          .values({
+            id: levelId,
+            criterionId,
+            label: level.label,
+            points: level.points,
+            description: level.description ?? null,
+            sortOrder: levelIndex
+          })
+          .run()
+      }
     })
   })
 }
