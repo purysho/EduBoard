@@ -107,6 +107,28 @@ export const assessments = sqliteTable(
   (t) => ({ classIdx: index('assessments_class_idx').on(t.classId) })
 )
 
+export const assignmentSubmissions = sqliteTable(
+  'assignment_submissions',
+  {
+    id: text('id').primaryKey(),
+    assessmentId: text('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    filePath: text('file_path').notNull(),
+    fileName: text('file_name').notNull(),
+    submittedAt: text('submitted_at').notNull()
+  },
+  (t) => ({
+    assessmentStudentUnique: uniqueIndex('assignment_submissions_assessment_student_unique').on(
+      t.assessmentId,
+      t.studentId
+    )
+  })
+)
+
 export const scores = sqliteTable(
   'scores',
   {

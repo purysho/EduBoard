@@ -125,6 +125,14 @@ export const IpcChannels = {
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
   },
+  assignmentSubmissions: {
+    listByAssessment: 'assignmentSubmissions:listByAssessment',
+    listByClass: 'assignmentSubmissions:listByClass',
+    pickFile: 'assignmentSubmissions:pickFile',
+    upsert: 'assignmentSubmissions:upsert',
+    remove: 'assignmentSubmissions:remove',
+    openPath: 'assignmentSubmissions:openPath'
+  },
   exitTickets: {
     getByClass: 'exitTickets:getByClass',
     upsert: 'exitTickets:upsert',

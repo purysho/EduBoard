@@ -1,8 +1,9 @@
 import { KeyboardEvent, useState } from 'react'
-import type { Score } from '@shared/types'
+import type { AssignmentSubmission, Score } from '@shared/types'
 import { useUpsertScore } from '@renderer/lib/queries'
 import { ScoreHistoryPopover } from './ScoreHistoryPopover'
 import { CommentPopover } from './CommentPopover'
+import { SubmissionPopover } from './SubmissionPopover'
 
 export function ScoreCell({
   classId,
@@ -10,6 +11,7 @@ export function ScoreCell({
   studentId,
   maxScore,
   score,
+  submission,
   row,
   col
 }: {
@@ -18,6 +20,7 @@ export function ScoreCell({
   studentId: string
   maxScore: number
   score: Score | undefined
+  submission: AssignmentSubmission | undefined
   row: number
   col: number
 }): React.JSX.Element {
@@ -119,6 +122,18 @@ export function ScoreCell({
           />
         </span>
       )}
+      <span
+        className={`absolute -right-3 top-6 flex flex-col transition-opacity ${
+          submission ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
+        }`}
+      >
+        <SubmissionPopover
+          classId={classId}
+          assessmentId={assessmentId}
+          studentId={studentId}
+          submission={submission}
+        />
+      </span>
     </span>
   )
 }

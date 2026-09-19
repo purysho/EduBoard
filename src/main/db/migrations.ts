@@ -303,6 +303,24 @@ const migrations: Migration[] = [
         ALTER TABLE student_log_entries ADD COLUMN follow_up_done INTEGER NOT NULL DEFAULT 0;
       `)
     }
+  },
+  {
+    id: 8,
+    name: 'assignment_submissions',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE assignment_submissions (
+          id TEXT PRIMARY KEY,
+          assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          file_path TEXT NOT NULL,
+          file_name TEXT NOT NULL,
+          submitted_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX assignment_submissions_assessment_student_unique
+          ON assignment_submissions(assessment_id, student_id);
+      `)
+    }
   }
 ]
 

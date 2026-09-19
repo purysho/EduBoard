@@ -13,7 +13,8 @@ import type {
   Standard,
   StudentLogEntry,
   LessonResource,
-  ExitTicketQuestion
+  ExitTicketQuestion,
+  AssignmentSubmission
 } from './types'
 
 export type CreateTermInput = Omit<Term, 'id' | 'createdAt' | 'updatedAt'>
@@ -102,6 +103,8 @@ export type CreateStudentLogEntryInput = Omit<
 export type UpdateStudentLogEntryInput = Partial<
   Pick<StudentLogEntry, 'followUpNeeded' | 'followUpDone'>
 >
+
+export type UpsertAssignmentSubmissionInput = Omit<AssignmentSubmission, 'id' | 'submittedAt'>
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

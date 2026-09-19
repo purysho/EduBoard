@@ -97,6 +97,15 @@ export interface Assessment {
   updatedAt: string
 }
 
+export interface AssignmentSubmission {
+  id: string
+  assessmentId: string
+  studentId: string
+  filePath: string
+  fileName: string
+  submittedAt: string
+}
+
 export interface Score {
   id: string
   assessmentId: string

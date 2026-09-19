@@ -25,7 +25,8 @@ import type {
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
-  UpsertExitTicketInput
+  UpsertExitTicketInput,
+  UpsertAssignmentSubmissionInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -64,6 +65,9 @@ export const queryKeys = {
   studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
   parentCommunications: ['parentCommunications'] as const,
   lessonResources: ['lessonResources'] as const,
+  assignmentSubmissions: (assessmentId: string) =>
+    ['assessments', assessmentId, 'submissions'] as const,
+  assignmentSubmissionsByClass: (classId: string) => ['classes', classId, 'submissions'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
     ['exitTickets', exitTicketId, 'responses'] as const,
@@ -758,6 +762,47 @@ export function useDeleteLessonResource() {
   return useMutation({
     mutationFn: (id: string) => api().lessonResources.remove(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+// ---- Assignment submissions -----------------------------------------------------------------
+
+export function useAssignmentSubmissions(assessmentId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.assignmentSubmissions(assessmentId ?? ''),
+    queryFn: () => api().assignmentSubmissions.listByAssessment(assessmentId!),
+    enabled: !!assessmentId
+  })
+}
+
+export function useAssignmentSubmissionsByClass(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.assignmentSubmissionsByClass(classId ?? ''),
+    queryFn: () => api().assignmentSubmissions.listByClass(classId!),
+    enabled: !!classId
+  })
+}
+
+export function useUpsertAssignmentSubmission(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpsertAssignmentSubmissionInput) =>
+      api().assignmentSubmissions.upsert(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissions(vars.assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissionsByClass(classId) })
+    }
+  })
+}
+
+export function useDeleteAssignmentSubmission(classId: string, assessmentId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().assignmentSubmissions.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissions(assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.assignmentSubmissionsByClass(classId) })
+    }
   })
 }
 

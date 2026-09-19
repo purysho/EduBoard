@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { ClipboardList, Plus } from 'lucide-react'
-import type { Assessment, ClassSection, Score } from '@shared/types'
+import type { Assessment, AssignmentSubmission, ClassSection, Score } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
 import { letterTone } from '@renderer/lib/grade'
@@ -9,6 +9,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
   useAssessments,
+  useAssignmentSubmissionsByClass,
   useClassRoster,
   useDeleteAssessment,
   useGradeCategories,
@@ -26,6 +27,7 @@ export function GradebookTab(): React.JSX.Element {
   const { data: assessments, isLoading } = useAssessments(classSection.id)
   const { data: roster } = useClassRoster(classSection.id)
   const { data: scores } = useScoresByClass(classSection.id)
+  const { data: submissions } = useAssignmentSubmissionsByClass(classSection.id)
   const { data: rubrics } = useRubrics()
   const deleteAssessment = useDeleteAssessment(classSection.id)
 
@@ -40,6 +42,12 @@ export function GradebookTab(): React.JSX.Element {
     for (const s of scores ?? []) map.set(`${s.assessmentId}:${s.studentId}`, s)
     return map
   }, [scores])
+
+  const submissionMap = useMemo(() => {
+    const map = new Map<string, AssignmentSubmission>()
+    for (const s of submissions ?? []) map.set(`${s.assessmentId}:${s.studentId}`, s)
+    return map
+  }, [submissions])
 
   const categoryName = new Map((categories ?? []).map((c) => [c.id, c.name]))
 
@@ -140,6 +148,7 @@ export function GradebookTab(): React.JSX.Element {
                             studentId={row.student.id}
                             maxScore={a.maxScore}
                             score={scoreMap.get(`${a.id}:${row.student.id}`)}
+                            submission={submissionMap.get(`${a.id}:${row.student.id}`)}
                             row={rowIndex}
                             col={colIndex}
                           />

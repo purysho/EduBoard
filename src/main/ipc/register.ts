@@ -17,6 +17,7 @@ import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -325,6 +326,29 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Assignment submissions --------------------------------------------------------------
+  handle(IpcChannels.assignmentSubmissions.listByAssessment, (_e, assessmentId: string) =>
+    assignmentSubmissionsRepo.listSubmissionsByAssessment(assessmentId)
+  )
+  handle(IpcChannels.assignmentSubmissions.listByClass, (_e, classId: string) =>
+    assignmentSubmissionsRepo.listSubmissionsByClass(classId)
+  )
+  handle(IpcChannels.assignmentSubmissions.pickFile, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(
+    IpcChannels.assignmentSubmissions.upsert,
+    (_e, input: assignmentSubmissionsRepo.UpsertAssignmentSubmissionInput) =>
+      assignmentSubmissionsRepo.upsertAssignmentSubmission(input)
+  )
+  handle(IpcChannels.assignmentSubmissions.remove, (_e, id: string) =>
+    assignmentSubmissionsRepo.deleteAssignmentSubmission(id)
+  )
+  handle(IpcChannels.assignmentSubmissions.openPath, (_e, filePath: string) =>
+    shell.openPath(filePath)
+  )
 
   // --- Exit tickets -----------------------------------------------------------------------
   handle(IpcChannels.exitTickets.getByClass, (_e, classId: string) =>

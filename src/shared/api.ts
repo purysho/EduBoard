@@ -28,6 +28,7 @@ import type {
   StudentLogEntry,
   ParentCommunicationEntry,
   LessonResource,
+  AssignmentSubmission,
   ExitTicket,
   ExitTicketResponse,
   ExitTicketServerInfo
@@ -57,7 +58,8 @@ import type {
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
   UpdateLessonResourceInput,
-  UpsertExitTicketInput
+  UpsertExitTicketInput,
+  UpsertAssignmentSubmissionInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -187,6 +189,14 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  assignmentSubmissions: {
+    listByAssessment(assessmentId: string): Promise<AssignmentSubmission[]>
+    listByClass(classId: string): Promise<AssignmentSubmission[]>
+    pickFile(): Promise<string | null>
+    upsert(input: UpsertAssignmentSubmissionInput): Promise<AssignmentSubmission>
+    remove(id: string): Promise<void>
+    openPath(filePath: string): Promise<void>
   }
   exitTickets: {
     getByClass(classId: string): Promise<ExitTicket | undefined>
