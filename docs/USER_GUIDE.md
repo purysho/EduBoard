@@ -10,6 +10,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Adding students](#adding-students)
 - [Setting up grading](#setting-up-grading)
 - [Using the gradebook](#using-the-gradebook)
+- [Grading with rubrics](#grading-with-rubrics)
 - [Taking attendance](#taking-attendance)
 - [Planning lessons](#planning-lessons)
 - [Reports and report cards](#reports-and-report-cards)
@@ -117,6 +118,21 @@ Enter scores directly in the grid: click a cell, type a number, click away (or p
 ![Gradebook](screenshots/gradebook.png)
 
 Click an assessment's name in the column header to edit it, or "remove" underneath to delete it (this also deletes every score recorded for it).
+
+**Move around the grid with the keyboard** — arrow keys jump between cells, Enter saves and moves down. Hover a cell you've already graded to reveal a small clock icon showing its change history, useful if a grade is ever disputed.
+
+---
+
+## Grading with rubrics
+
+**Rubrics** (in the sidebar) is a reusable library, separate from any one class — build a rubric once and attach it to assessments in any class.
+
+- **Rubric library tab → New rubric.** Give it a name, then add criteria (e.g. "Thesis," "Evidence"). Each criterion gets its own performance levels — a label, a point value, and an optional description (e.g. "Excellent" / 4 / "Clear, arguable thesis in the opening paragraph"). Optionally tag a criterion with one of your standards. The rubric's max score is the sum of each criterion's highest-point level.
+- **Standards tab** is your own list of standards (Common Core, state, or anything you define) — just a code and description. Nothing is bundled; you add what you use.
+- **Attaching a rubric to an assessment**: in **Gradebook → + Assessment**, pick a rubric from the "Grade with a rubric" dropdown. The assessment's max score locks to the rubric's total automatically.
+- **Grading**: a rubric-graded assessment's gradebook cells become buttons — click one to open the rubric, pick a performance level for each criterion, and save. The total is computed automatically and shows up everywhere a normal score would — the gradebook, class report, and dashboard — no different from typing a number in.
+
+Editing a rubric later preserves a student's existing scores wherever the criterion or level you're editing is the same one (fixing a typo doesn't lose data); only criteria or levels you actually remove take their recorded scores with them.
 
 ---
 
