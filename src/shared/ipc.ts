@@ -54,6 +54,11 @@ export const IpcChannels = {
     mark: 'attendance:mark',
     markBulk: 'attendance:markBulk'
   },
+  attendanceCheckIn: {
+    getStatus: 'attendanceCheckIn:getStatus',
+    open: 'attendanceCheckIn:open',
+    close: 'attendanceCheckIn:close'
+  },
   lessonPlans: {
     listByClass: 'lessonPlans:listByClass',
     listUpcoming: 'lessonPlans:listUpcoming',

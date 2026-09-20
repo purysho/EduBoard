@@ -1,7 +1,9 @@
 import { createServer, type Server } from 'http'
 import { networkInterfaces } from 'os'
 import { getExitTicketByClass, submitExitTicketResponse } from '../repositories/exitTickets'
-import type { ExitTicketServerInfo } from '@shared/types'
+import { getRosterForClass } from '../repositories/enrollments'
+import { markAttendance } from '../repositories/attendanceRecords'
+import type { AttendanceCheckInStatus, ExitTicketServerInfo } from '@shared/types'
 
 // Fixed port with a few fallbacks in case something else on the machine already holds
 // it. Never anything but a plain loopback-adjacent LAN port — this server is meant to
@@ -122,6 +124,94 @@ document.getElementById('f').addEventListener('submit', function (e) {
 </body></html>`
 }
 
+// Which classes currently have a QR attendance check-in session open, and who has
+// checked in so far. In-memory only — like the server itself, a check-in session is a
+// live-class-period concept, not something that needs to survive an app restart; the
+// teacher just starts a new one next period.
+const openCheckIns = new Map<string, { date: string; checkedInStudentIds: Set<string> }>()
+
+export function openAttendanceCheckIn(classId: string, date: string): void {
+  openCheckIns.set(classId, { date, checkedInStudentIds: new Set() })
+}
+
+export function closeAttendanceCheckIn(classId: string): void {
+  openCheckIns.delete(classId)
+}
+
+export function getAttendanceCheckInStatus(classId: string): AttendanceCheckInStatus {
+  const session = openCheckIns.get(classId)
+  if (!session) return { open: false, date: null, checkedInStudentIds: [] }
+  return { open: true, date: session.date, checkedInStudentIds: [...session.checkedInStudentIds] }
+}
+
+function renderAttendancePage(classId: string): string {
+  const session = openCheckIns.get(classId)
+
+  if (!session) {
+    return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attendance</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
+</head><body><p>No attendance check-in is open right now. Ask your teacher.</p></body></html>`
+  }
+
+  const roster = getRosterForClass(classId).filter((r) => r.enrollment.status === 'active')
+  const studentsHtml = roster
+    .map(({ student }) => {
+      const name = escapeHtml(`${student.firstName} ${student.lastName}`)
+      const checkedIn = session.checkedInStudentIds.has(student.id)
+      return `<button class="s${checkedIn ? ' done' : ''}" data-id="${student.id}" ${checkedIn ? 'disabled' : ''}>${name}${checkedIn ? ' ✓' : ''}</button>`
+    })
+    .join('')
+
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attendance</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+  .wrap{max-width:480px;margin:0 auto;padding:24px 16px}
+  h1{font-size:1.25rem;margin:0 0 4px}
+  p.hint{color:#64748b;margin:0 0 20px;font-size:.9rem}
+  .grid{display:flex;flex-direction:column;gap:8px}
+  .s{padding:14px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-size:1rem;text-align:left}
+  .s.done{background:#ecfdf5;border-color:#10b981;color:#047857}
+  .s:disabled{opacity:.7}
+  #done{display:none;text-align:center;padding:60px 0;font-size:1.1rem}
+</style></head>
+<body><div class="wrap">
+  <div id="list">
+    <h1>Attendance check-in</h1>
+    <p class="hint">Tap your name to mark yourself present.</p>
+    <div class="grid">${studentsHtml}</div>
+  </div>
+  <div id="done">You're checked in — thanks!</div>
+</div>
+<script>
+document.querySelectorAll('.s').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    btn.disabled = true
+    fetch(window.location.pathname + '/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studentId: btn.getAttribute('data-id') })
+    }).then(function (res) {
+      if (res.ok) {
+        document.getElementById('list').style.display = 'none'
+        document.getElementById('done').style.display = 'block'
+      } else {
+        btn.disabled = false
+        alert('Something went wrong — please try again.')
+      }
+    }).catch(function () {
+      btn.disabled = false
+      alert('Could not check in — check you are still on the classroom WiFi and try again.')
+    })
+  })
+})
+</script>
+</body></html>`
+}
+
 function readBody(req: import('http').IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     let body = ''
@@ -148,6 +238,59 @@ export function startExitTicketServer(): void {
     // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
     // genuine request.
     const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
+
+    const checkInMatch = url.match(/^\/a\/([^/]+)(\/checkin)?\/?$/)
+    if (checkInMatch) {
+      const classId = decodeURIComponent(checkInMatch[1])
+      const isCheckIn = !!checkInMatch[2]
+
+      if (isCheckIn && req.method === 'POST') {
+        readBody(req)
+          .then((raw) => {
+            const session = openCheckIns.get(classId)
+            if (!session) {
+              res.writeHead(403, { 'Content-Type': 'text/plain' })
+              res.end('This check-in session is closed.')
+              return
+            }
+            let parsed: { studentId?: unknown }
+            try {
+              parsed = JSON.parse(raw)
+            } catch {
+              res.writeHead(400, { 'Content-Type': 'text/plain' })
+              res.end('Bad request')
+              return
+            }
+            const studentId = typeof parsed.studentId === 'string' ? parsed.studentId : ''
+            const roster = getRosterForClass(classId)
+            if (!studentId || !roster.some((r) => r.student.id === studentId)) {
+              res.writeHead(400, { 'Content-Type': 'text/plain' })
+              res.end('Unknown student')
+              return
+            }
+            markAttendance({ classId, studentId, date: session.date, status: 'present' })
+            session.checkedInStudentIds.add(studentId)
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end('{"ok":true}')
+          })
+          .catch(() => {
+            res.writeHead(400, { 'Content-Type': 'text/plain' })
+            res.end('Bad request')
+          })
+        return
+      }
+
+      if (!isCheckIn && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(renderAttendancePage(classId))
+        return
+      }
+
+      res.writeHead(405, { 'Content-Type': 'text/plain' })
+      res.end('Method not allowed')
+      return
+    }
+
     const match = url.match(/^\/t\/([^/]+)(\/submit)?\/?$/)
 
     if (!match) {
@@ -254,6 +397,7 @@ export function stopExitTicketServer(): void {
   server?.close()
   server = null
   boundPort = null
+  openCheckIns.clear()
 }
 
 export function getExitTicketServerInfo(): ExitTicketServerInfo {

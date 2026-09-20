@@ -5,6 +5,7 @@ import type {
   AnalyticsOverview,
   AppSettings,
   Assessment,
+  AttendanceCheckInStatus,
   AttendanceRecord,
   AttendanceSummary,
   BackupInfo,
@@ -123,6 +124,11 @@ export interface EduBoardApi {
     listByStudentAndClass(studentId: string, classId: string): Promise<AttendanceRecord[]>
     mark(input: MarkAttendanceInput): Promise<AttendanceRecord>
     markBulk(inputs: MarkAttendanceInput[]): Promise<void>
+  }
+  attendanceCheckIn: {
+    getStatus(classId: string): Promise<AttendanceCheckInStatus>
+    open(classId: string, date: string): Promise<AttendanceCheckInStatus>
+    close(classId: string): Promise<void>
   }
   lessonPlans: {
     listByClass(classId: string): Promise<LessonPlan[]>

@@ -1,11 +1,21 @@
 import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, useOutletContext } from 'react-router-dom'
-import { CalendarCheck, Download, Plus } from 'lucide-react'
+import { CalendarCheck, Download, Play, Plus, QrCode, Square } from 'lucide-react'
 import type { AttendanceRecord, ClassSection } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
+import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Input } from '@renderer/components/ui/Field'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
-import { useAttendanceByClass, useClassRoster } from '@renderer/lib/queries'
+import {
+  queryKeys,
+  useAttendanceByClass,
+  useAttendanceCheckInStatus,
+  useClassroomServerInfo,
+  useClassRoster,
+  useCloseAttendanceCheckIn,
+  useOpenAttendanceCheckIn
+} from '@renderer/lib/queries'
 import { formatDate, formatRate, studentFullName, todayIso } from '@renderer/lib/format'
 import { AttendanceCell } from './AttendanceCell'
 
@@ -61,6 +71,8 @@ export function AttendanceTab(): React.JSX.Element {
 
   return (
     <div>
+      <QrCheckInPanel classId={classSection.id} />
+
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-muted)]">
           Click a cell to cycle Present → Late → Absent → Excused.
@@ -128,5 +140,92 @@ export function AttendanceTab(): React.JSX.Element {
         </table>
       </div>
     </div>
+  )
+}
+
+function QrCheckInPanel({ classId }: { classId: string }): React.JSX.Element {
+  const qc = useQueryClient()
+  const { data: status } = useAttendanceCheckInStatus(classId, true)
+  const isOpen = !!status?.open
+  const openCheckIn = useOpenAttendanceCheckIn(classId)
+  const closeCheckIn = useCloseAttendanceCheckIn(classId)
+  const { data: serverInfo } = useClassroomServerInfo(isOpen)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+
+  // The attendance grid's own query has no reason to poll on its own, but a checked-in
+  // count that just grew means a student's record landed in the DB via the LAN server,
+  // not through any renderer mutation — so the grid's cache needs a nudge to catch up.
+  const checkedInCount = status?.checkedInStudentIds.length ?? 0
+  const [lastSeenCount, setLastSeenCount] = useState(checkedInCount)
+  if (checkedInCount !== lastSeenCount) {
+    setLastSeenCount(checkedInCount)
+    qc.invalidateQueries({ queryKey: queryKeys.attendanceByClass(classId) })
+    qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
+  }
+
+  const studentUrl = serverInfo?.url ? `${serverInfo.url}/a/${classId}` : null
+
+  // Fetch the QR code once we have a URL to encode — during render, guarded, rather
+  // than an effect, since it's a one-shot derived value keyed to the URL string.
+  const [qrForUrl, setQrForUrl] = useState<string | null>(null)
+  if (studentUrl && qrForUrl !== studentUrl) {
+    setQrForUrl(studentUrl)
+    window.api.exitTickets.getQrDataUrl(studentUrl).then(setQrDataUrl)
+  } else if (!studentUrl && qrForUrl !== null) {
+    setQrForUrl(null)
+    setQrDataUrl(null)
+  }
+
+  return (
+    <Card className="mb-4">
+      <CardHeader className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <QrCode size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+          QR check-in
+        </h2>
+        <Button
+          variant={isOpen ? 'danger' : 'primary'}
+          size="sm"
+          onClick={() => (isOpen ? closeCheckIn.mutate() : openCheckIn.mutate(todayIso()))}
+          disabled={openCheckIn.isPending || closeCheckIn.isPending}
+        >
+          {isOpen ? (
+            <>
+              <Square size={13} className="mr-1 inline" aria-hidden />
+              Stop
+            </>
+          ) : (
+            <>
+              <Play size={13} className="mr-1 inline" aria-hidden />
+              Start
+            </>
+          )}
+        </Button>
+      </CardHeader>
+      {isOpen && (
+        <CardBody className="flex items-start gap-4">
+          {qrDataUrl && (
+            <img
+              src={qrDataUrl}
+              alt="QR code for attendance check-in"
+              className="h-28 w-28 rounded-lg border border-[var(--color-border)]"
+            />
+          )}
+          <div>
+            <p className="text-sm text-[var(--color-text-muted)]">Students on this WiFi go to:</p>
+            <p className="mt-1 break-all text-lg font-semibold">{studentUrl ?? '…'}</p>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+              {status?.checkedInStudentIds.length ?? 0} checked in for {formatDate(todayIso())}
+            </p>
+            {!serverInfo?.lanIp && (
+              <p className="mt-2 text-xs text-[var(--color-warning)]">
+                Couldn&apos;t detect a network address — make sure this computer is connected to the
+                classroom WiFi (not just powered on).
+              </p>
+            )}
+          </div>
+        </CardBody>
+      )}
+    </Card>
   )
 }

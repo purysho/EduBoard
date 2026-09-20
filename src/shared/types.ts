@@ -301,6 +301,15 @@ export interface ClassScheduleSlotWithClass extends ClassScheduleSlot {
   classColor: string | null
 }
 
+/** A QR check-in session's live state for one class — open/closed, which date it's
+ * marking attendance for, and who has checked themselves in so far. Ephemeral
+ * (in-memory only, like ExitTicketServerInfo's running server), not persisted. */
+export interface AttendanceCheckInStatus {
+  open: boolean
+  date: string | null
+  checkedInStudentIds: string[]
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string

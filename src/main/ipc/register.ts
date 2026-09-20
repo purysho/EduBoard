@@ -23,7 +23,13 @@ import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
 import { getCourseGroupComposite } from '../services/compositeGrades'
 import * as exitTicketsRepo from '../repositories/exitTickets'
-import { getExitTicketServerInfo, startExitTicketServer } from '../services/exitTicketServer'
+import {
+  closeAttendanceCheckIn,
+  getAttendanceCheckInStatus,
+  getExitTicketServerInfo,
+  openAttendanceCheckIn,
+  startExitTicketServer
+} from '../services/exitTicketServer'
 import QRCode from 'qrcode'
 import * as reportsService from '../services/reports'
 import * as backupService from '../services/backup'
@@ -160,6 +166,19 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.attendance.markBulk, (_e, inputs: attendanceRepo.MarkAttendanceInput[]) =>
     attendanceRepo.markAttendanceBulk(inputs)
+  )
+
+  // --- Attendance QR check-in ----------------------------------------------------------------
+  handle(IpcChannels.attendanceCheckIn.getStatus, (_e, classId: string) =>
+    getAttendanceCheckInStatus(classId)
+  )
+  handle(IpcChannels.attendanceCheckIn.open, (_e, classId: string, date: string) => {
+    startExitTicketServer()
+    openAttendanceCheckIn(classId, date)
+    return getAttendanceCheckInStatus(classId)
+  })
+  handle(IpcChannels.attendanceCheckIn.close, (_e, classId: string) =>
+    closeAttendanceCheckIn(classId)
   )
 
   // --- Lesson plans -----------------------------------------------------------------------

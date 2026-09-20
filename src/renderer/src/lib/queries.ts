@@ -50,6 +50,7 @@ export const queryKeys = {
   attendanceByClass: (classId: string) => ['classes', classId, 'attendance'] as const,
   attendanceByStudentClass: (studentId: string, classId: string) =>
     ['students', studentId, 'classes', classId, 'attendance'] as const,
+  attendanceCheckInStatus: (classId: string) => ['classes', classId, 'attendanceCheckIn'] as const,
   lessonPlans: (classId: string) => ['classes', classId, 'lessonPlans'] as const,
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
@@ -441,6 +442,39 @@ export function useMarkAttendanceBulk(classId: string) {
   return useMutation({
     mutationFn: (inputs: MarkAttendanceInput[]) => api().attendance.markBulk(inputs),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.attendanceByClass(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+    }
+  })
+}
+
+/** Polls while a check-in session is open so the teacher sees students land live,
+ * without any push mechanism from the local server (same pattern as exit tickets). */
+export function useAttendanceCheckInStatus(classId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.attendanceCheckInStatus(classId),
+    queryFn: () => api().attendanceCheckIn.getStatus(classId),
+    enabled,
+    refetchInterval: enabled ? 3000 : false
+  })
+}
+
+export function useOpenAttendanceCheckIn(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (date: string) => api().attendanceCheckIn.open(classId, date),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.attendanceCheckInStatus(classId) })
+  })
+}
+
+export function useCloseAttendanceCheckIn(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().attendanceCheckIn.close(classId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.attendanceCheckInStatus(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.attendanceByClass(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
@@ -977,3 +1011,8 @@ export function useExitTicketServerInfo(enabled: boolean) {
     enabled
   })
 }
+
+/** The exit-ticket server is really the one shared classroom LAN server — attendance
+ * QR check-in runs on it too, so this is just a clearer name at the call site for the
+ * same underlying query. */
+export const useClassroomServerInfo = useExitTicketServerInfo
