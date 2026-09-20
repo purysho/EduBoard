@@ -40,6 +40,15 @@ jobs:
           # Code signing / notarization — all optional. Unset (the default until these
           # repo secrets are added), electron-builder falls back to an unsigned build
           # exactly as before. See docs/CODE_SIGNING.md for what to add and where.
+          #
+          # GitHub Actions always exports a secret's env var, even when the secret was
+          # never set — as an empty string, never as "absent". electron-builder's mac
+          # signing path treats CSC_LINK: "" as "a certificate was provided" rather than
+          # "none configured", tries to load it as a file, and the build fails outright.
+          # CSC_IDENTITY_AUTO_DISCOVERY: false stops it from treating an empty CSC_LINK
+          # as a signing request — it only disables the *automatic* keychain search, so
+          # an explicit non-empty CSC_LINK still signs normally once the secret is set.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
