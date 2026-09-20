@@ -12,6 +12,13 @@ import { ImportPanel } from './ImportPanel'
 import { BackupPanel } from './BackupPanel'
 import { PortalPanel } from './PortalPanel'
 
+const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
+  deepseek: 'DeepSeek',
+  qwen: 'Qwen',
+  anthropic: 'Anthropic',
+  custom: 'API'
+}
+
 export function SettingsPage(): React.JSX.Element {
   const { data: settings, isLoading } = useSettings()
   const updateSettings = useUpdateSettings()
@@ -79,7 +86,10 @@ export function SettingsPage(): React.JSX.Element {
                   onChange={(e) => setForm({ ...form, defaultPassMark: Number(e.target.value) })}
                 />
               </FormRow>
-              <FormRow label="AI provider" hint="DeepSeek works without a VPN in mainland China">
+              <FormRow
+                label="AI provider"
+                hint="DeepSeek/Qwen work without a VPN in mainland China. Custom accepts any OpenAI-compatible endpoint."
+              >
                 <Select
                   value={form.aiProvider}
                   onChange={(e) =>
@@ -87,12 +97,39 @@ export function SettingsPage(): React.JSX.Element {
                   }
                 >
                   <option value="deepseek">DeepSeek</option>
+                  <option value="qwen">Qwen (Alibaba)</option>
                   <option value="anthropic">Anthropic</option>
+                  <option value="custom">Custom (OpenAI-compatible)</option>
                 </Select>
               </FormRow>
+              {form.aiProvider === 'custom' && (
+                <>
+                  <FormRow
+                    label="Custom base URL"
+                    hint="e.g. http://localhost:11434/v1 for a local Ollama server"
+                  >
+                    <Input
+                      value={form.aiCustomBaseUrl}
+                      onChange={(e) => setForm({ ...form, aiCustomBaseUrl: e.target.value })}
+                      placeholder="https://api.example.com/v1"
+                    />
+                  </FormRow>
+                  <FormRow label="Custom model name">
+                    <Input
+                      value={form.aiCustomModel}
+                      onChange={(e) => setForm({ ...form, aiCustomModel: e.target.value })}
+                      placeholder="e.g. llama3.1"
+                    />
+                  </FormRow>
+                </>
+              )}
               <FormRow
-                label={`${form.aiProvider === 'anthropic' ? 'Anthropic' : 'DeepSeek'} API key`}
-                hint="Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else."
+                label={`${PROVIDER_LABEL[form.aiProvider]} key`}
+                hint={
+                  form.aiProvider === 'custom'
+                    ? 'Optional — leave blank for a server that needs no key, like local Ollama.'
+                    : 'Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else.'
+                }
               >
                 <Input
                   type="password"

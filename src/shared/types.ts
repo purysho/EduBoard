@@ -394,7 +394,7 @@ export interface LessonPlan {
   updatedAt: string
 }
 
-export const AI_PROVIDERS = ['deepseek', 'anthropic'] as const
+export const AI_PROVIDERS = ['deepseek', 'qwen', 'anthropic', 'custom'] as const
 export type AiProvider = (typeof AI_PROVIDERS)[number]
 
 export interface AppSettings {
@@ -405,14 +405,23 @@ export interface AppSettings {
   defaultPassMark: number
   defaultMaxScore: number
   /** Which LLM provider the AI drafting features call. 'deepseek' is the default so a
-   * teacher in mainland China gets a working feature with no VPN — 'anthropic' is
-   * there for anyone who prefers/has it. */
+   * teacher in mainland China gets a working feature with no VPN — 'qwen' is another
+   * China-reachable option, 'anthropic' is there for anyone who prefers/has it, and
+   * 'custom' points at any OpenAI-compatible endpoint (Moonshot, Zhipu, a local Ollama
+   * server, OpenAI itself, anything) so a teacher outside this app's original use case
+   * isn't stuck with only the presets above. */
   aiProvider: AiProvider
   /** A teacher-supplied API key for whichever provider is selected above, used only
    * for the optional AI lesson-plan and report-comment drafting features — empty
    * means those features are unavailable. Sent straight to that provider's API from
-   * the main process; never bundled, never anyone else's key. */
+   * the main process; never bundled, never anyone else's key. Ignored for a 'custom'
+   * provider pointed at a server that needs no key (e.g. local Ollama). */
   aiApiKey: string
+  /** Only used when aiProvider === 'custom' — the OpenAI-compatible chat/completions
+   * base URL (e.g. "http://localhost:11434/v1" for Ollama, or another provider's
+   * endpoint) and the model name to request. */
+  aiCustomBaseUrl: string
+  aiCustomModel: string
   /** Base URL of a deployed Portal instance (see portal/README.md) — e.g.
    * "https://portal.example.com". Empty means the Portal features (publish/pull) are
    * unavailable, same "entirely opt-in" shape as everything else here. */
@@ -431,6 +440,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultMaxScore: 100,
   aiProvider: 'deepseek',
   aiApiKey: '',
+  aiCustomBaseUrl: '',
+  aiCustomModel: '',
   portalUrl: '',
   portalSyncSecret: ''
 }

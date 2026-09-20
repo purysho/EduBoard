@@ -8,7 +8,19 @@ import type {
 } from '@shared/types'
 
 const ANTHROPIC_MODEL = 'claude-opus-5'
-const DEEPSEEK_MODEL = 'deepseek-chat'
+
+// Every non-Anthropic preset speaks the same OpenAI-compatible chat/completions shape —
+// only the base URL, model name, and (rarely) whether a key is required differ.
+const OPENAI_COMPATIBLE_PRESETS: Record<
+  Exclude<AiProvider, 'anthropic' | 'custom'>,
+  { baseUrl: string; model: string }
+> = {
+  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
+  qwen: {
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    model: 'qwen-plus'
+  }
+}
 
 export class AiNotConfiguredError extends Error {
   constructor() {
@@ -42,22 +54,26 @@ async function completeAnthropic(
   return block?.type === 'text' ? block.text : ''
 }
 
-/** DeepSeek's API is OpenAI-compatible chat completions — a plain fetch call is enough
- * here, so this doesn't need a whole second SDK dependency for one provider. */
-async function completeDeepSeek(
+/** Any OpenAI-compatible chat/completions endpoint — every preset besides Anthropic,
+ * plus a fully teacher-specified 'custom' provider (any base URL/model, e.g. a local
+ * Ollama server, Moonshot, Zhipu, OpenAI itself — anything speaking this same shape).
+ * A plain fetch call is enough here; no SDK needed for any of these. */
+async function completeOpenAiCompatible(
+  baseUrl: string,
+  model: string,
   apiKey: string,
   system: string,
   user: string,
   maxTokens: number
 ): Promise<string> {
-  const res = await fetch('https://api.deepseek.com/chat/completions', {
+  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
     },
     body: JSON.stringify({
-      model: DEEPSEEK_MODEL,
+      model,
       max_tokens: maxTokens,
       messages: [
         { role: 'system', content: system },
@@ -66,7 +82,7 @@ async function completeDeepSeek(
     })
   })
   if (!res.ok) {
-    throw new Error(`DeepSeek API error ${res.status}: ${await res.text()}`)
+    throw new Error(`AI provider error ${res.status}: ${await res.text()}`)
   }
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] }
   return data.choices?.[0]?.message?.content ?? ''
@@ -74,13 +90,32 @@ async function completeDeepSeek(
 
 async function complete(system: string, user: string, maxTokens: number): Promise<string> {
   const settings = getSettings()
+  const provider: AiProvider = settings.aiProvider
+
+  if (provider === 'custom') {
+    const baseUrl = settings.aiCustomBaseUrl.trim()
+    const model = settings.aiCustomModel.trim()
+    if (!baseUrl || !model) throw new AiNotConfiguredError()
+    // A key isn't required for every custom endpoint (e.g. a local Ollama server) —
+    // only Anthropic and the built-in presets below need one to even attempt a call.
+    return completeOpenAiCompatible(
+      baseUrl,
+      model,
+      settings.aiApiKey.trim(),
+      system,
+      user,
+      maxTokens
+    )
+  }
+
   const apiKey = settings.aiApiKey.trim()
   if (!apiKey) throw new AiNotConfiguredError()
 
-  const provider: AiProvider = settings.aiProvider
-  return provider === 'anthropic'
-    ? completeAnthropic(apiKey, system, user, maxTokens)
-    : completeDeepSeek(apiKey, system, user, maxTokens)
+  if (provider === 'anthropic') {
+    return completeAnthropic(apiKey, system, user, maxTokens)
+  }
+  const preset = OPENAI_COMPATIBLE_PRESETS[provider]
+  return completeOpenAiCompatible(preset.baseUrl, preset.model, apiKey, system, user, maxTokens)
 }
 
 export async function draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan> {
