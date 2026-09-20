@@ -10,6 +10,7 @@ import {
   assignSeat,
   clearSeatingChart,
   listSeatAssignments,
+  pruneOutOfBoundsSeats,
   unassignSeat
 } from '../seatAssignments'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
@@ -112,5 +113,33 @@ describe('seat assignments', () => {
 
     clearSeatingChart(classId)
     expect(listSeatAssignments(classId)).toHaveLength(0)
+  })
+
+  it('unseats only students whose row or col falls outside a shrunk grid', () => {
+    const classId = makeClass()
+    const inBounds = makeStudent('Cara')
+    const outByRow = makeStudent('Dan')
+    const outByCol = makeStudent('Eve')
+
+    assignSeat(classId, inBounds, 1, 1)
+    assignSeat(classId, outByRow, 4, 1) // row 4 is out of bounds once rows shrink to 3
+    assignSeat(classId, outByCol, 1, 5) // col 5 is out of bounds once cols shrink to 4
+
+    pruneOutOfBoundsSeats(classId, 3, 4)
+
+    const remaining = listSeatAssignments(classId)
+    expect(remaining.map((s) => s.studentId)).toEqual([inBounds])
+  })
+
+  it('leaves every seat alone when the grid grows or stays the same', () => {
+    const classId = makeClass()
+    const student = makeStudent('Fay')
+    assignSeat(classId, student, 4, 5)
+
+    pruneOutOfBoundsSeats(classId, 5, 6)
+    expect(listSeatAssignments(classId)).toHaveLength(1)
+
+    pruneOutOfBoundsSeats(classId, 10, 10)
+    expect(listSeatAssignments(classId)).toHaveLength(1)
   })
 })

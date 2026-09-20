@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, gte, or } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { seatAssignments } from '../db/schema'
 import { newId, nowIso } from '../db/util'
@@ -52,4 +52,21 @@ export function unassignSeat(classId: string, studentId: string): void {
 
 export function clearSeatingChart(classId: string): void {
   getDb().delete(seatAssignments).where(eq(seatAssignments.classId, classId)).run()
+}
+
+/** Unseats anyone whose row/col falls outside a newly shrunk grid. Without this, a
+ * student placed at, say, row 4 becomes invisible after the grid shrinks to 3 rows:
+ * gone from the rendered grid (their cell no longer exists) but still absent from the
+ * "Unseated" list too (the seat_assignments row is still there), stuck until the whole
+ * chart is cleared. */
+export function pruneOutOfBoundsSeats(classId: string, rows: number, cols: number): void {
+  getDb()
+    .delete(seatAssignments)
+    .where(
+      and(
+        eq(seatAssignments.classId, classId),
+        or(gte(seatAssignments.row, rows), gte(seatAssignments.col, cols))
+      )
+    )
+    .run()
 }
