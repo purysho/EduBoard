@@ -1,0 +1,123 @@
+# EduBoard Portal
+
+A small, standalone service that lets students/parents check grades, attendance, and
+(for university-level classes) homework from home — without a VPN in mainland China.
+
+This is **not** part of the desktop app's build. It's a separate Node service you deploy
+once, on your own small server, and the desktop app talks to it over plain HTTPS from
+then on (Settings → Portal URL / Portal sync secret).
+
+## How it fits together
+
+- The **desktop app** stays the source of truth for everything. Nothing here can change
+  your local data.
+- **Publish to portal** (Settings) pushes your current roster, grades, attendance,
+  homework, and invite codes here, replacing what the Portal has each time.
+- **Pull homework status** (Settings) brings back only the homework status students set
+  for themselves — the one thing that flows back into the desktop app, and only when you
+  click it.
+- **Invite strips** (a class's Portal tab, in the desktop app) are what a family redeems
+  here to create an account, pre-scoped to that one class.
+
+## Why Hong Kong
+
+`api.anthropic.com`-style Western hosting is unreliable from mainland China without a
+VPN. A Hong Kong VPS is generally reachable without one, needs no ICP license (unlike
+hosting on mainland China), and is cheap (a few dollars/month for something this small).
+See the main project's chat history / CLAUDE.md for the fuller reachability/legal
+tradeoffs if you want them again.
+
+## Deploying (Hong Kong VPS)
+
+1. **Get a VPS.** Any mainstream provider with a Hong Kong region works. The cheapest
+   tier is enough — this is a small SQLite-backed service, not a heavy web app.
+2. **Point a domain at it.** Buy/reuse a domain, add an A record to the VPS's IP. You
+   need a domain for HTTPS (a magic-login link or password over plain HTTP would leak
+   credentials to anyone on the network).
+3. **Install Node.js** (18+) on the VPS.
+4. **Copy this `portal/` directory** to the VPS (e.g. `git clone` the whole EduBoard
+   repo, or `scp` just this folder — it doesn't need the rest of the repo).
+5. **Install dependencies:**
+   ```bash
+   cd portal
+   npm install
+   ```
+6. **Set environment variables** — create `portal/.env` (or export them in your systemd
+   service, see below):
+   ```
+   SESSION_SECRET=<a long random string — generate with `openssl rand -hex 32`>
+   SYNC_SECRET=<a different long random string — this is what you also paste into the desktop app's Settings>
+   PORT=4790
+   NODE_ENV=production
+   ```
+   Both secrets must be kept private — `SYNC_SECRET` in particular lets whoever has it
+   overwrite the Portal's entire dataset.
+7. **Put it behind HTTPS.** The simplest option is
+   [Caddy](https://caddyserver.com/) — install it, then a `Caddyfile` like:
+   ```
+   portal.yourdomain.com {
+     reverse_proxy localhost:4790
+   }
+   ```
+   Caddy handles the Let's Encrypt certificate automatically. Start it as a service
+   (`sudo systemctl enable --now caddy` on most distros' packaged builds).
+8. **Run the Portal as a systemd service** so it survives reboots — `/etc/systemd/system/eduboard-portal.service`:
+   ```ini
+   [Unit]
+   Description=EduBoard Portal
+   After=network.target
+
+   [Service]
+   WorkingDirectory=/path/to/portal
+   ExecStart=/usr/bin/node server.js
+   EnvironmentFile=/path/to/portal/.env
+   Restart=on-failure
+   User=eduboard
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+   Then:
+   ```bash
+   sudo systemctl enable --now eduboard-portal
+   ```
+9. **In the desktop app**, go to Settings → set Portal URL to
+   `https://portal.yourdomain.com` and Portal sync secret to the same `SYNC_SECRET` you
+   set above. Click "Publish to portal" once to push your first batch of data.
+
+## Data it holds
+
+Only what you publish: class names/types, student names/DOB/number, per-class grade %
+and attendance rate, homework titles/descriptions/due dates, and invite codes. No
+guardian contact info, no detailed score history, no teacher notes — deliberately a
+narrow slice, not a mirror of the full desktop database.
+
+## Recovery, not self-service email resets
+
+There's no "forgot password" email flow by design — this app has no mail service, and
+mail deliverability from a fresh VPS is its own headache. Instead:
+
+- **Forgot password** → from the desktop app, call the teacher-triggered reset
+  (`POST /api/sync/reset-password` with `SYNC_SECRET`) — a "Reset a family's password"
+  action belongs in the desktop app's Settings once you want it; for now this is a raw
+  API call, e.g.:
+  ```bash
+  curl -X POST https://portal.yourdomain.com/api/sync/reset-password \
+    -H "Content-Type: application/json" -H "X-Sync-Secret: <your secret>" \
+    -d '{"username":"theirusername","newPassword":"a-temporary-password"}'
+  ```
+- **Lost the saved QR image** → the family just logs in with username/password and
+  downloads a fresh one; no teacher involvement needed at all.
+- **Lost/revoked invite strip** → generate and print a new batch from the class's
+  Portal tab in the desktop app; the old, unclaimed strips can be revoked from the same
+  tab.
+
+## Local testing
+
+```bash
+cd portal
+npm install
+SESSION_SECRET=test SYNC_SECRET=test PORT=4790 node server.js
+```
+Then visit `http://localhost:4790` — you'll see a login screen until an invite is
+redeemed (`http://localhost:4790/?code=<a code your desktop app generated>`).

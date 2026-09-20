@@ -6,7 +6,10 @@ import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
 
 export default defineConfig(
-  { ignores: ['**/node_modules', '**/dist', '**/out'] },
+  // portal/ is a separate, standalone Node service (plain CommonJS, no build step, no
+  // relation to this app's TS/React source) — see portal/README.md. Its own lint
+  // conventions don't belong here.
+  { ignores: ['**/node_modules', '**/dist', '**/out', 'portal/**'] },
   tseslint.configs.recommended,
   eslintPluginReact.configs.flat.recommended,
   eslintPluginReact.configs.flat['jsx-runtime'],

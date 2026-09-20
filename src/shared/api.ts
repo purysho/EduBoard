@@ -279,4 +279,8 @@ export interface EduBoardApi {
       suggestedFileName: string
     ): Promise<{ saved: boolean; filePath?: string }>
   }
+  portalSync: {
+    publish(): Promise<void>
+    pullSubmissions(): Promise<number>
+  }
 }

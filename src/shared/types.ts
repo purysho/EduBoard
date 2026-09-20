@@ -413,6 +413,13 @@ export interface AppSettings {
    * means those features are unavailable. Sent straight to that provider's API from
    * the main process; never bundled, never anyone else's key. */
   aiApiKey: string
+  /** Base URL of a deployed Portal instance (see portal/README.md) — e.g.
+   * "https://portal.example.com". Empty means the Portal features (publish/pull) are
+   * unavailable, same "entirely opt-in" shape as everything else here. */
+  portalUrl: string
+  /** Shared secret the Portal's /api/sync routes require (SYNC_SECRET on the server
+   * side) — set once, matching whatever was configured when the Portal was deployed. */
+  portalSyncSecret: string
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -423,7 +430,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultPassMark: 60,
   defaultMaxScore: 100,
   aiProvider: 'deepseek',
-  aiApiKey: ''
+  aiApiKey: '',
+  portalUrl: '',
+  portalSyncSecret: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

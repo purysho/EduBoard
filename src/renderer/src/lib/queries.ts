@@ -1128,3 +1128,11 @@ export function useRevokePortalInvite(classId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
   })
 }
+
+export function usePublishToPortal() {
+  return useMutation({ mutationFn: () => api().portalSync.publish() })
+}
+
+export function usePullSubmissionsFromPortal() {
+  return useMutation({ mutationFn: () => api().portalSync.pullSubmissions() })
+}

@@ -1,0 +1,107 @@
+const express = require('express')
+const db = require('../db')
+const { requireSyncSecret, hashPassword } = require('../auth')
+
+const router = express.Router()
+router.use(requireSyncSecret)
+
+// Full push from the desktop app. Each table is wholesale-replaced inside one
+// transaction — the desktop app always sends its complete current state, never a
+// diff, so "replace everything" is simpler and can't drift out of sync from a missed
+// incremental update.
+router.post('/', (req, res) => {
+  const {
+    classes = [],
+    students = [],
+    enrollments = [],
+    grades = [],
+    homeworkAssignments = [],
+    invites = []
+  } = req.body
+
+  const run = db.transaction(() => {
+    db.prepare('DELETE FROM classes').run()
+    db.prepare('DELETE FROM students').run()
+    db.prepare('DELETE FROM enrollments').run()
+    db.prepare('DELETE FROM grades').run()
+    db.prepare('DELETE FROM homework_assignments').run()
+
+    const insertClass = db.prepare('INSERT INTO classes (id, name, level_type) VALUES (?, ?, ?)')
+    for (const c of classes) insertClass.run(c.id, c.name, c.levelType)
+
+    const insertStudent = db.prepare(
+      'INSERT INTO students (id, first_name, last_name, date_of_birth, student_number) VALUES (?, ?, ?, ?, ?)'
+    )
+    for (const s of students) {
+      insertStudent.run(s.id, s.firstName, s.lastName, s.dateOfBirth, s.studentNumber)
+    }
+
+    const insertEnrollment = db.prepare(
+      'INSERT OR REPLACE INTO enrollments (student_id, class_id, status) VALUES (?, ?, ?)'
+    )
+    for (const e of enrollments) insertEnrollment.run(e.studentId, e.classId, e.status)
+
+    const insertGrade = db.prepare(
+      'INSERT OR REPLACE INTO grades (student_id, class_id, percent, letter, attendance_rate) VALUES (?, ?, ?, ?, ?)'
+    )
+    for (const g of grades) {
+      insertGrade.run(g.studentId, g.classId, g.percent, g.letter, g.attendanceRate)
+    }
+
+    const insertHomework = db.prepare(
+      'INSERT INTO homework_assignments (id, class_id, title, description, due_date) VALUES (?, ?, ?, ?, ?)'
+    )
+    for (const h of homeworkAssignments) {
+      insertHomework.run(h.id, h.classId, h.title, h.description, h.dueDate)
+    }
+
+    // Invites are upserted, never deleted — a claimed invite's claimed_at must survive
+    // being left out of a later push (the desktop only knows about the codes it
+    // generated locally; it doesn't track claim state, since claiming happens here).
+    const upsertInvite = db.prepare(`
+      INSERT INTO invites (code, class_id, revoked, claimed_at)
+      VALUES (@code, @classId, @revoked, NULL)
+      ON CONFLICT(code) DO UPDATE SET revoked = @revoked
+    `)
+    for (const i of invites) {
+      upsertInvite.run({ code: i.code, classId: i.classId, revoked: i.revoked ? 1 : 0 })
+    }
+  })
+  run()
+
+  res.json({ ok: true })
+})
+
+// Pull homework submission statuses students have set themselves, so the desktop app
+// can mirror them into its own local tracking without the portal ever writing directly
+// into the desktop's database.
+router.get('/submissions', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM homework_submissions').all()
+  res.json(
+    rows.map((r) => ({
+      homeworkAssignmentId: r.homework_assignment_id,
+      studentId: r.student_id,
+      status: r.status,
+      submittedAt: r.submitted_at
+    }))
+  )
+})
+
+// Teacher-triggered password reset (see portal/README.md — there is deliberately no
+// self-service email reset; the teacher does this from the desktop app when a family
+// says they're locked out, same day, not an async support queue).
+router.post('/reset-password', (req, res) => {
+  const { username, newPassword } = req.body
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: 'username and newPassword are required' })
+  }
+  const account = db.prepare('SELECT id FROM accounts WHERE username = ?').get(username)
+  if (!account) return res.status(404).json({ error: 'No such account' })
+  db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
+    hashPassword(newPassword),
+    account.id
+  )
+  res.json({ ok: true })
+})
+
+module.exports = router

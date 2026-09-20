@@ -10,6 +10,7 @@ import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
 import { TermsPanel } from './TermsPanel'
 import { ImportPanel } from './ImportPanel'
 import { BackupPanel } from './BackupPanel'
+import { PortalPanel } from './PortalPanel'
 
 export function SettingsPage(): React.JSX.Element {
   const { data: settings, isLoading } = useSettings()
@@ -100,6 +101,23 @@ export function SettingsPage(): React.JSX.Element {
                   placeholder={form.aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
                 />
               </FormRow>
+              <FormRow label="Portal URL" hint="Where your deployed Portal server lives">
+                <Input
+                  value={form.portalUrl}
+                  onChange={(e) => setForm({ ...form, portalUrl: e.target.value })}
+                  placeholder="https://portal.example.com"
+                />
+              </FormRow>
+              <FormRow
+                label="Portal sync secret"
+                hint="Must match SYNC_SECRET on the Portal server"
+              >
+                <Input
+                  type="password"
+                  value={form.portalSyncSecret}
+                  onChange={(e) => setForm({ ...form, portalSyncSecret: e.target.value })}
+                />
+              </FormRow>
               <div className="col-span-2">
                 <Button variant="primary" type="submit" disabled={updateSettings.isPending}>
                   {updateSettings.isPending ? 'Saving…' : 'Save'}
@@ -112,6 +130,7 @@ export function SettingsPage(): React.JSX.Element {
         <TermsPanel />
         <ImportPanel />
         <BackupPanel />
+        <PortalPanel />
       </div>
     </div>
   )

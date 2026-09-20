@@ -186,5 +186,9 @@ export const IpcChannels = {
     getBatch: 'portalInvites:getBatch',
     revoke: 'portalInvites:revoke',
     printBatch: 'portalInvites:printBatch'
+  },
+  portalSync: {
+    publish: 'portalSync:publish',
+    pullSubmissions: 'portalSync:pullSubmissions'
   }
 } as const

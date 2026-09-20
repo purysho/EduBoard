@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EduBoard Portal</title>
+<style>
+  :root { color-scheme: light; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  p.hint { color: #64748b; margin: 0 0 20px; font-size: .9rem; }
+  label { display: block; font-size: .85rem; font-weight: 600; margin: 14px 0 4px; }
+  input, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
+  button { width: 100%; margin-top: 20px; padding: 13px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.secondary { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; }
+  .error { color: #dc2626; font-size: .85rem; margin-top: 10px; }
+  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .muted { color: #64748b; font-size: .85rem; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .pill.not_started { background: #f1f5f9; color: #64748b; }
+  .pill.submitted { background: #fef3c7; color: #92400e; }
+  .pill.done { background: #d1fae5; color: #065f46; }
+  img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; }
+  a.linklike { color: #6366f1; text-decoration: none; font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">Loading…</div>
+<script>
+const app = document.getElementById('app')
+const params = new URLSearchParams(location.search)
+
+async function api(path, opts) {
+  const res = await fetch('/api' + path, {
+    method: opts?.method || 'GET',
+    headers: opts?.body ? { 'Content-Type': 'application/json' } : undefined,
+    body: opts?.body ? JSON.stringify(opts.body) : undefined
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Something went wrong')
+  return data
+}
+
+async function main() {
+  const code = params.get('code')
+  if (code) return renderRedeem(code)
+
+  try {
+    const me = await api('/me')
+    renderDashboard(me)
+  } catch {
+    renderLogin()
+  }
+}
+
+function renderLogin() {
+  app.innerHTML = `
+    <h1>EduBoard Portal</h1>
+    <p class="hint">Sign in to see grades, attendance, and homework.</p>
+    <label>Username</label>
+    <input id="u" autocomplete="username" />
+    <label>Password</label>
+    <input id="p" type="password" autocomplete="current-password" />
+    <button id="go">Log in</button>
+    <p class="error" id="err"></p>
+  `
+  document.getElementById('go').onclick = async () => {
+    try {
+      await api('/auth/login', { method: 'POST', body: { username: document.getElementById('u').value, password: document.getElementById('p').value } })
+      location.reload()
+    } catch (e) {
+      document.getElementById('err').textContent = e.message
+    }
+  }
+}
+
+async function renderRedeem(code) {
+  app.innerHTML = 'Loading…'
+  let info
+  try {
+    info = await api('/invites/' + encodeURIComponent(code))
+  } catch (e) {
+    app.innerHTML = `<h1>EduBoard Portal</h1><p class="error">${e.message}</p>`
+    return
+  }
+  app.innerHTML = `
+    <h1>Join ${info.className}</h1>
+    <p class="hint">Pick your name, confirm your date of birth, and set a login.</p>
+    <label>Student</label>
+    <select id="sid">${info.students.map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+    <label>Date of birth</label>
+    <input id="dob" type="date" />
+    <label>Username</label>
+    <input id="u" />
+    <label>Password</label>
+    <input id="p" type="password" />
+    <button id="go">Create account</button>
+    <p class="error" id="err"></p>
+  `
+  document.getElementById('go').onclick = async () => {
+    try {
+      await api('/invites/' + encodeURIComponent(code) + '/redeem', {
+        method: 'POST',
+        body: {
+          studentId: document.getElementById('sid').value,
+          dateOfBirth: document.getElementById('dob').value,
+          username: document.getElementById('u').value,
+          password: document.getElementById('p').value
+        }
+      })
+      location.href = '/'
+    } catch (e) {
+      document.getElementById('err').textContent = e.message
+    }
+  }
+}
+
+function renderDashboard(me) {
+  if (!me.students.length) {
+    app.innerHTML = `<h1>EduBoard Portal</h1><p class="hint">No student linked to this account yet.</p>`
+    return
+  }
+  app.innerHTML =
+    me.students
+      .map(
+        (s) => `
+    <h1>${s.studentName}</h1>
+    ${s.classes
+      .map(
+        (c) => `
+      <div class="card">
+        <div class="row"><strong>${c.name}</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + (c.letter ?? '') + ')' : 'No grade yet'}</span></div>
+        <p class="muted">Attendance: ${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</p>
+        ${
+          c.homework
+            ? c.homework
+                .map(
+                  (h) => `
+          <div class="row" style="margin-top:8px">
+            <span>${h.title}${h.dueDate ? ' <span class="muted">(due ' + h.dueDate + ')</span>' : ''}</span>
+            <span class="pill ${h.status}" data-hw="${h.id}" data-student="${s.studentId}" style="cursor:pointer">${h.status.replace('_', ' ')}</span>
+          </div>`
+                )
+                .join('')
+            : ''
+        }
+      </div>`
+      )
+      .join('')
+  }`
+      )
+      .join('') +
+    `<button class="secondary" id="qr">Get quick-login QR</button>
+     <button class="secondary" id="logout">Log out</button>
+     <div id="qrbox"></div>`
+
+  document.querySelectorAll('[data-hw]').forEach((el) => {
+    el.onclick = async () => {
+      const cycle = { not_started: 'submitted', submitted: 'done', done: 'not_started' }
+      const status = cycle[el.textContent.trim().replace(' ', '_')] || 'submitted'
+      await api(`/me/homework/${el.dataset.hw}/status`, {
+        method: 'POST',
+        body: { status, studentId: el.dataset.student }
+      })
+      location.reload()
+    }
+  })
+
+  document.getElementById('qr').onclick = async () => {
+    const { qrDataUrl } = await api('/me/qr', { method: 'POST' })
+    document.getElementById('qrbox').innerHTML = `
+      <img class="qr" src="${qrDataUrl}" />
+      <p class="muted" style="text-align:center">Save this image — opening it logs you in with one tap, no typing.</p>
+      <a class="linklike" href="${qrDataUrl}" download="eduboard-login.png">Download</a>
+    `
+  }
+  document.getElementById('logout').onclick = async () => {
+    await api('/auth/logout', { method: 'POST' })
+    location.reload()
+  }
+}
+
+main()
+</script>
+</body>
+</html>

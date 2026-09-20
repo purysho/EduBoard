@@ -209,6 +209,10 @@ const api: EduBoardApi = {
     revoke: (inviteId) => invoke(IpcChannels.portalInvites.revoke, inviteId),
     printBatch: (batchId, suggestedFileName) =>
       invoke(IpcChannels.portalInvites.printBatch, batchId, suggestedFileName)
+  },
+  portalSync: {
+    publish: () => invoke(IpcChannels.portalSync.publish),
+    pullSubmissions: () => invoke(IpcChannels.portalSync.pullSubmissions)
   }
 }
 

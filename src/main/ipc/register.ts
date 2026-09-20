@@ -36,6 +36,7 @@ import * as reportsService from '../services/reports'
 import * as aiService from '../services/aiService'
 import * as homeworkRepo from '../repositories/homeworkAssignments'
 import * as portalInvitesRepo from '../repositories/portalInvites'
+import { publishToPortal, pullSubmissionsFromPortal } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -528,4 +529,8 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  // --- Portal sync ---------------------------------------------------------------------------
+  handle(IpcChannels.portalSync.publish, () => publishToPortal())
+  handle(IpcChannels.portalSync.pullSubmissions, () => pullSubmissionsFromPortal())
 }
