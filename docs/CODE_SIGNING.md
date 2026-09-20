@@ -9,6 +9,13 @@ Signing is entirely opt-in: with none of the secrets below set, nothing about th
 changes. `electron-builder.yml` never has to be touched to turn it on or off — it reacts
 to whichever of these environment variables are present.
 
+`release.yml` sets `CSC_IDENTITY_AUTO_DISCOVERY: false` on every platform's build step —
+GitHub Actions exports an unset secret as an *empty string*, never as a truly absent env
+var, and without this flag electron-builder's macOS signing path treats `CSC_LINK: ""`
+as "a certificate was provided" and fails the build trying to load it. This flag only
+turns off electron-builder's own automatic keychain search; an explicit non-empty
+`CSC_LINK` still signs normally.
+
 Add secrets in **complete pairs/sets**, not individually — `CSC_LINK` without
 `CSC_KEY_PASSWORD` (or vice versa) makes electron-builder try to sign with an incomplete
 credential, which fails the build with an unlock/decrypt error rather than silently
