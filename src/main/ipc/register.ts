@@ -1,6 +1,7 @@
 import { dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
+import type { DraftLessonPlanInput, DraftReportCommentInput } from '@shared/types'
 
 import * as studentsRepo from '../repositories/students'
 import * as termsRepo from '../repositories/terms'
@@ -32,6 +33,7 @@ import {
 } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
 import * as reportsService from '../services/reports'
+import * as aiService from '../services/aiService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -450,4 +452,12 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.exitTickets.getServerInfo, () => getExitTicketServerInfo())
   handle(IpcChannels.exitTickets.getQrDataUrl, (_e, url: string) => QRCode.toDataURL(url))
+
+  // --- AI (optional, requires a teacher-supplied API key) --------------------------------
+  handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
+    aiService.draftLessonPlan(input)
+  )
+  handle(IpcChannels.ai.draftReportComment, (_e, input: DraftReportCommentInput) =>
+    aiService.draftReportComment(input)
+  )
 }

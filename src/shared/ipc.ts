@@ -167,5 +167,9 @@ export const IpcChannels = {
     clearResponses: 'exitTickets:clearResponses',
     getServerInfo: 'exitTickets:getServerInfo',
     getQrDataUrl: 'exitTickets:getQrDataUrl'
+  },
+  ai: {
+    draftLessonPlan: 'ai:draftLessonPlan',
+    draftReportComment: 'ai:draftReportComment'
   }
 } as const

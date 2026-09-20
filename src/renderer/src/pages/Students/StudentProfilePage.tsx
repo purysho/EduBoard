@@ -95,6 +95,7 @@ export function StudentProfilePage(): React.JSX.Element {
                   <th className="px-4 py-2.5 font-medium">Grade</th>
                   <th className="px-4 py-2.5 font-medium">Letter</th>
                   <th className="px-4 py-2.5 font-medium">Attendance</th>
+                  <th className="px-4 py-2.5 font-medium" />
                 </tr>
               </thead>
               <tbody>

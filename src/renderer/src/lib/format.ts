@@ -23,3 +23,13 @@ export function studentFullName(student: { firstName: string; lastName: string }
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
+
+/** Electron's ipcMain.handle rejects with "Error invoking remote method '<channel>':
+ * <ErrorClass>: <message>" — every error thrown in a main-process handler picks up that
+ * prefix, so a message meant for a teacher (like "add an API key in Settings") arrives
+ * wrapped in implementation detail. Strips it back down to the original message. */
+export function ipcErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof Error)) return fallback
+  const match = error.message.match(/Error invoking remote method '[^']*': (?:\w+Error: )?(.*)/s)
+  return match ? match[1] : error.message
+}

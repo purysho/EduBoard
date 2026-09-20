@@ -12,29 +12,41 @@ const STATUS_OPTIONS: { value: LessonPlanStatus; label: string }[] = [
   { value: 'skipped', label: 'Skipped' }
 ]
 
+/** What an AI draft prefills a new (never an existing) plan's fields with — the teacher
+ * still reviews and edits every field before saving, same as typing it by hand. */
+export interface LessonPlanDraft {
+  title: string
+  objectives: string
+  materials: string
+  activities: string
+  homework: string
+}
+
 export function LessonPlanFormModal({
   open,
   onClose,
   classId,
   assessments,
-  plan
+  plan,
+  initialDraft
 }: {
   open: boolean
   onClose: () => void
   classId: string
   assessments: Assessment[]
   plan?: LessonPlan
+  initialDraft?: LessonPlanDraft
 }): React.JSX.Element {
   const isEdit = !!plan
   const createPlan = useCreateLessonPlan(classId)
   const updatePlan = useUpdateLessonPlan(classId)
 
   const [date, setDate] = useState(plan?.date ?? todayIso())
-  const [title, setTitle] = useState(plan?.title ?? '')
-  const [objectives, setObjectives] = useState(plan?.objectives ?? '')
-  const [materials, setMaterials] = useState(plan?.materials ?? '')
-  const [activities, setActivities] = useState(plan?.activities ?? '')
-  const [homework, setHomework] = useState(plan?.homework ?? '')
+  const [title, setTitle] = useState(plan?.title ?? initialDraft?.title ?? '')
+  const [objectives, setObjectives] = useState(plan?.objectives ?? initialDraft?.objectives ?? '')
+  const [materials, setMaterials] = useState(plan?.materials ?? initialDraft?.materials ?? '')
+  const [activities, setActivities] = useState(plan?.activities ?? initialDraft?.activities ?? '')
+  const [homework, setHomework] = useState(plan?.homework ?? initialDraft?.homework ?? '')
   const [linkedAssessmentId, setLinkedAssessmentId] = useState(plan?.linkedAssessmentId ?? '')
   const [status, setStatus] = useState<LessonPlanStatus>(plan?.status ?? 'planned')
 

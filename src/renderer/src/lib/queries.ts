@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { AppSettings, EnrollmentStatus } from '@shared/types'
+import type {
+  AppSettings,
+  DraftLessonPlanInput,
+  DraftReportCommentInput,
+  EnrollmentStatus
+} from '@shared/types'
 import type {
   CreateAssessmentInput,
   CreateClassInput,
@@ -1016,3 +1021,17 @@ export function useExitTicketServerInfo(enabled: boolean) {
  * QR check-in runs on it too, so this is just a clearer name at the call site for the
  * same underlying query. */
 export const useClassroomServerInfo = useExitTicketServerInfo
+
+// ---- AI drafting (optional, requires a teacher-supplied API key) --------------------------
+
+export function useDraftLessonPlan() {
+  return useMutation({
+    mutationFn: (input: DraftLessonPlanInput) => api().ai.draftLessonPlan(input)
+  })
+}
+
+export function useDraftReportComment() {
+  return useMutation({
+    mutationFn: (input: DraftReportCommentInput) => api().ai.draftReportComment(input)
+  })
+}

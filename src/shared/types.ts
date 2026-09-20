@@ -345,6 +345,11 @@ export interface AppSettings {
   defaultGradeThresholds: GradeThresholds
   defaultPassMark: number
   defaultMaxScore: number
+  /** A teacher-supplied Anthropic API key, used only for the optional AI lesson-plan
+   * and report-comment drafting features — empty means those features are unavailable.
+   * Sent straight to Anthropic's API from the main process; never bundled, never
+   * anyone else's key. */
+  aiApiKey: string
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -353,7 +358,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   theme: 'system',
   defaultGradeThresholds: DEFAULT_GRADE_THRESHOLDS,
   defaultPassMark: 60,
-  defaultMaxScore: 100
+  defaultMaxScore: 100,
+  aiApiKey: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------
@@ -452,6 +458,32 @@ export interface AnalyticsOverview {
   classComparison: ClassComparisonEntry[]
   categoryComparison: CategoryComparisonEntry[]
   attendanceTrend: { date: string; rate: number | null }[]
+}
+
+// --- AI drafting (optional, requires a teacher-supplied API key) -------------------------
+
+export interface DraftLessonPlanInput {
+  className: string
+  subject: string | null
+  gradeLevel: string | null
+  topic: string
+}
+
+export interface DraftedLessonPlan {
+  title: string
+  objectives: string
+  materials: string
+  activities: string
+  homework: string
+}
+
+export interface DraftReportCommentInput {
+  studentName: string
+  className: string
+  percent: number | null
+  letter: string | null
+  attendanceRate: number | null
+  recentNotes: string[]
 }
 
 export interface DeviceSyncStatus {

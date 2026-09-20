@@ -1,15 +1,21 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { NotebookPen, Pencil, Plus, Trash2 } from 'lucide-react'
+import { NotebookPen, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import type { ClassSection, LessonPlan } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
-import { useAssessments, useDeleteLessonPlan, useLessonPlans } from '@renderer/lib/queries'
-import { formatDate } from '@renderer/lib/format'
-import { LessonPlanFormModal } from './LessonPlanFormModal'
+import { Input } from '@renderer/components/ui/Field'
+import {
+  useAssessments,
+  useDeleteLessonPlan,
+  useDraftLessonPlan,
+  useLessonPlans
+} from '@renderer/lib/queries'
+import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { LessonPlanFormModal, type LessonPlanDraft } from './LessonPlanFormModal'
 
 const STATUS_TONE = {
   planned: 'primary',
@@ -26,17 +32,68 @@ export function LessonPlannerTab(): React.JSX.Element {
   const [showAdd, setShowAdd] = useState(false)
   const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null)
   const [pendingDelete, setPendingDelete] = useState<LessonPlan | null>(null)
+  const [aiDraft, setAiDraft] = useState<LessonPlanDraft | undefined>(undefined)
+  const [showAiTopic, setShowAiTopic] = useState(false)
+  const [topic, setTopic] = useState('')
+  const draftPlan = useDraftLessonPlan()
+
+  async function handleDraft(): Promise<void> {
+    if (!topic.trim()) return
+    const drafted = await draftPlan.mutateAsync({
+      className: classSection.name,
+      subject: classSection.subject,
+      gradeLevel: classSection.gradeLevel,
+      topic: topic.trim()
+    })
+    setAiDraft(drafted)
+    setShowAiTopic(false)
+    setTopic('')
+    setShowAdd(true)
+  }
 
   if (isLoading) return <Spinner />
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
-        <Button variant="primary" onClick={() => setShowAdd(true)}>
+      <div className="mb-4 flex items-start justify-end gap-2">
+        {showAiTopic && (
+          <div className="flex items-center gap-2">
+            <Input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Topic, e.g. fractions to decimals"
+              className="w-64"
+              autoFocus
+            />
+            <Button
+              variant="secondary"
+              onClick={handleDraft}
+              disabled={!topic.trim() || draftPlan.isPending}
+            >
+              {draftPlan.isPending ? 'Drafting…' : 'Go'}
+            </Button>
+          </div>
+        )}
+        <Button variant="secondary" onClick={() => setShowAiTopic((v) => !v)}>
+          <Sparkles size={15} className="mr-1 inline" aria-hidden />
+          Draft with AI
+        </Button>
+        <Button
+          variant="primary"
+          onClick={() => {
+            setAiDraft(undefined)
+            setShowAdd(true)
+          }}
+        >
           <Plus size={15} className="mr-1 inline" aria-hidden />
           Lesson plan
         </Button>
       </div>
+      {draftPlan.isError && (
+        <p className="mb-4 text-sm text-[var(--color-danger)]">
+          {ipcErrorMessage(draftPlan.error, 'Could not draft a lesson plan.')}
+        </p>
+      )}
 
       {!plans?.length ? (
         <EmptyState
@@ -84,10 +141,17 @@ export function LessonPlannerTab(): React.JSX.Element {
       )}
 
       <LessonPlanFormModal
+        // Remounts whenever a fresh AI draft lands (its fields are only ever read once,
+        // into useState, on mount) so a second draft doesn't keep showing the first's text.
+        key={aiDraft ? `draft:${aiDraft.title}:${aiDraft.objectives}` : 'blank'}
         open={showAdd}
-        onClose={() => setShowAdd(false)}
+        onClose={() => {
+          setShowAdd(false)
+          setAiDraft(undefined)
+        }}
         classId={classSection.id}
         assessments={assessments ?? []}
+        initialDraft={aiDraft}
       />
       {editingPlan && (
         <LessonPlanFormModal

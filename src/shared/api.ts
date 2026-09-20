@@ -13,6 +13,9 @@ import type {
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
   DeviceSyncStatus,
+  DraftedLessonPlan,
+  DraftLessonPlanInput,
+  DraftReportCommentInput,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -242,5 +245,9 @@ export interface EduBoardApi {
     clearResponses(exitTicketId: string): Promise<void>
     getServerInfo(): Promise<ExitTicketServerInfo>
     getQrDataUrl(url: string): Promise<string>
+  }
+  ai: {
+    draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan>
+    draftReportComment(input: DraftReportCommentInput): Promise<string>
   }
 }

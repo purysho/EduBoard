@@ -78,6 +78,17 @@ export function SettingsPage(): React.JSX.Element {
                   onChange={(e) => setForm({ ...form, defaultPassMark: Number(e.target.value) })}
                 />
               </FormRow>
+              <FormRow
+                label="Anthropic API key"
+                hint="Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to Anthropic, never anywhere else."
+              >
+                <Input
+                  type="password"
+                  value={form.aiApiKey}
+                  onChange={(e) => setForm({ ...form, aiApiKey: e.target.value })}
+                  placeholder="sk-ant-…"
+                />
+              </FormRow>
               <div className="col-span-2">
                 <Button variant="primary" type="submit" disabled={updateSettings.isPending}>
                   {updateSettings.isPending ? 'Saving…' : 'Save'}
