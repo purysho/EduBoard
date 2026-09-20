@@ -45,3 +45,28 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Generate SHA256 checksums for this platform's installers
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const crypto = require('crypto');
+            const path = require('path');
+            const dir = 'dist';
+            const exts = ['.exe', '.dmg', '.zip', '.AppImage'];
+            const lines = fs.readdirSync(dir)
+              .filter((f) => exts.includes(path.extname(f)))
+              .sort()
+              .map((f) => {
+                const hash = crypto.createHash('sha256').update(fs.readFileSync(path.join(dir, f))).digest('hex');
+                return \`\${hash}  \${f}\`;
+              });
+            fs.writeFileSync(path.join(dir, 'SHA256SUMS-${{ matrix.os }}.txt'), lines.join('\n') + '\n');
+          "
+
+      - name: Upload checksums to the release
+        shell: bash
+        run: gh release upload "${GITHUB_REF_NAME}" "dist/SHA256SUMS-${{ matrix.os }}.txt" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

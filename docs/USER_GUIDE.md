@@ -11,8 +11,13 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Setting up grading](#setting-up-grading)
 - [Using the gradebook](#using-the-gradebook)
 - [Grading with rubrics](#grading-with-rubrics)
+- [Composite grading across terms](#composite-grading-across-terms)
 - [Taking attendance](#taking-attendance)
 - [Planning lessons](#planning-lessons)
+- [Seating charts](#seating-charts)
+- [Exit tickets](#exit-tickets)
+- [Resources library](#resources-library)
+- [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
 - [Backing up your data](#backing-up-your-data)
 - [Carrying EduBoard on a USB stick](#carrying-eduboard-on-a-usb-stick)
@@ -73,7 +78,7 @@ Go to **Classes → New class**. Fill in:
 - **Level** — K-12, University, Club, or Other. This is just a label (shown as a badge) — it doesn't change what the class can do.
 - **Grade level / year**, **Term**, **Schedule**, **Room** — all optional, free text.
 
-Save, and you're on the class page with six tabs: **Roster, Gradebook, Attendance, Lesson plans, Report, Settings**. Every one of these is scoped to this class — grades, attendance, and lesson plans never leak between classes, but a student can be enrolled in several at once (a homeroom teacher who also runs a club, for example).
+Save, and you're on the class page with eight tabs: **Roster, Gradebook, Attendance, Lesson plans, Seating chart, Exit ticket, Report, Settings**. Every one of these is scoped to this class — grades, attendance, and lesson plans never leak between classes, but a student can be enrolled in several at once (a homeroom teacher who also runs a club, for example).
 
 ![Classes](screenshots/classes.png)
 
@@ -87,6 +92,10 @@ Two ways to get students into a class, both from the **Roster** tab:
 2. **Enroll students → + New.** Adds a brand-new student to your directory *and* enrolls them in this class in one step. Fill in first/last name at minimum — everything else (student number, grade level, guardian contact, notes) is optional and can be added later from the student's own profile page (click their name anywhere in the app).
 
 ![Roster](screenshots/roster.png)
+
+A student's own profile page (click their name anywhere) shows their details, every class they're enrolled in with its current grade, and their log (see [Student logs and parent communications](#student-logs-and-parent-communications)).
+
+![Student profile](screenshots/student-profile.png)
 
 For a whole class at once, skip manual entry — see [Importing a roster](#importing-a-roster) below.
 
@@ -119,7 +128,9 @@ Enter scores directly in the grid: click a cell, type a number, click away (or p
 
 Click an assessment's name in the column header to edit it, or "remove" underneath to delete it (this also deletes every score recorded for it).
 
-**Move around the grid with the keyboard** — arrow keys jump between cells, Enter saves and moves down. Hover a cell you've already graded to reveal a small clock icon showing its change history, useful if a grade is ever disputed.
+**Move around the grid with the keyboard** — arrow keys jump between cells, Enter saves and moves down; this works the same whether a cell is a plain score or a rubric-graded one. Hover a cell you've already graded to reveal a small clock icon showing its change history, useful if a grade is ever disputed, and a speech-bubble icon to leave yourself a private comment on that grade.
+
+**Attaching a submission** — hover any gradebook cell and a paperclip icon appears (it stays visible once a file's attached). Click it to attach a file from anywhere on your computer; click it again to **Replace** with a new file or **Remove** it, or click the filename to open it in your system's default app for that file type. Only one submission is kept per student per assessment — attaching a new one replaces the old, it doesn't pile up a history. EduBoard remembers where the file lives on disk rather than copying it in, so keep the original in place (or re-attach it) if you move it.
 
 ---
 
@@ -132,7 +143,23 @@ Click an assessment's name in the column header to edit it, or "remove" undernea
 - **Attaching a rubric to an assessment**: in **Gradebook → + Assessment**, pick a rubric from the "Grade with a rubric" dropdown. The assessment's max score locks to the rubric's total automatically.
 - **Grading**: a rubric-graded assessment's gradebook cells become buttons — click one to open the rubric, pick a performance level for each criterion, and save. The total is computed automatically and shows up everywhere a normal score would — the gradebook, class report, and dashboard — no different from typing a number in.
 
+![Rubric scoring](screenshots/rubric-scoring.png)
+
 Editing a rubric later preserves a student's existing scores wherever the criterion or level you're editing is the same one (fixing a typo doesn't lose data); only criteria or levels you actually remove take their recorded scores with them.
+
+---
+
+## Composite grading across terms
+
+If a course runs across multiple terms (Fall and Spring sections of the same class, say), you can see one student's grade across the whole thing instead of just one term at a time.
+
+1. On each term's class, go to **Settings → Course group** and either pick an existing course group or type a name to create a new one — this is what ties "Algebra I (Fall)" and "Algebra I (Spring)" together as the same course.
+2. Optionally set that class's **weight in composite** — how much this term counts relative to the group's others. Leave it at 1 to weight every linked term equally.
+3. Open **Composite Grades** in the sidebar and pick the course group. You'll see every enrolled student, their percent in each linked term, and a weighted composite (with a letter grade).
+
+![Composite grades](screenshots/composite-grades.png)
+
+The composite is renormalized across whichever terms actually have graded work — a term that hasn't started yet doesn't drag the composite down, the same way an ungraded category doesn't drag down a single class's grade.
 
 ---
 
@@ -149,6 +176,60 @@ Today's date is there by default — add more with the date picker and **+ Add d
 ## Planning lessons
 
 **Lesson plans** is a running list, newest additions included. Each entry has a date, status (Planned / Taught / Skipped), title, objectives, materials, activities, homework, and an optional link to one of the class's assessments (handy for tracing which lesson a quiz grew out of). Nothing here is required — use as much or as little structure as is useful to you.
+
+---
+
+## Seating charts
+
+**Seating chart** (per class) is a grid you lay out yourself — set **Rows** and **Columns** at the top to match your actual room.
+
+- **Placing a student**: click a name in the **Unseated** list on the left, then click an empty seat to place them there.
+- **Moving a student**: click their occupied seat (it highlights as selected), then click the seat you want to move them to. If that seat is already taken, the two students swap places — nobody gets bumped to "unseated" by accident.
+- **Unseating a student**: double-click their seat directly, or click it once to select them and don't click a destination.
+- **Shrinking the grid**: if you reduce Rows or Columns and a student's seat falls outside the new size, they're automatically moved back to the Unseated list rather than left stuck in a seat you can no longer see.
+
+![Seating chart](screenshots/seating-chart.png)
+
+The layout is saved per class automatically — no separate save step.
+
+---
+
+## Exit tickets
+
+An exit ticket is a quick 1–3 question check students answer on their own device (phone, tablet, laptop) over the classroom WiFi — no internet connection, app install, or account needed on their end.
+
+1. **Exit ticket** (per class) → write up to 3 questions (short answer or multiple choice) and **Save**.
+2. **Start session** — EduBoard starts a small local server and shows a QR code plus a web address. Students on the same WiFi scan the QR code or type the address into their browser.
+3. Students fill in their name and answers and submit. Responses appear in the **Responses** list live (it polls every few seconds while the session is open).
+4. **Stop session** when you're done; **Clear** wipes the recorded responses if you want to reuse the same questions with another class.
+
+![Exit tickets](screenshots/exit-tickets.png)
+
+Because everything happens over your local WiFi rather than the internet, this works in classrooms with no outside network access — the only requirement is that the teacher's computer and students' devices share the same WiFi network. If a student's device shows "no exit ticket is open," check that the session is still started and that they're on the same network as the teacher's computer.
+
+---
+
+## Resources library
+
+**Resources** (sidebar) is a searchable library of lesson links, files, and notes — not tied to any one class, so you build it up once and reuse it everywhere.
+
+- **New resource** → choose a type (**Link**, **File**, or **Note**), give it a title, and fill in the URL or pick a file from your computer (for File) or just write the note (for Note). Add tags (comma-separated) and, optionally, one of your standards to make it easy to find later.
+- Filter by typing in the search box or clicking a tag chip; click a link or file resource to open it in your browser or default app, or click a note to view/edit it.
+- Files are referenced by their path on disk, the same as gradebook submissions — keep the original file where EduBoard can find it.
+
+![Resources library](screenshots/resources.png)
+
+---
+
+## Student logs and parent communications
+
+Every student's profile page has a **Log** — quick-add buttons for common entries (missed homework, great participation, called home, emailed guardian) plus a free-text note with a type: **Note**, **Positive**, **Concern**, or **Contact**.
+
+A **Contact** entry is a parent-communication record: pick how you reached them (**Phone**, **Email**, **In person**, **Other**) and, if it needs a follow-up, check **Needs follow-up**. Once you've followed up, click **Mark follow-up done** on that entry (from either the student's profile or the Communications page below).
+
+**Communications** (sidebar) rolls up every Contact entry across every student into one searchable list — search by student name or note text, or filter to just the ones still needing follow-up. Each entry links back to that student's profile.
+
+![Parent communications](screenshots/parent-communication.png)
 
 ---
 

@@ -1,9 +1,9 @@
 {
   "name": "eduboard",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A local-first teacher dashboard for tracking students, classes, lesson plans, grades, attendance, and reports across K-12, university, and club sections.",
   "main": "./out/main/index.js",
-  "author": "Oliver",
+  "author": "Purysho",
   "license": "MIT",
   "desktopName": "eduboard.desktop",
   "homepage": "https://github.com/purysho/EduBoard",
