@@ -78,15 +78,26 @@ export function SettingsPage(): React.JSX.Element {
                   onChange={(e) => setForm({ ...form, defaultPassMark: Number(e.target.value) })}
                 />
               </FormRow>
+              <FormRow label="AI provider" hint="DeepSeek works without a VPN in mainland China">
+                <Select
+                  value={form.aiProvider}
+                  onChange={(e) =>
+                    setForm({ ...form, aiProvider: e.target.value as AppSettings['aiProvider'] })
+                  }
+                >
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="anthropic">Anthropic</option>
+                </Select>
+              </FormRow>
               <FormRow
-                label="Anthropic API key"
-                hint="Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to Anthropic, never anywhere else."
+                label={`${form.aiProvider === 'anthropic' ? 'Anthropic' : 'DeepSeek'} API key`}
+                hint="Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else."
               >
                 <Input
                   type="password"
                   value={form.aiApiKey}
                   onChange={(e) => setForm({ ...form, aiApiKey: e.target.value })}
-                  placeholder="sk-ant-…"
+                  placeholder={form.aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
                 />
               </FormRow>
               <div className="col-span-2">

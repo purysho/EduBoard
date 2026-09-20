@@ -394,6 +394,9 @@ export interface LessonPlan {
   updatedAt: string
 }
 
+export const AI_PROVIDERS = ['deepseek', 'anthropic'] as const
+export type AiProvider = (typeof AI_PROVIDERS)[number]
+
 export interface AppSettings {
   teacherName: string
   schoolName: string
@@ -401,10 +404,14 @@ export interface AppSettings {
   defaultGradeThresholds: GradeThresholds
   defaultPassMark: number
   defaultMaxScore: number
-  /** A teacher-supplied Anthropic API key, used only for the optional AI lesson-plan
-   * and report-comment drafting features — empty means those features are unavailable.
-   * Sent straight to Anthropic's API from the main process; never bundled, never
-   * anyone else's key. */
+  /** Which LLM provider the AI drafting features call. 'deepseek' is the default so a
+   * teacher in mainland China gets a working feature with no VPN — 'anthropic' is
+   * there for anyone who prefers/has it. */
+  aiProvider: AiProvider
+  /** A teacher-supplied API key for whichever provider is selected above, used only
+   * for the optional AI lesson-plan and report-comment drafting features — empty
+   * means those features are unavailable. Sent straight to that provider's API from
+   * the main process; never bundled, never anyone else's key. */
   aiApiKey: string
 }
 
@@ -415,6 +422,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultGradeThresholds: DEFAULT_GRADE_THRESHOLDS,
   defaultPassMark: 60,
   defaultMaxScore: 100,
+  aiProvider: 'deepseek',
   aiApiKey: ''
 }
 
