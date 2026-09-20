@@ -183,6 +183,81 @@ export const classScheduleSlots = sqliteTable(
   })
 )
 
+export const homeworkAssignments = sqliteTable(
+  'homework_assignments',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    description: text('description'),
+    dueDate: text('due_date'),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    classIdx: index('homework_assignments_class_idx').on(t.classId, t.dueDate)
+  })
+)
+
+export const homeworkSubmissions = sqliteTable(
+  'homework_submissions',
+  {
+    id: text('id').primaryKey(),
+    homeworkAssignmentId: text('homework_assignment_id')
+      .notNull()
+      .references(() => homeworkAssignments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('not_started'),
+    submittedAt: text('submitted_at'),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    assignmentStudentUnique: uniqueIndex('homework_submissions_assignment_student_unique').on(
+      t.homeworkAssignmentId,
+      t.studentId
+    )
+  })
+)
+
+export const portalInviteBatches = sqliteTable(
+  'portal_invite_batches',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    count: integer('count').notNull(),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    classIdx: index('portal_invite_batches_class_idx').on(t.classId)
+  })
+)
+
+export const portalInvites = sqliteTable(
+  'portal_invites',
+  {
+    id: text('id').primaryKey(),
+    batchId: text('batch_id')
+      .notNull()
+      .references(() => portalInviteBatches.id, { onDelete: 'cascade' }),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    code: text('code').notNull().unique(),
+    revoked: integer('revoked', { mode: 'boolean' }).notNull().default(false),
+    claimedAt: text('claimed_at'),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    batchIdx: index('portal_invites_batch_idx').on(t.batchId)
+  })
+)
+
 export const scores = sqliteTable(
   'scores',
   {

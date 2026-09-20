@@ -8,6 +8,8 @@ import type {
   CourseGroup,
   Enrollment,
   GradeCategory,
+  HomeworkAssignment,
+  HomeworkSubmissionStatus,
   LessonPlan,
   Student,
   Term,
@@ -128,6 +130,22 @@ export type CreateClassScheduleSlotInput = Omit<ClassScheduleSlot, 'id' | 'creat
 export type UpdateClassScheduleSlotInput = Partial<
   Omit<ClassScheduleSlot, 'id' | 'classId' | 'createdAt'>
 >
+
+export type CreateHomeworkAssignmentInput = Omit<
+  HomeworkAssignment,
+  'id' | 'createdAt' | 'updatedAt'
+>
+export type UpdateHomeworkAssignmentInput = Partial<
+  Omit<HomeworkAssignment, 'id' | 'classId' | 'createdAt' | 'updatedAt'>
+>
+
+export type SetHomeworkSubmissionStatusInput = {
+  homeworkAssignmentId: string
+  studentId: string
+  status: HomeworkSubmissionStatus
+}
+
+export type CreatePortalInviteBatchInput = { classId: string; count: number }
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

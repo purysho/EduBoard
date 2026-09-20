@@ -191,6 +191,24 @@ const api: EduBoardApi = {
   ai: {
     draftLessonPlan: (input) => invoke(IpcChannels.ai.draftLessonPlan, input),
     draftReportComment: (input) => invoke(IpcChannels.ai.draftReportComment, input)
+  },
+  homeworkAssignments: {
+    listByClass: (classId) => invoke(IpcChannels.homeworkAssignments.listByClass, classId),
+    create: (input) => invoke(IpcChannels.homeworkAssignments.create, input),
+    update: (id, patch) => invoke(IpcChannels.homeworkAssignments.update, id, patch),
+    remove: (id) => invoke(IpcChannels.homeworkAssignments.remove, id),
+    listSubmissions: (homeworkAssignmentId, classId) =>
+      invoke(IpcChannels.homeworkAssignments.listSubmissions, homeworkAssignmentId, classId),
+    setSubmissionStatus: (input) =>
+      invoke(IpcChannels.homeworkAssignments.setSubmissionStatus, input)
+  },
+  portalInvites: {
+    createBatch: (input) => invoke(IpcChannels.portalInvites.createBatch, input),
+    listBatchesByClass: (classId) => invoke(IpcChannels.portalInvites.listBatchesByClass, classId),
+    getBatch: (batchId) => invoke(IpcChannels.portalInvites.getBatch, batchId),
+    revoke: (inviteId) => invoke(IpcChannels.portalInvites.revoke, inviteId),
+    printBatch: (batchId, suggestedFileName) =>
+      invoke(IpcChannels.portalInvites.printBatch, batchId, suggestedFileName)
   }
 }
 

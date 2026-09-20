@@ -34,6 +34,8 @@ import {
 import QRCode from 'qrcode'
 import * as reportsService from '../services/reports'
 import * as aiService from '../services/aiService'
+import * as homeworkRepo from '../repositories/homeworkAssignments'
+import * as portalInvitesRepo from '../repositories/portalInvites'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -459,5 +461,71 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.ai.draftReportComment, (_e, input: DraftReportCommentInput) =>
     aiService.draftReportComment(input)
+  )
+
+  // --- Homework assignments ------------------------------------------------------------------
+  handle(IpcChannels.homeworkAssignments.listByClass, (_e, classId: string) =>
+    homeworkRepo.listHomeworkAssignmentsByClass(classId)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.create,
+    (_e, input: homeworkRepo.CreateHomeworkAssignmentInput) =>
+      homeworkRepo.createHomeworkAssignment(input)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.update,
+    (_e, id: string, patch: homeworkRepo.UpdateHomeworkAssignmentInput) =>
+      homeworkRepo.updateHomeworkAssignment(id, patch)
+  )
+  handle(IpcChannels.homeworkAssignments.remove, (_e, id: string) =>
+    homeworkRepo.deleteHomeworkAssignment(id)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.listSubmissions,
+    (_e, homeworkAssignmentId: string, classId: string) =>
+      homeworkRepo.listSubmissionsForAssignment(homeworkAssignmentId, classId)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.setSubmissionStatus,
+    (_e, input: homeworkRepo.SetHomeworkSubmissionStatusInput) =>
+      homeworkRepo.setSubmissionStatus(input)
+  )
+
+  // --- Portal invites -------------------------------------------------------------------------
+  handle(
+    IpcChannels.portalInvites.createBatch,
+    (_e, input: portalInvitesRepo.CreatePortalInviteBatchInput) =>
+      portalInvitesRepo.createInviteBatch(input)
+  )
+  handle(IpcChannels.portalInvites.listBatchesByClass, (_e, classId: string) =>
+    portalInvitesRepo.listInviteBatchesByClass(classId)
+  )
+  handle(IpcChannels.portalInvites.getBatch, (_e, batchId: string) =>
+    portalInvitesRepo.getInviteBatch(batchId)
+  )
+  handle(IpcChannels.portalInvites.revoke, (_e, inviteId: string) =>
+    portalInvitesRepo.revokeInvite(inviteId)
+  )
+  handle(
+    IpcChannels.portalInvites.printBatch,
+    async (_e, batchId: string, suggestedFileName: string) => {
+      const win = createPrintWindow()
+      try {
+        await loadAppRoute(win, `/print/invite-batch/${batchId}`)
+        await waitForPrintReady(win)
+        const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
+
+        const { canceled, filePath } = await dialog.showSaveDialog({
+          defaultPath: suggestedFileName,
+          filters: [{ name: 'PDF', extensions: ['pdf'] }]
+        })
+        if (canceled || !filePath) return { saved: false as const }
+
+        await writeFile(filePath, pdfBuffer)
+        return { saved: true as const, filePath }
+      } finally {
+        win.destroy()
+      }
+    }
   )
 }

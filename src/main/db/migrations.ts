@@ -381,6 +381,65 @@ const migrations: Migration[] = [
         CREATE INDEX class_schedule_slots_day_idx ON class_schedule_slots(day_of_week);
       `)
     }
+  },
+  {
+    id: 12,
+    name: 'homework_assignments',
+    up: (db) => {
+      // Named "homework_*", not "assignment_*" -- that name is already taken by the
+      // file-upload submissions tied to graded Assessments (migration 8). This is an
+      // unrelated concept: due-dated homework tracked (eventually) through the portal,
+      // not a gradebook item.
+      db.exec(`
+        CREATE TABLE homework_assignments (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          description TEXT,
+          due_date TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE INDEX homework_assignments_class_idx ON homework_assignments(class_id, due_date);
+
+        CREATE TABLE homework_submissions (
+          id TEXT PRIMARY KEY,
+          homework_assignment_id TEXT NOT NULL REFERENCES homework_assignments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          status TEXT NOT NULL DEFAULT 'not_started',
+          submitted_at TEXT,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX homework_submissions_assignment_student_unique
+          ON homework_submissions(homework_assignment_id, student_id);
+      `)
+    }
+  },
+  {
+    id: 13,
+    name: 'portal_invites',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE portal_invite_batches (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          count INTEGER NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX portal_invite_batches_class_idx ON portal_invite_batches(class_id);
+
+        CREATE TABLE portal_invites (
+          id TEXT PRIMARY KEY,
+          batch_id TEXT NOT NULL REFERENCES portal_invite_batches(id) ON DELETE CASCADE,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          code TEXT NOT NULL UNIQUE,
+          revoked INTEGER NOT NULL DEFAULT 0,
+          claimed_at TEXT,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX portal_invites_batch_idx ON portal_invites(batch_id);
+      `)
+    }
   }
 ]
 

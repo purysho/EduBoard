@@ -22,11 +22,15 @@ import { CommunicationsPage } from './pages/Communications/CommunicationsPage'
 import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage'
 import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 import { TimetablePage } from './pages/Timetable/TimetablePage'
+import { HomeworkTab } from './pages/Classes/HomeworkTab'
+import { PortalTab } from './pages/Classes/PortalTab'
+import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrintPage'
 
 function App(): React.JSX.Element {
   return (
     <Routes>
       <Route path="/print/student/:studentId/:classId" element={<StudentReportPrintPage />} />
+      <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
       <Route element={<AppShell />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/students" element={<StudentsListPage />} />
@@ -39,6 +43,8 @@ function App(): React.JSX.Element {
           <Route path="lessons" element={<LessonPlannerTab />} />
           <Route path="seating" element={<SeatingChartTab />} />
           <Route path="exit-ticket" element={<ExitTicketTab />} />
+          <Route path="homework" element={<HomeworkTab />} />
+          <Route path="portal" element={<PortalTab />} />
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />
         </Route>

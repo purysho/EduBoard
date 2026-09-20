@@ -301,6 +301,62 @@ export interface ClassScheduleSlotWithClass extends ClassScheduleSlot {
   classColor: string | null
 }
 
+export const HOMEWORK_SUBMISSION_STATUSES = ['not_started', 'submitted', 'done'] as const
+export type HomeworkSubmissionStatus = (typeof HOMEWORK_SUBMISSION_STATUSES)[number]
+
+/** Due-dated homework, distinct from a gradebook Assessment — this is what the Portal
+ * (once built) shows to university-level students and lets them mark as submitted.
+ * Until then, the teacher tracks status manually here. */
+export interface HomeworkAssignment {
+  id: string
+  classId: string
+  title: string
+  description: string | null
+  dueDate: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface HomeworkSubmission {
+  id: string
+  homeworkAssignmentId: string
+  studentId: string
+  status: HomeworkSubmissionStatus
+  submittedAt: string | null
+  updatedAt: string
+}
+
+/** One row per student for one assignment — what the per-assignment roster view
+ * renders, so it doesn't need a separate student lookup per submission. */
+export interface HomeworkSubmissionWithStudent extends HomeworkSubmission {
+  studentName: string
+}
+
+/** One printable strip: a Portal sign-up invite, pre-scoped to a class (and, via the
+ * class's levelType/courseGroupId, to whatever that class's students can see) at
+ * generation time — see PortalInviteBatch. Not usable until the Portal backend exists;
+ * the code and QR are generated now so batches are ready to print and hand out. */
+export interface PortalInvite {
+  id: string
+  batchId: string
+  classId: string
+  code: string
+  revoked: boolean
+  claimedAt: string | null
+  createdAt: string
+}
+
+export interface PortalInviteBatch {
+  id: string
+  classId: string
+  count: number
+  createdAt: string
+}
+
+export interface PortalInviteBatchWithInvites extends PortalInviteBatch {
+  invites: PortalInvite[]
+}
+
 /** A QR check-in session's live state for one class — open/closed, which date it's
  * marking attendance for, and who has checked themselves in so far. Ephemeral
  * (in-memory only, like ExitTicketServerInfo's running server), not persisted. */

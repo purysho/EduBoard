@@ -33,7 +33,10 @@ import type {
   UpsertExitTicketInput,
   UpsertAssignmentSubmissionInput,
   CreateCourseGroupInput,
-  CreateClassScheduleSlotInput
+  CreateClassScheduleSlotInput,
+  CreateHomeworkAssignmentInput,
+  UpdateHomeworkAssignmentInput,
+  SetHomeworkSubmissionStatusInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -61,6 +64,10 @@ export const queryKeys = {
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
   allScheduleSlots: ['scheduleSlots'] as const,
+  homeworkAssignments: (classId: string) => ['classes', classId, 'homework'] as const,
+  homeworkSubmissions: (homeworkAssignmentId: string) =>
+    ['homework', homeworkAssignmentId, 'submissions'] as const,
+  portalInviteBatches: (classId: string) => ['classes', classId, 'inviteBatches'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
   classReport: (classId: string) => ['classes', classId, 'report'] as const,
   studentClassGrade: (studentId: string, classId: string) =>
@@ -1033,5 +1040,91 @@ export function useDraftLessonPlan() {
 export function useDraftReportComment() {
   return useMutation({
     mutationFn: (input: DraftReportCommentInput) => api().ai.draftReportComment(input)
+  })
+}
+
+// ---- Homework assignments -------------------------------------------------------------------
+
+export function useHomeworkAssignments(classId: string) {
+  return useQuery({
+    queryKey: queryKeys.homeworkAssignments(classId),
+    queryFn: () => api().homeworkAssignments.listByClass(classId)
+  })
+}
+
+export function useCreateHomeworkAssignment(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateHomeworkAssignmentInput) => api().homeworkAssignments.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+  })
+}
+
+export function useUpdateHomeworkAssignment(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: UpdateHomeworkAssignmentInput }) =>
+      api().homeworkAssignments.update(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+  })
+}
+
+export function useDeleteHomeworkAssignment(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().homeworkAssignments.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+  })
+}
+
+export function useHomeworkSubmissions(homeworkAssignmentId: string, classId: string) {
+  return useQuery({
+    queryKey: queryKeys.homeworkSubmissions(homeworkAssignmentId),
+    queryFn: () => api().homeworkAssignments.listSubmissions(homeworkAssignmentId, classId)
+  })
+}
+
+export function useSetHomeworkSubmissionStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: SetHomeworkSubmissionStatusInput) =>
+      api().homeworkAssignments.setSubmissionStatus(input),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
+      })
+  })
+}
+
+// ---- Portal invites ---------------------------------------------------------------------------
+
+export function usePortalInviteBatches(classId: string) {
+  return useQuery({
+    queryKey: queryKeys.portalInviteBatches(classId),
+    queryFn: () => api().portalInvites.listBatchesByClass(classId)
+  })
+}
+
+export function usePortalInviteBatch(batchId: string | undefined) {
+  return useQuery({
+    queryKey: ['inviteBatch', batchId ?? ''] as const,
+    queryFn: () => api().portalInvites.getBatch(batchId!),
+    enabled: !!batchId
+  })
+}
+
+export function useCreatePortalInviteBatch(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (count: number) => api().portalInvites.createBatch({ classId, count }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
+  })
+}
+
+export function useRevokePortalInvite(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (inviteId: string) => api().portalInvites.revoke(inviteId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
   })
 }

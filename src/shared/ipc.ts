@@ -171,5 +171,20 @@ export const IpcChannels = {
   ai: {
     draftLessonPlan: 'ai:draftLessonPlan',
     draftReportComment: 'ai:draftReportComment'
+  },
+  homeworkAssignments: {
+    listByClass: 'homeworkAssignments:listByClass',
+    create: 'homeworkAssignments:create',
+    update: 'homeworkAssignments:update',
+    remove: 'homeworkAssignments:remove',
+    listSubmissions: 'homeworkAssignments:listSubmissions',
+    setSubmissionStatus: 'homeworkAssignments:setSubmissionStatus'
+  },
+  portalInvites: {
+    createBatch: 'portalInvites:createBatch',
+    listBatchesByClass: 'portalInvites:listBatchesByClass',
+    getBatch: 'portalInvites:getBatch',
+    revoke: 'portalInvites:revoke',
+    printBatch: 'portalInvites:printBatch'
   }
 } as const

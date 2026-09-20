@@ -16,6 +16,10 @@ import type {
   DraftedLessonPlan,
   DraftLessonPlanInput,
   DraftReportCommentInput,
+  HomeworkAssignment,
+  HomeworkSubmission,
+  HomeworkSubmissionWithStudent,
+  PortalInviteBatchWithInvites,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -72,7 +76,11 @@ import type {
   UpsertAssignmentSubmissionInput,
   CreateCourseGroupInput,
   CreateClassScheduleSlotInput,
-  UpdateClassScheduleSlotInput
+  UpdateClassScheduleSlotInput,
+  CreateHomeworkAssignmentInput,
+  UpdateHomeworkAssignmentInput,
+  SetHomeworkSubmissionStatusInput,
+  CreatePortalInviteBatchInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -249,5 +257,26 @@ export interface EduBoardApi {
   ai: {
     draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan>
     draftReportComment(input: DraftReportCommentInput): Promise<string>
+  }
+  homeworkAssignments: {
+    listByClass(classId: string): Promise<HomeworkAssignment[]>
+    create(input: CreateHomeworkAssignmentInput): Promise<HomeworkAssignment>
+    update(id: string, patch: UpdateHomeworkAssignmentInput): Promise<HomeworkAssignment>
+    remove(id: string): Promise<void>
+    listSubmissions(
+      homeworkAssignmentId: string,
+      classId: string
+    ): Promise<HomeworkSubmissionWithStudent[]>
+    setSubmissionStatus(input: SetHomeworkSubmissionStatusInput): Promise<HomeworkSubmission>
+  }
+  portalInvites: {
+    createBatch(input: CreatePortalInviteBatchInput): Promise<PortalInviteBatchWithInvites>
+    listBatchesByClass(classId: string): Promise<PortalInviteBatchWithInvites[]>
+    getBatch(batchId: string): Promise<PortalInviteBatchWithInvites | null>
+    revoke(inviteId: string): Promise<void>
+    printBatch(
+      batchId: string,
+      suggestedFileName: string
+    ): Promise<{ saved: boolean; filePath?: string }>
   }
 }
