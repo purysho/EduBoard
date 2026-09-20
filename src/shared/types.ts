@@ -403,6 +403,29 @@ export interface ClassReport {
   attendanceTrend: { date: string; rate: number | null }[]
 }
 
+/** One class's headline numbers, for side-by-side comparison across all classes. */
+export interface ClassComparisonEntry {
+  classId: string
+  className: string
+  averagePercent: number | null
+  passRate: number | null
+  averageAttendanceRate: number | null
+}
+
+/** One grading category's average, aggregated by category name across every class that
+ * has a category of that name — surfaces which kind of work is weakest school-wide. */
+export interface CategoryComparisonEntry {
+  categoryName: string
+  averagePercent: number | null
+  classCount: number
+}
+
+export interface AnalyticsOverview {
+  classComparison: ClassComparisonEntry[]
+  categoryComparison: CategoryComparisonEntry[]
+  attendanceTrend: { date: string; rate: number | null }[]
+}
+
 export interface DeviceSyncStatus {
   openedOnAnotherDevice: boolean
   previousDeviceLabel?: string

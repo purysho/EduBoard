@@ -77,7 +77,8 @@ const api: EduBoardApi = {
     studentClassGrade: (studentId, classId) =>
       invoke(IpcChannels.reports.studentClassGrade, studentId, classId),
     studentAttendanceSummary: (studentId, classId) =>
-      invoke(IpcChannels.reports.studentAttendanceSummary, studentId, classId)
+      invoke(IpcChannels.reports.studentAttendanceSummary, studentId, classId),
+    analyticsOverview: () => invoke(IpcChannels.reports.analyticsOverview)
   },
   settings: {
     get: () => invoke(IpcChannels.settings.get),

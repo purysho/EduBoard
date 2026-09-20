@@ -9,7 +9,10 @@ import { listStudents } from '../repositories/students'
 import { computeClassGrade, letterForPercent, isPassing } from './grading'
 import { computeAttendanceCounts } from './attendance'
 import type {
+  AnalyticsOverview,
   AttendanceSummary,
+  CategoryComparisonEntry,
+  ClassComparisonEntry,
   ClassReport,
   ClassRosterRow,
   DashboardStats,
@@ -232,4 +235,63 @@ export function getDashboardStats(): DashboardStats {
     upcomingLessons: listUpcomingLessonPlans(new Date().toISOString().slice(0, 10), 5),
     ungradedAssessmentCount
   }
+}
+
+/** Cross-class analytics — every active class's headline numbers side by side, grading
+ * categories aggregated by name across classes, and a combined attendance trend. Each
+ * class's numbers are just its own `ClassReport`, reused rather than recomputed. */
+export function getAnalyticsOverview(): AnalyticsOverview {
+  const classes = listClasses().filter((c) => !c.archived)
+
+  const classComparison: ClassComparisonEntry[] = []
+  const categoryTotals = new Map<string, { sum: number; count: number; classIds: Set<string> }>()
+  const attendanceByDate = new Map<string, { sum: number; count: number }>()
+
+  for (const cls of classes) {
+    const report = getClassReport(cls.id)
+    if (!report) continue
+
+    classComparison.push({
+      classId: cls.id,
+      className: cls.name,
+      averagePercent: report.averagePercent,
+      passRate: report.passRate,
+      averageAttendanceRate: report.averageAttendanceRate
+    })
+
+    for (const cat of report.categoryAverages) {
+      if (cat.averagePercent === null) continue
+      const entry = categoryTotals.get(cat.categoryName) ?? {
+        sum: 0,
+        count: 0,
+        classIds: new Set<string>()
+      }
+      entry.sum += cat.averagePercent
+      entry.count += 1
+      entry.classIds.add(cls.id)
+      categoryTotals.set(cat.categoryName, entry)
+    }
+
+    for (const point of report.attendanceTrend) {
+      if (point.rate === null) continue
+      const entry = attendanceByDate.get(point.date) ?? { sum: 0, count: 0 }
+      entry.sum += point.rate
+      entry.count += 1
+      attendanceByDate.set(point.date, entry)
+    }
+  }
+
+  const categoryComparison: CategoryComparisonEntry[] = Array.from(categoryTotals.entries())
+    .map(([categoryName, { sum, count, classIds }]) => ({
+      categoryName,
+      averagePercent: count ? sum / count : null,
+      classCount: classIds.size
+    }))
+    .sort((a, b) => (b.averagePercent ?? 0) - (a.averagePercent ?? 0))
+
+  const attendanceTrend = Array.from(attendanceByDate.entries())
+    .map(([date, { sum, count }]) => ({ date, rate: count ? sum / count : null }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  return { classComparison, categoryComparison, attendanceTrend }
 }

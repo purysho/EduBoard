@@ -66,7 +66,8 @@ export const IpcChannels = {
     classRoster: 'reports:classRoster',
     classReport: 'reports:classReport',
     studentClassGrade: 'reports:studentClassGrade',
-    studentAttendanceSummary: 'reports:studentAttendanceSummary'
+    studentAttendanceSummary: 'reports:studentAttendanceSummary',
+    analyticsOverview: 'reports:analyticsOverview'
   },
   settings: {
     get: 'settings:get',

@@ -2,6 +2,7 @@
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
 import type {
+  AnalyticsOverview,
   AppSettings,
   Assessment,
   AttendanceRecord,
@@ -132,6 +133,7 @@ export interface EduBoardApi {
     classReport(classId: string): Promise<ClassReport | null>
     studentClassGrade(studentId: string, classId: string): Promise<StudentClassGrade | null>
     studentAttendanceSummary(studentId: string, classId: string): Promise<AttendanceSummary>
+    analyticsOverview(): Promise<AnalyticsOverview>
   }
   settings: {
     get(): Promise<AppSettings>

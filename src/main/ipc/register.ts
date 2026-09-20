@@ -189,6 +189,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.reports.studentClassGrade, (_e, studentId: string, classId: string) =>
     reportsService.getStudentClassGrade(studentId, classId)
   )
+  handle(IpcChannels.reports.analyticsOverview, () => reportsService.getAnalyticsOverview())
   handle(IpcChannels.reports.studentAttendanceSummary, (_e, studentId: string, classId: string) =>
     reportsService.getStudentAttendanceSummary(studentId, classId)
   )

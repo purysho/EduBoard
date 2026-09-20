@@ -52,6 +52,7 @@ export const queryKeys = {
   lessonPlans: (classId: string) => ['classes', classId, 'lessonPlans'] as const,
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
+  analyticsOverview: ['analyticsOverview'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
   classReport: (classId: string) => ['classes', classId, 'report'] as const,
   studentClassGrade: (studentId: string, classId: string) =>
@@ -541,6 +542,13 @@ export function useStudentAttendanceSummary(
     queryKey: ['students', studentId ?? '', 'classes', classId ?? '', 'attendanceSummary'] as const,
     queryFn: () => api().reports.studentAttendanceSummary(studentId!, classId!),
     enabled: !!studentId && !!classId
+  })
+}
+
+export function useAnalyticsOverview() {
+  return useQuery({
+    queryKey: queryKeys.analyticsOverview,
+    queryFn: () => api().reports.analyticsOverview()
   })
 }
 

@@ -20,6 +20,7 @@ import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
 import { CommunicationsPage } from './pages/Communications/CommunicationsPage'
 import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage'
+import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 
 function App(): React.JSX.Element {
   return (
@@ -45,6 +46,7 @@ function App(): React.JSX.Element {
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/communications" element={<CommunicationsPage />} />
         <Route path="/composite-grades" element={<CompositeGradesPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

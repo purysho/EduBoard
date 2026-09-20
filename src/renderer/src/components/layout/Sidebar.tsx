@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
+  BarChart3,
   ClipboardCheck,
   FolderOpen,
   GraduationCap,
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/resources', label: 'Resources', icon: FolderOpen },
   { to: '/communications', label: 'Communications', icon: MessageCircle },
   { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]
 
