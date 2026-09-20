@@ -66,9 +66,16 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.classes.create, (_e, input: classesRepo.CreateClassInput) =>
     classesRepo.createClass(input)
   )
-  handle(IpcChannels.classes.update, (_e, id: string, patch: classesRepo.UpdateClassInput) =>
-    classesRepo.updateClass(id, patch)
-  )
+  handle(IpcChannels.classes.update, (_e, id: string, patch: classesRepo.UpdateClassInput) => {
+    const updated = classesRepo.updateClass(id, patch)
+    // A grid shrink can strand students at now-out-of-bounds seats — invisible on the
+    // grid and absent from "Unseated" alike, since their seat_assignments row is still
+    // there. Only relevant when the seating dimensions actually changed.
+    if (patch.seatingRows !== undefined || patch.seatingCols !== undefined) {
+      seatAssignmentsRepo.pruneOutOfBoundsSeats(id, updated.seatingRows, updated.seatingCols)
+    }
+    return updated
+  })
   handle(IpcChannels.classes.remove, (_e, id: string) => classesRepo.deleteClass(id))
 
   // --- Grade categories --------------------------------------------------------------

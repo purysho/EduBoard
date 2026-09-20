@@ -210,14 +210,15 @@ export function startExitTicketServer(): void {
     res.end('Method not allowed')
   })
 
-  s.on('error', (err) => {
-    console.error('Exit ticket server error:', err)
-  })
-
   server = s
   tryListen(s, 0)
 }
 
+// All bind-error handling — including logging — lives in the single `once('error', ...)`
+// listener attached per attempt below. A previous version also kept a persistent
+// `on('error', ...)` logger alongside it, so a single EADDRINUSE fired both and logged
+// twice; that persistent listener is gone now; each attempt logs at most once, either
+// silently retrying (still within candidates) or reporting the final failure.
 function tryListen(s: Server, portIndex: number): void {
   const port = CANDIDATE_PORTS[portIndex]
   if (port === undefined) {
@@ -228,15 +229,24 @@ function tryListen(s: Server, portIndex: number): void {
     if (server === s) server = null
     return
   }
+  const onError = (err: NodeJS.ErrnoException): void => {
+    if (err.code === 'EADDRINUSE' && portIndex + 1 < CANDIDATE_PORTS.length) {
+      tryListen(s, portIndex + 1)
+      return
+    }
+    console.error('Exit ticket server error:', err)
+    if (server === s) server = null
+  }
+  s.once('error', onError)
   // Bind to all interfaces (0.0.0.0), not just localhost — student devices on the
   // classroom WiFi need to reach it via the teacher's LAN IP.
   s.listen(port, '0.0.0.0', () => {
+    s.off('error', onError)
     boundPort = port
-  })
-  s.once('error', (err: NodeJS.ErrnoException) => {
-    if (err.code === 'EADDRINUSE' && portIndex + 1 < CANDIDATE_PORTS.length) {
-      tryListen(s, portIndex + 1)
-    }
+    // A late bind error after this point (e.g. the OS closing the socket under us) is
+    // rare but real — keep a persistent logger for the server's remaining lifetime,
+    // attached only once we're actually listening so it never overlaps a retry attempt.
+    s.on('error', (err) => console.error('Exit ticket server error:', err))
   })
 }
 
