@@ -362,6 +362,25 @@ const migrations: Migration[] = [
         CREATE INDEX classes_course_group_idx ON classes(course_group_id);
       `)
     }
+  },
+  {
+    id: 11,
+    name: 'class_schedule_slots',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE class_schedule_slots (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          day_of_week INTEGER NOT NULL,
+          start_time TEXT NOT NULL,
+          end_time TEXT NOT NULL,
+          room TEXT,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX class_schedule_slots_class_idx ON class_schedule_slots(class_id);
+        CREATE INDEX class_schedule_slots_day_idx ON class_schedule_slots(day_of_week);
+      `)
+    }
   }
 ]
 

@@ -61,6 +61,13 @@ export const IpcChannels = {
     update: 'lessonPlans:update',
     remove: 'lessonPlans:remove'
   },
+  scheduleSlots: {
+    listByClass: 'scheduleSlots:listByClass',
+    listAll: 'scheduleSlots:listAll',
+    create: 'scheduleSlots:create',
+    update: 'scheduleSlots:update',
+    remove: 'scheduleSlots:remove'
+  },
   reports: {
     dashboardStats: 'reports:dashboardStats',
     classRoster: 'reports:classRoster',

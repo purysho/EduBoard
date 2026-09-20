@@ -70,6 +70,13 @@ const api: EduBoardApi = {
     update: (id, patch) => invoke(IpcChannels.lessonPlans.update, id, patch),
     remove: (id) => invoke(IpcChannels.lessonPlans.remove, id)
   },
+  scheduleSlots: {
+    listByClass: (classId) => invoke(IpcChannels.scheduleSlots.listByClass, classId),
+    listAll: () => invoke(IpcChannels.scheduleSlots.listAll),
+    create: (input) => invoke(IpcChannels.scheduleSlots.create, input),
+    update: (id, patch) => invoke(IpcChannels.scheduleSlots.update, id, patch),
+    remove: (id) => invoke(IpcChannels.scheduleSlots.remove, id)
+  },
   reports: {
     dashboardStats: () => invoke(IpcChannels.reports.dashboardStats),
     classRoster: (classId) => invoke(IpcChannels.reports.classRoster, classId),

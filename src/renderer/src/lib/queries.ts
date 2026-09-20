@@ -27,7 +27,8 @@ import type {
   UpdateLessonResourceInput,
   UpsertExitTicketInput,
   UpsertAssignmentSubmissionInput,
-  CreateCourseGroupInput
+  CreateCourseGroupInput,
+  CreateClassScheduleSlotInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -53,6 +54,7 @@ export const queryKeys = {
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
+  allScheduleSlots: ['scheduleSlots'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
   classReport: (classId: string) => ['classes', classId, 'report'] as const,
   studentClassGrade: (studentId: string, classId: string) =>
@@ -498,6 +500,31 @@ export function useDeleteLessonPlan(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.upcomingLessonPlans })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
     }
+  })
+}
+
+// ---- Timetable ----------------------------------------------------------------------------
+
+export function useAllScheduleSlots() {
+  return useQuery({
+    queryKey: queryKeys.allScheduleSlots,
+    queryFn: () => api().scheduleSlots.listAll()
+  })
+}
+
+export function useCreateScheduleSlot() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateClassScheduleSlotInput) => api().scheduleSlots.create(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.allScheduleSlots })
+  })
+}
+
+export function useDeleteScheduleSlot() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().scheduleSlots.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.allScheduleSlots })
   })
 }
 

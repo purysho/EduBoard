@@ -11,6 +11,7 @@ import * as assessmentsRepo from '../repositories/assessments'
 import * as scoresRepo from '../repositories/scores'
 import * as attendanceRepo from '../repositories/attendanceRecords'
 import * as lessonPlansRepo from '../repositories/lessonPlans'
+import * as scheduleSlotsRepo from '../repositories/classScheduleSlots'
 import * as settingsRepo from '../repositories/settingsRepo'
 import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
@@ -177,6 +178,25 @@ export function registerIpcHandlers(): void {
       lessonPlansRepo.updateLessonPlan(id, patch)
   )
   handle(IpcChannels.lessonPlans.remove, (_e, id: string) => lessonPlansRepo.deleteLessonPlan(id))
+
+  // --- Schedule slots (Timetable) ------------------------------------------------------------
+  handle(IpcChannels.scheduleSlots.listByClass, (_e, classId: string) =>
+    scheduleSlotsRepo.listScheduleSlotsByClass(classId)
+  )
+  handle(IpcChannels.scheduleSlots.listAll, () => scheduleSlotsRepo.listAllScheduleSlots())
+  handle(
+    IpcChannels.scheduleSlots.create,
+    (_e, input: scheduleSlotsRepo.CreateClassScheduleSlotInput) =>
+      scheduleSlotsRepo.createScheduleSlot(input)
+  )
+  handle(
+    IpcChannels.scheduleSlots.update,
+    (_e, id: string, patch: scheduleSlotsRepo.UpdateClassScheduleSlotInput) =>
+      scheduleSlotsRepo.updateScheduleSlot(id, patch)
+  )
+  handle(IpcChannels.scheduleSlots.remove, (_e, id: string) =>
+    scheduleSlotsRepo.deleteScheduleSlot(id)
+  )
 
   // --- Reports ------------------------------------------------------------------------------
   handle(IpcChannels.reports.dashboardStats, () => reportsService.getDashboardStats())

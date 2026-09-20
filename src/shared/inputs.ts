@@ -3,6 +3,7 @@
 // so the two sides can't silently drift apart.
 import type {
   AttendanceRecord,
+  ClassScheduleSlot,
   ClassSection,
   CourseGroup,
   Enrollment,
@@ -122,6 +123,11 @@ export type UpdateStudentLogEntryInput = Partial<
 >
 
 export type UpsertAssignmentSubmissionInput = Omit<AssignmentSubmission, 'id' | 'submittedAt'>
+
+export type CreateClassScheduleSlotInput = Omit<ClassScheduleSlot, 'id' | 'createdAt'>
+export type UpdateClassScheduleSlotInput = Partial<
+  Omit<ClassScheduleSlot, 'id' | 'classId' | 'createdAt'>
+>
 
 export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>

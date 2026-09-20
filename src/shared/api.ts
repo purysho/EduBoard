@@ -9,6 +9,8 @@ import type {
   AttendanceSummary,
   BackupInfo,
   BackupPreview,
+  ClassScheduleSlot,
+  ClassScheduleSlotWithClass,
   DeviceSyncStatus,
   ScoreHistoryEntry,
   ClassReport,
@@ -64,7 +66,9 @@ import type {
   UpdateLessonResourceInput,
   UpsertExitTicketInput,
   UpsertAssignmentSubmissionInput,
-  CreateCourseGroupInput
+  CreateCourseGroupInput,
+  CreateClassScheduleSlotInput,
+  UpdateClassScheduleSlotInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
@@ -125,6 +129,13 @@ export interface EduBoardApi {
     listUpcoming(fromDate: string, limit?: number): Promise<LessonPlan[]>
     create(input: CreateLessonPlanInput): Promise<LessonPlan>
     update(id: string, patch: UpdateLessonPlanInput): Promise<LessonPlan>
+    remove(id: string): Promise<void>
+  }
+  scheduleSlots: {
+    listByClass(classId: string): Promise<ClassScheduleSlot[]>
+    listAll(): Promise<ClassScheduleSlotWithClass[]>
+    create(input: CreateClassScheduleSlotInput): Promise<ClassScheduleSlot>
+    update(id: string, patch: UpdateClassScheduleSlotInput): Promise<ClassScheduleSlot>
     remove(id: string): Promise<void>
   }
   reports: {

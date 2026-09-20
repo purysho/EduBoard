@@ -164,6 +164,25 @@ export const seatAssignments = sqliteTable(
   })
 )
 
+export const classScheduleSlots = sqliteTable(
+  'class_schedule_slots',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    dayOfWeek: integer('day_of_week').notNull(),
+    startTime: text('start_time').notNull(),
+    endTime: text('end_time').notNull(),
+    room: text('room'),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    classIdx: index('class_schedule_slots_class_idx').on(t.classId),
+    dayIdx: index('class_schedule_slots_day_idx').on(t.dayOfWeek)
+  })
+)
+
 export const scores = sqliteTable(
   'scores',
   {

@@ -282,6 +282,25 @@ export interface ExitTicketServerInfo {
   lanIp: string | null
 }
 
+/** 0 = Sunday, matching JS Date#getDay() — kept structured (vs. the free-text
+ * ClassSection.schedule field) so a Timetable view can group/sort by day and time. */
+export interface ClassScheduleSlot {
+  id: string
+  classId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  room: string | null
+  createdAt: string
+}
+
+/** A schedule slot with its class's name/color attached — what the Timetable page's
+ * weekly grid renders, so it doesn't need a separate class lookup per slot. */
+export interface ClassScheduleSlotWithClass extends ClassScheduleSlot {
+  className: string
+  classColor: string | null
+}
+
 export interface AttendanceRecord {
   id: string
   classId: string
