@@ -20,7 +20,13 @@ export function listLessonResources(): LessonResource[] {
 
 export function createLessonResource(input: CreateLessonResourceInput): LessonResource {
   const now = nowIso()
-  const row: LessonResource = { id: newId(), createdAt: now, updatedAt: now, ...input }
+  const row: LessonResource = {
+    id: newId(),
+    createdAt: now,
+    updatedAt: now,
+    indexedAt: null,
+    ...input
+  }
   getDb().insert(lessonResources).values(row).run()
   return row
 }
@@ -39,4 +45,17 @@ export function updateLessonResource(id: string, patch: UpdateLessonResourceInpu
 
 export function deleteLessonResource(id: string): void {
   getDb().delete(lessonResources).where(eq(lessonResources.id, id)).run()
+}
+
+export function getLessonResource(id: string): LessonResource | undefined {
+  return getDb().select().from(lessonResources).where(eq(lessonResources.id, id)).get() as
+    LessonResource | undefined
+}
+
+export function touchLessonResourceIndexedAt(id: string): void {
+  getDb()
+    .update(lessonResources)
+    .set({ indexedAt: nowIso() })
+    .where(eq(lessonResources.id, id))
+    .run()
 }

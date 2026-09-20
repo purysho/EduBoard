@@ -23,6 +23,7 @@ import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage
 import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 import { TimetablePage } from './pages/Timetable/TimetablePage'
 import { HomeworkTab } from './pages/Classes/HomeworkTab'
+import { NotebookPage } from './pages/Notebook/NotebookPage'
 import { PortalTab } from './pages/Classes/PortalTab'
 import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrintPage'
 
@@ -51,6 +52,7 @@ function App(): React.JSX.Element {
         <Route path="/rubrics" element={<RubricsPage />} />
         <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/notebook" element={<NotebookPage />} />
         <Route path="/communications" element={<CommunicationsPage />} />
         <Route path="/composite-grades" element={<CompositeGradesPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />

@@ -440,6 +440,27 @@ const migrations: Migration[] = [
         CREATE INDEX portal_invites_batch_idx ON portal_invites(batch_id);
       `)
     }
+  },
+  {
+    id: 14,
+    name: 'notebook',
+    up: (db) => {
+      db.exec(`
+        -- Tracks when a resource's text was last extracted+chunked, so the UI can tell
+        -- "indexed" from "not yet" and re-index only what changed since.
+        ALTER TABLE lesson_resources ADD COLUMN indexed_at TEXT;
+
+        -- FTS5 gives keyword search "for free" with no embeddings/vector-DB dependency
+        -- — the right tradeoff at a single classroom's resource-library scale, and it
+        -- keeps the "works with any AI provider" promise (embeddings support varies a
+        -- lot more across OpenAI-compatible endpoints than plain chat completions do).
+        CREATE VIRTUAL TABLE resource_chunks USING fts5(
+          resource_id UNINDEXED,
+          chunk_index UNINDEXED,
+          text
+        );
+      `)
+    }
   }
 ]
 

@@ -19,6 +19,7 @@ import type {
   HomeworkAssignment,
   HomeworkSubmission,
   HomeworkSubmissionWithStudent,
+  NotebookAnswer,
   PortalInviteBatchWithInvites,
   ScoreHistoryEntry,
   ClassReport,
@@ -223,6 +224,11 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
+  }
+  notebook: {
+    indexResource(resourceId: string): Promise<number>
+    indexAll(): Promise<number>
+    ask(question: string, resourceIds: string[] | null): Promise<NotebookAnswer>
   }
   courseGroups: {
     list(): Promise<CourseGroup[]>

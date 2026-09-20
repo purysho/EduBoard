@@ -19,6 +19,8 @@ import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as resourceChunksRepo from '../repositories/resourceChunks'
+import { indexResource, askNotebook } from '../services/notebookService'
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
@@ -372,15 +374,37 @@ export function registerIpcHandlers(): void {
     (_e, id: string, patch: lessonResourcesRepo.UpdateLessonResourceInput) =>
       lessonResourcesRepo.updateLessonResource(id, patch)
   )
-  handle(IpcChannels.lessonResources.remove, (_e, id: string) =>
+  handle(IpcChannels.lessonResources.remove, (_e, id: string) => {
+    resourceChunksRepo.deleteResourceChunks(id)
     lessonResourcesRepo.deleteLessonResource(id)
-  )
+  })
   handle(IpcChannels.lessonResources.pickFile, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
     return canceled || !filePaths[0] ? null : filePaths[0]
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+
+  // --- Notebook (chat with your Resources library) ------------------------------------------
+  handle(IpcChannels.notebook.indexResource, (_e, resourceId: string) => indexResource(resourceId))
+  handle(IpcChannels.notebook.indexAll, async () => {
+    const resources = lessonResourcesRepo.listLessonResources()
+    let indexed = 0
+    for (const resource of resources) {
+      try {
+        await indexResource(resource.id)
+        indexed++
+      } catch {
+        // One unreadable/unfetchable resource shouldn't stop the rest of the library
+        // from indexing — the per-resource error is still visible via its own
+        // "Index" button if the teacher retries it individually.
+      }
+    }
+    return indexed
+  })
+  handle(IpcChannels.notebook.ask, (_e, question: string, resourceIds: string[] | null) =>
+    askNotebook(question, resourceIds)
+  )
 
   // --- Course groups / composite grades ----------------------------------------------------
   handle(IpcChannels.courseGroups.list, () => courseGroupsRepo.listCourseGroups())

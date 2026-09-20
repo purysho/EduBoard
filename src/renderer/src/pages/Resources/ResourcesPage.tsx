@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react'
-import { ExternalLink, File, FolderOpen, Link2, Plus, StickyNote, Trash2 } from 'lucide-react'
+import {
+  ExternalLink,
+  File,
+  FolderOpen,
+  Link2,
+  Plus,
+  Sparkles,
+  StickyNote,
+  Trash2
+} from 'lucide-react'
 import type { LessonResource } from '@shared/types'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
@@ -8,7 +17,13 @@ import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Badge } from '@renderer/components/ui/Badge'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
-import { useDeleteLessonResource, useLessonResources, useStandards } from '@renderer/lib/queries'
+import {
+  useDeleteLessonResource,
+  useIndexResource,
+  useLessonResources,
+  useStandards
+} from '@renderer/lib/queries'
+import { ipcErrorMessage } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { ResourceFormModal } from './ResourceFormModal'
 
@@ -18,6 +33,21 @@ export function ResourcesPage(): React.JSX.Element {
   const { data: resources, isLoading } = useLessonResources()
   const { data: standards } = useStandards()
   const deleteResource = useDeleteLessonResource()
+  const indexResource = useIndexResource()
+  const [indexingId, setIndexingId] = useState<string | null>(null)
+  const [indexError, setIndexError] = useState<string | null>(null)
+
+  async function handleIndex(resource: LessonResource): Promise<void> {
+    setIndexingId(resource.id)
+    setIndexError(null)
+    try {
+      await indexResource.mutateAsync(resource.id)
+    } catch (e) {
+      setIndexError(ipcErrorMessage(e, `Could not index "${resource.title}".`))
+    } finally {
+      setIndexingId(null)
+    }
+  }
 
   const [search, setSearch] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
@@ -93,6 +123,8 @@ export function ResourcesPage(): React.JSX.Element {
           </div>
         )}
       </div>
+
+      {indexError && <p className="mb-4 text-sm text-[var(--color-danger)]">{indexError}</p>}
 
       {isLoading ? (
         <Spinner />
@@ -171,12 +203,26 @@ export function ResourcesPage(): React.JSX.Element {
                       ))}
                     </div>
                   )}
-                  <button
-                    className="mt-3 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
-                    onClick={() => setEditingResource(resource)}
-                  >
-                    Edit
-                  </button>
+                  <div className="mt-3 flex items-center justify-between">
+                    <button
+                      className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                      onClick={() => setEditingResource(resource)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
+                      onClick={() => handleIndex(resource)}
+                      disabled={indexingId === resource.id}
+                    >
+                      <Sparkles size={12} aria-hidden />
+                      {indexingId === resource.id
+                        ? 'Indexing…'
+                        : resource.indexedAt
+                          ? 'Re-index'
+                          : 'Index for Notebook'}
+                    </button>
+                  </div>
                 </CardBody>
               </Card>
             )

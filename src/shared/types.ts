@@ -245,6 +245,10 @@ export interface LessonResource {
   standardId: string | null
   createdAt: string
   updatedAt: string
+  /** When this resource's text was last extracted and indexed for Notebook search —
+   * null means never indexed. Set by notebookService.indexResource(), never by the
+   * ordinary create/update form. */
+  indexedAt: string | null
 }
 
 export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const
@@ -542,6 +546,20 @@ export interface AnalyticsOverview {
   classComparison: ClassComparisonEntry[]
   categoryComparison: CategoryComparisonEntry[]
   attendanceTrend: { date: string; rate: number | null }[]
+}
+
+// --- Notebook (chat with your Resources library, grounded with citations) ----------------
+
+export interface NotebookCitation {
+  resourceId: string
+  resourceTitle: string
+  chunkIndex: number
+  snippet: string
+}
+
+export interface NotebookAnswer {
+  answer: string
+  citations: NotebookCitation[]
 }
 
 // --- AI drafting (optional, requires a teacher-supplied API key) -------------------------

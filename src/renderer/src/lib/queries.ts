@@ -851,6 +851,31 @@ export function useDeleteLessonResource() {
   })
 }
 
+// ---- Notebook -------------------------------------------------------------------------------
+
+export function useIndexResource() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (resourceId: string) => api().notebook.indexResource(resourceId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+export function useIndexAllResources() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().notebook.indexAll(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+  })
+}
+
+export function useAskNotebook() {
+  return useMutation({
+    mutationFn: ({ question, resourceIds }: { question: string; resourceIds: string[] | null }) =>
+      api().notebook.ask(question, resourceIds)
+  })
+}
+
 // ---- Course groups / composite grades -----------------------------------------------------
 
 export function useCourseGroups() {

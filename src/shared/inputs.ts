@@ -147,7 +147,10 @@ export type SetHomeworkSubmissionStatusInput = {
 
 export type CreatePortalInviteBatchInput = { classId: string; count: number }
 
-export type CreateLessonResourceInput = Omit<LessonResource, 'id' | 'createdAt' | 'updatedAt'>
+export type CreateLessonResourceInput = Omit<
+  LessonResource,
+  'id' | 'createdAt' | 'updatedAt' | 'indexedAt'
+>
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>
 
 /** The teacher's editable exit-ticket setup for a class — title + question list. Saved

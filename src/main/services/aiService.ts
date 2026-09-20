@@ -118,6 +118,14 @@ async function complete(system: string, user: string, maxTokens: number): Promis
   return completeOpenAiCompatible(preset.baseUrl, preset.model, apiKey, system, user, maxTokens)
 }
 
+/** A general-purpose escape hatch onto whichever provider/model is configured — used by
+ * anything that isn't one of this file's own two fixed-shape drafting prompts (e.g. the
+ * Notebook's question-answering, which needs to hand over a variable amount of
+ * retrieved context rather than a fixed template). */
+export async function askAi(system: string, user: string, maxTokens: number): Promise<string> {
+  return complete(system, user, maxTokens)
+}
+
 export async function draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan> {
   const system =
     'You draft lesson plans for teachers. Respond with ONLY a JSON object — no prose, ' +

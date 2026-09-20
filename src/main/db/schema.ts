@@ -460,7 +460,8 @@ export const lessonResources = sqliteTable(
     tags: text('tags', { mode: 'json' }).notNull().$type<string[]>(),
     standardId: text('standard_id').references(() => standards.id, { onDelete: 'set null' }),
     createdAt: text('created_at').notNull(),
-    updatedAt: text('updated_at').notNull()
+    updatedAt: text('updated_at').notNull(),
+    indexedAt: text('indexed_at')
   },
   (t) => ({
     standardIdx: index('lesson_resources_standard_idx').on(t.standardId)

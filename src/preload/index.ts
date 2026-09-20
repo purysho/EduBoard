@@ -155,6 +155,11 @@ const api: EduBoardApi = {
     openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
     openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
   },
+  notebook: {
+    indexResource: (resourceId) => invoke(IpcChannels.notebook.indexResource, resourceId),
+    indexAll: () => invoke(IpcChannels.notebook.indexAll),
+    ask: (question, resourceIds) => invoke(IpcChannels.notebook.ask, question, resourceIds)
+  },
   courseGroups: {
     list: () => invoke(IpcChannels.courseGroups.list),
     create: (input) => invoke(IpcChannels.courseGroups.create, input),

@@ -138,6 +138,11 @@ export const IpcChannels = {
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
   },
+  notebook: {
+    indexResource: 'notebook:indexResource',
+    indexAll: 'notebook:indexAll',
+    ask: 'notebook:ask'
+  },
   courseGroups: {
     list: 'courseGroups:list',
     create: 'courseGroups:create',
