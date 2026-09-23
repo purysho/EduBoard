@@ -125,6 +125,17 @@ db.exec(`
     read_by_teacher INTEGER NOT NULL DEFAULT 0,
     read_by_family INTEGER NOT NULL DEFAULT 0
   );
+
+  -- Single-row config for the one shared AI key every student uses — see
+  -- portalSyncService.publishToPortal on the desktop side. Never exposed to a family's
+  -- browser; only this server calls the provider, with this key, on a student's behalf.
+  CREATE TABLE IF NOT EXISTS ai_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    provider TEXT NOT NULL DEFAULT 'zhipu',
+    api_key TEXT NOT NULL DEFAULT '',
+    custom_base_url TEXT NOT NULL DEFAULT '',
+    custom_model TEXT NOT NULL DEFAULT ''
+  );
 `)
 
 // CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live

@@ -114,6 +114,7 @@ export async function publishToPortal(): Promise<void> {
     }
   }
 
+  const settings = getSettings()
   const res = await fetch(`${portalUrl}/api/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
@@ -129,7 +130,13 @@ export async function publishToPortal(): Promise<void> {
       enrollments,
       grades,
       homeworkAssignments,
-      invites
+      invites,
+      // The one shared AI key every student can use — see AppSettings.portalAiApiKey.
+      // Sent on every publish so a key change (or clearing it) takes effect right away.
+      aiProvider: settings.portalAiProvider,
+      aiApiKey: settings.portalAiApiKey,
+      aiCustomBaseUrl: settings.portalAiCustomBaseUrl,
+      aiCustomModel: settings.portalAiCustomModel
     })
   })
   if (!res.ok) throw new Error(`Portal sync failed: ${res.status} ${await res.text()}`)

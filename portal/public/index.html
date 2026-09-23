@@ -50,7 +50,7 @@
   .field-note { color: var(--muted); font-size: .8rem; margin: 6px 0 0; line-height: 1.4; }
   .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
   .section-title:first-child { margin-top: 0; }
-  #messages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  #messages, .ai-chat { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
   .msg { display: flex; flex-direction: column; max-width: 80%; }
   .msg.family { align-self: flex-end; align-items: flex-end; }
   .msg.teacher { align-self: flex-start; align-items: flex-start; }
@@ -352,7 +352,16 @@ function renderDashboard(me) {
         ${c.homework ? homeworkByTopicHtml(c.homework, s.studentId) : ''}`
       )
       .join('')
-  }`
+  }
+    <div class="section-title">Study Helper</div>
+    <div class="card">
+      <div id="ai-chat-${s.studentId}" class="ai-chat"></div>
+      <form data-ai-chat="${s.studentId}" style="margin-top:10px">
+        <textarea rows="2" placeholder="Ask about your homework or a topic you're stuck on…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+        <button type="submit">Ask</button>
+        <p class="error"></p>
+      </form>
+    </div>`
       )
       .join('') +
     `<div class="section-title">Messages</div>
@@ -394,6 +403,34 @@ function renderDashboard(me) {
       } catch (ex) {
         err.textContent = ex.message
       }
+    }
+  })
+
+  document.querySelectorAll('[data-ai-chat]').forEach((form) => {
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const studentId = form.dataset.aiChat
+      const textarea = form.querySelector('textarea')
+      const err = form.querySelector('.error')
+      const message = textarea.value.trim()
+      if (!message) return
+      err.textContent = ''
+      const box = document.getElementById('ai-chat-' + studentId)
+      box.insertAdjacentHTML('beforeend', `<div class="msg family"><div class="msg-bubble">${message}</div></div>`)
+      textarea.value = ''
+      const thinking = document.createElement('div')
+      thinking.className = 'msg teacher'
+      thinking.innerHTML = '<div class="msg-bubble muted">Thinking…</div>'
+      box.appendChild(thinking)
+      box.scrollTop = box.scrollHeight
+      try {
+        const { reply } = await api('/me/ai/chat', { method: 'POST', body: { studentId, message } })
+        thinking.innerHTML = `<div class="msg-bubble">${reply}</div>`
+      } catch (ex) {
+        thinking.remove()
+        err.textContent = ex.message
+      }
+      box.scrollTop = box.scrollHeight
     }
   })
 

@@ -4,6 +4,7 @@ const path = require('path')
 const QRCode = require('qrcode')
 const db = require('../db')
 const { requireAuth, newRandomToken, hashToken } = require('../auth')
+const { complete, AiNotConfiguredError } = require('../services/ai')
 
 const router = express.Router()
 router.use(requireAuth)
@@ -284,6 +285,61 @@ router.post('/messages', (req, res) => {
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_teacher) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), req.accountId, 'family', body, new Date().toISOString())
   res.json({ ok: true })
+})
+
+// A light-context study helper: not full RAG over every resource, but grounded in the
+// student's own current classes and homework so answers reference their actual work
+// rather than being generic — e.g. "explain photosynthesis" gets an answer that also
+// knows they have a Bio assignment due Friday.
+function buildStudyContext(studentId) {
+  const classes = db
+    .prepare(
+      `SELECT c.name FROM enrollments e JOIN classes c ON c.id = e.class_id
+       WHERE e.student_id = ? AND e.status = 'active'`
+    )
+    .all(studentId)
+  const homework = db
+    .prepare(
+      `SELECT h.title, h.topic, h.due_date, c.name AS class_name
+       FROM homework_assignments h JOIN classes c ON c.id = h.class_id
+       JOIN enrollments e ON e.class_id = h.class_id AND e.student_id = ?
+       WHERE e.status = 'active'
+       ORDER BY h.due_date DESC LIMIT 15`
+    )
+    .all(studentId)
+
+  const classList = classes.map((c) => c.name).join(', ') || 'none on record'
+  const hwList =
+    homework
+      .map((h) => `- "${h.title}"${h.topic ? ` (${h.topic})` : ''} in ${h.class_name}`)
+      .join('\n') || 'none on record'
+
+  return `This student is enrolled in: ${classList}.\nTheir recent/current homework:\n${hwList}`
+}
+
+router.post('/ai/chat', async (req, res) => {
+  const { studentId, message } = req.body
+  const text = (message || '').trim()
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student' })
+  }
+  if (!text) return res.status(400).json({ error: 'Message is empty' })
+
+  const system =
+    'You are a friendly, patient study helper for a K-12/university student. Explain ' +
+    'things clearly and simply, encourage them, and never just do their homework for ' +
+    'them outright — guide them toward understanding it. Keep answers concise. Use the ' +
+    "context below about the student's classes and homework only to make your answer " +
+    'more relevant; do not mention this context block itself.\n\n' +
+    buildStudyContext(studentId)
+
+  try {
+    const reply = await complete(system, text, 800)
+    res.json({ reply: reply.trim() })
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
+    res.status(502).json({ error: 'AI request failed. Try again in a moment.' })
+  }
 })
 
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR

@@ -442,7 +442,7 @@ export interface LessonPlan {
   updatedAt: string
 }
 
-export const AI_PROVIDERS = ['deepseek', 'qwen', 'anthropic', 'custom'] as const
+export const AI_PROVIDERS = ['deepseek', 'qwen', 'zhipu', 'anthropic', 'custom'] as const
 export type AiProvider = (typeof AI_PROVIDERS)[number]
 
 export interface AppSettings {
@@ -477,6 +477,16 @@ export interface AppSettings {
   /** Shared secret the Portal's /api/sync routes require (SYNC_SECRET on the server
    * side) — set once, matching whatever was configured when the Portal was deployed. */
   portalSyncSecret: string
+  /** A single shared key the teacher provides so EVERY student can use the Portal's AI
+   * features (chat about materials, study guides) — deliberately one key for the whole
+   * class rather than per-student keys, the same "teacher provisions, students just use
+   * it" shape as portalSyncSecret. Pushed to the Portal on publish; the Portal calls the
+   * provider itself, so this key is never sent to a student's browser. 'zhipu' defaults
+   * here since GLM-4-Flash has a genuinely free tier and is China-reachable. */
+  portalAiProvider: AiProvider
+  portalAiApiKey: string
+  portalAiCustomBaseUrl: string
+  portalAiCustomModel: string
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -491,7 +501,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   aiCustomBaseUrl: '',
   aiCustomModel: '',
   portalUrl: '',
-  portalSyncSecret: ''
+  portalSyncSecret: '',
+  portalAiProvider: 'zhipu',
+  portalAiApiKey: '',
+  portalAiCustomBaseUrl: '',
+  portalAiCustomModel: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

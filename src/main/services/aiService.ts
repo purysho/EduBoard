@@ -19,7 +19,11 @@ const OPENAI_COMPATIBLE_PRESETS: Record<
   qwen: {
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     model: 'qwen-plus'
-  }
+  },
+  // GLM-4-Flash is Zhipu's genuinely-free tier (not just cheap) — the default for the
+  // Portal's student-facing AI key, where "free enough to hand to a whole class" matters
+  // more than raw quality.
+  zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' }
 }
 
 export class AiNotConfiguredError extends Error {

@@ -15,6 +15,7 @@ import { PortalPanel } from './PortalPanel'
 const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
   deepseek: 'DeepSeek',
   qwen: 'Qwen',
+  zhipu: 'Zhipu (GLM)',
   anthropic: 'Anthropic',
   custom: 'API'
 }
@@ -98,6 +99,7 @@ export function SettingsPage(): React.JSX.Element {
                 >
                   <option value="deepseek">DeepSeek</option>
                   <option value="qwen">Qwen (Alibaba)</option>
+                  <option value="zhipu">Zhipu (GLM) — free tier</option>
                   <option value="anthropic">Anthropic</option>
                   <option value="custom">Custom (OpenAI-compatible)</option>
                 </Select>
@@ -153,6 +155,61 @@ export function SettingsPage(): React.JSX.Element {
                   type="password"
                   value={form.portalSyncSecret}
                   onChange={(e) => setForm({ ...form, portalSyncSecret: e.target.value })}
+                />
+              </FormRow>
+              <div className="col-span-2 mt-2 border-t border-[var(--color-border)] pt-4">
+                <h3 className="mb-1 text-sm font-semibold">Student AI (Portal)</h3>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  One shared key every student can use for AI features on the Portal — chatting
+                  about their materials, study help. Never sent to students&apos; browsers; the
+                  Portal server calls the provider on their behalf. Zhipu&apos;s GLM-4-Flash is
+                  free, so it&apos;s the default.
+                </p>
+              </div>
+              <FormRow label="Student AI provider">
+                <Select
+                  value={form.portalAiProvider}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      portalAiProvider: e.target.value as AppSettings['portalAiProvider']
+                    })
+                  }
+                >
+                  <option value="zhipu">Zhipu (GLM) — free tier</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="qwen">Qwen (Alibaba)</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="custom">Custom (OpenAI-compatible)</option>
+                </Select>
+              </FormRow>
+              {form.portalAiProvider === 'custom' && (
+                <>
+                  <FormRow label="Custom base URL">
+                    <Input
+                      value={form.portalAiCustomBaseUrl}
+                      onChange={(e) => setForm({ ...form, portalAiCustomBaseUrl: e.target.value })}
+                      placeholder="https://api.example.com/v1"
+                    />
+                  </FormRow>
+                  <FormRow label="Custom model name">
+                    <Input
+                      value={form.portalAiCustomModel}
+                      onChange={(e) => setForm({ ...form, portalAiCustomModel: e.target.value })}
+                      placeholder="e.g. glm-4-flash"
+                    />
+                  </FormRow>
+                </>
+              )}
+              <FormRow
+                label={`${PROVIDER_LABEL[form.portalAiProvider]} key (students)`}
+                hint="Optional — leave blank to keep the Portal's AI features turned off for students."
+              >
+                <Input
+                  type="password"
+                  value={form.portalAiApiKey}
+                  onChange={(e) => setForm({ ...form, portalAiApiKey: e.target.value })}
+                  placeholder="sk-…"
                 />
               </FormRow>
               <div className="col-span-2">

@@ -4,6 +4,7 @@ const path = require('path')
 const crypto = require('crypto')
 const db = require('../db')
 const { requireSyncSecret, hashPassword } = require('../auth')
+const { saveAiSettings } = require('../services/ai')
 
 const router = express.Router()
 router.use(requireSyncSecret)
@@ -28,8 +29,22 @@ router.post('/', (req, res) => {
     enrollments = [],
     grades = [],
     homeworkAssignments = [],
-    invites = []
+    invites = [],
+    aiProvider,
+    aiApiKey,
+    aiCustomBaseUrl,
+    aiCustomModel
   } = req.body
+
+  // The AI key is teacher-owned config, not roster data, but it rides along on the same
+  // publish so a key change (or the teacher clearing it) takes effect on the very next
+  // sync with no separate settings push needed.
+  saveAiSettings({
+    provider: aiProvider,
+    apiKey: aiApiKey,
+    customBaseUrl: aiCustomBaseUrl,
+    customModel: aiCustomModel
+  })
 
   // Every publish replaces the whole homework_assignments table (see below), so old
   // attachment files would otherwise pile up on disk forever — clear the folder first
