@@ -46,13 +46,20 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [x] Grade trend analytics per student — sparkline trend chart per class on the Student
       profile page, using existing scores/assessments data (no new tables)
 
-## Phase 5 — Operational maturity
+## Phase 5 — Operational maturity (partial)
 
-- [ ] Offline-first Portal caching (PWA-style "last synced" view)
-- [ ] Audit log / activity history (who changed what grade, when)
-- [ ] Bulk actions (mark a whole class present, apply a grade curve, batch-publish)
-- [ ] CSV/PDF export of anything (grades, attendance, submissions)
-- [ ] Multi-teacher/co-teacher support per class
+- [ ] Offline-first Portal caching (PWA-style "last synced" view) — NOT built; this is a
+      real architecture piece (service worker, cache strategy), not a quick add
+- [ ] Audit log / activity history (who changed what grade, when) — NOT built; score
+      history exists for one score's own edits, but there's no cross-entity activity log
+- [x] Bulk actions — "Mark all present" per date on the Attendance tab, "Publish all N
+      drafts" on the Homework tab. Grade curves not built (no curve-application UI exists
+      anywhere yet, not just as a bulk action).
+- [x] CSV/PDF export of anything — gradebook (.xlsx) and attendance (.csv) already
+      existed; added homework submissions (.csv). PDF export = the existing per-student
+      print report.
+- [ ] Multi-teacher/co-teacher support per class — NOT built; the whole app assumes one
+      teacher owns everything (no accounts/auth model exists on the desktop side at all)
 
 ## Phase 6 — Platform-level (only if EduBoard grows beyond a single classroom)
 
