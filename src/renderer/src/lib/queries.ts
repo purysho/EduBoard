@@ -66,6 +66,7 @@ export const queryKeys = {
   analyticsOverview: ['analyticsOverview'] as const,
   allScheduleSlots: ['scheduleSlots'] as const,
   homeworkAssignments: (classId: string) => ['classes', classId, 'homework'] as const,
+  allHomeworkAssignments: ['homeworkAssignments', 'all'] as const,
   homeworkSubmissions: (homeworkAssignmentId: string) =>
     ['homework', homeworkAssignmentId, 'submissions'] as const,
   portalInviteBatches: (classId: string) => ['classes', classId, 'inviteBatches'] as const,
@@ -1108,12 +1109,20 @@ export function useHomeworkAssignments(classId: string) {
   })
 }
 
+export function useAllHomeworkAssignments() {
+  return useQuery({
+    queryKey: queryKeys.allHomeworkAssignments,
+    queryFn: () => api().homeworkAssignments.listAll()
+  })
+}
+
 export function useCreateHomeworkAssignment(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateHomeworkAssignmentInput) => api().homeworkAssignments.create(input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.allHomeworkAssignments })
       scheduleAutoPublishToPortal()
     }
   })
@@ -1126,6 +1135,7 @@ export function useUpdateHomeworkAssignment(classId: string) {
       api().homeworkAssignments.update(id, patch),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.allHomeworkAssignments })
       scheduleAutoPublishToPortal()
     }
   })
@@ -1137,6 +1147,7 @@ export function useDeleteHomeworkAssignment(classId: string) {
     mutationFn: (id: string) => api().homeworkAssignments.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.allHomeworkAssignments })
       scheduleAutoPublishToPortal()
     }
   })

@@ -22,6 +22,7 @@ import { CommunicationsPage } from './pages/Communications/CommunicationsPage'
 import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage'
 import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 import { TimetablePage } from './pages/Timetable/TimetablePage'
+import { CalendarPage } from './pages/Calendar/CalendarPage'
 import { HomeworkTab } from './pages/Classes/HomeworkTab'
 import { ClassStoryTab } from './pages/Classes/ClassStoryTab'
 import { NotebookPage } from './pages/Notebook/NotebookPage'
@@ -61,6 +62,7 @@ function App(): React.JSX.Element {
         <Route path="/composite-grades" element={<CompositeGradesPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/timetable" element={<TimetablePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
     </Routes>

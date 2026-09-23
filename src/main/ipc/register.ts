@@ -500,6 +500,7 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Homework assignments ------------------------------------------------------------------
+  handle(IpcChannels.homeworkAssignments.listAll, () => homeworkRepo.listAllHomeworkAssignments())
   handle(IpcChannels.homeworkAssignments.listByClass, (_e, classId: string) =>
     homeworkRepo.listHomeworkAssignmentsByClass(classId)
   )

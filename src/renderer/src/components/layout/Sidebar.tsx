@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   BarChart3,
   BookOpenText,
+  Calendar,
   CalendarDays,
   ClipboardCheck,
   FolderOpen,
@@ -27,6 +28,7 @@ const navItems = [
   { to: '/communications', label: 'Communications', icon: MessageCircle },
   { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
   { to: '/timetable', label: 'Timetable', icon: CalendarDays },
+  { to: '/calendar', label: 'Calendar', icon: Calendar },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]

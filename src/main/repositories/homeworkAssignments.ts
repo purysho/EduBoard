@@ -1,10 +1,11 @@
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
-import { homeworkAssignments, homeworkSubmissions } from '../db/schema'
+import { classes, homeworkAssignments, homeworkSubmissions } from '../db/schema'
 import { newId, nowIso } from '../db/util'
 import { getRosterForClass } from './enrollments'
 import type {
   HomeworkAssignment,
+  HomeworkAssignmentWithClass,
   HomeworkSubmission,
   HomeworkSubmissionStatus,
   HomeworkSubmissionWithStudent
@@ -29,6 +30,30 @@ export function listHomeworkAssignmentsByClass(classId: string): HomeworkAssignm
     .from(homeworkAssignments)
     .where(eq(homeworkAssignments.classId, classId))
     .all() as HomeworkAssignment[]
+}
+
+/** Every assignment across every class, with its class name/color attached — the source
+ * for the Calendar view, which needs to show due dates across all classes at once
+ * rather than one class at a time like the Homework tab does. */
+export function listAllHomeworkAssignments(): HomeworkAssignmentWithClass[] {
+  return getDb()
+    .select({
+      id: homeworkAssignments.id,
+      classId: homeworkAssignments.classId,
+      title: homeworkAssignments.title,
+      description: homeworkAssignments.description,
+      dueDate: homeworkAssignments.dueDate,
+      filePath: homeworkAssignments.filePath,
+      fileName: homeworkAssignments.fileName,
+      topic: homeworkAssignments.topic,
+      createdAt: homeworkAssignments.createdAt,
+      updatedAt: homeworkAssignments.updatedAt,
+      className: classes.name,
+      classColor: classes.color
+    })
+    .from(homeworkAssignments)
+    .innerJoin(classes, eq(classes.id, homeworkAssignments.classId))
+    .all() as HomeworkAssignmentWithClass[]
 }
 
 export function createHomeworkAssignment(input: CreateHomeworkAssignmentInput): HomeworkAssignment {

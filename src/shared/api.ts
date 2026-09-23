@@ -17,6 +17,7 @@ import type {
   DraftLessonPlanInput,
   DraftReportCommentInput,
   HomeworkAssignment,
+  HomeworkAssignmentWithClass,
   HomeworkSubmission,
   HomeworkSubmissionWithStudent,
   NotebookAnswer,
@@ -268,6 +269,7 @@ export interface EduBoardApi {
     draftReportComment(input: DraftReportCommentInput): Promise<string>
   }
   homeworkAssignments: {
+    listAll(): Promise<HomeworkAssignmentWithClass[]>
     listByClass(classId: string): Promise<HomeworkAssignment[]>
     create(input: CreateHomeworkAssignmentInput): Promise<HomeworkAssignment>
     update(id: string, patch: UpdateHomeworkAssignmentInput): Promise<HomeworkAssignment>

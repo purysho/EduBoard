@@ -324,6 +324,13 @@ export interface HomeworkAssignment {
   updatedAt: string
 }
 
+/** An assignment with its class's name/color attached — what the Calendar view renders,
+ * since it shows due dates across every class at once rather than one class at a time. */
+export interface HomeworkAssignmentWithClass extends HomeworkAssignment {
+  className: string
+  classColor: string | null
+}
+
 export interface HomeworkSubmission {
   id: string
   homeworkAssignmentId: string

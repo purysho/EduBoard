@@ -178,6 +178,7 @@ export const IpcChannels = {
     draftReportComment: 'ai:draftReportComment'
   },
   homeworkAssignments: {
+    listAll: 'homeworkAssignments:listAll',
     listByClass: 'homeworkAssignments:listByClass',
     create: 'homeworkAssignments:create',
     update: 'homeworkAssignments:update',
