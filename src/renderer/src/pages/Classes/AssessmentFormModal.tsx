@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Assessment, GradeCategory } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
-import { FormRow, Input, Select } from '@renderer/components/ui/Field'
+import { DateSelect, FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { useCreateAssessment, useRubrics, useUpdateAssessment } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 
@@ -114,11 +114,7 @@ export function AssessmentFormModal({
             />
           </FormRow>
           <FormRow label="Date">
-            <Input
-              type="date"
-              value={assessmentDate}
-              onChange={(e) => setAssessmentDate(e.target.value)}
-            />
+            <DateSelect value={assessmentDate} onChange={setAssessmentDate} />
           </FormRow>
           <FormRow label="Final?">
             <label className="mt-2 flex items-center gap-2 text-sm">

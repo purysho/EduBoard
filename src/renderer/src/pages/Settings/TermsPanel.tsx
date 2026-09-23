@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react'
 import { CalendarRange, Plus } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { FormRow, Input } from '@renderer/components/ui/Field'
+import { DateSelect, FormRow, Input } from '@renderer/components/ui/Field'
 import { useCreateTerm, useDeleteTerm, useTerms } from '@renderer/lib/queries'
 
 export function TermsPanel(): React.JSX.Element {
@@ -70,10 +70,10 @@ export function TermsPanel(): React.JSX.Element {
             />
           </FormRow>
           <FormRow label="Start date">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <DateSelect value={startDate} onChange={setStartDate} />
           </FormRow>
           <FormRow label="End date">
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <DateSelect value={endDate} onChange={setEndDate} />
           </FormRow>
           <div className="col-span-4">
             <Button variant="secondary" type="submit" disabled={createTerm.isPending}>

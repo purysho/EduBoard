@@ -5,7 +5,7 @@ import type { ClassSection, HomeworkAssignment, HomeworkSubmissionStatus } from 
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
-import { FormRow, Input, Textarea } from '@renderer/components/ui/Field'
+import { DateSelect, FormRow, Input, Textarea } from '@renderer/components/ui/Field'
 import { Modal } from '@renderer/components/ui/Modal'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
@@ -205,7 +205,7 @@ function NewAssignmentModal({
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </FormRow>
         <FormRow label="Due date" hint="Optional">
-          <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <DateSelect value={dueDate} onChange={setDueDate} />
         </FormRow>
         <FormRow label="Description" hint="Optional">
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />

@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react'
 import type { Assessment, LessonPlan, LessonPlanStatus } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
-import { FormRow, Input, Select, Textarea } from '@renderer/components/ui/Field'
+import { DateSelect, FormRow, Input, Select, Textarea } from '@renderer/components/ui/Field'
 import { useCreateLessonPlan, useUpdateLessonPlan } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 
@@ -96,7 +96,7 @@ export function LessonPlanFormModal({
     >
       <form id="lesson-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <FormRow label="Date">
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          <DateSelect value={date} onChange={setDate} required />
         </FormRow>
         <FormRow label="Status">
           <Select value={status} onChange={(e) => setStatus(e.target.value as LessonPlanStatus)}>

@@ -36,27 +36,24 @@ router.get('/', (req, res) => {
       )
       .all(studentId)
       .map((c) => {
-        const homework =
-          c.level_type === 'university'
-            ? db
-                .prepare('SELECT * FROM homework_assignments WHERE class_id = ? ORDER BY due_date')
-                .all(c.id)
-                .map((h) => {
-                  const submission = db
-                    .prepare(
-                      'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
-                    )
-                    .get(h.id, studentId)
-                  return {
-                    id: h.id,
-                    title: h.title,
-                    description: h.description,
-                    dueDate: h.due_date,
-                    fileName: h.file_name,
-                    status: submission?.status ?? 'not_started'
-                  }
-                })
-            : null
+        const homework = db
+          .prepare('SELECT * FROM homework_assignments WHERE class_id = ? ORDER BY due_date')
+          .all(c.id)
+          .map((h) => {
+            const submission = db
+              .prepare(
+                'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
+              )
+              .get(h.id, studentId)
+            return {
+              id: h.id,
+              title: h.title,
+              description: h.description,
+              dueDate: h.due_date,
+              fileName: h.file_name,
+              status: submission?.status ?? 'not_started'
+            }
+          })
 
         return {
           id: c.id,

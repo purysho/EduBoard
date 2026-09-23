@@ -5,7 +5,7 @@ import { CalendarCheck, Download, Play, Plus, QrCode, Square } from 'lucide-reac
 import type { AttendanceRecord, ClassSection } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
-import { Input } from '@renderer/components/ui/Field'
+import { DateSelect } from '@renderer/components/ui/Field'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import {
   queryKeys,
@@ -78,12 +78,9 @@ export function AttendanceTab(): React.JSX.Element {
           Click a cell to cycle Present → Late → Absent → Excused.
         </p>
         <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            value={newDate}
-            onChange={(e) => setNewDate(e.target.value)}
-            className="w-40"
-          />
+          <div className="w-56">
+            <DateSelect value={newDate} onChange={setNewDate} />
+          </div>
           <Button variant="secondary" onClick={addDate}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
             Add date
