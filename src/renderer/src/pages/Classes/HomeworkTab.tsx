@@ -75,9 +75,23 @@ export function HomeworkTab(): React.JSX.Element {
 
   if (isLoading) return <Spinner />
 
+  const draftCount = assignments?.filter((a) => a.status === 'draft').length ?? 0
+
+  function handlePublishAllDrafts(): void {
+    for (const a of assignments ?? []) {
+      if (a.status === 'draft')
+        updateAssignment.mutate({ id: a.id, patch: { status: 'published' } })
+    }
+  }
+
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end gap-2">
+        {draftCount > 1 && (
+          <Button variant="secondary" onClick={handlePublishAllDrafts}>
+            Publish all {draftCount} drafts
+          </Button>
+        )}
         <Button variant="primary" onClick={() => setShowAdd(true)}>
           <Plus size={15} className="mr-1 inline" aria-hidden />
           Assignment

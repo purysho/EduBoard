@@ -7,6 +7,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { DateSelect } from '@renderer/components/ui/Field'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
+import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
   queryKeys,
   useAttendanceByClass,
@@ -14,6 +15,7 @@ import {
   useClassroomServerInfo,
   useClassRoster,
   useCloseAttendanceCheckIn,
+  useMarkAttendanceBulk,
   useOpenAttendanceCheckIn
 } from '@renderer/lib/queries'
 import { formatDate, formatRate, studentFullName, todayIso } from '@renderer/lib/format'
@@ -26,6 +28,20 @@ export function AttendanceTab(): React.JSX.Element {
   const [extraDates, setExtraDates] = useState<string[]>([todayIso()])
   const [newDate, setNewDate] = useState('')
   const [exporting, setExporting] = useState(false)
+  const [pendingMarkAllDate, setPendingMarkAllDate] = useState<string | null>(null)
+  const markBulk = useMarkAttendanceBulk(classSection.id)
+
+  function handleMarkAllPresent(date: string): void {
+    markBulk.mutate(
+      (roster ?? []).map((row) => ({
+        classId: classSection.id,
+        studentId: row.student.id,
+        date,
+        status: 'present' as const
+      }))
+    )
+    setPendingMarkAllDate(null)
+  }
 
   async function handleExportCsv(): Promise<void> {
     setExporting(true)
@@ -101,7 +117,13 @@ export function AttendanceTab(): React.JSX.Element {
               </th>
               {dates.map((date) => (
                 <th key={date} className="px-1.5 py-2 text-center font-medium">
-                  {formatDate(date, 'MMM d')}
+                  <button
+                    onClick={() => setPendingMarkAllDate(date)}
+                    className="hover:text-[var(--color-primary)]"
+                    title="Mark everyone present for this date"
+                  >
+                    {formatDate(date, 'MMM d')}
+                  </button>
                 </th>
               ))}
               <th className="min-w-20 px-3 py-2 text-center font-medium">Rate</th>
@@ -136,6 +158,15 @@ export function AttendanceTab(): React.JSX.Element {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingMarkAllDate}
+        title="Mark everyone present"
+        message={`Mark every enrolled student present on ${pendingMarkAllDate ? formatDate(pendingMarkAllDate, 'MMM d') : ''}? This overwrites any statuses already set for that date.`}
+        confirmLabel="Mark all present"
+        onConfirm={() => pendingMarkAllDate && handleMarkAllPresent(pendingMarkAllDate)}
+        onCancel={() => setPendingMarkAllDate(null)}
+      />
     </div>
   )
 }
