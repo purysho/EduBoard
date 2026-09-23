@@ -318,6 +318,9 @@ export type HomeworkSubmissionStatus = (typeof HOMEWORK_SUBMISSION_STATUSES)[num
 /** Due-dated homework, distinct from a gradebook Assessment — this is what the Portal
  * (once built) shows to university-level students and lets them mark as submitted.
  * Until then, the teacher tracks status manually here. */
+export const HOMEWORK_ASSIGNMENT_STATUSES = ['draft', 'published'] as const
+export type HomeworkAssignmentStatus = (typeof HOMEWORK_ASSIGNMENT_STATUSES)[number]
+
 export interface HomeworkAssignment {
   id: string
   classId: string
@@ -327,6 +330,10 @@ export interface HomeworkAssignment {
   filePath: string | null
   fileName: string | null
   topic: string | null
+  /** 'draft' assignments exist only in the desktop app — never sent to the Portal, so
+   * students never see them. A teacher can build out homework ahead of time and publish
+   * it (see HomeworkTab's Publish button) exactly when it should go live. */
+  status: HomeworkAssignmentStatus
   createdAt: string
   updatedAt: string
 }

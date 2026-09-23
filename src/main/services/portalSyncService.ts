@@ -120,7 +120,11 @@ export async function publishToPortal(): Promise<void> {
       })
     }
 
+    // Drafts stay local — only an assignment the teacher explicitly published (see
+    // HomeworkTab's Publish button) ever reaches the Portal, so building out homework
+    // ahead of time never puts it in front of students early.
     for (const hw of listHomeworkAssignmentsByClass(cls.id)) {
+      if (hw.status !== 'published') continue
       homeworkAssignments.push({
         id: hw.id,
         classId: cls.id,

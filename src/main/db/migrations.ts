@@ -526,6 +526,19 @@ const migrations: Migration[] = [
         ALTER TABLE lesson_resources ADD COLUMN study_guide TEXT;
       `)
     }
+  },
+  {
+    id: 20,
+    name: 'homework_draft_publish',
+    up: (db) => {
+      // New assignments start as drafts — visible only in the desktop app, never sent
+      // to the Portal — so a teacher can build out homework ahead of time and publish
+      // it to students when ready, rather than everything going live the moment it's
+      // saved. Existing assignments default to 'draft' too: nothing has actually gone
+      // out to real students yet at the point this migration ships, so there's nothing
+      // that would disappear out from under anyone by starting everything unpublished.
+      db.exec(`ALTER TABLE homework_assignments ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';`)
+    }
   }
 ]
 

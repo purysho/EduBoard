@@ -20,7 +20,8 @@ import {
   useHomeworkAssignments,
   useHomeworkSubmissions,
   useSetHomeworkSubmissionGrade,
-  useSetHomeworkSubmissionPortfolio
+  useSetHomeworkSubmissionPortfolio,
+  useUpdateHomeworkAssignment
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 
@@ -55,6 +56,7 @@ export function HomeworkTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const { data: assignments, isLoading } = useHomeworkAssignments(classSection.id)
   const deleteAssignment = useDeleteHomeworkAssignment(classSection.id)
+  const updateAssignment = useUpdateHomeworkAssignment(classSection.id)
 
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<HomeworkAssignment | null>(null)
@@ -99,6 +101,9 @@ export function HomeworkTab(): React.JSX.Element {
                         <h3 className="text-sm font-semibold hover:text-[var(--color-primary)]">
                           {a.title}
                         </h3>
+                        <Badge tone={a.status === 'published' ? 'success' : 'neutral'}>
+                          {a.status === 'published' ? 'Published' : 'Draft'}
+                        </Badge>
                         {a.dueDate && (
                           <span className="text-xs text-[var(--color-text-muted)]">
                             Due {formatDate(a.dueDate)}
@@ -128,6 +133,19 @@ export function HomeworkTab(): React.JSX.Element {
                           Open file
                         </Button>
                       )}
+                      <Button
+                        variant={a.status === 'published' ? 'ghost' : 'secondary'}
+                        size="sm"
+                        disabled={updateAssignment.isPending}
+                        onClick={() =>
+                          updateAssignment.mutate({
+                            id: a.id,
+                            patch: { status: a.status === 'published' ? 'draft' : 'published' }
+                          })
+                        }
+                      >
+                        {a.status === 'published' ? 'Unpublish' : 'Publish to students'}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -232,7 +250,8 @@ function NewAssignmentModal({
       dueDate: dueDate || null,
       filePath,
       fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null,
-      topic: topic.trim() || null
+      topic: topic.trim() || null,
+      status: 'draft'
     })
     resetForm()
     onClose()
@@ -278,6 +297,10 @@ function NewAssignmentModal({
       }
     >
       <form id="homework-form" onSubmit={handleSubmit} className="space-y-4">
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Saves as a draft, visible only to you. Use &quot;Publish to students&quot; on the
+          assignment afterward when it&apos;s ready to go out.
+        </p>
         <FormRow label="Title">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </FormRow>

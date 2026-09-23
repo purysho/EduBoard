@@ -196,6 +196,7 @@ export const homeworkAssignments = sqliteTable(
     filePath: text('file_path'),
     fileName: text('file_name'),
     topic: text('topic'),
+    status: text('status').notNull().default('draft'),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull()
   },
