@@ -96,4 +96,14 @@ db.exec(`
   );
 `)
 
+// CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live
+// server — this covers adding a column to a table that's already been created there,
+// so new columns don't need a manual ALTER TABLE on every deploy.
+function ensureColumn(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
+  if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`)
+}
+ensureColumn('homework_assignments', 'file_name', 'file_name TEXT')
+ensureColumn('homework_assignments', 'file_path', 'file_path TEXT')
+
 module.exports = db
