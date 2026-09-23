@@ -195,6 +195,11 @@ export interface EduBoardApi {
     importRoster(filePath: string, classId?: string): Promise<RosterImportResult>
     exportGradebook(classId: string, filePath: string): Promise<void>
     exportAttendance(classId: string, filePath: string): Promise<void>
+    exportHomeworkSubmissions(
+      homeworkAssignmentId: string,
+      classId: string,
+      filePath: string
+    ): Promise<void>
   }
   print: {
     printStudentReport(

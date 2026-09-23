@@ -6,6 +6,7 @@ import { getClass } from '../repositories/classes'
 import { listAssessmentsByClass } from '../repositories/assessments'
 import { listScoresByClass } from '../repositories/scores'
 import { listAttendanceByClass } from '../repositories/attendanceRecords'
+import { listSubmissionsForAssignment } from '../repositories/homeworkAssignments'
 import { getClassRoster } from './reports'
 import type { RosterImportResult } from '@shared/importExportTypes'
 
@@ -179,6 +180,37 @@ export async function exportAttendanceCsv(classId: string, filePath: string): Pr
         row.student.firstName,
         row.student.studentNumber ?? '',
         ...dates.map((d) => statusByKey.get(`${row.student.id}:${d}`) ?? '')
+      ]
+        .map(csvField)
+        .join(',')
+    )
+  }
+
+  await writeFile(filePath, lines.join('\n'), 'utf-8')
+}
+
+/** Exports one assignment's full roster of submissions (status, text, grade, feedback)
+ * to .csv — for a school that wants paper/spreadsheet records of who turned in what. */
+export async function exportHomeworkSubmissionsCsv(
+  homeworkAssignmentId: string,
+  classId: string,
+  filePath: string
+): Promise<void> {
+  const submissions = listSubmissionsForAssignment(homeworkAssignmentId, classId)
+
+  const lines: string[] = []
+  lines.push(
+    ['Student', 'Status', 'Submitted answer', 'File', 'Grade', 'Feedback'].map(csvField).join(',')
+  )
+  for (const s of submissions) {
+    lines.push(
+      [
+        s.studentName,
+        s.status,
+        s.textAnswer ?? '',
+        s.fileName ?? '',
+        s.grade ?? '',
+        s.feedback ?? ''
       ]
         .map(csvField)
         .join(',')

@@ -403,9 +403,34 @@ function SubmissionsModal({
   onClose: () => void
 }): React.JSX.Element {
   const { data: submissions, isLoading } = useHomeworkSubmissions(assignment.id, classId)
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExportCsv(): Promise<void> {
+    setExporting(true)
+    try {
+      const path = await window.api.importExport.pickExportPath(
+        `${assignment.title.replace(/[^\w -]/g, '')}-submissions.csv`
+      )
+      if (path) {
+        await window.api.importExport.exportHomeworkSubmissions(assignment.id, classId, path)
+      }
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
-    <Modal open onClose={onClose} title={assignment.title} wide>
+    <Modal
+      open
+      onClose={onClose}
+      title={assignment.title}
+      wide
+      footer={
+        <Button variant="secondary" size="sm" onClick={handleExportCsv} disabled={exporting}>
+          {exporting ? 'Exporting…' : 'Export .csv'}
+        </Button>
+      }
+    >
       {isLoading ? (
         <Spinner />
       ) : !submissions?.length ? (

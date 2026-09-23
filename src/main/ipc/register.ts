@@ -305,6 +305,11 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.importExport.exportAttendance, (_e, classId: string, filePath: string) =>
     importExportService.exportAttendanceCsv(classId, filePath)
   )
+  handle(
+    IpcChannels.importExport.exportHomeworkSubmissions,
+    (_e, homeworkAssignmentId: string, classId: string, filePath: string) =>
+      importExportService.exportHomeworkSubmissionsCsv(homeworkAssignmentId, classId, filePath)
+  )
 
   // --- Print --------------------------------------------------------------------------------
   handle(
