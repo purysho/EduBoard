@@ -25,6 +25,9 @@
   .pill.done { background: #d1fae5; color: #065f46; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; }
   a.linklike { color: #6366f1; text-decoration: none; font-size: .85rem; }
+  .dob-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; }
+  .dob-row select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; background: #fff; }
+  .field-note { color: #64748b; font-size: .8rem; margin: 4px 0 0; }
 </style>
 </head>
 <body>
@@ -77,6 +80,35 @@ function renderLogin() {
   }
 }
 
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
+
+function dobPickerHtml() {
+  const thisYear = new Date().getFullYear()
+  const months = MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join('')
+  const days = Array.from({ length: 31 }, (_, i) => i + 1)
+    .map((d) => `<option value="${String(d).padStart(2, '0')}">${d}</option>`).join('')
+  const years = Array.from({ length: 100 }, (_, i) => thisYear - i)
+    .map((y) => `<option value="${y}">${y}</option>`).join('')
+  return `
+    <div class="dob-row">
+      <select id="dob-m"><option value="">Month</option>${months}</select>
+      <select id="dob-d"><option value="">Day</option>${days}</select>
+      <select id="dob-y"><option value="">Year</option>${years}</select>
+    </div>
+  `
+}
+
+function readDob() {
+  const m = document.getElementById('dob-m').value
+  const d = document.getElementById('dob-d').value
+  const y = document.getElementById('dob-y').value
+  if (!m || !d || !y) return ''
+  return `${y}-${m}-${d}`
+}
+
 async function renderRedeem(code) {
   app.innerHTML = 'Loading…'
   let info
@@ -86,27 +118,38 @@ async function renderRedeem(code) {
     app.innerHTML = `<h1>EduBoard Portal</h1><p class="error">${e.message}</p>`
     return
   }
+  const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
   app.innerHTML = `
     <h1>Join ${info.className}</h1>
     <p class="hint">Pick your name, confirm your date of birth, and set a login.</p>
     <label>Student</label>
     <select id="sid">${info.students.map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
     <label>Date of birth</label>
-    <input id="dob" type="date" />
+    ${dobPickerHtml()}
+    <p class="field-note" id="dob-note"></p>
     <label>Username</label>
-    <input id="u" />
+    <input id="u" autocomplete="username" />
     <label>Password</label>
-    <input id="p" type="password" />
+    <input id="p" type="password" autocomplete="new-password" />
     <button id="go">Create account</button>
     <p class="error" id="err"></p>
   `
+  function updateDobNote() {
+    const selected = studentsById[document.getElementById('sid').value]
+    document.getElementById('dob-note').textContent = selected?.hasDob
+      ? "This confirms it's really you — must match what your teacher has on file."
+      : 'Your teacher hasn’t recorded this yet — enter it now so it’s on file for next time.'
+  }
+  document.getElementById('sid').onchange = updateDobNote
+  updateDobNote()
+
   document.getElementById('go').onclick = async () => {
     try {
       await api('/invites/' + encodeURIComponent(code) + '/redeem', {
         method: 'POST',
         body: {
           studentId: document.getElementById('sid').value,
-          dateOfBirth: document.getElementById('dob').value,
+          dateOfBirth: readDob(),
           username: document.getElementById('u').value,
           password: document.getElementById('p').value
         }

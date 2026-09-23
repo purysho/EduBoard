@@ -21,7 +21,7 @@ router.get('/:code', (req, res) => {
   const cls = db.prepare('SELECT * FROM classes WHERE id = ?').get(invite.class_id)
   const roster = db
     .prepare(
-      `SELECT s.id, s.first_name, s.last_name FROM students s
+      `SELECT s.id, s.first_name, s.last_name, s.date_of_birth FROM students s
        JOIN enrollments e ON e.student_id = s.id
        WHERE e.class_id = ? AND e.status = 'active'
        ORDER BY s.last_name, s.first_name`
@@ -30,7 +30,11 @@ router.get('/:code', (req, res) => {
 
   res.json({
     className: cls?.name ?? 'Class',
-    students: roster.map((s) => ({ id: s.id, name: `${s.first_name} ${s.last_name}` }))
+    students: roster.map((s) => ({
+      id: s.id,
+      name: `${s.first_name} ${s.last_name}`,
+      hasDob: Boolean(s.date_of_birth)
+    }))
   })
 })
 
@@ -39,7 +43,7 @@ router.post('/:code/redeem', (req, res) => {
   if (!invite) return res.status(404).json({ error: 'Invalid or already-used code' })
 
   const { studentId, dateOfBirth, username, password } = req.body
-  if (!studentId || !dateOfBirth || !username || !password) {
+  if (!studentId || !username || !password) {
     return res.status(400).json({ error: 'All fields are required' })
   }
 
@@ -51,8 +55,20 @@ router.post('/:code/redeem', (req, res) => {
   if (!enrolled) return res.status(400).json({ error: 'Not a student in this class' })
 
   const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId)
-  if (!student || student.date_of_birth !== dateOfBirth) {
-    return res.status(400).json({ error: 'Date of birth does not match our records' })
+  if (!student) return res.status(400).json({ error: 'Not a student in this class' })
+
+  // A teacher may not have a birth date on file for every student (it's not collected
+  // everywhere). When one IS on file, it's the anti-impersonation check — a classmate who
+  // guesses or overhears a code still can't claim someone else's account without knowing
+  // their actual birth date. When none is on file, we can't enforce that check, so we
+  // simply record whatever the family enters here for future reference (e.g. account
+  // recovery) rather than blocking signup entirely.
+  if (student.date_of_birth) {
+    if (student.date_of_birth !== dateOfBirth) {
+      return res.status(400).json({ error: 'Date of birth does not match our records' })
+    }
+  } else if (dateOfBirth) {
+    db.prepare('UPDATE students SET date_of_birth = ? WHERE id = ?').run(dateOfBirth, studentId)
   }
 
   const existing = db.prepare('SELECT 1 FROM accounts WHERE username = ?').get(username)
