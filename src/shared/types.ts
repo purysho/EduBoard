@@ -501,6 +501,17 @@ export interface AppSettings {
   portalAiApiKey: string
   portalAiCustomBaseUrl: string
   portalAiCustomModel: string
+  /** SMTP config for the weekly parent digest email, sent from the Portal server (not
+   * the desktop app) — same "teacher provisions once, pushed on every publish" shape as
+   * the AI key above. digestEnabled off by default; a Gmail app password + smtp.gmail.com
+   * works fine for this volume, but any SMTP provider works. */
+  digestEnabled: boolean
+  digestSmtpHost: string
+  digestSmtpPort: number
+  digestSmtpUser: string
+  digestSmtpPass: string
+  digestFromEmail: string
+  digestFromName: string
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -519,7 +530,14 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   portalAiProvider: 'zhipu',
   portalAiApiKey: '',
   portalAiCustomBaseUrl: '',
-  portalAiCustomModel: ''
+  portalAiCustomModel: '',
+  digestEnabled: false,
+  digestSmtpHost: '',
+  digestSmtpPort: 587,
+  digestSmtpUser: '',
+  digestSmtpPass: '',
+  digestFromEmail: '',
+  digestFromName: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

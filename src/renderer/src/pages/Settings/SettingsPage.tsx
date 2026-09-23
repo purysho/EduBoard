@@ -212,6 +212,82 @@ export function SettingsPage(): React.JSX.Element {
                   placeholder="sk-…"
                 />
               </FormRow>
+              <div className="col-span-2 mt-2 border-t border-[var(--color-border)] pt-4">
+                <h3 className="mb-1 text-sm font-semibold">Weekly parent digest email</h3>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  Sends a weekly grades/attendance/homework/Class Story summary to any family who
+                  adds their email on the Portal. Sent from the Portal server itself, every Monday
+                  morning — a Gmail address with an{' '}
+                  <a
+                    className="text-[var(--color-primary)] underline"
+                    href="https://support.google.com/accounts/answer/185833"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      window.api.lessonResources.openExternal(
+                        'https://support.google.com/accounts/answer/185833'
+                      )
+                    }}
+                  >
+                    app password
+                  </a>{' '}
+                  works fine for this.
+                </p>
+              </div>
+              <label className="col-span-2 flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.digestEnabled}
+                  onChange={(e) => setForm({ ...form, digestEnabled: e.target.checked })}
+                />
+                Enable weekly digest emails
+              </label>
+              {form.digestEnabled && (
+                <>
+                  <FormRow label="SMTP host">
+                    <Input
+                      value={form.digestSmtpHost}
+                      onChange={(e) => setForm({ ...form, digestSmtpHost: e.target.value })}
+                      placeholder="smtp.gmail.com"
+                    />
+                  </FormRow>
+                  <FormRow label="SMTP port">
+                    <Input
+                      type="number"
+                      value={form.digestSmtpPort}
+                      onChange={(e) => setForm({ ...form, digestSmtpPort: Number(e.target.value) })}
+                    />
+                  </FormRow>
+                  <FormRow label="SMTP username">
+                    <Input
+                      value={form.digestSmtpUser}
+                      onChange={(e) => setForm({ ...form, digestSmtpUser: e.target.value })}
+                      placeholder="you@gmail.com"
+                    />
+                  </FormRow>
+                  <FormRow label="SMTP password">
+                    <Input
+                      type="password"
+                      value={form.digestSmtpPass}
+                      onChange={(e) => setForm({ ...form, digestSmtpPass: e.target.value })}
+                    />
+                  </FormRow>
+                  <FormRow label="From email">
+                    <Input
+                      type="email"
+                      value={form.digestFromEmail}
+                      onChange={(e) => setForm({ ...form, digestFromEmail: e.target.value })}
+                      placeholder="you@gmail.com"
+                    />
+                  </FormRow>
+                  <FormRow label="From name" hint="Optional">
+                    <Input
+                      value={form.digestFromName}
+                      onChange={(e) => setForm({ ...form, digestFromName: e.target.value })}
+                      placeholder="Ms. Smith"
+                    />
+                  </FormRow>
+                </>
+              )}
               <div className="col-span-2">
                 <Button variant="primary" type="submit" disabled={updateSettings.isPending}>
                   {updateSettings.isPending ? 'Saving…' : 'Save'}

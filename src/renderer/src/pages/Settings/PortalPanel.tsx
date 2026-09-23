@@ -1,12 +1,17 @@
-import { UploadCloud, Wifi } from 'lucide-react'
+import { Mail, UploadCloud, Wifi } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { ipcErrorMessage } from '@renderer/lib/format'
-import { usePublishToPortal, usePullSubmissionsFromPortal } from '@renderer/lib/queries'
+import {
+  usePublishToPortal,
+  usePullSubmissionsFromPortal,
+  useSendDigestNow
+} from '@renderer/lib/queries'
 
 export function PortalPanel(): React.JSX.Element {
   const publish = usePublishToPortal()
   const pull = usePullSubmissionsFromPortal()
+  const sendDigest = useSendDigestNow()
 
   return (
     <Card>
@@ -62,6 +67,28 @@ export function PortalPanel(): React.JSX.Element {
             Pulled {pull.data} submission{pull.data === 1 ? '' : 's'}.
           </p>
         )}
+        <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => sendDigest.mutate()}
+            disabled={sendDigest.isPending}
+          >
+            <Mail size={14} className="mr-1 inline" aria-hidden />
+            {sendDigest.isPending ? 'Sending…' : 'Send weekly digest now'}
+          </Button>
+          {sendDigest.isError && (
+            <span className="text-[var(--color-danger)]">
+              {ipcErrorMessage(sendDigest.error, 'Could not send the digest.')}
+            </span>
+          )}
+          {sendDigest.isSuccess && (
+            <span className="text-[var(--color-success)]">
+              Sent to {sendDigest.data.sent} of {sendDigest.data.total} families with an email on
+              file.
+            </span>
+          )}
+        </div>
       </CardBody>
     </Card>
   )

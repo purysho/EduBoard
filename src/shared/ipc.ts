@@ -213,5 +213,8 @@ export const IpcChannels = {
     create: 'classPosts:create',
     remove: 'classPosts:remove',
     pickImage: 'classPosts:pickImage'
+  },
+  digest: {
+    sendNow: 'digest:sendNow'
   }
 } as const

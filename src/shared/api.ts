@@ -316,4 +316,11 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     pickImage(): Promise<string | null>
   }
+  digest: {
+    sendNow(): Promise<{
+      sent: number
+      total: number
+      errors: { username: string; error: string }[]
+    }>
+  }
 }

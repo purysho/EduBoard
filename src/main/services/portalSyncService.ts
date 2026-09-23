@@ -167,7 +167,14 @@ export async function publishToPortal(): Promise<void> {
       aiProvider: settings.portalAiProvider,
       aiApiKey: settings.portalAiApiKey,
       aiCustomBaseUrl: settings.portalAiCustomBaseUrl,
-      aiCustomModel: settings.portalAiCustomModel
+      aiCustomModel: settings.portalAiCustomModel,
+      digestEnabled: settings.digestEnabled,
+      digestSmtpHost: settings.digestSmtpHost,
+      digestSmtpPort: settings.digestSmtpPort,
+      digestSmtpUser: settings.digestSmtpUser,
+      digestSmtpPass: settings.digestSmtpPass,
+      digestFromEmail: settings.digestFromEmail,
+      digestFromName: settings.digestFromName
     })
   })
   if (!res.ok) throw new Error(`Portal sync failed: ${res.status} ${await res.text()}`)
@@ -334,4 +341,22 @@ export async function deleteClassPost(id: string): Promise<void> {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw new Error(`Could not delete post: ${res.status} ${await res.text()}`)
+}
+
+/** Triggers an immediate send of the weekly digest to every family with an email on
+ * file — for testing the setup, or sending an out-of-cycle update, without waiting for
+ * next Monday's automatic run. */
+export async function sendDigestNow(): Promise<{
+  sent: number
+  total: number
+  errors: { username: string; error: string }[]
+}> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/digest/send-now`, {
+    method: 'POST',
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (!res.ok) throw new Error(`Digest send failed: ${res.status} ${await res.text()}`)
+  return res.json()
 }

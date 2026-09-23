@@ -420,6 +420,22 @@ router.post('/ai/chat', async (req, res) => {
   }
 })
 
+// A family opts into the weekly digest email by setting an address here — nothing is
+// sent unless both this is set AND the teacher has SMTP configured. Empty string
+// clears it (opt back out).
+router.get('/account', (req, res) => {
+  const account = db.prepare('SELECT username, email FROM accounts WHERE id = ?').get(
+    req.accountId
+  )
+  res.json(account)
+})
+
+router.post('/account', (req, res) => {
+  const email = (req.body?.email || '').trim()
+  db.prepare('UPDATE accounts SET email = ? WHERE id = ?').run(email || null, req.accountId)
+  res.json({ ok: true })
+})
+
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR
 // image — the raw token is shown/embedded exactly once, here; only its hash is stored.
 router.post('/qr', async (req, res) => {

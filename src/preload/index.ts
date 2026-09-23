@@ -245,6 +245,9 @@ const api: EduBoardApi = {
       invoke(IpcChannels.classPosts.create, classId, body, imagePath),
     remove: (id) => invoke(IpcChannels.classPosts.remove, id),
     pickImage: () => invoke(IpcChannels.classPosts.pickImage)
+  },
+  digest: {
+    sendNow: () => invoke(IpcChannels.digest.sendNow)
   }
 }
 

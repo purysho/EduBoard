@@ -1330,3 +1330,9 @@ export function useDeleteClassPost() {
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classPosts })
   })
 }
+
+export function useSendDigestNow() {
+  return useMutation({
+    mutationFn: () => api().digest.sendNow()
+  })
+}

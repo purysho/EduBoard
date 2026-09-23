@@ -16,6 +16,7 @@ import {
   Users
 } from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
+import { usePortalMessageThreads } from '@renderer/lib/queries'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
@@ -34,6 +35,11 @@ const navItems = [
 ]
 
 export function Sidebar(): React.JSX.Element {
+  // Silently empty when the Portal isn't configured (the query just errors and `data`
+  // stays undefined) — no badge is a perfectly normal state here, not worth surfacing.
+  const { data: threads } = usePortalMessageThreads()
+  const unreadMessages = threads?.reduce((sum, t) => sum + t.unread, 0) ?? 0
+
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="flex items-center gap-2.5 px-5 py-5">
@@ -70,6 +76,11 @@ export function Sidebar(): React.JSX.Element {
                 />
                 <item.icon size={17} strokeWidth={2} aria-hidden />
                 {item.label}
+                {item.to === '/messages' && unreadMessages > 0 && (
+                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
+                    {unreadMessages > 99 ? '99+' : unreadMessages}
+                  </span>
+                )}
               </>
             )}
           </NavLink>

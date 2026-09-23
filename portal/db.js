@@ -155,6 +155,22 @@ db.exec(`
     custom_base_url TEXT NOT NULL DEFAULT '',
     custom_model TEXT NOT NULL DEFAULT ''
   );
+
+  -- Single-row SMTP config for the weekly parent digest email — same "teacher provisions
+  -- once, pushed on every publish" shape as ai_settings. last_sent_at tracks the most
+  -- recent automatic send so the hourly scheduler in server.js knows not to resend
+  -- inside the same week.
+  CREATE TABLE IF NOT EXISTS digest_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    enabled INTEGER NOT NULL DEFAULT 0,
+    smtp_host TEXT NOT NULL DEFAULT '',
+    smtp_port INTEGER NOT NULL DEFAULT 587,
+    smtp_user TEXT NOT NULL DEFAULT '',
+    smtp_pass TEXT NOT NULL DEFAULT '',
+    from_email TEXT NOT NULL DEFAULT '',
+    from_name TEXT NOT NULL DEFAULT '',
+    last_sent_at TEXT
+  );
 `)
 
 // CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live
@@ -174,5 +190,6 @@ ensureColumn('homework_submissions', 'feedback', 'feedback TEXT')
 ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
 ensureColumn('homework_assignments', 'topic', 'topic TEXT')
 ensureColumn('homework_submissions', 'portfolio', 'portfolio INTEGER NOT NULL DEFAULT 0')
+ensureColumn('accounts', 'email', 'email TEXT')
 
 module.exports = db

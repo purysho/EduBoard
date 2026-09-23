@@ -5,6 +5,8 @@ const crypto = require('crypto')
 const db = require('../db')
 const { requireSyncSecret, hashPassword } = require('../auth')
 const { saveAiSettings } = require('../services/ai')
+const { saveDigestSettings } = require('../services/mailer')
+const { sendAllDigests } = require('../services/digest')
 
 const router = express.Router()
 router.use(requireSyncSecret)
@@ -34,7 +36,14 @@ router.post('/', (req, res) => {
     aiProvider,
     aiApiKey,
     aiCustomBaseUrl,
-    aiCustomModel
+    aiCustomModel,
+    digestEnabled,
+    digestSmtpHost,
+    digestSmtpPort,
+    digestSmtpUser,
+    digestSmtpPass,
+    digestFromEmail,
+    digestFromName
   } = req.body
 
   // The AI key is teacher-owned config, not roster data, but it rides along on the same
@@ -45,6 +54,15 @@ router.post('/', (req, res) => {
     apiKey: aiApiKey,
     customBaseUrl: aiCustomBaseUrl,
     customModel: aiCustomModel
+  })
+  saveDigestSettings({
+    enabled: digestEnabled,
+    smtpHost: digestSmtpHost,
+    smtpPort: digestSmtpPort,
+    smtpUser: digestSmtpUser,
+    smtpPass: digestSmtpPass,
+    fromEmail: digestFromEmail,
+    fromName: digestFromName
   })
 
   // Every publish replaces the whole homework_assignments table (see below), so old
@@ -307,6 +325,18 @@ router.post('/messages/:accountId/read', (req, res) => {
     'family'
   )
   res.json({ ok: true })
+})
+
+// Teacher-triggered immediate send, for testing or an out-of-cycle update — the
+// automatic weekly send (see services/digest.runScheduledDigestIfDue) still runs
+// independently on its own Monday-morning schedule.
+router.post('/digest/send-now', async (_req, res) => {
+  try {
+    const result = await sendAllDigests()
+    res.json(result)
+  } catch (err) {
+    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })
+  }
 })
 
 // Teacher-triggered password reset (see portal/README.md — there is deliberately no

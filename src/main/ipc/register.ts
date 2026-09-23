@@ -49,7 +49,8 @@ import {
   markMessageThreadRead,
   listClassPosts,
   createClassPost,
-  deleteClassPost
+  deleteClassPost,
+  sendDigestNow
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -623,4 +624,6 @@ export function registerIpcHandlers(): void {
     })
     return canceled || !filePaths[0] ? null : filePaths[0]
   })
+
+  handle(IpcChannels.digest.sendNow, () => sendDigestNow())
 }
