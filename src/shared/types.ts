@@ -368,6 +368,24 @@ export interface PortalInviteBatchWithInvites extends PortalInviteBatch {
   invites: PortalInvite[]
 }
 
+/** A message thread lives entirely on the Portal, not mirrored into the desktop's own
+ * database — the desktop fetches it live (like homework attachments), since there's
+ * only one teacher and no offline-editing conflict to worry about resolving. */
+export interface PortalMessage {
+  id: string
+  sender: 'family' | 'teacher'
+  body: string
+  createdAt: string
+}
+
+export interface PortalMessageThread {
+  accountId: string
+  username: string
+  studentNames: string | null
+  unread: number
+  messages: PortalMessage[]
+}
+
 /** A QR check-in session's live state for one class — open/closed, which date it's
  * marking attendance for, and who has checked themselves in so far. Ephemeral
  * (in-memory only, like ExitTicketServerInfo's running server), not persisted. */

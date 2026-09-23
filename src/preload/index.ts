@@ -229,6 +229,11 @@ const api: EduBoardApi = {
   portalSync: {
     publish: () => invoke(IpcChannels.portalSync.publish),
     pullSubmissions: () => invoke(IpcChannels.portalSync.pullSubmissions)
+  },
+  portalMessages: {
+    listThreads: () => invoke(IpcChannels.portalMessages.listThreads),
+    send: (accountId, body) => invoke(IpcChannels.portalMessages.send, accountId, body),
+    markRead: (accountId) => invoke(IpcChannels.portalMessages.markRead, accountId)
   }
 }
 

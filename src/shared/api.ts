@@ -21,6 +21,7 @@ import type {
   HomeworkSubmissionWithStudent,
   NotebookAnswer,
   PortalInviteBatchWithInvites,
+  PortalMessageThread,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -297,5 +298,10 @@ export interface EduBoardApi {
   portalSync: {
     publish(): Promise<void>
     pullSubmissions(): Promise<number>
+  }
+  portalMessages: {
+    listThreads(): Promise<PortalMessageThread[]>
+    send(accountId: string, body: string): Promise<void>
+    markRead(accountId: string): Promise<void>
   }
 }

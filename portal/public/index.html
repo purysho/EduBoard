@@ -50,6 +50,13 @@
   .field-note { color: var(--muted); font-size: .8rem; margin: 6px 0 0; line-height: 1.4; }
   .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
   .section-title:first-child { margin-top: 0; }
+  #messages { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .msg { display: flex; flex-direction: column; max-width: 80%; }
+  .msg.family { align-self: flex-end; align-items: flex-end; }
+  .msg.teacher { align-self: flex-start; align-items: flex-start; }
+  .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.4; white-space: pre-wrap; }
+  .msg.family .msg-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.teacher .msg-bubble { background: #f1f5f9; color: var(--ink); border-bottom-left-radius: 4px; }
 </style>
 </head>
 <body>
@@ -235,6 +242,29 @@ function homeworkCardHtml(h, studentId) {
     </div>`
 }
 
+async function loadMessages() {
+  const box = document.getElementById('messages')
+  if (!box) return
+  const messages = await api('/me/messages')
+  box.innerHTML = !messages.length
+    ? '<p class="muted">No messages yet — say hello below.</p>'
+    : messages
+        .map(
+          (m) => `
+      <div class="msg ${m.sender}">
+        <div class="msg-bubble">${m.body}</div>
+        <div class="muted" style="font-size:.72rem; margin-top:2px">${formatWhen(m.createdAt)}</div>
+      </div>`
+        )
+        .join('')
+  box.scrollTop = box.scrollHeight
+}
+
+function formatWhen(iso) {
+  const d = new Date(iso)
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
 function renderDashboard(me) {
   if (!me.students.length) {
     app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
@@ -263,7 +293,14 @@ function renderDashboard(me) {
   }`
       )
       .join('') +
-    `<button class="secondary" id="qr">Get quick-login QR</button>
+    `<div class="section-title">Messages</div>
+     <div class="card"><div id="messages">Loading…</div>
+       <form id="msg-form" style="margin-top:10px">
+         <textarea id="msg-body" rows="2" placeholder="Message the teacher…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+         <button type="submit">Send</button>
+       </form>
+     </div>
+     <button class="secondary" id="qr">Get quick-login QR</button>
      <button class="secondary" id="logout">Log out</button>
      <div id="qrbox"></div>`
 
@@ -297,6 +334,16 @@ function renderDashboard(me) {
       }
     }
   })
+
+  loadMessages()
+  document.getElementById('msg-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const input = document.getElementById('msg-body')
+    if (!input.value.trim()) return
+    await api('/me/messages', { method: 'POST', body: { body: input.value.trim() } })
+    input.value = ''
+    loadMessages()
+  }
 
   document.getElementById('qr').onclick = async () => {
     const { qrDataUrl } = await api('/me/qr', { method: 'POST' })

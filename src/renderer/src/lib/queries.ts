@@ -69,6 +69,7 @@ export const queryKeys = {
   homeworkSubmissions: (homeworkAssignmentId: string) =>
     ['homework', homeworkAssignmentId, 'submissions'] as const,
   portalInviteBatches: (classId: string) => ['classes', classId, 'inviteBatches'] as const,
+  portalMessageThreads: ['portal', 'messageThreads'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
   classReport: (classId: string) => ['classes', classId, 'report'] as const,
   studentClassGrade: (studentId: string, classId: string) =>
@@ -1232,4 +1233,31 @@ export function scheduleAutoPublishToPortal(): void {
 
 export function usePullSubmissionsFromPortal() {
   return useMutation({ mutationFn: () => api().portalSync.pullSubmissions() })
+}
+
+// ---- Portal messages ---------------------------------------------------------------------
+
+export function usePortalMessageThreads() {
+  return useQuery({
+    queryKey: queryKeys.portalMessageThreads,
+    queryFn: () => api().portalMessages.listThreads(),
+    refetchInterval: 15000
+  })
+}
+
+export function useSendPortalMessage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ accountId, body }: { accountId: string; body: string }) =>
+      api().portalMessages.send(accountId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalMessageThreads })
+  })
+}
+
+export function useMarkPortalThreadRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (accountId: string) => api().portalMessages.markRead(accountId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalMessageThreads })
+  })
 }

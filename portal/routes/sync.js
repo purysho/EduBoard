@@ -1,6 +1,7 @@
 const express = require('express')
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 const db = require('../db')
 const { requireSyncSecret, hashPassword } = require('../auth')
 
@@ -152,6 +153,61 @@ router.post('/submissions/grade', (req, res) => {
     }
   })
   run()
+  res.json({ ok: true })
+})
+
+// One row per family account, with its message thread and an unread count for
+// messages the family sent — what the desktop app's Messages page lists as threads.
+router.get('/messages/threads', (req, res) => {
+  const accounts = db
+    .prepare(
+      `SELECT a.id, a.username, GROUP_CONCAT(s.first_name || ' ' || s.last_name, ', ') AS student_names
+       FROM accounts a
+       LEFT JOIN account_students acs ON acs.account_id = a.id
+       LEFT JOIN students s ON s.id = acs.student_id
+       GROUP BY a.id`
+    )
+    .all()
+
+  const threads = accounts
+    .map((a) => {
+      const messages = db
+        .prepare('SELECT * FROM messages WHERE account_id = ? ORDER BY created_at')
+        .all(a.id)
+      const unread = messages.filter((m) => m.sender === 'family' && !m.read_by_teacher).length
+      return {
+        accountId: a.id,
+        username: a.username,
+        studentNames: a.student_names,
+        unread,
+        messages: messages.map((m) => ({
+          id: m.id,
+          sender: m.sender,
+          body: m.body,
+          createdAt: m.created_at
+        }))
+      }
+    })
+    .filter((t) => t.messages.length > 0 || t.unread > 0)
+
+  res.json(threads)
+})
+
+router.post('/messages', (req, res) => {
+  const { accountId, body } = req.body
+  const text = (body || '').trim()
+  if (!accountId || !text) return res.status(400).json({ error: 'accountId and body required' })
+  db.prepare(
+    'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_family) VALUES (?, ?, ?, ?, ?, 0)'
+  ).run(crypto.randomUUID(), accountId, 'teacher', text, new Date().toISOString())
+  res.json({ ok: true })
+})
+
+router.post('/messages/:accountId/read', (req, res) => {
+  db.prepare('UPDATE messages SET read_by_teacher = 1 WHERE account_id = ? AND sender = ?').run(
+    req.params.accountId,
+    'family'
+  )
   res.json({ ok: true })
 })
 

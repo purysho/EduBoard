@@ -9,6 +9,7 @@ import {
   Layers,
   LayoutGrid,
   MessageCircle,
+  MessageSquare,
   Settings2,
   ShieldCheck,
   Users
@@ -22,6 +23,7 @@ const navItems = [
   { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
   { to: '/resources', label: 'Resources', icon: FolderOpen },
   { to: '/notebook', label: 'Notebook', icon: BookOpenText },
+  { to: '/messages', label: 'Messages', icon: MessageSquare },
   { to: '/communications', label: 'Communications', icon: MessageCircle },
   { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
   { to: '/timetable', label: 'Timetable', icon: CalendarDays },

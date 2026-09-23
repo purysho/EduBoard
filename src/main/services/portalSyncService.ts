@@ -10,7 +10,7 @@ import {
 import { listInviteBatchesByClass } from '../repositories/portalInvites'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
-import type { Student, HomeworkSubmissionStatus } from '@shared/types'
+import type { Student, HomeworkSubmissionStatus, PortalMessageThread } from '@shared/types'
 
 export class PortalNotConfiguredError extends Error {
   constructor() {
@@ -194,4 +194,37 @@ export async function downloadSubmissionFile(
   const destPath = join(dir, `${studentId}-${fileName}`)
   writeFileSync(destPath, Buffer.from(await res.arrayBuffer()))
   return destPath
+}
+
+/** Every family's message thread, fetched live from the Portal — nothing here is
+ * mirrored locally, so this always reflects exactly what's on the Portal right now. */
+export async function listMessageThreads(): Promise<PortalMessageThread[]> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/messages/threads`, {
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (!res.ok) throw new Error(`Could not load messages: ${res.status} ${await res.text()}`)
+  return res.json()
+}
+
+export async function sendTeacherMessage(accountId: string, body: string): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ accountId, body })
+  })
+  if (!res.ok) throw new Error(`Could not send message: ${res.status} ${await res.text()}`)
+}
+
+export async function markMessageThreadRead(accountId: string): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/messages/${accountId}/read`, {
+    method: 'POST',
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (!res.ok) throw new Error(`Could not mark read: ${res.status} ${await res.text()}`)
 }

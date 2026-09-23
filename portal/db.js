@@ -100,6 +100,18 @@ db.exec(`
     graded_at TEXT,
     PRIMARY KEY (homework_assignment_id, student_id)
   );
+
+  -- One thread per family account with the teacher — simple by design: this Portal
+  -- serves one teacher, so there's no need to pick a recipient or scope by class.
+  CREATE TABLE IF NOT EXISTS messages (
+    id TEXT PRIMARY KEY,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    sender TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    read_by_teacher INTEGER NOT NULL DEFAULT 0,
+    read_by_family INTEGER NOT NULL DEFAULT 0
+  );
 `)
 
 // CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live

@@ -176,6 +176,31 @@ router.get('/homework/:id/submission-file', (req, res) => {
   res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
+// One thread per account with the teacher — reading it marks the teacher's messages
+// read so the family's unread badge clears; the teacher's own unread count (for
+// messages the family sent) is a separate flag, cleared from the desktop app instead.
+router.get('/messages', (req, res) => {
+  db.prepare('UPDATE messages SET read_by_family = 1 WHERE account_id = ? AND sender = ?').run(
+    req.accountId,
+    'teacher'
+  )
+  const rows = db
+    .prepare('SELECT * FROM messages WHERE account_id = ? ORDER BY created_at')
+    .all(req.accountId)
+  res.json(
+    rows.map((r) => ({ id: r.id, sender: r.sender, body: r.body, createdAt: r.created_at }))
+  )
+})
+
+router.post('/messages', (req, res) => {
+  const body = (req.body?.body || '').trim()
+  if (!body) return res.status(400).json({ error: 'Message is empty' })
+  db.prepare(
+    'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_teacher) VALUES (?, ?, ?, ?, ?, 0)'
+  ).run(crypto.randomUUID(), req.accountId, 'family', body, new Date().toISOString())
+  res.json({ ok: true })
+})
+
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR
 // image — the raw token is shown/embedded exactly once, here; only its hash is stored.
 router.post('/qr', async (req, res) => {
