@@ -565,6 +565,31 @@ const migrations: Migration[] = [
           ON homework_rubric_scores(homework_assignment_id, student_id, criterion_id);
       `)
     }
+  },
+  {
+    id: 22,
+    name: 'homework_questions',
+    up: (db) => {
+      // Lightweight auto-graded formative checks attached to an assignment — multiple
+      // choice or short answer, graded automatically on the Portal the moment a student
+      // submits (see portal/routes/me.js). `options` is JSON-encoded (an array of
+      // strings) for multiple_choice, null for short_answer. correctAnswer is the
+      // correct option's index (as text) for multiple_choice, or the expected text
+      // (matched case/whitespace-insensitively) for short_answer.
+      db.exec(`
+        CREATE TABLE homework_questions (
+          id TEXT PRIMARY KEY,
+          homework_assignment_id TEXT NOT NULL REFERENCES homework_assignments(id) ON DELETE CASCADE,
+          type TEXT NOT NULL,
+          prompt TEXT NOT NULL,
+          options TEXT,
+          correct_answer TEXT NOT NULL,
+          points REAL NOT NULL DEFAULT 1,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX homework_questions_assignment_idx ON homework_questions(homework_assignment_id);
+      `)
+    }
   }
 ]
 

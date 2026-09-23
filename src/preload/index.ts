@@ -146,6 +146,12 @@ const api: EduBoardApi = {
       invoke(IpcChannels.homeworkRubricScores.list, homeworkAssignmentId, studentId),
     save: (input) => invoke(IpcChannels.homeworkRubricScores.save, input)
   },
+  homeworkQuestions: {
+    list: (homeworkAssignmentId) =>
+      invoke(IpcChannels.homeworkQuestions.list, homeworkAssignmentId),
+    replace: (homeworkAssignmentId, questions) =>
+      invoke(IpcChannels.homeworkQuestions.replace, homeworkAssignmentId, questions)
+  },
   studentLogEntries: {
     listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
     create: (input) => invoke(IpcChannels.studentLogEntries.create, input),

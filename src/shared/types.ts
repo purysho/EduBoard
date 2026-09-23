@@ -209,6 +209,23 @@ export interface RubricScore {
   updatedAt: string
 }
 
+export const HOMEWORK_QUESTION_TYPES = ['multiple_choice', 'short_answer'] as const
+export type HomeworkQuestionType = (typeof HOMEWORK_QUESTION_TYPES)[number]
+
+/** A lightweight auto-graded formative-check question attached to an assignment —
+ * graded automatically by the Portal the moment a student submits, no teacher review
+ * needed (see portal/routes/me.js). `options` only applies to multiple_choice. */
+export interface HomeworkQuestion {
+  id: string
+  homeworkAssignmentId: string
+  type: HomeworkQuestionType
+  prompt: string
+  options: string[] | null
+  correctAnswer: string
+  points: number
+  sortOrder: number
+}
+
 /** A rubric score against a homework submission rather than an assessment — a separate
  * shape/table from RubricScore so the existing assessment-grading path needs no changes;
  * see homeworkRubricScores.ts. */

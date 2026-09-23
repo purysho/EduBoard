@@ -18,6 +18,7 @@ import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as homeworkRubricScoresRepo from '../repositories/homeworkRubricScores'
+import * as homeworkQuestionsRepo from '../repositories/homeworkQuestions'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
@@ -376,6 +377,14 @@ export function registerIpcHandlers(): void {
       })
       return result
     }
+  )
+  handle(IpcChannels.homeworkQuestions.list, (_e, homeworkAssignmentId: string) =>
+    homeworkQuestionsRepo.listHomeworkQuestions(homeworkAssignmentId)
+  )
+  handle(
+    IpcChannels.homeworkQuestions.replace,
+    (_e, homeworkAssignmentId: string, questions: homeworkQuestionsRepo.DraftHomeworkQuestion[]) =>
+      homeworkQuestionsRepo.replaceHomeworkQuestions(homeworkAssignmentId, questions)
   )
 
   // --- Student log entries ---------------------------------------------------------------

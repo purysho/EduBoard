@@ -9,6 +9,7 @@ import {
 } from '../repositories/homeworkAssignments'
 import { listInviteBatchesByClass } from '../repositories/portalInvites'
 import { listLessonResources } from '../repositories/lessonResources'
+import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
@@ -73,6 +74,13 @@ export async function publishToPortal(): Promise<void> {
     fileName: string | null
     fileData: string | null
     topic: string | null
+    questions: {
+      type: string
+      prompt: string
+      options: string[] | null
+      correctAnswer: string
+      points: number
+    }[]
   }[] = []
   const invites: { code: string; classId: string; revoked: boolean }[] = []
   const materials: {
@@ -133,7 +141,16 @@ export async function publishToPortal(): Promise<void> {
         dueDate: hw.dueDate,
         fileName: hw.fileName,
         fileData: readHomeworkFile(hw.filePath),
-        topic: hw.topic
+        topic: hw.topic,
+        // Correct answers travel here for the Portal to grade with server-side — it
+        // strips them before ever sending a homework list to a family's browser.
+        questions: listHomeworkQuestions(hw.id).map((q) => ({
+          type: q.type,
+          prompt: q.prompt,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          points: q.points
+        }))
       })
     }
 

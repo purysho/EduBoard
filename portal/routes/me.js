@@ -62,6 +62,31 @@ router.get('/', (req, res) => {
                 'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
               )
               .get(h.id, studentId)
+
+            // correct_answer never goes to the browser — only whether THIS student's own
+            // prior answer (if any) was marked correct, once they've already submitted.
+            const questions = db
+              .prepare(
+                'SELECT * FROM homework_questions WHERE homework_assignment_id = ? ORDER BY sort_order'
+              )
+              .all(h.id)
+              .map((q) => {
+                const answer = db
+                  .prepare(
+                    'SELECT * FROM homework_question_answers WHERE homework_question_id = ? AND student_id = ?'
+                  )
+                  .get(q.id, studentId)
+                return {
+                  id: q.id,
+                  type: q.type,
+                  prompt: q.prompt,
+                  options: q.options ? JSON.parse(q.options) : null,
+                  points: q.points,
+                  yourAnswer: answer?.answer ?? null,
+                  wasCorrect: answer ? !!answer.correct : null
+                }
+              })
+
             return {
               id: h.id,
               title: h.title,
@@ -73,7 +98,8 @@ router.get('/', (req, res) => {
               textAnswer: submission?.text_answer ?? null,
               submissionFileName: submission?.file_name ?? null,
               grade: submission?.grade ?? null,
-              feedback: submission?.feedback ?? null
+              feedback: submission?.feedback ?? null,
+              questions
             }
           })
 
@@ -171,6 +197,70 @@ router.post('/homework/:id/submit', (req, res) => {
     storedFilePath
   )
   res.json({ ok: true })
+})
+
+// A student answers an assignment's auto-graded Quick Check — graded and scored
+// immediately, no teacher review needed. If the assignment ALSO has a freeform
+// text/file component, this only touches the question-answer side; grading here still
+// sets the submission's overall status/grade, since a Quick-Check-only assignment has
+// nothing else to grade.
+router.post('/homework/:id/answers', (req, res) => {
+  const { studentId, answers } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student' })
+  }
+  if (!answers || typeof answers !== 'object') {
+    return res.status(400).json({ error: 'answers required' })
+  }
+
+  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(
+    req.params.id
+  )
+  if (!hw) return res.status(404).json({ error: 'Assignment not found' })
+  const enrolled = db
+    .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+    .get(studentId, hw.class_id)
+  if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+
+  const questions = db
+    .prepare('SELECT * FROM homework_questions WHERE homework_assignment_id = ?')
+    .all(req.params.id)
+  if (!questions.length) return res.status(400).json({ error: 'This assignment has no questions' })
+
+  const normalize = (s) => String(s ?? '').trim().toLowerCase()
+  let earned = 0
+  let possible = 0
+  const results = []
+
+  const saveAnswer = db.prepare(
+    `INSERT INTO homework_question_answers (homework_question_id, student_id, answer, correct)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(homework_question_id, student_id) DO UPDATE SET answer = excluded.answer, correct = excluded.correct`
+  )
+
+  const run = db.transaction(() => {
+    for (const q of questions) {
+      possible += q.points
+      const given = answers[q.id]
+      const correct = normalize(given) === normalize(q.correct_answer)
+      if (correct) earned += q.points
+      saveAnswer.run(q.id, studentId, String(given ?? ''), correct ? 1 : 0)
+      results.push({ questionId: q.id, correct })
+    }
+  })
+  run()
+
+  const grade = `${earned}/${possible}`
+  const now = new Date().toISOString()
+  db.prepare(
+    `INSERT INTO homework_submissions
+       (homework_assignment_id, student_id, status, submitted_at, updated_at, grade, graded_at)
+     VALUES (?, ?, 'done', ?, ?, ?, ?)
+     ON CONFLICT(homework_assignment_id, student_id) DO UPDATE
+       SET status = 'done', submitted_at = COALESCE(submitted_at, ?), updated_at = ?, grade = ?, graded_at = ?`
+  ).run(req.params.id, studentId, now, now, grade, now, now, now, grade, now)
+
+  res.json({ grade, results })
 })
 
 // A student re-downloading what they themselves already turned in.

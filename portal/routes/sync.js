@@ -78,6 +78,7 @@ router.post('/', (req, res) => {
     db.prepare('DELETE FROM enrollments').run()
     db.prepare('DELETE FROM grades').run()
     db.prepare('DELETE FROM homework_assignments').run()
+    db.prepare('DELETE FROM homework_questions').run()
     db.prepare('DELETE FROM materials').run()
     db.prepare('DELETE FROM material_chunks').run()
 
@@ -106,6 +107,11 @@ router.post('/', (req, res) => {
     const insertHomework = db.prepare(
       'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     )
+    const insertQuestion = db.prepare(
+      `INSERT INTO homework_questions
+         (id, homework_assignment_id, type, prompt, options, correct_answer, points, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
     for (const h of homeworkAssignments) {
       let filePath = null
       if (h.fileName && h.fileData) {
@@ -123,6 +129,18 @@ router.post('/', (req, res) => {
         filePath,
         h.topic || null
       )
+      ;(h.questions || []).forEach((q, i) => {
+        insertQuestion.run(
+          crypto.randomUUID(),
+          h.id,
+          q.type,
+          q.prompt,
+          q.options ? JSON.stringify(q.options) : null,
+          q.correctAnswer,
+          q.points,
+          i
+        )
+      })
     }
 
     const insertMaterial = db.prepare(

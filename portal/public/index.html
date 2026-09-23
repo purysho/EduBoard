@@ -219,6 +219,53 @@ function homeworkByTopicHtml(homework, studentId) {
     .join('')
 }
 
+function quickCheckHtml(h, studentId) {
+  if (!h.questions || !h.questions.length) return ''
+  const answered = h.questions.every((q) => q.yourAnswer !== null)
+  if (answered) {
+    const correctCount = h.questions.filter((q) => q.wasCorrect).length
+    return `
+      <div class="card" style="margin-top:12px; background:#f8fafc">
+        <p class="muted" style="margin:0 0 8px">Quick check — ${correctCount}/${h.questions.length} correct</p>
+        ${h.questions
+          .map(
+            (q) => `
+          <p class="desc" style="margin:6px 0">
+            ${q.wasCorrect ? '✅' : '❌'} ${q.prompt}
+          </p>`
+          )
+          .join('')}
+      </div>`
+  }
+  return `
+    <form data-quiz="${h.id}" data-student="${studentId}" style="margin-top:12px" class="card">
+      <p class="muted" style="margin:0 0 8px">Quick check</p>
+      ${h.questions
+        .map(
+          (q, i) => `
+        <div style="margin-bottom:12px">
+          <p style="margin:0 0 6px; font-weight:600">${i + 1}. ${q.prompt}</p>
+          ${
+            q.type === 'multiple_choice'
+              ? (q.options || [])
+                  .map(
+                    (opt, oi) => `
+              <label style="display:flex; align-items:center; gap:8px; margin:4px 0">
+                <input type="radio" name="q-${q.id}" value="${oi}" required />
+                ${opt}
+              </label>`
+                  )
+                  .join('')
+              : `<input type="text" name="q-${q.id}" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid var(--border); border-radius:8px; font:inherit;" required />`
+          }
+        </div>`
+        )
+        .join('')}
+      <button type="submit">Submit answers</button>
+      <p class="error"></p>
+    </form>`
+}
+
 function homeworkCardHtml(h, studentId) {
   const graded = h.status === 'done'
   const detailId = `${h.id}-${studentId}`
@@ -232,6 +279,7 @@ function homeworkCardHtml(h, studentId) {
       <div id="detail-${detailId}" style="display:none; margin-top:10px">
         ${h.description ? `<p class="desc">${h.description}</p>` : ''}
         ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${h.id}/file">\u{1F4CE} ${h.fileName} (from your teacher)</a></p>` : ''}
+        ${quickCheckHtml(h, studentId)}
         ${
           graded
             ? `
@@ -480,6 +528,29 @@ function renderDashboard(me) {
           method: 'POST',
           body: { studentId, textAnswer, fileName: file?.name || null, fileData }
         })
+        location.reload()
+      } catch (ex) {
+        err.textContent = ex.message
+      }
+    }
+  })
+
+  document.querySelectorAll('[data-quiz]').forEach((form) => {
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const hwId = form.dataset.quiz
+      const studentId = form.dataset.student
+      const err = form.querySelector('.error')
+      err.textContent = ''
+
+      const answers = {}
+      form.querySelectorAll('[name^="q-"]').forEach((el) => {
+        if (el.type === 'radio' && !el.checked) return
+        answers[el.name.slice(2)] = el.value
+      })
+
+      try {
+        await api(`/me/homework/${hwId}/answers`, { method: 'POST', body: { studentId, answers } })
         location.reload()
       } catch (ex) {
         err.textContent = ex.message

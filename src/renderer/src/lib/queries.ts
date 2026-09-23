@@ -27,6 +27,7 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   SaveHomeworkRubricScoresInput,
+  DraftHomeworkQuestion,
   CreateStudentLogEntryInput,
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
@@ -813,6 +814,33 @@ export function useSaveHomeworkRubricScores() {
       })
       qc.invalidateQueries({
         queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
+      })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+export function useHomeworkQuestions(homeworkAssignmentId: string | undefined) {
+  return useQuery({
+    queryKey: ['homework', homeworkAssignmentId ?? '', 'questions'] as const,
+    queryFn: () => api().homeworkQuestions.list(homeworkAssignmentId!),
+    enabled: !!homeworkAssignmentId
+  })
+}
+
+export function useReplaceHomeworkQuestions() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      homeworkAssignmentId,
+      questions
+    }: {
+      homeworkAssignmentId: string
+      questions: DraftHomeworkQuestion[]
+    }) => api().homeworkQuestions.replace(homeworkAssignmentId, questions),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({
+        queryKey: ['homework', vars.homeworkAssignmentId, 'questions']
       })
       scheduleAutoPublishToPortal()
     }

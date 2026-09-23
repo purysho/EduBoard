@@ -127,6 +127,10 @@ export const IpcChannels = {
     list: 'homeworkRubricScores:list',
     save: 'homeworkRubricScores:save'
   },
+  homeworkQuestions: {
+    list: 'homeworkQuestions:list',
+    replace: 'homeworkQuestions:replace'
+  },
   studentLogEntries: {
     listByStudent: 'studentLogEntries:listByStudent',
     create: 'studentLogEntries:create',

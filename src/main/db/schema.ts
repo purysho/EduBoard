@@ -465,6 +465,25 @@ export const homeworkRubricScores = sqliteTable(
   })
 )
 
+export const homeworkQuestions = sqliteTable(
+  'homework_questions',
+  {
+    id: text('id').primaryKey(),
+    homeworkAssignmentId: text('homework_assignment_id')
+      .notNull()
+      .references(() => homeworkAssignments.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(),
+    prompt: text('prompt').notNull(),
+    options: text('options', { mode: 'json' }).$type<string[] | null>(),
+    correctAnswer: text('correct_answer').notNull(),
+    points: real('points').notNull().default(1),
+    sortOrder: integer('sort_order').notNull().default(0)
+  },
+  (t) => ({
+    assignmentIdx: index('homework_questions_assignment_idx').on(t.homeworkAssignmentId)
+  })
+)
+
 export const studentLogEntries = sqliteTable(
   'student_log_entries',
   {

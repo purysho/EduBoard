@@ -1,12 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ClipboardList, Copy, Paperclip, Plus, Star, Trash2 } from 'lucide-react'
+import { ClipboardList, Copy, ListChecks, Paperclip, Plus, Star, Trash2, X } from 'lucide-react'
 import type {
   ClassSection,
   HomeworkAssignment,
+  HomeworkQuestionType,
   HomeworkSubmissionStatus,
   HomeworkSubmissionWithStudent
 } from '@shared/types'
+import type { DraftHomeworkQuestion } from '@shared/inputs'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -19,8 +21,10 @@ import {
   useCreateHomeworkAssignment,
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
+  useHomeworkQuestions,
   useHomeworkRubricScores,
   useHomeworkSubmissions,
+  useReplaceHomeworkQuestions,
   useRubric,
   useRubrics,
   useSaveHomeworkRubricScores,
@@ -67,6 +71,7 @@ export function HomeworkTab(): React.JSX.Element {
   const [selected, setSelected] = useState<HomeworkAssignment | null>(null)
   const [pendingDelete, setPendingDelete] = useState<HomeworkAssignment | null>(null)
   const [reuseFrom, setReuseFrom] = useState<HomeworkAssignment | null>(null)
+  const [editingQuestions, setEditingQuestions] = useState<HomeworkAssignment | null>(null)
 
   if (isLoading) return <Spinner />
 
@@ -151,6 +156,10 @@ export function HomeworkTab(): React.JSX.Element {
                       >
                         {a.status === 'published' ? 'Unpublish' : 'Publish to students'}
                       </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setEditingQuestions(a)}>
+                        <ListChecks size={13} className="mr-1 inline" aria-hidden />
+                        Quick check
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -184,6 +193,12 @@ export function HomeworkTab(): React.JSX.Element {
         classId={classSection.id}
         reuseFrom={reuseFrom}
       />
+      {editingQuestions && (
+        <QuestionsEditorModal
+          assignment={editingQuestions}
+          onClose={() => setEditingQuestions(null)}
+        />
+      )}
       {selected && (
         <SubmissionsModal
           assignment={selected}
@@ -641,6 +656,216 @@ function HomeworkRubricScoringModal({
               className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
             />
           </div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+const QUESTION_TYPE_LABEL: Record<HomeworkQuestionType, string> = {
+  multiple_choice: 'Multiple choice',
+  short_answer: 'Short answer'
+}
+
+function emptyQuestion(): DraftHomeworkQuestion {
+  return { type: 'multiple_choice', prompt: '', options: ['', ''], correctAnswer: '0', points: 1 }
+}
+
+/** A "Quick check" — a small set of auto-graded questions attached to an assignment,
+ * graded instantly by the Portal when a student submits, no teacher review needed. Kept
+ * separate from the assignment's freeform description/attachment: a teacher can add one
+ * to any assignment, published or not, without re-opening the assignment form. */
+function QuestionsEditorModal({
+  assignment,
+  onClose
+}: {
+  assignment: HomeworkAssignment
+  onClose: () => void
+}): React.JSX.Element {
+  const { data: existing, isLoading } = useHomeworkQuestions(assignment.id)
+  const replaceQuestions = useReplaceHomeworkQuestions()
+
+  const [questions, setQuestions] = useState<DraftHomeworkQuestion[] | null>(null)
+
+  // Seed local editable state from what's loaded, once — after that, `questions` is the
+  // source of truth until Save, same as every other draft-editor pattern in this file.
+  if (existing && questions === null) {
+    setQuestions(
+      existing.length
+        ? existing.map((q) => ({
+            type: q.type,
+            prompt: q.prompt,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            points: q.points
+          }))
+        : []
+    )
+  }
+
+  function updateQuestion(index: number, patch: Partial<DraftHomeworkQuestion>): void {
+    setQuestions((prev) => prev!.map((q, i) => (i === index ? { ...q, ...patch } : q)))
+  }
+
+  function updateOption(qIndex: number, oIndex: number, value: string): void {
+    setQuestions((prev) =>
+      prev!.map((q, i) =>
+        i === qIndex
+          ? { ...q, options: (q.options ?? []).map((o, j) => (j === oIndex ? value : o)) }
+          : q
+      )
+    )
+  }
+
+  async function handleSave(): Promise<void> {
+    if (!questions) return
+    await replaceQuestions.mutateAsync({ homeworkAssignmentId: assignment.id, questions })
+    onClose()
+  }
+
+  const canSave =
+    questions !== null &&
+    questions.every(
+      (q) =>
+        q.prompt.trim() &&
+        (q.type === 'short_answer'
+          ? q.correctAnswer.trim()
+          : (q.options ?? []).filter((o) => o.trim()).length >= 2)
+    )
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Quick check — ${assignment.title}`}
+      wide
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={!canSave || replaceQuestions.isPending}
+          >
+            {replaceQuestions.isPending ? 'Saving…' : 'Save'}
+          </Button>
+        </>
+      }
+    >
+      {isLoading || questions === null ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-4">
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Optional auto-graded questions students answer on the Portal when they submit — graded
+            instantly, no review needed from you. Leave empty for a normal text/file-only
+            assignment.
+          </p>
+          {questions.map((q, i) => (
+            <div key={i} className="rounded-lg border border-[var(--color-border)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <Select
+                  className="w-44"
+                  value={q.type}
+                  onChange={(e) => {
+                    const type = e.target.value as HomeworkQuestionType
+                    updateQuestion(i, {
+                      type,
+                      options: type === 'multiple_choice' ? ['', ''] : null,
+                      correctAnswer: type === 'multiple_choice' ? '0' : ''
+                    })
+                  }}
+                >
+                  {Object.entries(QUESTION_TYPE_LABEL).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => setQuestions((prev) => prev!.filter((_, j) => j !== i))}
+                  className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
+                  aria-label="Remove question"
+                >
+                  <X size={15} aria-hidden />
+                </button>
+              </div>
+              <Input
+                value={q.prompt}
+                onChange={(e) => updateQuestion(i, { prompt: e.target.value })}
+                placeholder="Question prompt"
+                className="mb-2"
+              />
+              {q.type === 'multiple_choice' ? (
+                <div className="space-y-1.5">
+                  {(q.options ?? []).map((option, oIndex) => (
+                    <div key={oIndex} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`correct-${i}`}
+                        checked={q.correctAnswer === String(oIndex)}
+                        onChange={() => updateQuestion(i, { correctAnswer: String(oIndex) })}
+                        aria-label={`Correct answer is option ${oIndex + 1}`}
+                      />
+                      <Input
+                        value={option}
+                        onChange={(e) => updateOption(i, oIndex, e.target.value)}
+                        placeholder={`Option ${oIndex + 1}`}
+                        className="flex-1"
+                      />
+                      {(q.options ?? []).length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateQuestion(i, {
+                              options: (q.options ?? []).filter((_, j) => j !== oIndex),
+                              correctAnswer:
+                                Number(q.correctAnswer) === oIndex
+                                  ? '0'
+                                  : Number(q.correctAnswer) > oIndex
+                                    ? String(Number(q.correctAnswer) - 1)
+                                    : q.correctAnswer
+                            })
+                          }
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
+                          aria-label="Remove option"
+                        >
+                          <X size={13} aria-hidden />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => updateQuestion(i, { options: [...(q.options ?? []), ''] })}
+                    className="text-xs text-[var(--color-primary)]"
+                  >
+                    + Add option
+                  </button>
+                  <p className="text-[11px] text-[var(--color-text-muted)]">
+                    Select the radio button next to the correct option.
+                  </p>
+                </div>
+              ) : (
+                <Input
+                  value={q.correctAnswer}
+                  onChange={(e) => updateQuestion(i, { correctAnswer: e.target.value })}
+                  placeholder="Correct answer (matched ignoring case/spacing)"
+                />
+              )}
+            </div>
+          ))}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setQuestions((prev) => [...prev!, emptyQuestion()])}
+          >
+            <Plus size={13} className="mr-1 inline" aria-hidden />
+            Add question
+          </Button>
         </div>
       )}
     </Modal>

@@ -56,6 +56,32 @@ db.exec(`
     topic TEXT
   );
 
+  -- Auto-graded formative-check questions attached to an assignment — wholesale-replaced
+  -- on every publish, same as homework_assignments itself. correct_answer never leaves
+  -- this table for a family's browser; only /api/me sees it, to grade a submission
+  -- server-side, and only /api/me/homework strips it before returning the list.
+  CREATE TABLE IF NOT EXISTS homework_questions (
+    id TEXT PRIMARY KEY,
+    homework_assignment_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    options TEXT,
+    correct_answer TEXT NOT NULL,
+    points REAL NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0
+  );
+
+  -- One row per student's answer to one quick-check question — kept so a student who
+  -- reopens the assignment sees what they answered and whether it was correct, without
+  -- being able to see the correct_answer itself if they got it wrong.
+  CREATE TABLE IF NOT EXISTS homework_question_answers (
+    homework_question_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    correct INTEGER NOT NULL,
+    PRIMARY KEY (homework_question_id, student_id)
+  );
+
   CREATE TABLE IF NOT EXISTS invites (
     code TEXT PRIMARY KEY,
     class_id TEXT NOT NULL,

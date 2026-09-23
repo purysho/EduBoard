@@ -19,6 +19,7 @@ import type {
   DraftReportCommentInput,
   HomeworkAssignment,
   HomeworkAssignmentWithClass,
+  HomeworkQuestion,
   HomeworkRubricScore,
   HomeworkSubmission,
   HomeworkSubmissionWithStudent,
@@ -75,6 +76,7 @@ import type {
   UpdateRubricInput,
   SaveRubricScoresInput,
   SaveHomeworkRubricScoresInput,
+  DraftHomeworkQuestion,
   CreateStudentLogEntryInput,
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
@@ -221,6 +223,10 @@ export interface EduBoardApi {
   homeworkRubricScores: {
     list(homeworkAssignmentId: string, studentId: string): Promise<HomeworkRubricScore[]>
     save(input: SaveHomeworkRubricScoresInput): Promise<{ pointsEarned: number; maxPoints: number }>
+  }
+  homeworkQuestions: {
+    list(homeworkAssignmentId: string): Promise<HomeworkQuestion[]>
+    replace(homeworkAssignmentId: string, questions: DraftHomeworkQuestion[]): Promise<void>
   }
   studentLogEntries: {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>

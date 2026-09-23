@@ -9,6 +9,7 @@ import type {
   Enrollment,
   GradeCategory,
   HomeworkAssignment,
+  HomeworkQuestionType,
   HomeworkSubmissionStatus,
   LessonPlan,
   Student,
@@ -119,6 +120,14 @@ export type SaveHomeworkRubricScoresInput = {
   studentId: string
   selections: { criterionId: string; levelId: string }[]
   feedback?: string | null
+}
+
+export type DraftHomeworkQuestion = {
+  type: HomeworkQuestionType
+  prompt: string
+  options: string[] | null
+  correctAnswer: string
+  points: number
 }
 
 export type CreateStudentLogEntryInput = Omit<
