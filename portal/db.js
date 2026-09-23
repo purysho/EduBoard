@@ -52,7 +52,8 @@ db.exec(`
     description TEXT,
     due_date TEXT,
     file_name TEXT,
-    file_path TEXT
+    file_path TEXT,
+    topic TEXT
   );
 
   CREATE TABLE IF NOT EXISTS invites (
@@ -141,5 +142,6 @@ ensureColumn('homework_submissions', 'file_path', 'file_path TEXT')
 ensureColumn('homework_submissions', 'grade', 'grade TEXT')
 ensureColumn('homework_submissions', 'feedback', 'feedback TEXT')
 ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
+ensureColumn('homework_assignments', 'topic', 'topic TEXT')
 
 module.exports = db

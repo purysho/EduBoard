@@ -319,6 +319,7 @@ export interface HomeworkAssignment {
   dueDate: string | null
   filePath: string | null
   fileName: string | null
+  topic: string | null
   createdAt: string
   updatedAt: string
 }

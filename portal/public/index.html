@@ -200,6 +200,25 @@ function readFileAsBase64(file) {
   })
 }
 
+function homeworkByTopicHtml(homework, studentId) {
+  const groups = new Map()
+  for (const h of homework) {
+    const key = (h.topic || '').trim() || 'Other'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(h)
+  }
+  const entries = [...groups.entries()].sort((a, b) =>
+    a[0] === 'Other' ? 1 : b[0] === 'Other' ? -1 : 0
+  )
+  return entries
+    .map(
+      ([topic, items]) => `
+      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${topic}</p>
+      ${items.map((h) => homeworkCardHtml(h, studentId)).join('')}`
+    )
+    .join('')
+}
+
 function homeworkCardHtml(h, studentId) {
   const graded = h.status === 'done'
   const detailId = `${h.id}-${studentId}`
@@ -304,11 +323,7 @@ function renderDashboard(me) {
         <div class="row"><strong>Grade</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + (c.letter ?? '') + ')' : 'No grade yet'}</span></div>
         <div class="row" style="margin-top:6px"><strong>Attendance</strong><span class="muted">${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
       </div>
-        ${
-          c.homework
-            ? c.homework.map((h) => homeworkCardHtml(h, s.studentId)).join('')
-            : ''
-        }`
+        ${c.homework ? homeworkByTopicHtml(c.homework, s.studentId) : ''}`
       )
       .join('')
   }`

@@ -70,6 +70,7 @@ export async function publishToPortal(): Promise<void> {
     dueDate: string | null
     fileName: string | null
     fileData: string | null
+    topic: string | null
   }[] = []
   const invites: { code: string; classId: string; revoked: boolean }[] = []
 
@@ -101,7 +102,8 @@ export async function publishToPortal(): Promise<void> {
         description: hw.description,
         dueDate: hw.dueDate,
         fileName: hw.fileName,
-        fileData: readHomeworkFile(hw.filePath)
+        fileData: readHomeworkFile(hw.filePath),
+        topic: hw.topic
       })
     }
 

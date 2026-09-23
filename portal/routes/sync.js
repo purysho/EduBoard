@@ -68,7 +68,7 @@ router.post('/', (req, res) => {
     }
 
     const insertHomework = db.prepare(
-      'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     )
     for (const h of homeworkAssignments) {
       let filePath = null
@@ -77,7 +77,16 @@ router.post('/', (req, res) => {
         fs.writeFileSync(path.join(UPLOADS_DIR, storedName), Buffer.from(h.fileData, 'base64'))
         filePath = storedName
       }
-      insertHomework.run(h.id, h.classId, h.title, h.description, h.dueDate, h.fileName, filePath)
+      insertHomework.run(
+        h.id,
+        h.classId,
+        h.title,
+        h.description,
+        h.dueDate,
+        h.fileName,
+        filePath,
+        h.topic || null
+      )
     }
 
     // Invites are upserted, never deleted — a claimed invite's claimed_at must survive

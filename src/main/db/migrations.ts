@@ -490,6 +490,16 @@ const migrations: Migration[] = [
         ALTER TABLE homework_submissions ADD COLUMN graded_at TEXT;
       `)
     }
+  },
+  {
+    id: 17,
+    name: 'homework_topic',
+    up: (db) => {
+      // Free-text grouping label (e.g. "Unit 1: Ecosystems", "Week of Oct 12") — an
+      // assignment with no topic just falls into an "Other" bucket in the UI, so this
+      // stays optional rather than forcing every teacher to organize by unit.
+      db.exec(`ALTER TABLE homework_assignments ADD COLUMN topic TEXT;`)
+    }
   }
 ]
 

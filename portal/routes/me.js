@@ -57,6 +57,7 @@ router.get('/', (req, res) => {
               description: h.description,
               dueDate: h.due_date,
               fileName: h.file_name,
+              topic: h.topic,
               status: submission?.status ?? 'not_started',
               textAnswer: submission?.text_answer ?? null,
               submissionFileName: submission?.file_name ?? null,

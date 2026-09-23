@@ -34,6 +34,22 @@ const STATUS_TONE: Record<HomeworkSubmissionStatus, 'neutral' | 'warning' | 'suc
   done: 'success'
 }
 
+/** Groups assignments by their topic label, "Other" catching anything left blank —
+ * topics keep their first-seen order (roughly creation order) rather than alphabetizing,
+ * since a teacher naming topics "Week 1", "Week 2" etc. wants them to stay in that order. */
+function groupByTopic(assignments: HomeworkAssignment[]): [string, HomeworkAssignment[]][] {
+  const groups = new Map<string, HomeworkAssignment[]>()
+  for (const a of assignments) {
+    const key = a.topic?.trim() || 'Other'
+    const list = groups.get(key) ?? []
+    list.push(a)
+    groups.set(key, list)
+  }
+  const entries = [...groups.entries()]
+  entries.sort((a, b) => (a[0] === 'Other' ? 1 : b[0] === 'Other' ? -1 : 0))
+  return entries
+}
+
 export function HomeworkTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const { data: assignments, isLoading } = useHomeworkAssignments(classSection.id)
@@ -58,7 +74,7 @@ export function HomeworkTab(): React.JSX.Element {
         <EmptyState
           icon={ClipboardList}
           title="No homework assignments yet"
-          description="Once the Portal is live, university-level students see these and mark them done."
+          description="Students see these on the Portal and can turn in their work right there."
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
@@ -67,51 +83,60 @@ export function HomeworkTab(): React.JSX.Element {
           }
         />
       ) : (
-        <div className="space-y-3">
-          {assignments.map((a) => (
-            <Card key={a.id}>
-              <CardBody className="flex items-start justify-between gap-4">
-                <button className="min-w-0 text-left" onClick={() => setSelected(a)}>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold hover:text-[var(--color-primary)]">
-                      {a.title}
-                    </h3>
-                    {a.dueDate && (
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        Due {formatDate(a.dueDate)}
-                      </span>
-                    )}
-                  </div>
-                  {a.description && (
-                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">{a.description}</p>
-                  )}
-                  {a.fileName && (
-                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-[var(--color-primary)]">
-                      <Paperclip size={12} aria-hidden />
-                      {a.fileName}
-                    </span>
-                  )}
-                </button>
-                <div className="flex shrink-0 items-center gap-1">
-                  {a.filePath && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.api.homeworkAssignments.openPath(a.filePath!)}
-                    >
-                      <Paperclip size={13} className="mr-1 inline" aria-hidden />
-                      Open file
-                    </Button>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
-                    <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                    Delete
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
+        groupByTopic(assignments).map(([topic, group]) => (
+          <div key={topic} className="mb-6">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              {topic}
+            </h2>
+            <div className="space-y-3">
+              {group.map((a) => (
+                <Card key={a.id}>
+                  <CardBody className="flex items-start justify-between gap-4">
+                    <button className="min-w-0 text-left" onClick={() => setSelected(a)}>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold hover:text-[var(--color-primary)]">
+                          {a.title}
+                        </h3>
+                        {a.dueDate && (
+                          <span className="text-xs text-[var(--color-text-muted)]">
+                            Due {formatDate(a.dueDate)}
+                          </span>
+                        )}
+                      </div>
+                      {a.description && (
+                        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                          {a.description}
+                        </p>
+                      )}
+                      {a.fileName && (
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs text-[var(--color-primary)]">
+                          <Paperclip size={12} aria-hidden />
+                          {a.fileName}
+                        </span>
+                      )}
+                    </button>
+                    <div className="flex shrink-0 items-center gap-1">
+                      {a.filePath && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.api.homeworkAssignments.openPath(a.filePath!)}
+                        >
+                          <Paperclip size={13} className="mr-1 inline" aria-hidden />
+                          Open file
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
+                        <Trash2 size={13} className="mr-1 inline" aria-hidden />
+                        Delete
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))
       )}
 
       <NewAssignmentModal
@@ -152,10 +177,16 @@ function NewAssignmentModal({
   classId: string
 }): React.JSX.Element {
   const createAssignment = useCreateHomeworkAssignment(classId)
+  const { data: existingAssignments } = useHomeworkAssignments(classId)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [filePath, setFilePath] = useState<string | null>(null)
+  const [topic, setTopic] = useState('')
+
+  const existingTopics = [
+    ...new Set((existingAssignments ?? []).map((a) => a.topic).filter((t): t is string => !!t))
+  ]
 
   async function handlePickFile(): Promise<void> {
     const picked = await window.api.homeworkAssignments.pickFile()
@@ -170,12 +201,14 @@ function NewAssignmentModal({
       description: description.trim() || null,
       dueDate: dueDate || null,
       filePath,
-      fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null
+      fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null,
+      topic: topic.trim() || null
     })
     setTitle('')
     setDescription('')
     setDueDate('')
     setFilePath(null)
+    setTopic('')
     onClose()
   }
 
@@ -203,6 +236,19 @@ function NewAssignmentModal({
       <form id="homework-form" onSubmit={handleSubmit} className="space-y-4">
         <FormRow label="Title">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+        </FormRow>
+        <FormRow label="Topic / unit" hint="Optional — groups this with related assignments">
+          <Input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            list="topic-suggestions"
+            placeholder="e.g. Unit 1: Ecosystems"
+          />
+          <datalist id="topic-suggestions">
+            {existingTopics.map((t) => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
         </FormRow>
         <FormRow label="Due date" hint="Optional">
           <DateSelect value={dueDate} onChange={setDueDate} />
