@@ -205,7 +205,9 @@ const api: EduBoardApi = {
     listSubmissions: (homeworkAssignmentId, classId) =>
       invoke(IpcChannels.homeworkAssignments.listSubmissions, homeworkAssignmentId, classId),
     setSubmissionStatus: (input) =>
-      invoke(IpcChannels.homeworkAssignments.setSubmissionStatus, input)
+      invoke(IpcChannels.homeworkAssignments.setSubmissionStatus, input),
+    pickFile: () => invoke(IpcChannels.homeworkAssignments.pickFile),
+    openPath: (filePath) => invoke(IpcChannels.homeworkAssignments.openPath, filePath)
   },
   portalInvites: {
     createBatch: (input) => invoke(IpcChannels.portalInvites.createBatch, input),

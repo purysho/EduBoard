@@ -183,7 +183,9 @@ export const IpcChannels = {
     update: 'homeworkAssignments:update',
     remove: 'homeworkAssignments:remove',
     listSubmissions: 'homeworkAssignments:listSubmissions',
-    setSubmissionStatus: 'homeworkAssignments:setSubmissionStatus'
+    setSubmissionStatus: 'homeworkAssignments:setSubmissionStatus',
+    pickFile: 'homeworkAssignments:pickFile',
+    openPath: 'homeworkAssignments:openPath'
   },
   portalInvites: {
     createBatch: 'portalInvites:createBatch',

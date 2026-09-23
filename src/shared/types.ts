@@ -317,6 +317,8 @@ export interface HomeworkAssignment {
   title: string
   description: string | null
   dueDate: string | null
+  filePath: string | null
+  fileName: string | null
   createdAt: string
   updatedAt: string
 }

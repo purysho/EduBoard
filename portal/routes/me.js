@@ -1,11 +1,14 @@
 const express = require('express')
 const crypto = require('crypto')
+const path = require('path')
 const QRCode = require('qrcode')
 const db = require('../db')
 const { requireAuth, newRandomToken, hashToken } = require('../auth')
 
 const router = express.Router()
 router.use(requireAuth)
+
+const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
 
 // A family account covers one student today (redemption links exactly one), but the
 // schema allows more than one row per account so a future "second child" invite could
@@ -49,6 +52,7 @@ router.get('/', (req, res) => {
                     title: h.title,
                     description: h.description,
                     dueDate: h.due_date,
+                    fileName: h.file_name,
                     status: submission?.status ?? 'not_started'
                   }
                 })
@@ -72,6 +76,24 @@ router.get('/', (req, res) => {
   })
 
   res.json({ students })
+})
+
+// Gated on the requesting account actually having a linked student enrolled in this
+// assignment's class — the session cookie alone isn't enough, since one account could
+// otherwise fetch another class's attachment just by guessing/incrementing an id.
+router.get('/homework/:id/file', (req, res) => {
+  const hw = db.prepare('SELECT * FROM homework_assignments WHERE id = ?').get(req.params.id)
+  if (!hw || !hw.file_path) return res.status(404).json({ error: 'No file' })
+
+  const linked = getLinkedStudentIds(req.accountId)
+  const enrolled = linked.some((studentId) =>
+    db
+      .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+      .get(studentId, hw.class_id)
+  )
+  if (!enrolled) return res.status(403).json({ error: 'Not your class' })
+
+  res.download(path.join(UPLOADS_DIR, hw.file_path), hw.file_name)
 })
 
 router.post('/homework/:id/status', (req, res) => {

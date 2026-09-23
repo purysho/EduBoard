@@ -274,6 +274,8 @@ export interface EduBoardApi {
       classId: string
     ): Promise<HomeworkSubmissionWithStudent[]>
     setSubmissionStatus(input: SetHomeworkSubmissionStatusInput): Promise<HomeworkSubmission>
+    pickFile(): Promise<string | null>
+    openPath(filePath: string): Promise<string>
   }
   portalInvites: {
     createBatch(input: CreatePortalInviteBatchInput): Promise<PortalInviteBatchWithInvites>

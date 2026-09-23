@@ -193,6 +193,8 @@ export const homeworkAssignments = sqliteTable(
     title: text('title').notNull(),
     description: text('description'),
     dueDate: text('due_date'),
+    filePath: text('file_path'),
+    fileName: text('file_name'),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull()
   },

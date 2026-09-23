@@ -515,6 +515,13 @@ export function registerIpcHandlers(): void {
     (_e, input: homeworkRepo.SetHomeworkSubmissionStatusInput) =>
       homeworkRepo.setSubmissionStatus(input)
   )
+  handle(IpcChannels.homeworkAssignments.pickFile, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(IpcChannels.homeworkAssignments.openPath, (_e, filePath: string) =>
+    shell.openPath(filePath)
+  )
 
   // --- Portal invites -------------------------------------------------------------------------
   handle(

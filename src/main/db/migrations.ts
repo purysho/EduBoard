@@ -461,6 +461,19 @@ const migrations: Migration[] = [
         );
       `)
     }
+  },
+  {
+    id: 15,
+    name: 'homework_attachment',
+    up: (db) => {
+      // Points at the file's original location on the teacher's own disk — same
+      // "reference, don't copy" approach lesson_resources.file_path already uses.
+      // Publishing to the Portal reads the bytes from here at publish time.
+      db.exec(`
+        ALTER TABLE homework_assignments ADD COLUMN file_path TEXT;
+        ALTER TABLE homework_assignments ADD COLUMN file_name TEXT;
+      `)
+    }
   }
 ]
 

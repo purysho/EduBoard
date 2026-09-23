@@ -4,33 +4,56 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>EduBoard Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light; }
-  body { font-family: system-ui, sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 32px 16px; }
-  h1 { font-size: 1.3rem; margin: 0 0 4px; }
-  p.hint { color: #64748b; margin: 0 0 20px; font-size: .9rem; }
-  label { display: block; font-size: .85rem; font-weight: 600; margin: 14px 0 4px; }
-  input, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; }
-  button { width: 100%; margin-top: 20px; padding: 13px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+  :root {
+    color-scheme: light;
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --bg: #f4f5fb;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+  .topbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #fff; border-bottom: 1px solid var(--border); }
+  .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
+  .brand { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 40px 20px 60px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; letter-spacing: -.01em; }
+  p.hint { color: var(--muted); margin: 0 0 24px; font-size: .92rem; line-height: 1.5; }
+  label { display: block; font-size: .82rem; font-weight: 600; margin: 16px 0 6px; color: #334155; }
+  input, select { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; font-size: .92rem; background: #fff; transition: border-color .15s; }
+  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgb(99 102 241 / .12); }
+  button { width: 100%; margin-top: 22px; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer; transition: background .15s; }
+  button:hover:not(:disabled) { background: var(--primary-dark); }
   button:disabled { opacity: .5; cursor: default; }
-  button.secondary { background: #fff; color: #0f172a; border: 1px solid #cbd5e1; }
+  button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--border); }
+  button.secondary:hover:not(:disabled) { background: #f8fafc; }
   .error { color: #dc2626; font-size: .85rem; margin-top: 10px; }
-  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; }
-  .muted { color: #64748b; font-size: .85rem; }
-  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgb(15 23 42 / .04); }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .desc { color: #475569; font-size: .87rem; line-height: 1.5; margin: 8px 0 0; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
   .pill.not_started { background: #f1f5f9; color: #64748b; }
   .pill.submitted { background: #fef3c7; color: #92400e; }
   .pill.done { background: #d1fae5; color: #065f46; }
-  img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; }
-  a.linklike { color: #6366f1; text-decoration: none; font-size: .85rem; }
+  img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; }
+  a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
+  a.linklike:hover { text-decoration: underline; }
   .dob-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; }
-  .dob-row select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font: inherit; background: #fff; }
-  .field-note { color: #64748b; font-size: .8rem; margin: 4px 0 0; }
+  .dob-row select { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; background: #fff; }
+  .field-note { color: var(--muted); font-size: .8rem; margin: 6px 0 0; line-height: 1.4; }
+  .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
+  .section-title:first-child { margin-top: 0; }
 </style>
 </head>
 <body>
+<div class="topbar"><div class="badge">EB</div><div class="brand">EduBoard Portal</div></div>
 <div class="wrap" id="app">Loading…</div>
 <script>
 const app = document.getElementById('app')
@@ -61,7 +84,7 @@ async function main() {
 
 function renderLogin() {
   app.innerHTML = `
-    <h1>EduBoard Portal</h1>
+    <h1>Welcome back</h1>
     <p class="hint">Sign in to see grades, attendance, and homework.</p>
     <label>Username</label>
     <input id="u" autocomplete="username" />
@@ -115,7 +138,7 @@ async function renderRedeem(code) {
   try {
     info = await api('/invites/' + encodeURIComponent(code))
   } catch (e) {
-    app.innerHTML = `<h1>EduBoard Portal</h1><p class="error">${e.message}</p>`
+    app.innerHTML = `<h1>Can't join</h1><p class="error">${e.message}</p>`
     return
   }
   const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
@@ -163,7 +186,7 @@ async function renderRedeem(code) {
 
 function renderDashboard(me) {
   if (!me.students.length) {
-    app.innerHTML = `<h1>EduBoard Portal</h1><p class="hint">No student linked to this account yet.</p>`
+    app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
     return
   }
   app.innerHTML =
@@ -174,23 +197,29 @@ function renderDashboard(me) {
     ${s.classes
       .map(
         (c) => `
+      <div class="section-title">${c.name}</div>
       <div class="card">
-        <div class="row"><strong>${c.name}</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + (c.letter ?? '') + ')' : 'No grade yet'}</span></div>
-        <p class="muted">Attendance: ${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</p>
+        <div class="row"><strong>Grade</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + (c.letter ?? '') + ')' : 'No grade yet'}</span></div>
+        <div class="row" style="margin-top:6px"><strong>Attendance</strong><span class="muted">${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
+      </div>
         ${
           c.homework
             ? c.homework
                 .map(
                   (h) => `
-          <div class="row" style="margin-top:8px">
-            <span>${h.title}${h.dueDate ? ' <span class="muted">(due ' + h.dueDate + ')</span>' : ''}</span>
-            <span class="pill ${h.status}" data-hw="${h.id}" data-student="${s.studentId}" style="cursor:pointer">${h.status.replace('_', ' ')}</span>
-          </div>`
+      <div class="card">
+        <div class="row">
+          <strong>${h.title}</strong>
+          <span class="pill ${h.status}" data-hw="${h.id}" data-student="${s.studentId}" style="cursor:pointer">${h.status.replace('_', ' ')}</span>
+        </div>
+        ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${h.dueDate}</p>` : ''}
+        ${h.description ? `<p class="desc">${h.description}</p>` : ''}
+        ${h.fileName ? `<p style="margin-top:10px"><a class="linklike" href="/api/me/homework/${h.id}/file">\u{1F4CE} ${h.fileName}</a></p>` : ''}
+      </div>`
                 )
                 .join('')
             : ''
-        }
-      </div>`
+        }`
       )
       .join('')
   }`

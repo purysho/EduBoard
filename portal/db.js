@@ -50,7 +50,9 @@ db.exec(`
     class_id TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
-    due_date TEXT
+    due_date TEXT,
+    file_name TEXT,
+    file_path TEXT
   );
 
   CREATE TABLE IF NOT EXISTS invites (

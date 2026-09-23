@@ -1,9 +1,18 @@
 const express = require('express')
+const fs = require('fs')
+const path = require('path')
 const db = require('../db')
 const { requireSyncSecret, hashPassword } = require('../auth')
 
 const router = express.Router()
 router.use(requireSyncSecret)
+
+const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
+fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+
+function sanitizeFileName(name) {
+  return String(name).replace(/[^\w.\-]+/g, '_').slice(-120)
+}
 
 // Full push from the desktop app. Each table is wholesale-replaced inside one
 // transaction — the desktop app always sends its complete current state, never a
@@ -18,6 +27,13 @@ router.post('/', (req, res) => {
     homeworkAssignments = [],
     invites = []
   } = req.body
+
+  // Every publish replaces the whole homework_assignments table (see below), so old
+  // attachment files would otherwise pile up on disk forever — clear the folder first
+  // and let this push repopulate only what's still current.
+  for (const entry of fs.readdirSync(UPLOADS_DIR)) {
+    fs.rmSync(path.join(UPLOADS_DIR, entry), { force: true })
+  }
 
   const run = db.transaction(() => {
     db.prepare('DELETE FROM classes').run()
@@ -49,10 +65,16 @@ router.post('/', (req, res) => {
     }
 
     const insertHomework = db.prepare(
-      'INSERT INTO homework_assignments (id, class_id, title, description, due_date) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
     for (const h of homeworkAssignments) {
-      insertHomework.run(h.id, h.classId, h.title, h.description, h.dueDate)
+      let filePath = null
+      if (h.fileName && h.fileData) {
+        const storedName = `${h.id}-${sanitizeFileName(h.fileName)}`
+        fs.writeFileSync(path.join(UPLOADS_DIR, storedName), Buffer.from(h.fileData, 'base64'))
+        filePath = storedName
+      }
+      insertHomework.run(h.id, h.classId, h.title, h.description, h.dueDate, h.fileName, filePath)
     }
 
     // Invites are upserted, never deleted — a claimed invite's claimed_at must survive

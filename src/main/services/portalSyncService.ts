@@ -1,3 +1,4 @@
+import { readFileSync, statSync } from 'fs'
 import { listClasses } from '../repositories/classes'
 import { getRosterForClass } from '../repositories/enrollments'
 import {
@@ -13,6 +14,20 @@ export class PortalNotConfiguredError extends Error {
   constructor() {
     super('Set a Portal URL and sync secret in Settings first.')
     this.name = 'PortalNotConfiguredError'
+  }
+}
+
+// Above this, a homework attachment is skipped rather than sent — keeps the sync
+// payload from ballooning to the point of timing out on the Portal's limited bandwidth.
+const MAX_HOMEWORK_FILE_BYTES = 8 * 1024 * 1024
+
+function readHomeworkFile(filePath: string | null): string | null {
+  if (!filePath) return null
+  try {
+    if (statSync(filePath).size > MAX_HOMEWORK_FILE_BYTES) return null
+    return readFileSync(filePath).toString('base64')
+  } catch {
+    return null
   }
 }
 
@@ -46,6 +61,8 @@ export async function publishToPortal(): Promise<void> {
     title: string
     description: string | null
     dueDate: string | null
+    fileName: string | null
+    fileData: string | null
   }[] = []
   const invites: { code: string; classId: string; revoked: boolean }[] = []
 
@@ -75,7 +92,9 @@ export async function publishToPortal(): Promise<void> {
         classId: cls.id,
         title: hw.title,
         description: hw.description,
-        dueDate: hw.dueDate
+        dueDate: hw.dueDate,
+        fileName: hw.fileName,
+        fileData: readHomeworkFile(hw.filePath)
       })
     }
 

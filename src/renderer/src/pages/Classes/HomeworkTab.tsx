@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ClipboardList, Plus, Trash2 } from 'lucide-react'
+import { ClipboardList, Paperclip, Plus, Trash2 } from 'lucide-react'
 import type { ClassSection, HomeworkAssignment, HomeworkSubmissionStatus } from '@shared/types'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -85,11 +85,29 @@ export function HomeworkTab(): React.JSX.Element {
                   {a.description && (
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">{a.description}</p>
                   )}
+                  {a.fileName && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-[var(--color-primary)]">
+                      <Paperclip size={12} aria-hidden />
+                      {a.fileName}
+                    </span>
+                  )}
                 </button>
-                <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
-                  <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                  Delete
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {a.filePath && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.api.homeworkAssignments.openPath(a.filePath!)}
+                    >
+                      <Paperclip size={13} className="mr-1 inline" aria-hidden />
+                      Open file
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
+                    <Trash2 size={13} className="mr-1 inline" aria-hidden />
+                    Delete
+                  </Button>
+                </div>
               </CardBody>
             </Card>
           ))}
@@ -137,6 +155,12 @@ function NewAssignmentModal({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
+  const [filePath, setFilePath] = useState<string | null>(null)
+
+  async function handlePickFile(): Promise<void> {
+    const picked = await window.api.homeworkAssignments.pickFile()
+    if (picked) setFilePath(picked)
+  }
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
@@ -144,11 +168,14 @@ function NewAssignmentModal({
       classId,
       title: title.trim(),
       description: description.trim() || null,
-      dueDate: dueDate || null
+      dueDate: dueDate || null,
+      filePath,
+      fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null
     })
     setTitle('')
     setDescription('')
     setDueDate('')
+    setFilePath(null)
     onClose()
   }
 
@@ -182,6 +209,19 @@ function NewAssignmentModal({
         </FormRow>
         <FormRow label="Description" hint="Optional">
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        </FormRow>
+        <FormRow label="Attachment" hint="Optional — a worksheet or instructions file">
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={handlePickFile}>
+              <Paperclip size={13} className="mr-1 inline" aria-hidden />
+              {filePath ? 'Change file' : 'Choose file'}
+            </Button>
+            {filePath && (
+              <span className="truncate text-xs text-[var(--color-text-muted)]">
+                {filePath.split(/[/\\]/).pop()}
+              </span>
+            )}
+          </div>
         </FormRow>
       </form>
     </Modal>
