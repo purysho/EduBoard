@@ -79,7 +79,8 @@ export const IpcChannels = {
     classReport: 'reports:classReport',
     studentClassGrade: 'reports:studentClassGrade',
     studentAttendanceSummary: 'reports:studentAttendanceSummary',
-    analyticsOverview: 'reports:analyticsOverview'
+    analyticsOverview: 'reports:analyticsOverview',
+    studentGradeTrend: 'reports:studentGradeTrend'
   },
   settings: {
     get: 'settings:get',

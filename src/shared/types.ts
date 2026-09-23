@@ -550,6 +550,15 @@ export interface StudentClassGrade {
   categoryBreakdown: { categoryId: string | null; categoryName: string; percent: number | null }[]
 }
 
+/** One scored assessment on a student's grade trajectory in a class — what the Analytics
+ * page's per-student trend chart plots, oldest first. */
+export interface GradeTrendPoint {
+  assessmentId: string
+  assessmentName: string
+  date: string | null
+  percent: number
+}
+
 export interface CompositeGradeClassEntry {
   classId: string
   className: string

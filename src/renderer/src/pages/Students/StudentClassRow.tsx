@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles } from 'lucide-react'
+import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts'
 import type { ClassSection, Enrollment } from '@shared/types'
 import { Badge } from '@renderer/components/ui/Badge'
 import { Button } from '@renderer/components/ui/Button'
@@ -12,6 +13,7 @@ import {
   useDraftReportComment,
   useStudentAttendanceSummary,
   useStudentClassGrade,
+  useStudentGradeTrend,
   useStudentLogEntries,
   useStudents
 } from '@renderer/lib/queries'
@@ -27,6 +29,7 @@ export function StudentClassRow({
 }): React.JSX.Element {
   const { data: grade } = useStudentClassGrade(studentId, cls.id)
   const { data: attendance } = useStudentAttendanceSummary(studentId, cls.id)
+  const { data: trend } = useStudentGradeTrend(studentId, cls.id)
 
   return (
     <tr className="border-t border-[var(--color-border)]">
@@ -43,6 +46,32 @@ export function StudentClassRow({
         )}
       </td>
       <td className="px-4 py-2.5">{formatPercent(grade?.percent)}</td>
+      <td className="px-4 py-2.5">
+        {trend && trend.length >= 2 ? (
+          <div className="h-8 w-20">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trend}>
+                <Tooltip
+                  formatter={(value: number, _name, entry) => [
+                    `${value.toFixed(0)}%`,
+                    entry.payload.assessmentName
+                  ]}
+                  contentStyle={{ fontSize: 11, padding: '4px 8px' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="percent"
+                  stroke="var(--color-primary)"
+                  strokeWidth={1.5}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <span className="text-xs text-[var(--color-text-muted)]">Not enough data</span>
+        )}
+      </td>
       <td className="px-4 py-2.5">
         {grade?.letter ? <Badge tone={letterTone(grade.letter)}>{grade.letter}</Badge> : '—'}
       </td>

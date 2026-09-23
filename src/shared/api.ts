@@ -8,6 +8,7 @@ import type {
   AttendanceCheckInStatus,
   AttendanceRecord,
   AttendanceSummary,
+  GradeTrendPoint,
   BackupInfo,
   BackupPreview,
   ClassScheduleSlot,
@@ -168,6 +169,7 @@ export interface EduBoardApi {
     studentClassGrade(studentId: string, classId: string): Promise<StudentClassGrade | null>
     studentAttendanceSummary(studentId: string, classId: string): Promise<AttendanceSummary>
     analyticsOverview(): Promise<AnalyticsOverview>
+    studentGradeTrend(studentId: string, classId: string): Promise<GradeTrendPoint[]>
   }
   settings: {
     get(): Promise<AppSettings>

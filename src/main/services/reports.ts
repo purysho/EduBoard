@@ -1,7 +1,7 @@
 import { getClass, listClasses } from '../repositories/classes'
 import { listGradeCategories } from '../repositories/gradeCategories'
 import { listAssessmentsByClass } from '../repositories/assessments'
-import { listScoresByClass } from '../repositories/scores'
+import { listScoresByClass, listScoresByStudentAndClass } from '../repositories/scores'
 import { getRosterForClass } from '../repositories/enrollments'
 import { listAttendanceByClass } from '../repositories/attendanceRecords'
 import { listUpcomingLessonPlans } from '../repositories/lessonPlans'
@@ -17,6 +17,7 @@ import type {
   ClassRosterRow,
   DashboardStats,
   GradeDistributionEntry,
+  GradeTrendPoint,
   Score,
   StudentClassGrade
 } from '@shared/types'
@@ -99,6 +100,31 @@ export function getClassRoster(classId: string): ClassRosterRow[] {
     },
     attendanceRate: attendance.get(student.id)?.rate ?? null
   }))
+}
+
+/** One student's scored assessments in one class, oldest first, each as a percent —
+ * the raw series a trend chart plots. Excludes excused and not-yet-graded assessments
+ * (pointsEarned null), since neither represents a data point on a trajectory. Assessments
+ * with no date sort last, since there's no meaningful position for them on a timeline. */
+export function getStudentGradeTrend(studentId: string, classId: string): GradeTrendPoint[] {
+  const assessmentsById = new Map(listAssessmentsByClass(classId).map((a) => [a.id, a]))
+  const scores = listScoresByStudentAndClass(studentId, classId)
+
+  const points: GradeTrendPoint[] = []
+  for (const score of scores) {
+    if (score.pointsEarned === null || score.excused) continue
+    const assessment = assessmentsById.get(score.assessmentId)
+    if (!assessment || assessment.maxScore <= 0) continue
+    points.push({
+      assessmentId: assessment.id,
+      assessmentName: assessment.name,
+      date: assessment.assessmentDate,
+      percent: (score.pointsEarned / assessment.maxScore) * 100
+    })
+  }
+
+  points.sort((a, b) => (a.date ?? '9999').localeCompare(b.date ?? '9999'))
+  return points
 }
 
 export function getStudentAttendanceSummary(studentId: string, classId: string): AttendanceSummary {

@@ -637,6 +637,14 @@ export function useStudentAttendanceSummary(
   })
 }
 
+export function useStudentGradeTrend(studentId: string | undefined, classId: string | undefined) {
+  return useQuery({
+    queryKey: ['students', studentId ?? '', 'classes', classId ?? '', 'gradeTrend'] as const,
+    queryFn: () => api().reports.studentGradeTrend(studentId!, classId!),
+    enabled: !!studentId && !!classId
+  })
+}
+
 export function useAnalyticsOverview() {
   return useQuery({
     queryKey: queryKeys.analyticsOverview,
