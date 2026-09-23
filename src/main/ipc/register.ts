@@ -45,7 +45,10 @@ import {
   downloadSubmissionFile,
   listMessageThreads,
   sendTeacherMessage,
-  markMessageThreadRead
+  markMessageThreadRead,
+  listClassPosts,
+  createClassPost,
+  deleteClassPost
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -594,4 +597,18 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.portalMessages.markRead, (_e, accountId: string) =>
     markMessageThreadRead(accountId)
   )
+  handle(IpcChannels.classPosts.list, () => listClassPosts())
+  handle(
+    IpcChannels.classPosts.create,
+    (_e, classId: string, body: string, imagePath: string | null) =>
+      createClassPost(classId, body, imagePath)
+  )
+  handle(IpcChannels.classPosts.remove, (_e, id: string) => deleteClassPost(id))
+  handle(IpcChannels.classPosts.pickImage, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] }]
+    })
+    return canceled || !filePaths[0] ? null : filePaths[0]
+  })
 }

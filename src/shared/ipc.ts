@@ -204,5 +204,11 @@ export const IpcChannels = {
     listThreads: 'portalMessages:listThreads',
     send: 'portalMessages:send',
     markRead: 'portalMessages:markRead'
+  },
+  classPosts: {
+    list: 'classPosts:list',
+    create: 'classPosts:create',
+    remove: 'classPosts:remove',
+    pickImage: 'classPosts:pickImage'
   }
 } as const

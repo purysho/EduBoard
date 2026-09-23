@@ -10,7 +10,12 @@ import {
 import { listInviteBatchesByClass } from '../repositories/portalInvites'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
-import type { Student, HomeworkSubmissionStatus, PortalMessageThread } from '@shared/types'
+import type {
+  ClassPost,
+  Student,
+  HomeworkSubmissionStatus,
+  PortalMessageThread
+} from '@shared/types'
 
 export class PortalNotConfiguredError extends Error {
   constructor() {
@@ -227,4 +232,46 @@ export async function markMessageThreadRead(accountId: string): Promise<void> {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw new Error(`Could not mark read: ${res.status} ${await res.text()}`)
+}
+
+export async function listClassPosts(): Promise<ClassPost[]> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/posts`, {
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (!res.ok) throw new Error(`Could not load posts: ${res.status} ${await res.text()}`)
+  return res.json()
+}
+
+export async function createClassPost(
+  classId: string,
+  body: string,
+  imagePath: string | null
+): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  let imageName: string | null = null
+  let imageData: string | null = null
+  if (imagePath) {
+    imageName = imagePath.split(/[/\\]/).pop() ?? imagePath
+    imageData = readFileSync(imagePath).toString('base64')
+  }
+
+  const res = await fetch(`${portalUrl}/api/sync/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ classId, body, imageName, imageData })
+  })
+  if (!res.ok) throw new Error(`Could not post: ${res.status} ${await res.text()}`)
+}
+
+export async function deleteClassPost(id: string): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/posts/${id}`, {
+    method: 'DELETE',
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (!res.ok) throw new Error(`Could not delete post: ${res.status} ${await res.text()}`)
 }

@@ -70,6 +70,7 @@ export const queryKeys = {
     ['homework', homeworkAssignmentId, 'submissions'] as const,
   portalInviteBatches: (classId: string) => ['classes', classId, 'inviteBatches'] as const,
   portalMessageThreads: ['portal', 'messageThreads'] as const,
+  classPosts: ['portal', 'classPosts'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
   classReport: (classId: string) => ['classes', classId, 'report'] as const,
   studentClassGrade: (studentId: string, classId: string) =>
@@ -1259,5 +1260,32 @@ export function useMarkPortalThreadRead() {
   return useMutation({
     mutationFn: (accountId: string) => api().portalMessages.markRead(accountId),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalMessageThreads })
+  })
+}
+
+// ---- Class Story posts --------------------------------------------------------------------
+
+export function useClassPosts(classId: string) {
+  return useQuery({
+    queryKey: queryKeys.classPosts,
+    queryFn: () => api().classPosts.list(),
+    select: (posts) => posts.filter((p) => p.classId === classId)
+  })
+}
+
+export function useCreateClassPost(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ body, imagePath }: { body: string; imagePath: string | null }) =>
+      api().classPosts.create(classId, body, imagePath),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classPosts })
+  })
+}
+
+export function useDeleteClassPost() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().classPosts.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classPosts })
   })
 }

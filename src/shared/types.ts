@@ -386,6 +386,16 @@ export interface PortalMessageThread {
   messages: PortalMessage[]
 }
 
+/** A Class Story post — lives only on the Portal, same as messages/homework
+ * attachments, fetched live rather than mirrored locally. */
+export interface ClassPost {
+  id: string
+  classId: string
+  body: string
+  hasImage: boolean
+  createdAt: string
+}
+
 /** A QR check-in session's live state for one class — open/closed, which date it's
  * marking attendance for, and who has checked themselves in so far. Ephemeral
  * (in-memory only, like ExitTicketServerInfo's running server), not persisted. */

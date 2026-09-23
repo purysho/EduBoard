@@ -101,6 +101,18 @@ db.exec(`
     PRIMARY KEY (homework_assignment_id, student_id)
   );
 
+  -- Short teacher updates (text, optionally a photo) visible to every family with a
+  -- student in that class — ClassDojo's "Class Story," the cheapest way to keep
+  -- parents in the loop day to day without them needing to check grades/homework.
+  CREATE TABLE IF NOT EXISTS class_posts (
+    id TEXT PRIMARY KEY,
+    class_id TEXT NOT NULL,
+    body TEXT NOT NULL,
+    image_name TEXT,
+    image_path TEXT,
+    created_at TEXT NOT NULL
+  );
+
   -- One thread per family account with the teacher — simple by design: this Portal
   -- serves one teacher, so there's no need to pick a recipient or scope by class.
   CREATE TABLE IF NOT EXISTS messages (

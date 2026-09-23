@@ -176,6 +176,57 @@ router.get('/homework/:id/submission-file', (req, res) => {
   res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
+const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
+require('fs').mkdirSync(POSTS_DIR, { recursive: true })
+
+// Every post from every class this account's student(s) are actively enrolled in,
+// newest first — a family with two kids in different classes sees one combined feed.
+router.get('/posts', (req, res) => {
+  const studentIds = getLinkedStudentIds(req.accountId)
+  if (!studentIds.length) return res.json([])
+
+  const classIds = new Set()
+  for (const studentId of studentIds) {
+    db.prepare("SELECT class_id FROM enrollments WHERE student_id = ? AND status = 'active'")
+      .all(studentId)
+      .forEach((r) => classIds.add(r.class_id))
+  }
+  if (!classIds.size) return res.json([])
+
+  const placeholders = [...classIds].map(() => '?').join(',')
+  const rows = db
+    .prepare(
+      `SELECT p.*, c.name AS class_name FROM class_posts p
+       JOIN classes c ON c.id = p.class_id
+       WHERE p.class_id IN (${placeholders})
+       ORDER BY p.created_at DESC`
+    )
+    .all(...classIds)
+
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      className: r.class_name,
+      body: r.body,
+      hasImage: !!r.image_path,
+      createdAt: r.created_at
+    }))
+  )
+})
+
+router.get('/posts/:id/image', (req, res) => {
+  const studentIds = getLinkedStudentIds(req.accountId)
+  const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
+  if (!post || !post.image_path) return res.status(404).json({ error: 'No image' })
+  const enrolled = studentIds.some((studentId) =>
+    db
+      .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+      .get(studentId, post.class_id)
+  )
+  if (!enrolled) return res.status(403).json({ error: 'Not your class' })
+  res.sendFile(path.join(POSTS_DIR, post.image_path))
+})
+
 // One thread per account with the teacher — reading it marks the teacher's messages
 // read so the family's unread badge clears; the teacher's own unread count (for
 // messages the family sent) is a separate flag, cleared from the desktop app instead.

@@ -156,6 +156,52 @@ router.post('/submissions/grade', (req, res) => {
   res.json({ ok: true })
 })
 
+const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
+fs.mkdirSync(POSTS_DIR, { recursive: true })
+
+router.get('/posts', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM class_posts ORDER BY created_at DESC').all()
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      classId: r.class_id,
+      body: r.body,
+      hasImage: !!r.image_path,
+      createdAt: r.created_at
+    }))
+  )
+})
+
+router.post('/posts', (req, res) => {
+  const { classId, body, imageName, imageData } = req.body
+  const text = (body || '').trim()
+  if (!classId || !text) return res.status(400).json({ error: 'classId and body required' })
+
+  let imagePath = null
+  if (imageName && imageData) {
+    const id = crypto.randomUUID()
+    const storedName = `${id}-${sanitizeFileName(imageName)}`
+    fs.writeFileSync(path.join(POSTS_DIR, storedName), Buffer.from(imageData, 'base64'))
+    imagePath = storedName
+    db.prepare(
+      'INSERT INTO class_posts (id, class_id, body, image_name, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, classId, text, imageName, imagePath, new Date().toISOString())
+    return res.json({ ok: true })
+  }
+
+  db.prepare(
+    'INSERT INTO class_posts (id, class_id, body, created_at) VALUES (?, ?, ?, ?)'
+  ).run(crypto.randomUUID(), classId, text, new Date().toISOString())
+  res.json({ ok: true })
+})
+
+router.delete('/posts/:id', (req, res) => {
+  const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
+  if (post?.image_path) fs.rmSync(path.join(POSTS_DIR, post.image_path), { force: true })
+  db.prepare('DELETE FROM class_posts WHERE id = ?').run(req.params.id)
+  res.json({ ok: true })
+})
+
 // One row per family account, with its message thread and an unread count for
 // messages the family sent — what the desktop app's Messages page lists as threads.
 router.get('/messages/threads', (req, res) => {

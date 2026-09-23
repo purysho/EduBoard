@@ -23,6 +23,7 @@ import { CompositeGradesPage } from './pages/CompositeGrades/CompositeGradesPage
 import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 import { TimetablePage } from './pages/Timetable/TimetablePage'
 import { HomeworkTab } from './pages/Classes/HomeworkTab'
+import { ClassStoryTab } from './pages/Classes/ClassStoryTab'
 import { NotebookPage } from './pages/Notebook/NotebookPage'
 import { MessagesPage } from './pages/Messages/MessagesPage'
 import { PortalTab } from './pages/Classes/PortalTab'
@@ -46,6 +47,7 @@ function App(): React.JSX.Element {
           <Route path="seating" element={<SeatingChartTab />} />
           <Route path="exit-ticket" element={<ExitTicketTab />} />
           <Route path="homework" element={<HomeworkTab />} />
+          <Route path="story" element={<ClassStoryTab />} />
           <Route path="portal" element={<PortalTab />} />
           <Route path="report" element={<ReportTab />} />
           <Route path="settings" element={<ClassSettingsTab />} />

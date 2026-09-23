@@ -265,12 +265,33 @@ function formatWhen(iso) {
   return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
+async function loadClassStory() {
+  const box = document.getElementById('story')
+  if (!box) return
+  const posts = await api('/me/posts')
+  box.innerHTML = !posts.length
+    ? '<p class="muted">No updates yet.</p>'
+    : posts
+        .map(
+          (p) => `
+      <div class="card">
+        <div class="row"><strong>${p.className}</strong><span class="muted">${formatWhen(p.createdAt)}</span></div>
+        <p class="desc">${p.body}</p>
+        ${p.hasImage ? `<img src="/api/me/posts/${p.id}/image" style="width:100%; border-radius:10px; margin-top:8px" />` : ''}
+      </div>`
+        )
+        .join('')
+}
+
 function renderDashboard(me) {
   if (!me.students.length) {
     app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
     return
   }
   app.innerHTML =
+    `<h1>Welcome back</h1>
+     <div class="section-title">Class Story</div>
+     <div id="story">Loading…</div>` +
     me.students
       .map(
         (s) => `
@@ -335,6 +356,7 @@ function renderDashboard(me) {
     }
   })
 
+  loadClassStory()
   loadMessages()
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()

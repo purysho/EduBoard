@@ -22,6 +22,7 @@ import type {
   NotebookAnswer,
   PortalInviteBatchWithInvites,
   PortalMessageThread,
+  ClassPost,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -303,5 +304,11 @@ export interface EduBoardApi {
     listThreads(): Promise<PortalMessageThread[]>
     send(accountId: string, body: string): Promise<void>
     markRead(accountId: string): Promise<void>
+  }
+  classPosts: {
+    list(): Promise<ClassPost[]>
+    create(classId: string, body: string, imagePath: string | null): Promise<void>
+    remove(id: string): Promise<void>
+    pickImage(): Promise<string | null>
   }
 }

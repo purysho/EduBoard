@@ -7,6 +7,7 @@ import {
   FileCheck2,
   LayoutGrid,
   MonitorSmartphone,
+  Newspaper,
   NotebookPen,
   Settings2,
   Ticket,
@@ -24,6 +25,7 @@ const TABS = [
   { to: 'seating', label: 'Seating chart', icon: LayoutGrid },
   { to: 'exit-ticket', label: 'Exit ticket', icon: MonitorSmartphone },
   { to: 'homework', label: 'Homework', icon: FileCheck2 },
+  { to: 'story', label: 'Class Story', icon: Newspaper },
   { to: 'portal', label: 'Portal', icon: Ticket },
   { to: 'report', label: 'Report', icon: BarChart3 },
   { to: 'settings', label: 'Settings', icon: Settings2 }

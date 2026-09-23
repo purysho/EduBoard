@@ -234,6 +234,13 @@ const api: EduBoardApi = {
     listThreads: () => invoke(IpcChannels.portalMessages.listThreads),
     send: (accountId, body) => invoke(IpcChannels.portalMessages.send, accountId, body),
     markRead: (accountId) => invoke(IpcChannels.portalMessages.markRead, accountId)
+  },
+  classPosts: {
+    list: () => invoke(IpcChannels.classPosts.list),
+    create: (classId, body, imagePath) =>
+      invoke(IpcChannels.classPosts.create, classId, body, imagePath),
+    remove: (id) => invoke(IpcChannels.classPosts.remove, id),
+    pickImage: () => invoke(IpcChannels.classPosts.pickImage)
   }
 }
 
