@@ -197,6 +197,7 @@ export const homeworkAssignments = sqliteTable(
     fileName: text('file_name'),
     topic: text('topic'),
     status: text('status').notNull().default('draft'),
+    rubricId: text('rubric_id').references(() => rubrics.id, { onDelete: 'set null' }),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull()
   },
@@ -436,6 +437,31 @@ export const rubricScores = sqliteTable(
     assessmentStudentCriterionUnique: uniqueIndex(
       'rubric_scores_assessment_student_criterion_unique'
     ).on(t.assessmentId, t.studentId, t.criterionId)
+  })
+)
+
+export const homeworkRubricScores = sqliteTable(
+  'homework_rubric_scores',
+  {
+    id: text('id').primaryKey(),
+    homeworkAssignmentId: text('homework_assignment_id')
+      .notNull()
+      .references(() => homeworkAssignments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    criterionId: text('criterion_id')
+      .notNull()
+      .references(() => rubricCriteria.id, { onDelete: 'cascade' }),
+    levelId: text('level_id')
+      .notNull()
+      .references(() => rubricLevels.id, { onDelete: 'cascade' }),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    assignmentStudentCriterionUnique: uniqueIndex(
+      'homework_rubric_scores_assignment_student_criterion_unique'
+    ).on(t.homeworkAssignmentId, t.studentId, t.criterionId)
   })
 )
 

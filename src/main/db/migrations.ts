@@ -539,6 +539,32 @@ const migrations: Migration[] = [
       // that would disappear out from under anyone by starting everything unpublished.
       db.exec(`ALTER TABLE homework_assignments ADD COLUMN status TEXT NOT NULL DEFAULT 'draft';`)
     }
+  },
+  {
+    id: 21,
+    name: 'homework_rubric_scores',
+    up: (db) => {
+      // A separate table from rubric_scores (which is assessment-only, with a NOT NULL
+      // FK to assessments) rather than widening that table — keeps this additive and
+      // leaves the existing assessment-grading path completely untouched. Scoring here
+      // still writes its total through to the submission's existing grade/feedback text
+      // fields (see homeworkRubricScores.ts), so everywhere that already reads a
+      // submission's grade — the Portal, Portfolio, etc. — needs no changes.
+      db.exec(`
+        ALTER TABLE homework_assignments ADD COLUMN rubric_id TEXT REFERENCES rubrics(id) ON DELETE SET NULL;
+
+        CREATE TABLE homework_rubric_scores (
+          id TEXT PRIMARY KEY,
+          homework_assignment_id TEXT NOT NULL REFERENCES homework_assignments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          criterion_id TEXT NOT NULL REFERENCES rubric_criteria(id) ON DELETE CASCADE,
+          level_id TEXT NOT NULL REFERENCES rubric_levels(id) ON DELETE CASCADE,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX homework_rubric_scores_assignment_student_criterion_unique
+          ON homework_rubric_scores(homework_assignment_id, student_id, criterion_id);
+      `)
+    }
   }
 ]
 

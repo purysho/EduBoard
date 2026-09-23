@@ -26,6 +26,7 @@ import type {
   CreateRubricInput,
   UpdateRubricInput,
   SaveRubricScoresInput,
+  SaveHomeworkRubricScoresInput,
   CreateStudentLogEntryInput,
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
@@ -84,6 +85,8 @@ export const queryKeys = {
   rubric: (id: string) => ['rubrics', id] as const,
   rubricScores: (assessmentId: string, studentId: string) =>
     ['assessments', assessmentId, 'students', studentId, 'rubricScores'] as const,
+  homeworkRubricScores: (homeworkAssignmentId: string, studentId: string) =>
+    ['homework', homeworkAssignmentId, 'students', studentId, 'rubricScores'] as const,
   studentLogEntries: (studentId: string) => ['students', studentId, 'logEntries'] as const,
   parentCommunications: ['parentCommunications'] as const,
   lessonResources: ['lessonResources'] as const,
@@ -785,6 +788,33 @@ export function useSaveRubricScores(classId: string) {
       qc.invalidateQueries({
         queryKey: ['scoreHistory', vars.assessmentId, vars.studentId]
       })
+    }
+  })
+}
+
+export function useHomeworkRubricScores(
+  homeworkAssignmentId: string | undefined,
+  studentId: string | undefined
+) {
+  return useQuery({
+    queryKey: queryKeys.homeworkRubricScores(homeworkAssignmentId ?? '', studentId ?? ''),
+    queryFn: () => api().homeworkRubricScores.list(homeworkAssignmentId!, studentId!),
+    enabled: !!homeworkAssignmentId && !!studentId
+  })
+}
+
+export function useSaveHomeworkRubricScores() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: SaveHomeworkRubricScoresInput) => api().homeworkRubricScores.save(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({
+        queryKey: queryKeys.homeworkRubricScores(vars.homeworkAssignmentId, vars.studentId)
+      })
+      qc.invalidateQueries({
+        queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
+      })
+      scheduleAutoPublishToPortal()
     }
   })
 }

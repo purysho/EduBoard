@@ -209,6 +209,18 @@ export interface RubricScore {
   updatedAt: string
 }
 
+/** A rubric score against a homework submission rather than an assessment — a separate
+ * shape/table from RubricScore so the existing assessment-grading path needs no changes;
+ * see homeworkRubricScores.ts. */
+export interface HomeworkRubricScore {
+  id: string
+  homeworkAssignmentId: string
+  studentId: string
+  criterionId: string
+  levelId: string
+  updatedAt: string
+}
+
 export const STUDENT_LOG_TYPES = ['note', 'positive', 'concern', 'contact'] as const
 export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
 
@@ -334,6 +346,10 @@ export interface HomeworkAssignment {
    * students never see them. A teacher can build out homework ahead of time and publish
    * it (see HomeworkTab's Publish button) exactly when it should go live. */
   status: HomeworkAssignmentStatus
+  /** Optional rubric to grade submissions against — when set, the teacher scores a
+   * submission criterion-by-criterion (see HomeworkRubricScore) instead of, or in
+   * addition to, freeform grade text. */
+  rubricId: string | null
   createdAt: string
   updatedAt: string
 }

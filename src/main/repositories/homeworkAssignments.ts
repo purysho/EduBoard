@@ -85,6 +85,11 @@ export function deleteHomeworkAssignment(id: string): void {
   getDb().delete(homeworkAssignments).where(eq(homeworkAssignments.id, id)).run()
 }
 
+export function getHomeworkAssignment(id: string): HomeworkAssignment | undefined {
+  return getDb().select().from(homeworkAssignments).where(eq(homeworkAssignments.id, id)).get() as
+    HomeworkAssignment | undefined
+}
+
 /** Every actively-enrolled student's submission status for one assignment — students
  * with no submission row yet default to "not_started" rather than being left out, so
  * the roster view always shows everyone, not just students who already have a row. */

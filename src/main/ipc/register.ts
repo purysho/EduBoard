@@ -17,6 +17,7 @@ import * as settingsRepo from '../repositories/settingsRepo'
 import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
+import * as homeworkRubricScoresRepo from '../repositories/homeworkRubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
@@ -355,6 +356,26 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.rubricScores.save, (_e, input: rubricScoresRepo.SaveRubricScoresInput) =>
     rubricScoresRepo.saveRubricScores(input)
+  )
+  handle(
+    IpcChannels.homeworkRubricScores.list,
+    (_e, homeworkAssignmentId: string, studentId: string) =>
+      homeworkRubricScoresRepo.listHomeworkRubricScores(homeworkAssignmentId, studentId)
+  )
+  handle(
+    IpcChannels.homeworkRubricScores.save,
+    async (_e, input: homeworkRubricScoresRepo.SaveHomeworkRubricScoresInput) => {
+      const assignment = homeworkRepo.getHomeworkAssignment(input.homeworkAssignmentId)
+      if (!assignment?.rubricId) throw new Error('This assignment has no rubric linked.')
+      const result = homeworkRubricScoresRepo.saveHomeworkRubricScores(input, assignment.rubricId)
+      await pushSubmissionGrade({
+        homeworkAssignmentId: input.homeworkAssignmentId,
+        studentId: input.studentId,
+        grade: `${result.pointsEarned}/${result.maxPoints}`,
+        feedback: input.feedback ?? null
+      })
+      return result
+    }
   )
 
   // --- Student log entries ---------------------------------------------------------------

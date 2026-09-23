@@ -114,6 +114,13 @@ export type SaveRubricScoresInput = {
   comment?: string | null
 }
 
+export type SaveHomeworkRubricScoresInput = {
+  homeworkAssignmentId: string
+  studentId: string
+  selections: { criterionId: string; levelId: string }[]
+  feedback?: string | null
+}
+
 export type CreateStudentLogEntryInput = Omit<
   StudentLogEntry,
   'id' | 'createdAt' | 'contactMethod' | 'followUpNeeded' | 'followUpDone'

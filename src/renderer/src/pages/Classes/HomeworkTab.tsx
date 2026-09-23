@@ -10,15 +10,20 @@ import type {
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
-import { DateSelect, FormRow, Input, Textarea } from '@renderer/components/ui/Field'
+import { DateSelect, FormRow, Input, Select, Textarea } from '@renderer/components/ui/Field'
 import { Modal } from '@renderer/components/ui/Modal'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
+import { cn } from '@renderer/lib/cn'
 import {
   useCreateHomeworkAssignment,
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
+  useHomeworkRubricScores,
   useHomeworkSubmissions,
+  useRubric,
+  useRubrics,
+  useSaveHomeworkRubricScores,
   useSetHomeworkSubmissionGrade,
   useSetHomeworkSubmissionPortfolio,
   useUpdateHomeworkAssignment
@@ -215,11 +220,13 @@ function NewAssignmentModal({
 }): React.JSX.Element {
   const createAssignment = useCreateHomeworkAssignment(classId)
   const { data: existingAssignments } = useHomeworkAssignments(classId)
+  const { data: rubrics } = useRubrics()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [filePath, setFilePath] = useState<string | null>(null)
   const [topic, setTopic] = useState('')
+  const [rubricId, setRubricId] = useState('')
 
   // Pre-fill from the assignment being reused whenever a fresh one is picked — due date is
   // deliberately left blank since "reuse" means a new due date, not the old one; the
@@ -230,6 +237,7 @@ function NewAssignmentModal({
     setTitle(reuseFrom.title)
     setDescription(reuseFrom.description ?? '')
     setTopic(reuseFrom.topic ?? '')
+    setRubricId(reuseFrom.rubricId ?? '')
   }
 
   const existingTopics = [
@@ -251,7 +259,8 @@ function NewAssignmentModal({
       filePath,
       fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null,
       topic: topic.trim() || null,
-      status: 'draft'
+      status: 'draft',
+      rubricId: rubricId || null
     })
     resetForm()
     onClose()
@@ -263,6 +272,7 @@ function NewAssignmentModal({
     setDueDate('')
     setFilePath(null)
     setTopic('')
+    setRubricId('')
     setPrefilledFrom(null)
   }
 
@@ -323,6 +333,19 @@ function NewAssignmentModal({
         <FormRow label="Description" hint="Optional">
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </FormRow>
+        <FormRow
+          label="Rubric"
+          hint="Optional — score submissions criterion-by-criterion instead of a plain grade"
+        >
+          <Select value={rubricId} onChange={(e) => setRubricId(e.target.value)}>
+            <option value="">No rubric</option>
+            {rubrics?.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </Select>
+        </FormRow>
         <FormRow label="Attachment" hint="Optional — a worksheet or instructions file">
           <div className="flex items-center gap-2">
             <Button type="button" variant="secondary" size="sm" onClick={handlePickFile}>
@@ -365,7 +388,7 @@ function SubmissionsModal({
             students have turned in.
           </p>
           {submissions.map((s) => (
-            <SubmissionRow key={s.studentId} assignmentId={assignment.id} submission={s} />
+            <SubmissionRow key={s.studentId} assignment={assignment} submission={s} />
           ))}
         </div>
       )}
@@ -374,17 +397,19 @@ function SubmissionsModal({
 }
 
 function SubmissionRow({
-  assignmentId,
+  assignment,
   submission
 }: {
-  assignmentId: string
+  assignment: HomeworkAssignment
   submission: HomeworkSubmissionWithStudent
 }): React.JSX.Element {
+  const assignmentId = assignment.id
   const setGrade = useSetHomeworkSubmissionGrade()
   const setPortfolio = useSetHomeworkSubmissionPortfolio()
   const [grade, setGradeValue] = useState(submission.grade ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
   const [opening, setOpening] = useState(false)
+  const [scoringRubric, setScoringRubric] = useState(false)
 
   async function handleOpenFile(): Promise<void> {
     if (!submission.fileName) return
@@ -443,7 +468,14 @@ function SubmissionRow({
           {opening ? 'Opening…' : submission.fileName}
         </Button>
       )}
-      {submission.status !== 'not_started' && (
+      {submission.status !== 'not_started' && assignment.rubricId && (
+        <div className="mt-3">
+          <Button variant="secondary" size="sm" onClick={() => setScoringRubric(true)}>
+            {submission.grade ? `Rubric score: ${submission.grade}` : 'Score with rubric'}
+          </Button>
+        </div>
+      )}
+      {submission.status !== 'not_started' && !assignment.rubricId && (
         <div className="mt-3 grid grid-cols-[100px_1fr] gap-2">
           <Input
             placeholder="Grade"
@@ -474,6 +506,143 @@ function SubmissionRow({
           </div>
         </div>
       )}
+      {scoringRubric && assignment.rubricId && (
+        <HomeworkRubricScoringModal
+          open
+          onClose={() => setScoringRubric(false)}
+          homeworkAssignmentId={assignmentId}
+          rubricId={assignment.rubricId}
+          studentId={submission.studentId}
+          studentName={submission.studentName}
+        />
+      )}
     </div>
+  )
+}
+
+function HomeworkRubricScoringModal({
+  open,
+  onClose,
+  homeworkAssignmentId,
+  rubricId,
+  studentId,
+  studentName
+}: {
+  open: boolean
+  onClose: () => void
+  homeworkAssignmentId: string
+  rubricId: string
+  studentId: string
+  studentName: string
+}): React.JSX.Element {
+  const { data: rubric, isLoading: rubricLoading } = useRubric(rubricId)
+  const { data: existing, isLoading: scoresLoading } = useHomeworkRubricScores(
+    homeworkAssignmentId,
+    studentId
+  )
+  const saveScores = useSaveHomeworkRubricScores()
+
+  const [selections, setSelections] = useState<Record<string, string>>({})
+  const [feedback, setFeedback] = useState('')
+
+  const [lastSeenKey, setLastSeenKey] = useState<string | null>(null)
+  const currentKey = existing ? 'loaded' : 'loading'
+  if (existing && currentKey !== lastSeenKey) {
+    setLastSeenKey(currentKey)
+    const map: Record<string, string> = {}
+    for (const s of existing) map[s.criterionId] = s.levelId
+    setSelections(map)
+  }
+
+  const isLoading = rubricLoading || scoresLoading
+  const total =
+    rubric?.criteria.reduce((sum, c) => {
+      const level = c.levels.find((l) => l.id === selections[c.id])
+      return sum + (level?.points ?? 0)
+    }, 0) ?? 0
+  const allScored = !!rubric && rubric.criteria.every((c) => selections[c.id])
+
+  async function handleSave(): Promise<void> {
+    if (!rubric) return
+    await saveScores.mutateAsync({
+      homeworkAssignmentId,
+      studentId,
+      selections: rubric.criteria.map((c) => ({ criterionId: c.id, levelId: selections[c.id] })),
+      feedback: feedback.trim() || null
+    })
+    onClose()
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={rubric ? `${rubric.name} — ${studentName}` : studentName}
+      wide
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={!allScored || saveScores.isPending}
+          >
+            {saveScores.isPending ? 'Saving…' : `Save (${total}/${rubric?.maxPoints ?? 0})`}
+          </Button>
+        </>
+      }
+    >
+      {isLoading || !rubric ? (
+        <Spinner />
+      ) : (
+        <div className="space-y-5">
+          {rubric.criteria.map((criterion) => (
+            <div key={criterion.id}>
+              <p className="mb-2 text-sm font-semibold">{criterion.name}</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {criterion.levels.map((level) => {
+                  const selected = selections[criterion.id] === level.id
+                  return (
+                    <button
+                      key={level.id}
+                      type="button"
+                      onClick={() =>
+                        setSelections((prev) => ({ ...prev, [criterion.id]: level.id }))
+                      }
+                      className={cn(
+                        'rounded-lg border p-2.5 text-left text-xs transition-colors',
+                        selected
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)]'
+                          : 'border-[var(--color-border)] hover:bg-[var(--color-surface-muted)]'
+                      )}
+                    >
+                      <div className="flex items-center justify-between font-medium">
+                        <span>{level.label}</span>
+                        <span className="text-[var(--color-text-muted)]">{level.points}</span>
+                      </div>
+                      {level.description && (
+                        <p className="mt-1 text-[var(--color-text-muted)]">{level.description}</p>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          <div>
+            <p className="mb-1.5 text-sm font-semibold">Feedback (optional)</p>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={2}
+              placeholder="A note for the student…"
+              className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
+            />
+          </div>
+        </div>
+      )}
+    </Modal>
   )
 }

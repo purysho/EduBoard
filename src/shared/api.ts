@@ -19,6 +19,7 @@ import type {
   DraftReportCommentInput,
   HomeworkAssignment,
   HomeworkAssignmentWithClass,
+  HomeworkRubricScore,
   HomeworkSubmission,
   HomeworkSubmissionWithStudent,
   NotebookAnswer,
@@ -73,6 +74,7 @@ import type {
   CreateRubricInput,
   UpdateRubricInput,
   SaveRubricScoresInput,
+  SaveHomeworkRubricScoresInput,
   CreateStudentLogEntryInput,
   UpdateStudentLogEntryInput,
   CreateLessonResourceInput,
@@ -215,6 +217,10 @@ export interface EduBoardApi {
   rubricScores: {
     list(assessmentId: string, studentId: string): Promise<RubricScore[]>
     save(input: SaveRubricScoresInput): Promise<{ pointsEarned: number }>
+  }
+  homeworkRubricScores: {
+    list(homeworkAssignmentId: string, studentId: string): Promise<HomeworkRubricScore[]>
+    save(input: SaveHomeworkRubricScoresInput): Promise<{ pointsEarned: number; maxPoints: number }>
   }
   studentLogEntries: {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>
