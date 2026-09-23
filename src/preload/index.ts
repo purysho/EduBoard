@@ -158,7 +158,8 @@ const api: EduBoardApi = {
   notebook: {
     indexResource: (resourceId) => invoke(IpcChannels.notebook.indexResource, resourceId),
     indexAll: () => invoke(IpcChannels.notebook.indexAll),
-    ask: (question, resourceIds) => invoke(IpcChannels.notebook.ask, question, resourceIds)
+    ask: (question, resourceIds) => invoke(IpcChannels.notebook.ask, question, resourceIds),
+    draftStudyGuide: (resourceId) => invoke(IpcChannels.notebook.draftStudyGuide, resourceId)
   },
   courseGroups: {
     list: () => invoke(IpcChannels.courseGroups.list),

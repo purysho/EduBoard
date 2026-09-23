@@ -470,7 +470,10 @@ export const lessonResources = sqliteTable(
     standardId: text('standard_id').references(() => standards.id, { onDelete: 'set null' }),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),
-    indexedAt: text('indexed_at')
+    indexedAt: text('indexed_at'),
+    classId: text('class_id').references(() => classes.id, { onDelete: 'set null' }),
+    shareWithStudents: integer('share_with_students', { mode: 'boolean' }).notNull().default(false),
+    studyGuide: text('study_guide')
   },
   (t) => ({
     standardIdx: index('lesson_resources_standard_idx').on(t.standardId)

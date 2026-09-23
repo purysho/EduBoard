@@ -30,6 +30,7 @@ router.post('/', (req, res) => {
     grades = [],
     homeworkAssignments = [],
     invites = [],
+    materials = [],
     aiProvider,
     aiApiKey,
     aiCustomBaseUrl,
@@ -59,6 +60,8 @@ router.post('/', (req, res) => {
     db.prepare('DELETE FROM enrollments').run()
     db.prepare('DELETE FROM grades').run()
     db.prepare('DELETE FROM homework_assignments').run()
+    db.prepare('DELETE FROM materials').run()
+    db.prepare('DELETE FROM material_chunks').run()
 
     const insertClass = db.prepare('INSERT INTO classes (id, name, level_type) VALUES (?, ?, ?)')
     for (const c of classes) insertClass.run(c.id, c.name, c.levelType)
@@ -102,6 +105,17 @@ router.post('/', (req, res) => {
         filePath,
         h.topic || null
       )
+    }
+
+    const insertMaterial = db.prepare(
+      'INSERT INTO materials (id, class_id, title, study_guide) VALUES (?, ?, ?, ?)'
+    )
+    const insertChunk = db.prepare(
+      'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
+    )
+    for (const m of materials) {
+      insertMaterial.run(m.id, m.classId, m.title, m.studyGuide || null)
+      ;(m.chunks || []).forEach((text, i) => insertChunk.run(m.id, i, text))
     }
 
     // Invites are upserted, never deleted — a claimed invite's claimed_at must survive

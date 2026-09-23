@@ -126,6 +126,25 @@ db.exec(`
     read_by_family INTEGER NOT NULL DEFAULT 0
   );
 
+  -- Resources the teacher explicitly shared with a class's students (see
+  -- lessonResources.shareWithStudents on the desktop side). Wholesale-replaced on every
+  -- publish, same as homework_assignments.
+  CREATE TABLE IF NOT EXISTS materials (
+    id TEXT PRIMARY KEY,
+    class_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    study_guide TEXT
+  );
+
+  -- FTS5 keyword index over each material's chunks, mirroring the desktop app's own
+  -- resource_chunks table/search — lets /me/ai/chat ground its answers in the material's
+  -- actual text and cite which chunk supported each claim.
+  CREATE VIRTUAL TABLE IF NOT EXISTS material_chunks USING fts5(
+    material_id UNINDEXED,
+    chunk_index UNINDEXED,
+    text
+  );
+
   -- Single-row config for the one shared AI key every student uses — see
   -- portalSyncService.publishToPortal on the desktop side. Never exposed to a family's
   -- browser; only this server calls the provider, with this key, on a student's behalf.

@@ -510,6 +510,22 @@ const migrations: Migration[] = [
       // separate from the full graded-assignment list.
       db.exec(`ALTER TABLE homework_submissions ADD COLUMN portfolio INTEGER NOT NULL DEFAULT 0;`)
     }
+  },
+  {
+    id: 19,
+    name: 'lesson_resource_student_sharing',
+    up: (db) => {
+      // Resources are a personal library by default (classId null) — a teacher opts one
+      // into a specific class's Portal materials by setting both of these, which is what
+      // publishToPortal reads to decide what to push. studyGuide holds an AI-generated
+      // summary (see aiService/materials study-guide generation), shown to students
+      // alongside the source material and readable aloud via the browser's built-in TTS.
+      db.exec(`
+        ALTER TABLE lesson_resources ADD COLUMN class_id TEXT REFERENCES classes(id) ON DELETE SET NULL;
+        ALTER TABLE lesson_resources ADD COLUMN share_with_students INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE lesson_resources ADD COLUMN study_guide TEXT;
+      `)
+    }
   }
 ]
 

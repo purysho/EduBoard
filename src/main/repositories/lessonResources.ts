@@ -52,6 +52,14 @@ export function getLessonResource(id: string): LessonResource | undefined {
     LessonResource | undefined
 }
 
+export function setLessonResourceStudyGuide(id: string, studyGuide: string): void {
+  getDb()
+    .update(lessonResources)
+    .set({ studyGuide, updatedAt: nowIso() })
+    .where(eq(lessonResources.id, id))
+    .run()
+}
+
 export function touchLessonResourceIndexedAt(id: string): void {
   getDb()
     .update(lessonResources)

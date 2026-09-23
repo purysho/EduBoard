@@ -1,8 +1,16 @@
 import { readFile } from 'fs/promises'
 import { extname } from 'path'
 import { PDFParse } from 'pdf-parse'
-import { getLessonResource, touchLessonResourceIndexedAt } from '../repositories/lessonResources'
-import { replaceResourceChunks, searchResourceChunks } from '../repositories/resourceChunks'
+import {
+  getLessonResource,
+  setLessonResourceStudyGuide,
+  touchLessonResourceIndexedAt
+} from '../repositories/lessonResources'
+import {
+  getAllResourceChunkText,
+  replaceResourceChunks,
+  searchResourceChunks
+} from '../repositories/resourceChunks'
 import { askAi } from './aiService'
 import type { LessonResource, NotebookAnswer } from '@shared/types'
 
@@ -103,6 +111,28 @@ export async function indexResource(resourceId: string): Promise<number> {
   replaceResourceChunks(resourceId, chunks)
   touchLessonResourceIndexedAt(resourceId)
   return chunks.length
+}
+
+/** Summarizes a resource's full indexed text into a study guide, saves it, and returns
+ * it — read by students on the Portal (see publishToPortal) alongside the source
+ * material, and playable aloud there via the browser's built-in text-to-speech. */
+export async function draftStudyGuide(resourceId: string): Promise<string> {
+  const text = getAllResourceChunkText(resourceId)
+  if (!text.trim()) {
+    throw new NotebookExtractionError(
+      'Index this resource first — there’s no extracted text to summarize yet.'
+    )
+  }
+
+  const system =
+    'You write clear, student-friendly study guides. Summarize the given material into: ' +
+    'a short overview (2-3 sentences), then "Key points" as a bulleted list, then, if the ' +
+    'material supports it, "Check yourself" with 2-3 short self-test questions (no answers ' +
+    'given, just the questions). Plain text only, no markdown headers — use blank lines and ' +
+    '"- " list prefixes. Base this only on the material given.'
+  const guide = await askAi(system, text, 2048)
+  setLessonResourceStudyGuide(resourceId, guide.trim())
+  return guide.trim()
 }
 
 /** Retrieves the top matching chunks (optionally scoped to a chosen set of resources),

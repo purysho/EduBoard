@@ -20,7 +20,7 @@ import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
-import { indexResource, askNotebook } from '../services/notebookService'
+import { indexResource, askNotebook, draftStudyGuide } from '../services/notebookService'
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
@@ -416,6 +416,9 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.notebook.ask, (_e, question: string, resourceIds: string[] | null) =>
     askNotebook(question, resourceIds)
+  )
+  handle(IpcChannels.notebook.draftStudyGuide, (_e, resourceId: string) =>
+    draftStudyGuide(resourceId)
   )
 
   // --- Course groups / composite grades ----------------------------------------------------

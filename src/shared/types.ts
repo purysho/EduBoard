@@ -249,6 +249,13 @@ export interface LessonResource {
    * null means never indexed. Set by notebookService.indexResource(), never by the
    * ordinary create/update form. */
   indexedAt: string | null
+  /** Opts this resource into a class's Portal materials — null classId means "personal
+   * library only," never pushed to students regardless of shareWithStudents. */
+  classId: string | null
+  shareWithStudents: boolean
+  /** An AI-generated summary of this resource, shown to students alongside the source
+   * material and read aloud via the browser's TTS — see aiService.draftStudyGuide. */
+  studyGuide: string | null
 }
 
 export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const

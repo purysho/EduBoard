@@ -26,6 +26,26 @@ export function deleteResourceChunks(resourceId: string): void {
   getSqlite().prepare('DELETE FROM resource_chunks WHERE resource_id = ?').run(resourceId)
 }
 
+/** A resource's chunks as a plain array, in original order — what publishToPortal sends
+ * so the Portal can build its own FTS index over the same chunk boundaries, rather than
+ * re-splitting the joined text itself. */
+export function listResourceChunks(resourceId: string): string[] {
+  const rows = getSqlite()
+    .prepare('SELECT text FROM resource_chunks WHERE resource_id = ? ORDER BY chunk_index')
+    .all(resourceId) as { text: string }[]
+  return rows.map((r) => r.text)
+}
+
+/** All of a resource's chunks, in original order, rejoined into one string — used to
+ * feed a whole resource's text to the AI (e.g. draftStudyGuide), as opposed to
+ * searchResourceChunks's keyword-retrieval of just the relevant few. */
+export function getAllResourceChunkText(resourceId: string): string {
+  const rows = getSqlite()
+    .prepare('SELECT text FROM resource_chunks WHERE resource_id = ? ORDER BY chunk_index')
+    .all(resourceId) as { text: string }[]
+  return rows.map((r) => r.text).join('\n\n')
+}
+
 /** FTS5 keyword search, optionally scoped to a set of resources — e.g. "only search
  * what the teacher selected for this question" rather than the whole library. */
 export function searchResourceChunks(

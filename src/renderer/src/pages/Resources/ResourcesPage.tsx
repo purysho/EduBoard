@@ -19,6 +19,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
   useDeleteLessonResource,
+  useDraftStudyGuide,
   useIndexResource,
   useLessonResources,
   useStandards
@@ -34,8 +35,10 @@ export function ResourcesPage(): React.JSX.Element {
   const { data: standards } = useStandards()
   const deleteResource = useDeleteLessonResource()
   const indexResource = useIndexResource()
+  const draftStudyGuide = useDraftStudyGuide()
   const [indexingId, setIndexingId] = useState<string | null>(null)
   const [indexError, setIndexError] = useState<string | null>(null)
+  const [guideId, setGuideId] = useState<string | null>(null)
 
   async function handleIndex(resource: LessonResource): Promise<void> {
     setIndexingId(resource.id)
@@ -46,6 +49,18 @@ export function ResourcesPage(): React.JSX.Element {
       setIndexError(ipcErrorMessage(e, `Could not index "${resource.title}".`))
     } finally {
       setIndexingId(null)
+    }
+  }
+
+  async function handleStudyGuide(resource: LessonResource): Promise<void> {
+    setGuideId(resource.id)
+    setIndexError(null)
+    try {
+      await draftStudyGuide.mutateAsync(resource.id)
+    } catch (e) {
+      setIndexError(ipcErrorMessage(e, `Could not generate a study guide for "${resource.title}".`))
+    } finally {
+      setGuideId(null)
     }
   }
 
@@ -195,9 +210,12 @@ export function ResourcesPage(): React.JSX.Element {
                       {resource.notes}
                     </p>
                   )}
-                  {(resource.tags.length > 0 || standard) && (
+                  {(resource.tags.length > 0 || standard || resource.shareWithStudents) && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {standard && <Badge tone="primary">{standard.code}</Badge>}
+                      {resource.shareWithStudents && (
+                        <Badge tone="success">Shared with students</Badge>
+                      )}
                       {resource.tags.map((tag) => (
                         <Badge key={tag}>{tag}</Badge>
                       ))}
@@ -210,18 +228,34 @@ export function ResourcesPage(): React.JSX.Element {
                     >
                       Edit
                     </button>
-                    <button
-                      className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
-                      onClick={() => handleIndex(resource)}
-                      disabled={indexingId === resource.id}
-                    >
-                      <Sparkles size={12} aria-hidden />
-                      {indexingId === resource.id
-                        ? 'Indexing…'
-                        : resource.indexedAt
-                          ? 'Re-index'
-                          : 'Index for Notebook'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
+                        onClick={() => handleIndex(resource)}
+                        disabled={indexingId === resource.id}
+                      >
+                        <Sparkles size={12} aria-hidden />
+                        {indexingId === resource.id
+                          ? 'Indexing…'
+                          : resource.indexedAt
+                            ? 'Re-index'
+                            : 'Index for Notebook'}
+                      </button>
+                      {resource.indexedAt && (
+                        <button
+                          className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
+                          onClick={() => handleStudyGuide(resource)}
+                          disabled={guideId === resource.id}
+                        >
+                          <Sparkles size={12} aria-hidden />
+                          {guideId === resource.id
+                            ? 'Writing…'
+                            : resource.studyGuide
+                              ? 'Regenerate study guide'
+                              : 'Study guide'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </CardBody>
               </Card>

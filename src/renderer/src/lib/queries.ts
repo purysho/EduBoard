@@ -863,7 +863,10 @@ export function useCreateLessonResource() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateLessonResourceInput) => api().lessonResources.create(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -872,7 +875,10 @@ export function useUpdateLessonResource() {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: UpdateLessonResourceInput }) =>
       api().lessonResources.update(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -906,6 +912,17 @@ export function useAskNotebook() {
   return useMutation({
     mutationFn: ({ question, resourceIds }: { question: string; resourceIds: string[] | null }) =>
       api().notebook.ask(question, resourceIds)
+  })
+}
+
+export function useDraftStudyGuide() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (resourceId: string) => api().notebook.draftStudyGuide(resourceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 

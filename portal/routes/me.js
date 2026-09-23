@@ -27,6 +27,16 @@ function getLinkedStudentIds(accountId) {
     .map((r) => r.student_id)
 }
 
+function getActiveClassIds(studentIds) {
+  const classIds = new Set()
+  for (const studentId of studentIds) {
+    db.prepare("SELECT class_id FROM enrollments WHERE student_id = ? AND status = 'active'")
+      .all(studentId)
+      .forEach((r) => classIds.add(r.class_id))
+  }
+  return [...classIds]
+}
+
 router.get('/', (req, res) => {
   const studentIds = getLinkedStudentIds(req.accountId)
   if (!studentIds.length) return res.json({ students: [] })
@@ -220,15 +230,10 @@ router.get('/posts', (req, res) => {
   const studentIds = getLinkedStudentIds(req.accountId)
   if (!studentIds.length) return res.json([])
 
-  const classIds = new Set()
-  for (const studentId of studentIds) {
-    db.prepare("SELECT class_id FROM enrollments WHERE student_id = ? AND status = 'active'")
-      .all(studentId)
-      .forEach((r) => classIds.add(r.class_id))
-  }
-  if (!classIds.size) return res.json([])
+  const classIds = getActiveClassIds(studentIds)
+  if (!classIds.length) return res.json([])
 
-  const placeholders = [...classIds].map(() => '?').join(',')
+  const placeholders = classIds.map(() => '?').join(',')
   const rows = db
     .prepare(
       `SELECT p.*, c.name AS class_name FROM class_posts p
@@ -287,6 +292,58 @@ router.post('/messages', (req, res) => {
   res.json({ ok: true })
 })
 
+// Every resource the teacher shared with a class this account's student(s) are
+// actively enrolled in — the student-facing reading list, each with its AI study guide
+// if one's been generated.
+router.get('/materials', (req, res) => {
+  const studentIds = getLinkedStudentIds(req.accountId)
+  const classIds = getActiveClassIds(studentIds)
+  if (!classIds.length) return res.json([])
+
+  const placeholders = classIds.map(() => '?').join(',')
+  const rows = db
+    .prepare(
+      `SELECT m.*, c.name AS class_name FROM materials m
+       JOIN classes c ON c.id = m.class_id
+       WHERE m.class_id IN (${placeholders})`
+    )
+    .all(...classIds)
+
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      className: r.class_name,
+      studyGuide: r.study_guide
+    }))
+  )
+})
+
+// Keyword-searches this account's in-scope materials (chunks belonging to a class one
+// of their students is actively enrolled in) and returns the best-matching chunks with
+// which material each came from, for citation. Mirrors the desktop Notebook's own
+// searchResourceChunks, just re-implemented in SQL against the Portal's own FTS table.
+function searchMaterials(classIds, query, limit) {
+  if (!classIds.length) return []
+  const ftsQuery = query
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `"${word.replace(/"/g, '""')}"`)
+    .join(' OR ')
+  if (!ftsQuery) return []
+
+  const classPlaceholders = classIds.map(() => '?').join(',')
+  return db
+    .prepare(
+      `SELECT mc.material_id, mc.chunk_index, mc.text, m.title
+       FROM material_chunks mc
+       JOIN materials m ON m.id = mc.material_id
+       WHERE mc.material_chunks MATCH ? AND m.class_id IN (${classPlaceholders})
+       ORDER BY rank LIMIT ?`
+    )
+    .all(ftsQuery, ...classIds, limit)
+}
+
 // A light-context study helper: not full RAG over every resource, but grounded in the
 // student's own current classes and homework so answers reference their actual work
 // rather than being generic — e.g. "explain photosynthesis" gets an answer that also
@@ -325,7 +382,10 @@ router.post('/ai/chat', async (req, res) => {
   }
   if (!text) return res.status(400).json({ error: 'Message is empty' })
 
-  const system =
+  const classIds = getActiveClassIds([studentId])
+  const materialMatches = searchMaterials(classIds, text, 6)
+
+  let system =
     'You are a friendly, patient study helper for a K-12/university student. Explain ' +
     'things clearly and simply, encourage them, and never just do their homework for ' +
     'them outright — guide them toward understanding it. Keep answers concise. Use the ' +
@@ -333,9 +393,27 @@ router.post('/ai/chat', async (req, res) => {
     'more relevant; do not mention this context block itself.\n\n' +
     buildStudyContext(studentId)
 
+  let citations = []
+  if (materialMatches.length) {
+    const contextBlock = materialMatches
+      .map((m, i) => `[${i + 1}] (from "${m.title}")\n${m.text}`)
+      .join('\n\n')
+    system +=
+      '\n\nThe student’s teacher has also shared these excerpts from class materials that ' +
+      'may be relevant. If you use one, cite it with its bracketed number like [1] — only ' +
+      'cite an excerpt if you actually relied on it, and only state facts the excerpts or ' +
+      'your general knowledge support:\n\n' +
+      contextBlock
+    citations = materialMatches.map((m, i) => ({
+      number: i + 1,
+      title: m.title,
+      snippet: m.text.length > 220 ? `${m.text.slice(0, 220)}…` : m.text
+    }))
+  }
+
   try {
-    const reply = await complete(system, text, 800)
-    res.json({ reply: reply.trim() })
+    const reply = await complete(system, text, 900)
+    res.json({ reply: reply.trim(), citations })
   } catch (err) {
     if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
     res.status(502).json({ error: 'AI request failed. Try again in a moment.' })

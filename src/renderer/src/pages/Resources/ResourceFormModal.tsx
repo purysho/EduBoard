@@ -4,6 +4,7 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select, Textarea } from '@renderer/components/ui/Field'
 import {
+  useClasses,
   useCreateLessonResource,
   useStandards,
   useUpdateLessonResource
@@ -28,6 +29,7 @@ export function ResourceFormModal({
   const createResource = useCreateLessonResource()
   const updateResource = useUpdateLessonResource()
   const { data: standards } = useStandards()
+  const { data: classes } = useClasses()
 
   const [title, setTitle] = useState(resource?.title ?? '')
   const [type, setType] = useState<LessonResourceType>(resource?.type ?? 'link')
@@ -36,6 +38,8 @@ export function ResourceFormModal({
   const [notes, setNotes] = useState(resource?.notes ?? '')
   const [tagsText, setTagsText] = useState(resource?.tags.join(', ') ?? '')
   const [standardId, setStandardId] = useState(resource?.standardId ?? '')
+  const [classId, setClassId] = useState(resource?.classId ?? '')
+  const [shareWithStudents, setShareWithStudents] = useState(resource?.shareWithStudents ?? false)
   const [picking, setPicking] = useState(false)
 
   // The "new resource" modal instance stays mounted between opens (only `open` toggles,
@@ -53,6 +57,8 @@ export function ResourceFormModal({
     setNotes(resource?.notes ?? '')
     setTagsText(resource?.tags.join(', ') ?? '')
     setStandardId(resource?.standardId ?? '')
+    setClassId(resource?.classId ?? '')
+    setShareWithStudents(resource?.shareWithStudents ?? false)
   } else if (!open && wasOpen) {
     setWasOpen(false)
   }
@@ -82,7 +88,10 @@ export function ResourceFormModal({
       filePath: type === 'file' ? filePath.trim() || null : null,
       notes: notes.trim() || null,
       tags,
-      standardId: standardId || null
+      standardId: standardId || null,
+      classId: classId || null,
+      shareWithStudents: classId ? shareWithStudents : false,
+      studyGuide: resource?.studyGuide ?? null
     }
 
     if (isEdit) {
@@ -175,6 +184,32 @@ export function ResourceFormModal({
         <FormRow label="Tags" hint="Comma-separated, e.g. fractions, unit 3, grade 5">
           <Input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
         </FormRow>
+
+        <FormRow
+          label="Class (optional)"
+          hint="Link this to a class to make it eligible for sharing with students on the Portal"
+        >
+          <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
+            <option value="">Personal library only</option>
+            {classes?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </Select>
+        </FormRow>
+
+        {classId && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={shareWithStudents}
+              onChange={(e) => setShareWithStudents(e.target.checked)}
+            />
+            Share with this class&apos;s students on the Portal (index it first in Notebook so it
+            has searchable content)
+          </label>
+        )}
       </form>
     </Modal>
   )

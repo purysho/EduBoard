@@ -141,7 +141,8 @@ export const IpcChannels = {
   notebook: {
     indexResource: 'notebook:indexResource',
     indexAll: 'notebook:indexAll',
-    ask: 'notebook:ask'
+    ask: 'notebook:ask',
+    draftStudyGuide: 'notebook:draftStudyGuide'
   },
   courseGroups: {
     list: 'courseGroups:list',

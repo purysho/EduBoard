@@ -301,6 +301,74 @@ async function loadPortfolio() {
     .join('')
 }
 
+// Reads text aloud with the browser's own built-in speech synthesis — free, no server
+// TTS cost or API key, and works offline once the page is loaded. Quality varies by
+// device/OS voice, but it's a real "audio overview" with zero added infrastructure.
+let currentUtterance = null
+function speak(text, buttonEl) {
+  if (!('speechSynthesis' in window)) {
+    alert('Audio isn’t supported in this browser.')
+    return
+  }
+  if (currentUtterance) {
+    window.speechSynthesis.cancel()
+    currentUtterance = null
+    if (buttonEl) buttonEl.textContent = '🔊 Listen'
+    return
+  }
+  const utter = new SpeechSynthesisUtterance(text)
+  utter.rate = 0.95
+  utter.onend = () => {
+    currentUtterance = null
+    if (buttonEl) buttonEl.textContent = '🔊 Listen'
+  }
+  currentUtterance = utter
+  if (buttonEl) buttonEl.textContent = '⏹ Stop'
+  window.speechSynthesis.speak(utter)
+}
+
+async function loadMaterials() {
+  const box = document.getElementById('materials')
+  if (!box) return
+  const items = await api('/me/materials')
+  if (!items.length) {
+    box.parentElement.style.display = 'none'
+    return
+  }
+  box.parentElement.style.display = ''
+  box.innerHTML = items
+    .map((m, i) => {
+      const guideId = `guide-${i}`
+      return `
+    <div class="card">
+      <div class="row"><strong>${m.title}</strong><span class="muted">${m.className}</span></div>
+      ${
+        m.studyGuide
+          ? `<div style="margin-top:8px">
+               <button class="secondary" data-toggle="${guideId}">Show study guide</button>
+               <button class="secondary" data-listen="${guideId}">🔊 Listen</button>
+               <div id="detail-${guideId}" class="desc" style="display:none; margin-top:8px; white-space:pre-wrap">${m.studyGuide}</div>
+             </div>`
+          : '<p class="muted" style="margin-top:6px">No study guide yet for this one.</p>'
+      }
+    </div>`
+    })
+    .join('')
+
+  box.querySelectorAll('[data-toggle]').forEach((el) => {
+    el.onclick = () => {
+      const detail = document.getElementById('detail-' + el.dataset.toggle)
+      detail.style.display = detail.style.display === 'none' ? 'block' : 'none'
+    }
+  })
+  box.querySelectorAll('[data-listen]').forEach((el) => {
+    el.onclick = () => {
+      const detail = document.getElementById('detail-' + el.dataset.listen)
+      speak(detail.textContent, el)
+    }
+  })
+}
+
 function formatWhen(iso) {
   const d = new Date(iso)
   return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -336,6 +404,10 @@ function renderDashboard(me) {
      <div style="display:none">
        <div class="section-title">Portfolio</div>
        <div id="portfolio"></div>
+     </div>
+     <div style="display:none">
+       <div class="section-title">Materials</div>
+       <div id="materials"></div>
      </div>` +
     me.students
       .map(
@@ -424,8 +496,17 @@ function renderDashboard(me) {
       box.appendChild(thinking)
       box.scrollTop = box.scrollHeight
       try {
-        const { reply } = await api('/me/ai/chat', { method: 'POST', body: { studentId, message } })
-        thinking.innerHTML = `<div class="msg-bubble">${reply}</div>`
+        const { reply, citations } = await api('/me/ai/chat', {
+          method: 'POST',
+          body: { studentId, message }
+        })
+        const citeHtml = citations && citations.length
+          ? `<div class="muted" style="font-size:.76rem; margin-top:4px">Sources: ${citations
+              .map((c) => `[${c.number}] ${c.title}`)
+              .join(' · ')}</div>`
+          : ''
+        thinking.innerHTML = `<div class="msg-bubble">${reply}</div>${citeHtml}<button class="secondary" style="margin-top:4px; padding:2px 8px; font-size:.76rem" data-listen-reply>🔊</button>`
+        thinking.querySelector('[data-listen-reply]').onclick = (evt) => speak(reply, evt.target)
       } catch (ex) {
         thinking.remove()
         err.textContent = ex.message
@@ -436,6 +517,7 @@ function renderDashboard(me) {
 
   loadClassStory()
   loadPortfolio()
+  loadMaterials()
   loadMessages()
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()

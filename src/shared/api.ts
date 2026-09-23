@@ -234,6 +234,7 @@ export interface EduBoardApi {
     indexResource(resourceId: string): Promise<number>
     indexAll(): Promise<number>
     ask(question: string, resourceIds: string[] | null): Promise<NotebookAnswer>
+    draftStudyGuide(resourceId: string): Promise<string>
   }
   courseGroups: {
     list(): Promise<CourseGroup[]>

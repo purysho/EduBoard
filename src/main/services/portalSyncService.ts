@@ -8,6 +8,8 @@ import {
   upsertSubmissionFromPortal
 } from '../repositories/homeworkAssignments'
 import { listInviteBatchesByClass } from '../repositories/portalInvites'
+import { listLessonResources } from '../repositories/lessonResources'
+import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
 import type {
@@ -73,6 +75,30 @@ export async function publishToPortal(): Promise<void> {
     topic: string | null
   }[] = []
   const invites: { code: string; classId: string; revoked: boolean }[] = []
+  const materials: {
+    id: string
+    classId: string
+    title: string
+    studyGuide: string | null
+    chunks: string[]
+  }[] = []
+
+  // Only resources the teacher explicitly opted in (classId set + shareWithStudents) and
+  // has indexed (chunks exist) get pushed — an unindexed "shared" resource would have
+  // nothing for the Portal's search to find, so it's silently skipped rather than sent
+  // with zero chunks.
+  for (const resource of listLessonResources()) {
+    if (!resource.classId || !resource.shareWithStudents) continue
+    const chunks = listResourceChunks(resource.id)
+    if (!chunks.length) continue
+    materials.push({
+      id: resource.id,
+      classId: resource.classId,
+      title: resource.title,
+      studyGuide: resource.studyGuide,
+      chunks
+    })
+  }
 
   for (const cls of classes) {
     const roster = getRosterForClass(cls.id)
@@ -131,6 +157,7 @@ export async function publishToPortal(): Promise<void> {
       grades,
       homeworkAssignments,
       invites,
+      materials,
       // The one shared AI key every student can use — see AppSettings.portalAiApiKey.
       // Sent on every publish so a key change (or clearing it) takes effect right away.
       aiProvider: settings.portalAiProvider,
