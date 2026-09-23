@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ClipboardList, Copy, Paperclip, Plus, Trash2 } from 'lucide-react'
+import { ClipboardList, Copy, Paperclip, Plus, Star, Trash2 } from 'lucide-react'
 import type {
   ClassSection,
   HomeworkAssignment,
@@ -19,7 +19,8 @@ import {
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
   useHomeworkSubmissions,
-  useSetHomeworkSubmissionGrade
+  useSetHomeworkSubmissionGrade,
+  useSetHomeworkSubmissionPortfolio
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 
@@ -357,6 +358,7 @@ function SubmissionRow({
   submission: HomeworkSubmissionWithStudent
 }): React.JSX.Element {
   const setGrade = useSetHomeworkSubmissionGrade()
+  const setPortfolio = useSetHomeworkSubmissionPortfolio()
   const [grade, setGradeValue] = useState(submission.grade ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
   const [opening, setOpening] = useState(false)
@@ -379,7 +381,29 @@ function SubmissionRow({
     <div className="rounded-lg border border-[var(--color-border)] p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{submission.studentName}</span>
-        <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
+        <div className="flex items-center gap-2">
+          {submission.status === 'done' && (
+            <button
+              title={submission.portfolio ? 'Remove from Portfolio' : 'Add to student Portfolio'}
+              onClick={() =>
+                setPortfolio.mutate({
+                  homeworkAssignmentId: assignmentId,
+                  studentId: submission.studentId,
+                  portfolio: !submission.portfolio
+                })
+              }
+              disabled={setPortfolio.isPending}
+              className={
+                submission.portfolio
+                  ? 'text-[var(--color-warning)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-warning)]'
+              }
+            >
+              <Star size={16} fill={submission.portfolio ? 'currentColor' : 'none'} aria-hidden />
+            </button>
+          )}
+          <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
+        </div>
       </div>
       {submission.textAnswer && (
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">{submission.textAnswer}</p>

@@ -177,6 +177,39 @@ router.get('/homework/:id/submission-file', (req, res) => {
   res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
+// The family's curated "best work" view — every submission the teacher starred,
+// across all of this account's linked students, newest-graded first.
+router.get('/portfolio', (req, res) => {
+  const studentIds = getLinkedStudentIds(req.accountId)
+  if (!studentIds.length) return res.json([])
+
+  const placeholders = studentIds.map(() => '?').join(',')
+  const rows = db
+    .prepare(
+      `SELECT sub.*, hw.title, hw.topic, hw.class_id, c.name AS class_name,
+              s.first_name, s.last_name
+       FROM homework_submissions sub
+       JOIN homework_assignments hw ON hw.id = sub.homework_assignment_id
+       JOIN classes c ON c.id = hw.class_id
+       JOIN students s ON s.id = sub.student_id
+       WHERE sub.student_id IN (${placeholders}) AND sub.portfolio = 1
+       ORDER BY sub.graded_at DESC`
+    )
+    .all(...studentIds)
+
+  res.json(
+    rows.map((r) => ({
+      studentName: `${r.first_name} ${r.last_name}`,
+      className: r.class_name,
+      title: r.title,
+      topic: r.topic,
+      grade: r.grade,
+      feedback: r.feedback,
+      gradedAt: r.graded_at
+    }))
+  )
+})
+
 const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
 require('fs').mkdirSync(POSTS_DIR, { recursive: true })
 

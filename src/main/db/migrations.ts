@@ -500,6 +500,16 @@ const migrations: Migration[] = [
       // stays optional rather than forcing every teacher to organize by unit.
       db.exec(`ALTER TABLE homework_assignments ADD COLUMN topic TEXT;`)
     }
+  },
+  {
+    id: 18,
+    name: 'homework_submission_portfolio',
+    up: (db) => {
+      // A teacher-starred submission worth keeping as a growth record — pushed to the
+      // Portal so families can see a curated "Portfolio" of their student's best work,
+      // separate from the full graded-assignment list.
+      db.exec(`ALTER TABLE homework_submissions ADD COLUMN portfolio INTEGER NOT NULL DEFAULT 0;`)
+    }
   }
 ]
 

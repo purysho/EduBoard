@@ -343,6 +343,7 @@ export interface HomeworkSubmission {
   grade: string | null
   feedback: string | null
   gradedAt: string | null
+  portfolio: boolean
 }
 
 /** One row per student for one assignment — what the per-assignment roster view

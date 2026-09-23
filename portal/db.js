@@ -143,5 +143,6 @@ ensureColumn('homework_submissions', 'grade', 'grade TEXT')
 ensureColumn('homework_submissions', 'feedback', 'feedback TEXT')
 ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
 ensureColumn('homework_assignments', 'topic', 'topic TEXT')
+ensureColumn('homework_submissions', 'portfolio', 'portfolio INTEGER NOT NULL DEFAULT 0')
 
 module.exports = db

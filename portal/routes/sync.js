@@ -125,6 +125,20 @@ router.get('/submissions', (_req, res) => {
   )
 })
 
+// Teacher stars/unstars a graded submission for the student's Portfolio — pushed
+// immediately, same pattern as /submissions/grade.
+router.post('/submissions/portfolio', (req, res) => {
+  const { homeworkAssignmentId, studentId, portfolio } = req.body
+  if (!homeworkAssignmentId || !studentId) {
+    return res.status(400).json({ error: 'homeworkAssignmentId and studentId required' })
+  }
+  db.prepare(
+    `UPDATE homework_submissions SET portfolio = ?, updated_at = ?
+     WHERE homework_assignment_id = ? AND student_id = ?`
+  ).run(portfolio ? 1 : 0, new Date().toISOString(), homeworkAssignmentId, studentId)
+  res.json({ ok: true })
+})
+
 // The teacher's desktop app downloading a student's submitted file — authenticated
 // with the sync secret, same as every other route in this file, since the teacher has
 // no Portal browser session of their own.

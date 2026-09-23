@@ -85,6 +85,7 @@ import type {
   UpdateHomeworkAssignmentInput,
   SetHomeworkSubmissionStatusInput,
   SetHomeworkSubmissionGradeInput,
+  SetHomeworkSubmissionPortfolioInput,
   CreatePortalInviteBatchInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
@@ -282,6 +283,7 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     openPath(filePath: string): Promise<string>
     setSubmissionGrade(input: SetHomeworkSubmissionGradeInput): Promise<HomeworkSubmission>
+    setSubmissionPortfolio(input: SetHomeworkSubmissionPortfolioInput): Promise<void>
     openSubmissionFile(
       homeworkAssignmentId: string,
       studentId: string,

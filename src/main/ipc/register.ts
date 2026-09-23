@@ -42,6 +42,7 @@ import {
   publishToPortal,
   pullSubmissionsFromPortal,
   pushSubmissionGrade,
+  pushSubmissionPortfolio,
   downloadSubmissionFile,
   listMessageThreads,
   sendTeacherMessage,
@@ -540,6 +541,13 @@ export function registerIpcHandlers(): void {
       const result = homeworkRepo.setSubmissionGrade(input)
       await pushSubmissionGrade(input)
       return result
+    }
+  )
+  handle(
+    IpcChannels.homeworkAssignments.setSubmissionPortfolio,
+    async (_e, input: homeworkRepo.SetHomeworkSubmissionPortfolioInput) => {
+      homeworkRepo.setSubmissionPortfolio(input)
+      await pushSubmissionPortfolio(input)
     }
   )
   handle(

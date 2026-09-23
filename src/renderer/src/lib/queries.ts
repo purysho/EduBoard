@@ -37,7 +37,8 @@ import type {
   CreateHomeworkAssignmentInput,
   UpdateHomeworkAssignmentInput,
   SetHomeworkSubmissionStatusInput,
-  SetHomeworkSubmissionGradeInput
+  SetHomeworkSubmissionGradeInput,
+  SetHomeworkSubmissionPortfolioInput
 } from '@shared/inputs'
 
 const api = () => window.api
@@ -1177,6 +1178,18 @@ export function useSetHomeworkSubmissionGrade() {
   return useMutation({
     mutationFn: (input: SetHomeworkSubmissionGradeInput) =>
       api().homeworkAssignments.setSubmissionGrade(input),
+    onSuccess: (_data, vars) =>
+      qc.invalidateQueries({
+        queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
+      })
+  })
+}
+
+export function useSetHomeworkSubmissionPortfolio() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: SetHomeworkSubmissionPortfolioInput) =>
+      api().homeworkAssignments.setSubmissionPortfolio(input),
     onSuccess: (_data, vars) =>
       qc.invalidateQueries({
         queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)

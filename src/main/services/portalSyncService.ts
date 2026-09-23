@@ -162,6 +162,9 @@ export async function pullSubmissionsFromPortal(): Promise<number> {
   return rows.length
 }
 
+// pushSubmissionPortfolio is the only path that writes `portfolio` — this pull never
+// touches it, so a teacher's star survives being left out of a Portal submissions row.
+
 /** Pushes a grade/feedback the teacher just entered for one submission straight up to
  * the Portal — immediate, not batched with the next full publish, so a family sees it
  * without the teacher needing to remember a separate "publish" step. */
@@ -179,6 +182,23 @@ export async function pushSubmissionGrade(input: {
     body: JSON.stringify({ grades: [input] })
   })
   if (!res.ok) throw new Error(`Portal grade push failed: ${res.status} ${await res.text()}`)
+}
+
+/** Pushes whether a submission is starred for the student's Portfolio, immediately —
+ * same "no publish step needed" pattern as pushSubmissionGrade. */
+export async function pushSubmissionPortfolio(input: {
+  homeworkAssignmentId: string
+  studentId: string
+  portfolio: boolean
+}): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/submissions/portfolio`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify(input)
+  })
+  if (!res.ok) throw new Error(`Portal portfolio push failed: ${res.status} ${await res.text()}`)
 }
 
 /** Downloads a student's submitted file to a local temp folder so the teacher can open

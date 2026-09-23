@@ -188,6 +188,7 @@ export const IpcChannels = {
     pickFile: 'homeworkAssignments:pickFile',
     openPath: 'homeworkAssignments:openPath',
     setSubmissionGrade: 'homeworkAssignments:setSubmissionGrade',
+    setSubmissionPortfolio: 'homeworkAssignments:setSubmissionPortfolio',
     openSubmissionFile: 'homeworkAssignments:openSubmissionFile'
   },
   portalInvites: {

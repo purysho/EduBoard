@@ -221,7 +221,8 @@ export const homeworkSubmissions = sqliteTable(
     fileName: text('file_name'),
     grade: text('grade'),
     feedback: text('feedback'),
-    gradedAt: text('graded_at')
+    gradedAt: text('graded_at'),
+    portfolio: integer('portfolio', { mode: 'boolean' }).notNull().default(false)
   },
   (t) => ({
     assignmentStudentUnique: uniqueIndex('homework_submissions_assignment_student_unique').on(

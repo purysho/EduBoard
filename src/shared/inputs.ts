@@ -152,6 +152,12 @@ export type SetHomeworkSubmissionGradeInput = {
   feedback: string | null
 }
 
+export type SetHomeworkSubmissionPortfolioInput = {
+  homeworkAssignmentId: string
+  studentId: string
+  portfolio: boolean
+}
+
 export type CreatePortalInviteBatchInput = { classId: string; count: number }
 
 export type CreateLessonResourceInput = Omit<

@@ -13,6 +13,7 @@ import type {
 import type {
   CreateHomeworkAssignmentInput,
   SetHomeworkSubmissionGradeInput,
+  SetHomeworkSubmissionPortfolioInput,
   SetHomeworkSubmissionStatusInput,
   UpdateHomeworkAssignmentInput
 } from '@shared/inputs'
@@ -21,7 +22,8 @@ export type {
   CreateHomeworkAssignmentInput,
   UpdateHomeworkAssignmentInput,
   SetHomeworkSubmissionStatusInput,
-  SetHomeworkSubmissionGradeInput
+  SetHomeworkSubmissionGradeInput,
+  SetHomeworkSubmissionPortfolioInput
 }
 
 export function listHomeworkAssignmentsByClass(classId: string): HomeworkAssignment[] {
@@ -112,6 +114,7 @@ export function listSubmissionsForAssignment(
       grade: submission?.grade ?? null,
       feedback: submission?.feedback ?? null,
       gradedAt: submission?.gradedAt ?? null,
+      portfolio: submission?.portfolio ?? false,
       studentName: `${student.firstName} ${student.lastName}`
     }
   })
@@ -154,6 +157,7 @@ export function setSubmissionGrade(input: SetHomeworkSubmissionGradeInput): Home
     submittedAt: null,
     textAnswer: null,
     fileName: null,
+    portfolio: false,
     ...patch
   }
   db.insert(homeworkSubmissions).values(row).run()
@@ -207,8 +211,27 @@ export function upsertSubmissionFromPortal(input: {
       homeworkAssignmentId: input.homeworkAssignmentId,
       studentId: input.studentId,
       gradedAt: null,
+      portfolio: false,
       ...patch
     })
+    .run()
+}
+
+/** Toggles whether a graded submission is kept in the student's Portal-visible
+ * Portfolio — a teacher's curated pick of their best work, separate from the full
+ * list of graded assignments. Pushed to the Portal right after, same pattern as
+ * setSubmissionGrade. */
+export function setSubmissionPortfolio(input: SetHomeworkSubmissionPortfolioInput): void {
+  const db = getDb()
+  const now = nowIso()
+  db.update(homeworkSubmissions)
+    .set({ portfolio: input.portfolio, updatedAt: now })
+    .where(
+      and(
+        eq(homeworkSubmissions.homeworkAssignmentId, input.homeworkAssignmentId),
+        eq(homeworkSubmissions.studentId, input.studentId)
+      )
+    )
     .run()
 }
 
@@ -247,7 +270,8 @@ export function setSubmissionStatus(input: SetHomeworkSubmissionStatusInput): Ho
     fileName: null,
     grade: null,
     feedback: null,
-    gradedAt: null
+    gradedAt: null,
+    portfolio: false
   }
   db.insert(homeworkSubmissions).values(row).run()
   return row
