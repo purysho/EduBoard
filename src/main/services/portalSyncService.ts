@@ -1,9 +1,11 @@
-import { readFileSync, statSync } from 'fs'
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 import { listClasses } from '../repositories/classes'
 import { getRosterForClass } from '../repositories/enrollments'
 import {
   listHomeworkAssignmentsByClass,
-  setSubmissionStatus
+  upsertSubmissionFromPortal
 } from '../repositories/homeworkAssignments'
 import { listInviteBatchesByClass } from '../repositories/portalInvites'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
@@ -141,9 +143,55 @@ export async function pullSubmissionsFromPortal(): Promise<number> {
     homeworkAssignmentId: string
     studentId: string
     status: HomeworkSubmissionStatus
+    submittedAt: string | null
+    textAnswer: string | null
+    fileName: string | null
+    grade: string | null
+    feedback: string | null
   }[]
   for (const row of rows) {
-    setSubmissionStatus(row)
+    upsertSubmissionFromPortal(row)
   }
   return rows.length
+}
+
+/** Pushes a grade/feedback the teacher just entered for one submission straight up to
+ * the Portal — immediate, not batched with the next full publish, so a family sees it
+ * without the teacher needing to remember a separate "publish" step. */
+export async function pushSubmissionGrade(input: {
+  homeworkAssignmentId: string
+  studentId: string
+  grade: string | null
+  feedback: string | null
+}): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/submissions/grade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ grades: [input] })
+  })
+  if (!res.ok) throw new Error(`Portal grade push failed: ${res.status} ${await res.text()}`)
+}
+
+/** Downloads a student's submitted file to a local temp folder so the teacher can open
+ * it — the file itself lives only on the Portal, never copied into the local database. */
+export async function downloadSubmissionFile(
+  homeworkAssignmentId: string,
+  studentId: string,
+  fileName: string
+): Promise<string> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(
+    `${portalUrl}/api/sync/submissions/${homeworkAssignmentId}/${studentId}/file`,
+    { headers: { 'X-Sync-Secret': portalSyncSecret } }
+  )
+  if (!res.ok) throw new Error(`Download failed: ${res.status} ${await res.text()}`)
+
+  const dir = join(tmpdir(), 'eduboard-submissions')
+  mkdirSync(dir, { recursive: true })
+  const destPath = join(dir, `${studentId}-${fileName}`)
+  writeFileSync(destPath, Buffer.from(await res.arrayBuffer()))
+  return destPath
 }

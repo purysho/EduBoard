@@ -474,6 +474,22 @@ const migrations: Migration[] = [
         ALTER TABLE homework_assignments ADD COLUMN file_name TEXT;
       `)
     }
+  },
+  {
+    id: 16,
+    name: 'homework_submission_details',
+    up: (db) => {
+      // Mirrors what a student turned in (text/file) and what the teacher graded it,
+      // pulled from and pushed to the Portal — see portalSyncService.ts. The submitted
+      // file itself stays on the Portal; only its name is mirrored here, for display.
+      db.exec(`
+        ALTER TABLE homework_submissions ADD COLUMN text_answer TEXT;
+        ALTER TABLE homework_submissions ADD COLUMN file_name TEXT;
+        ALTER TABLE homework_submissions ADD COLUMN grade TEXT;
+        ALTER TABLE homework_submissions ADD COLUMN feedback TEXT;
+        ALTER TABLE homework_submissions ADD COLUMN graded_at TEXT;
+      `)
+    }
   }
 ]
 

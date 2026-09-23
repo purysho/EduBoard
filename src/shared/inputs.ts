@@ -145,6 +145,13 @@ export type SetHomeworkSubmissionStatusInput = {
   status: HomeworkSubmissionStatus
 }
 
+export type SetHomeworkSubmissionGradeInput = {
+  homeworkAssignmentId: string
+  studentId: string
+  grade: string | null
+  feedback: string | null
+}
+
 export type CreatePortalInviteBatchInput = { classId: string; count: number }
 
 export type CreateLessonResourceInput = Omit<

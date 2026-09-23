@@ -8,7 +8,9 @@ const router = express.Router()
 router.use(requireSyncSecret)
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
+const SUBMISSIONS_DIR = path.join(__dirname, '..', 'data', 'submission-uploads')
 fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+fs.mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
   return String(name).replace(/[^\w.\-]+/g, '_').slice(-120)
@@ -104,9 +106,53 @@ router.get('/submissions', (_req, res) => {
       homeworkAssignmentId: r.homework_assignment_id,
       studentId: r.student_id,
       status: r.status,
-      submittedAt: r.submitted_at
+      submittedAt: r.submitted_at,
+      textAnswer: r.text_answer,
+      fileName: r.file_name,
+      grade: r.grade,
+      feedback: r.feedback
     }))
   )
+})
+
+// The teacher's desktop app downloading a student's submitted file — authenticated
+// with the sync secret, same as every other route in this file, since the teacher has
+// no Portal browser session of their own.
+router.get('/submissions/:homeworkId/:studentId/file', (req, res) => {
+  const submission = db
+    .prepare(
+      'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
+    )
+    .get(req.params.homeworkId, req.params.studentId)
+  if (!submission || !submission.file_path) return res.status(404).json({ error: 'No file' })
+  res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
+})
+
+// Teacher pushes grades/feedback down from the desktop app — the one place a teacher's
+// edits flow back to the Portal, separate from the wholesale replace at POST /.
+router.post('/submissions/grade', (req, res) => {
+  const { grades = [] } = req.body
+  const now = new Date().toISOString()
+  const upsert = db.prepare(`
+    INSERT INTO homework_submissions
+      (homework_assignment_id, student_id, status, updated_at, grade, feedback, graded_at)
+    VALUES (@homeworkAssignmentId, @studentId, 'done', @now, @grade, @feedback, @now)
+    ON CONFLICT(homework_assignment_id, student_id) DO UPDATE
+      SET status = 'done', updated_at = @now, grade = @grade, feedback = @feedback, graded_at = @now
+  `)
+  const run = db.transaction(() => {
+    for (const g of grades) {
+      upsert.run({
+        homeworkAssignmentId: g.homeworkAssignmentId,
+        studentId: g.studentId,
+        grade: g.grade ?? null,
+        feedback: g.feedback ?? null,
+        now
+      })
+    }
+  })
+  run()
+  res.json({ ok: true })
 })
 
 // Teacher-triggered password reset (see portal/README.md — there is deliberately no

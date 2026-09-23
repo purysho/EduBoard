@@ -184,6 +184,57 @@ async function renderRedeem(code) {
   }
 }
 
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result.split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function homeworkCardHtml(h, studentId) {
+  const graded = h.status === 'done'
+  const detailId = `${h.id}-${studentId}`
+  return `
+    <div class="card">
+      <div class="row" data-toggle="${detailId}" style="cursor:pointer">
+        <strong>${h.title}</strong>
+        <span class="pill ${h.status}">${h.status.replace('_', ' ')}</span>
+      </div>
+      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${h.dueDate}</p>` : ''}
+      <div id="detail-${detailId}" style="display:none; margin-top:10px">
+        ${h.description ? `<p class="desc">${h.description}</p>` : ''}
+        ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${h.id}/file">\u{1F4CE} ${h.fileName} (from your teacher)</a></p>` : ''}
+        ${
+          graded
+            ? `
+          <div class="card" style="margin-top:12px; background:#f8fafc">
+            <p class="muted" style="margin:0">Your submission</p>
+            ${h.textAnswer ? `<p class="desc">${h.textAnswer}</p>` : ''}
+            ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${h.id}/submission-file?studentId=${studentId}">\u{1F4CE} ${h.submissionFileName}</a></p>` : ''}
+            ${h.grade ? `<p style="margin-top:10px"><strong>Grade: ${h.grade}</strong></p>` : ''}
+            ${h.feedback ? `<p class="desc"><strong>Feedback:</strong> ${h.feedback}</p>` : ''}
+          </div>`
+            : `
+          <form data-submit="${h.id}" data-student="${studentId}" style="margin-top:10px">
+            ${
+              h.status === 'submitted'
+                ? `<p class="field-note">Already turned in${h.submissionFileName ? ` — attached ${h.submissionFileName}` : ''}. Submitting again replaces it.</p>`
+                : ''
+            }
+            <label>Your answer</label>
+            <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${h.textAnswer || ''}</textarea>
+            <label>Attach a file</label>
+            <input data-file type="file" />
+            <button type="submit">${h.status === 'submitted' ? 'Update submission' : 'Turn in'}</button>
+            <p class="error"></p>
+          </form>`
+        }
+      </div>
+    </div>`
+}
+
 function renderDashboard(me) {
   if (!me.students.length) {
     app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
@@ -204,20 +255,7 @@ function renderDashboard(me) {
       </div>
         ${
           c.homework
-            ? c.homework
-                .map(
-                  (h) => `
-      <div class="card">
-        <div class="row">
-          <strong>${h.title}</strong>
-          <span class="pill ${h.status}" data-hw="${h.id}" data-student="${s.studentId}" style="cursor:pointer">${h.status.replace('_', ' ')}</span>
-        </div>
-        ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${h.dueDate}</p>` : ''}
-        ${h.description ? `<p class="desc">${h.description}</p>` : ''}
-        ${h.fileName ? `<p style="margin-top:10px"><a class="linklike" href="/api/me/homework/${h.id}/file">\u{1F4CE} ${h.fileName}</a></p>` : ''}
-      </div>`
-                )
-                .join('')
+            ? c.homework.map((h) => homeworkCardHtml(h, s.studentId)).join('')
             : ''
         }`
       )
@@ -229,15 +267,34 @@ function renderDashboard(me) {
      <button class="secondary" id="logout">Log out</button>
      <div id="qrbox"></div>`
 
-  document.querySelectorAll('[data-hw]').forEach((el) => {
-    el.onclick = async () => {
-      const cycle = { not_started: 'submitted', submitted: 'done', done: 'not_started' }
-      const status = cycle[el.textContent.trim().replace(' ', '_')] || 'submitted'
-      await api(`/me/homework/${el.dataset.hw}/status`, {
-        method: 'POST',
-        body: { status, studentId: el.dataset.student }
-      })
-      location.reload()
+  document.querySelectorAll('[data-toggle]').forEach((el) => {
+    el.onclick = () => {
+      const detail = document.getElementById('detail-' + el.dataset.toggle)
+      detail.style.display = detail.style.display === 'none' ? 'block' : 'none'
+    }
+  })
+
+  document.querySelectorAll('[data-submit]').forEach((form) => {
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const hwId = form.dataset.submit
+      const studentId = form.dataset.student
+      const textAnswer = form.querySelector('[data-answer]').value
+      const fileInput = form.querySelector('[data-file]')
+      const file = fileInput.files[0]
+      const err = form.querySelector('.error')
+      err.textContent = ''
+
+      try {
+        const fileData = file ? await readFileAsBase64(file) : null
+        await api(`/me/homework/${hwId}/submit`, {
+          method: 'POST',
+          body: { studentId, textAnswer, fileName: file?.name || null, fileData }
+        })
+        location.reload()
+      } catch (ex) {
+        err.textContent = ex.message
+      }
     }
   })
 

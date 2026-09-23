@@ -38,7 +38,12 @@ import * as reportsService from '../services/reports'
 import * as aiService from '../services/aiService'
 import * as homeworkRepo from '../repositories/homeworkAssignments'
 import * as portalInvitesRepo from '../repositories/portalInvites'
-import { publishToPortal, pullSubmissionsFromPortal } from '../services/portalSyncService'
+import {
+  publishToPortal,
+  pullSubmissionsFromPortal,
+  pushSubmissionGrade,
+  downloadSubmissionFile
+} from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -521,6 +526,21 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.homeworkAssignments.openPath, (_e, filePath: string) =>
     shell.openPath(filePath)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.setSubmissionGrade,
+    async (_e, input: homeworkRepo.SetHomeworkSubmissionGradeInput) => {
+      const result = homeworkRepo.setSubmissionGrade(input)
+      await pushSubmissionGrade(input)
+      return result
+    }
+  )
+  handle(
+    IpcChannels.homeworkAssignments.openSubmissionFile,
+    async (_e, homeworkAssignmentId: string, studentId: string, fileName: string) => {
+      const localPath = await downloadSubmissionFile(homeworkAssignmentId, studentId, fileName)
+      return shell.openPath(localPath)
+    }
   )
 
   // --- Portal invites -------------------------------------------------------------------------

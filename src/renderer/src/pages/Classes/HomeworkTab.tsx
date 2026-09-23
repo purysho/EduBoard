@@ -1,7 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { ClipboardList, Paperclip, Plus, Trash2 } from 'lucide-react'
-import type { ClassSection, HomeworkAssignment, HomeworkSubmissionStatus } from '@shared/types'
+import type {
+  ClassSection,
+  HomeworkAssignment,
+  HomeworkSubmissionStatus,
+  HomeworkSubmissionWithStudent
+} from '@shared/types'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -14,7 +19,7 @@ import {
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
   useHomeworkSubmissions,
-  useSetHomeworkSubmissionStatus
+  useSetHomeworkSubmissionGrade
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 
@@ -27,11 +32,6 @@ const STATUS_TONE: Record<HomeworkSubmissionStatus, 'neutral' | 'warning' | 'suc
   not_started: 'neutral',
   submitted: 'warning',
   done: 'success'
-}
-const STATUS_CYCLE: Record<HomeworkSubmissionStatus, HomeworkSubmissionStatus> = {
-  not_started: 'submitted',
-  submitted: 'done',
-  done: 'not_started'
 }
 
 export function HomeworkTab(): React.JSX.Element {
@@ -238,7 +238,6 @@ function SubmissionsModal({
   onClose: () => void
 }): React.JSX.Element {
   const { data: submissions, isLoading } = useHomeworkSubmissions(assignment.id, classId)
-  const setStatus = useSetHomeworkSubmissionStatus()
 
   return (
     <Modal open onClose={onClose} title={assignment.title} wide>
@@ -247,30 +246,98 @@ function SubmissionsModal({
       ) : !submissions?.length ? (
         <p className="text-sm text-[var(--color-text-muted)]">No students enrolled.</p>
       ) : (
-        <div>
-          <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-            Click a status to cycle Not started → Submitted → Done.
+        <div className="space-y-3">
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Use &quot;Pull from Portal&quot; on the class&apos;s Portal tab first to fetch what
+            students have turned in.
           </p>
-          <ul className="divide-y divide-[var(--color-border)]">
-            {submissions.map((s) => (
-              <li key={s.studentId} className="flex items-center justify-between py-2 text-sm">
-                <span>{s.studentName}</span>
-                <button
-                  onClick={() =>
-                    setStatus.mutate({
-                      homeworkAssignmentId: assignment.id,
-                      studentId: s.studentId,
-                      status: STATUS_CYCLE[s.status]
-                    })
-                  }
-                >
-                  <Badge tone={STATUS_TONE[s.status]}>{STATUS_LABEL[s.status]}</Badge>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {submissions.map((s) => (
+            <SubmissionRow key={s.studentId} assignmentId={assignment.id} submission={s} />
+          ))}
         </div>
       )}
     </Modal>
+  )
+}
+
+function SubmissionRow({
+  assignmentId,
+  submission
+}: {
+  assignmentId: string
+  submission: HomeworkSubmissionWithStudent
+}): React.JSX.Element {
+  const setGrade = useSetHomeworkSubmissionGrade()
+  const [grade, setGradeValue] = useState(submission.grade ?? '')
+  const [feedback, setFeedback] = useState(submission.feedback ?? '')
+  const [opening, setOpening] = useState(false)
+
+  async function handleOpenFile(): Promise<void> {
+    if (!submission.fileName) return
+    setOpening(true)
+    try {
+      await window.api.homeworkAssignments.openSubmissionFile(
+        assignmentId,
+        submission.studentId,
+        submission.fileName
+      )
+    } finally {
+      setOpening(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{submission.studentName}</span>
+        <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
+      </div>
+      {submission.textAnswer && (
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">{submission.textAnswer}</p>
+      )}
+      {submission.fileName && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-1"
+          onClick={handleOpenFile}
+          disabled={opening}
+        >
+          <Paperclip size={13} className="mr-1 inline" aria-hidden />
+          {opening ? 'Opening…' : submission.fileName}
+        </Button>
+      )}
+      {submission.status !== 'not_started' && (
+        <div className="mt-3 grid grid-cols-[100px_1fr] gap-2">
+          <Input
+            placeholder="Grade"
+            value={grade}
+            onChange={(e) => setGradeValue(e.target.value)}
+          />
+          <Input
+            placeholder="Feedback"
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+          />
+          <div className="col-span-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={setGrade.isPending}
+              onClick={() =>
+                setGrade.mutate({
+                  homeworkAssignmentId: assignmentId,
+                  studentId: submission.studentId,
+                  grade: grade.trim() || null,
+                  feedback: feedback.trim() || null
+                })
+              }
+            >
+              {setGrade.isPending ? 'Saving…' : 'Save grade'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

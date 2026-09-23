@@ -92,6 +92,12 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'not_started',
     submitted_at TEXT,
     updated_at TEXT NOT NULL,
+    text_answer TEXT,
+    file_name TEXT,
+    file_path TEXT,
+    grade TEXT,
+    feedback TEXT,
+    graded_at TEXT,
     PRIMARY KEY (homework_assignment_id, student_id)
   );
 `)
@@ -105,5 +111,11 @@ function ensureColumn(table, column, ddl) {
 }
 ensureColumn('homework_assignments', 'file_name', 'file_name TEXT')
 ensureColumn('homework_assignments', 'file_path', 'file_path TEXT')
+ensureColumn('homework_submissions', 'text_answer', 'text_answer TEXT')
+ensureColumn('homework_submissions', 'file_name', 'file_name TEXT')
+ensureColumn('homework_submissions', 'file_path', 'file_path TEXT')
+ensureColumn('homework_submissions', 'grade', 'grade TEXT')
+ensureColumn('homework_submissions', 'feedback', 'feedback TEXT')
+ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
 
 module.exports = db

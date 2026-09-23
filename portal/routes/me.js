@@ -9,6 +9,12 @@ const router = express.Router()
 router.use(requireAuth)
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
+const SUBMISSIONS_DIR = path.join(__dirname, '..', 'data', 'submission-uploads')
+require('fs').mkdirSync(SUBMISSIONS_DIR, { recursive: true })
+
+function sanitizeFileName(name) {
+  return String(name).replace(/[^\w.\-]+/g, '_').slice(-120)
+}
 
 // A family account covers one student today (redemption links exactly one), but the
 // schema allows more than one row per account so a future "second child" invite could
@@ -51,7 +57,11 @@ router.get('/', (req, res) => {
               description: h.description,
               dueDate: h.due_date,
               fileName: h.file_name,
-              status: submission?.status ?? 'not_started'
+              status: submission?.status ?? 'not_started',
+              textAnswer: submission?.text_answer ?? null,
+              submissionFileName: submission?.file_name ?? null,
+              grade: submission?.grade ?? null,
+              feedback: submission?.feedback ?? null
             }
           })
 
@@ -93,31 +103,77 @@ router.get('/homework/:id/file', (req, res) => {
   res.download(path.join(UPLOADS_DIR, hw.file_path), hw.file_name)
 })
 
-router.post('/homework/:id/status', (req, res) => {
-  const { status, studentId } = req.body
-  if (!['not_started', 'submitted', 'done'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' })
-  }
-  if (!getLinkedStudentIds(req.accountId).includes(studentId)) {
+// A student turns in their work here — text, a file, or both. Grading (setting
+// status='done', grade, feedback) is teacher-only and happens from the desktop app,
+// pushed back up via /api/sync/submissions/grade — a student can never mark their own
+// work as graded.
+router.post('/homework/:id/submit', (req, res) => {
+  const { studentId, textAnswer, fileName, fileData } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
     return res.status(403).json({ error: 'Not your student' })
+  }
+  if (!textAnswer && !fileData) {
+    return res.status(400).json({ error: 'Add some text or a file before submitting' })
+  }
+
+  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(
+    req.params.id
+  )
+  if (!hw) return res.status(404).json({ error: 'Assignment not found' })
+  const enrolled = db
+    .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+    .get(studentId, hw.class_id)
+  if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+
+  let storedFileName = null
+  let storedFilePath = null
+  if (fileName && fileData) {
+    storedFileName = fileName
+    const storedName = `${req.params.id}-${studentId}-${sanitizeFileName(fileName)}`
+    require('fs').writeFileSync(
+      path.join(SUBMISSIONS_DIR, storedName),
+      Buffer.from(fileData, 'base64')
+    )
+    storedFilePath = storedName
   }
 
   const now = new Date().toISOString()
   db.prepare(
-    `INSERT INTO homework_submissions (homework_assignment_id, student_id, status, submitted_at, updated_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(homework_assignment_id, student_id) DO UPDATE SET status = ?, submitted_at = ?, updated_at = ?`
+    `INSERT INTO homework_submissions
+       (homework_assignment_id, student_id, status, submitted_at, updated_at, text_answer, file_name, file_path)
+     VALUES (?, ?, 'submitted', ?, ?, ?, ?, ?)
+     ON CONFLICT(homework_assignment_id, student_id) DO UPDATE
+       SET status = 'submitted', submitted_at = ?, updated_at = ?, text_answer = ?, file_name = ?, file_path = ?`
   ).run(
     req.params.id,
     studentId,
-    status,
-    status === 'not_started' ? null : now,
     now,
-    status,
-    status === 'not_started' ? null : now,
-    now
+    now,
+    textAnswer || null,
+    storedFileName,
+    storedFilePath,
+    now,
+    now,
+    textAnswer || null,
+    storedFileName,
+    storedFilePath
   )
   res.json({ ok: true })
+})
+
+// A student re-downloading what they themselves already turned in.
+router.get('/homework/:id/submission-file', (req, res) => {
+  const { studentId } = req.query
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student' })
+  }
+  const submission = db
+    .prepare(
+      'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
+    )
+    .get(req.params.id, studentId)
+  if (!submission || !submission.file_path) return res.status(404).json({ error: 'No file' })
+  res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR

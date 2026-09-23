@@ -330,6 +330,11 @@ export interface HomeworkSubmission {
   status: HomeworkSubmissionStatus
   submittedAt: string | null
   updatedAt: string
+  textAnswer: string | null
+  fileName: string | null
+  grade: string | null
+  feedback: string | null
+  gradedAt: string | null
 }
 
 /** One row per student for one assignment — what the per-assignment roster view

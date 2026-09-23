@@ -215,7 +215,12 @@ export const homeworkSubmissions = sqliteTable(
       .references(() => students.id, { onDelete: 'cascade' }),
     status: text('status').notNull().default('not_started'),
     submittedAt: text('submitted_at'),
-    updatedAt: text('updated_at').notNull()
+    updatedAt: text('updated_at').notNull(),
+    textAnswer: text('text_answer'),
+    fileName: text('file_name'),
+    grade: text('grade'),
+    feedback: text('feedback'),
+    gradedAt: text('graded_at')
   },
   (t) => ({
     assignmentStudentUnique: uniqueIndex('homework_submissions_assignment_student_unique').on(
