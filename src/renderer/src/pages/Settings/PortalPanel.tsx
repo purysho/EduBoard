@@ -41,6 +41,11 @@ export function PortalPanel(): React.JSX.Element {
           Portal URL above. Pull brings back homework status students have set themselves — nothing
           else ever flows back into this app.
         </p>
+        <p>
+          This also happens automatically a couple seconds after you edit anything that shows on the
+          Portal — grades, attendance, roster changes, homework — so this button is mainly for
+          forcing an immediate sync or double-checking it&apos;s working.
+        </p>
         {publish.isError && (
           <p className="text-[var(--color-danger)]">
             {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}

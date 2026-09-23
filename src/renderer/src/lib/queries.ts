@@ -109,7 +109,10 @@ export function useCreateStudent() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateStudentInput) => api().students.create(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.students })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.students })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -118,7 +121,10 @@ export function useUpdateStudent() {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: UpdateStudentInput }) =>
       api().students.update(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.students })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.students })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -197,6 +203,7 @@ export function useUpdateClass() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.classes })
       qc.invalidateQueries({ queryKey: queryKeys.classById(vars.id) })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -270,6 +277,7 @@ export function useEnrollStudent(classId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -282,6 +290,7 @@ export function useUpdateEnrollmentStatus(classId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -293,6 +302,7 @@ export function useUnenrollStudent(classId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -398,6 +408,7 @@ export function useUpsertScore(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
       qc.invalidateQueries({ queryKey: ['scoreHistory', vars.assessmentId, vars.studentId] })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -412,6 +423,7 @@ export function useUpsertScoresBulk(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -446,6 +458,7 @@ export function useMarkAttendance(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -459,6 +472,7 @@ export function useMarkAttendanceBulk(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
     }
   })
 }
@@ -811,6 +825,20 @@ export function useUpdateStudentLogEntry() {
 
 // ---- Parent communications -----------------------------------------------------------------
 
+/** Used from the standalone Communications page, where the student isn't fixed ahead of
+ * time (picked per-entry in the form) — invalidates both that student's own log panel
+ * and the cross-student communications list. */
+export function useCreateParentCommunication() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateStudentLogEntryInput) => api().studentLogEntries.create(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.studentLogEntries(vars.studentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.parentCommunications })
+    }
+  })
+}
+
 export function useParentCommunications() {
   return useQuery({
     queryKey: queryKeys.parentCommunications,
@@ -1082,7 +1110,10 @@ export function useCreateHomeworkAssignment(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: CreateHomeworkAssignmentInput) => api().homeworkAssignments.create(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -1091,7 +1122,10 @@ export function useUpdateHomeworkAssignment(classId: string) {
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: UpdateHomeworkAssignmentInput }) =>
       api().homeworkAssignments.update(id, patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -1099,7 +1133,10 @@ export function useDeleteHomeworkAssignment(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => api().homeworkAssignments.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -1155,7 +1192,10 @@ export function useCreatePortalInviteBatch(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (count: number) => api().portalInvites.createBatch({ classId, count }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
@@ -1163,12 +1203,31 @@ export function useRevokePortalInvite(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (inviteId: string) => api().portalInvites.revoke(inviteId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classId) })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
 export function usePublishToPortal() {
   return useMutation({ mutationFn: () => api().portalSync.publish() })
+}
+
+// Debounced so a burst of edits (entering a whole column of grades, marking a class's
+// attendance) triggers one publish a moment after the teacher stops, not one per
+// keystroke. Silent by design — this is a background convenience on top of the manual
+// "Publish to Portal" button, not a user-initiated action that owes its own error UI;
+// a family just sees last-published data a little longer if it fails (e.g. offline),
+// and the teacher can still always publish manually to force it.
+let autoPublishTimer: ReturnType<typeof setTimeout> | null = null
+export function scheduleAutoPublishToPortal(): void {
+  if (autoPublishTimer) clearTimeout(autoPublishTimer)
+  autoPublishTimer = setTimeout(() => {
+    api()
+      .portalSync.publish()
+      .catch((err) => console.warn('Auto-publish to Portal skipped:', err))
+  }, 2500)
 }
 
 export function usePullSubmissionsFromPortal() {
