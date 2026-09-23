@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ClipboardList, Paperclip, Plus, Trash2 } from 'lucide-react'
+import { ClipboardList, Copy, Paperclip, Plus, Trash2 } from 'lucide-react'
 import type {
   ClassSection,
   HomeworkAssignment,
@@ -58,6 +58,7 @@ export function HomeworkTab(): React.JSX.Element {
   const [showAdd, setShowAdd] = useState(false)
   const [selected, setSelected] = useState<HomeworkAssignment | null>(null)
   const [pendingDelete, setPendingDelete] = useState<HomeworkAssignment | null>(null)
+  const [reuseFrom, setReuseFrom] = useState<HomeworkAssignment | null>(null)
 
   if (isLoading) return <Spinner />
 
@@ -126,6 +127,17 @@ export function HomeworkTab(): React.JSX.Element {
                           Open file
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReuseFrom(a)
+                          setShowAdd(true)
+                        }}
+                      >
+                        <Copy size={13} className="mr-1 inline" aria-hidden />
+                        Reuse
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
                         <Trash2 size={13} className="mr-1 inline" aria-hidden />
                         Delete
@@ -141,8 +153,12 @@ export function HomeworkTab(): React.JSX.Element {
 
       <NewAssignmentModal
         open={showAdd}
-        onClose={() => setShowAdd(false)}
+        onClose={() => {
+          setShowAdd(false)
+          setReuseFrom(null)
+        }}
         classId={classSection.id}
+        reuseFrom={reuseFrom}
       />
       {selected && (
         <SubmissionsModal
@@ -170,11 +186,13 @@ export function HomeworkTab(): React.JSX.Element {
 function NewAssignmentModal({
   open,
   onClose,
-  classId
+  classId,
+  reuseFrom
 }: {
   open: boolean
   onClose: () => void
   classId: string
+  reuseFrom?: HomeworkAssignment | null
 }): React.JSX.Element {
   const createAssignment = useCreateHomeworkAssignment(classId)
   const { data: existingAssignments } = useHomeworkAssignments(classId)
@@ -183,6 +201,17 @@ function NewAssignmentModal({
   const [dueDate, setDueDate] = useState('')
   const [filePath, setFilePath] = useState<string | null>(null)
   const [topic, setTopic] = useState('')
+
+  // Pre-fill from the assignment being reused whenever a fresh one is picked — due date is
+  // deliberately left blank since "reuse" means a new due date, not the old one; the
+  // attachment isn't carried over either, since it lives at a path only the original had.
+  const [prefilledFrom, setPrefilledFrom] = useState<string | null>(null)
+  if (reuseFrom && reuseFrom.id !== prefilledFrom) {
+    setPrefilledFrom(reuseFrom.id)
+    setTitle(reuseFrom.title)
+    setDescription(reuseFrom.description ?? '')
+    setTopic(reuseFrom.topic ?? '')
+  }
 
   const existingTopics = [
     ...new Set((existingAssignments ?? []).map((a) => a.topic).filter((t): t is string => !!t))
@@ -204,22 +233,36 @@ function NewAssignmentModal({
       fileName: filePath ? filePath.split(/[/\\]/).pop() || filePath : null,
       topic: topic.trim() || null
     })
+    resetForm()
+    onClose()
+  }
+
+  function resetForm(): void {
     setTitle('')
     setDescription('')
     setDueDate('')
     setFilePath(null)
     setTopic('')
-    onClose()
+    setPrefilledFrom(null)
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
-      title="New assignment"
+      onClose={() => {
+        resetForm()
+        onClose()
+      }}
+      title={reuseFrom ? 'Reuse assignment' : 'New assignment'}
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              resetForm()
+              onClose()
+            }}
+          >
             Cancel
           </Button>
           <Button
