@@ -35,14 +35,16 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [ ] AI-assisted homework feedback — first-pass suggestions on a submission before the
       teacher reviews — NOT yet built
 
-## Phase 4 — Assessment depth
+## Phase 4 — Assessment depth ✅ DONE
 
-- [ ] Rubric-linked submissions — connect existing rubrics to homework submissions, not
-      just standalone assessments
-- [ ] Simple auto-graded question types (multiple choice, short answer) for quick
-      formative checks
-- [ ] Grade trend analytics per student — extend Analytics page with per-student
-      trajectory, not just class-wide
+- [x] Rubric-linked submissions — a homework assignment can link to an existing rubric;
+      grading opens the same criterion-by-criterion modal as assessment rubric grading,
+      writes through to the submission's grade field as "earned/max"
+- [x] Simple auto-graded question types (multiple choice, short answer) for quick
+      formative checks — "Quick check" questions on any assignment, graded instantly
+      server-side on the Portal, no teacher review step
+- [x] Grade trend analytics per student — sparkline trend chart per class on the Student
+      profile page, using existing scores/assessments data (no new tables)
 
 ## Phase 5 — Operational maturity
 
