@@ -17,7 +17,7 @@ import {
   Users
 } from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
-import { usePortalMessageThreads } from '@renderer/lib/queries'
+import { usePortalMessageThreads, useSettings } from '@renderer/lib/queries'
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
@@ -37,9 +37,12 @@ const navItems = [
 ]
 
 export function Sidebar(): React.JSX.Element {
-  // Silently empty when the Portal isn't configured (the query just errors and `data`
-  // stays undefined) — no badge is a perfectly normal state here, not worth surfacing.
-  const { data: threads } = usePortalMessageThreads()
+  // Only poll once a Portal is configured — otherwise every 15s poll throws
+  // PortalNotConfiguredError in the main process and floods the dev console. No badge
+  // is a perfectly normal state here, not worth surfacing.
+  const { data: settings } = useSettings()
+  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const { data: threads } = usePortalMessageThreads({ enabled: portalConfigured })
   const unreadMessages = threads?.reduce((sum, t) => sum + t.unread, 0) ?? 0
 
   return (

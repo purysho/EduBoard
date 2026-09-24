@@ -1354,11 +1354,12 @@ export function usePullSubmissionsFromPortal() {
 
 // ---- Portal messages ---------------------------------------------------------------------
 
-export function usePortalMessageThreads() {
+export function usePortalMessageThreads(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.portalMessageThreads,
     queryFn: () => api().portalMessages.listThreads(),
-    refetchInterval: 15000
+    refetchInterval: 15000,
+    enabled: options?.enabled ?? true
   })
 }
 
