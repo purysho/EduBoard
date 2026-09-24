@@ -165,13 +165,19 @@ export async function draftReportComment(input: DraftReportCommentInput): Promis
   const notesLine = input.recentNotes.length
     ? `Recent teacher notes on this student: ${input.recentNotes.join('; ')}`
     : 'No recent teacher notes on this student.'
+  const trendLine =
+    input.trendDirection && input.trendDeltaPoints !== null
+      ? `Grade trend across recent assessments: ${input.trendDirection} (${input.trendDeltaPoints > 0 ? '+' : ''}${input.trendDeltaPoints.toFixed(0)} points from first to most recent scored assessment).`
+      : 'Not enough scored assessments yet to show a grade trend.'
 
   const system =
     'You write brief, specific, encouraging-but-honest report card comments for teachers ' +
     'to send to parents/guardians. 2-4 sentences. Plain text only, no markdown, no greeting ' +
     'or sign-off (the teacher adds those). Base the comment only on the data given — never ' +
-    'invent specifics not present in it.'
-  const user = `Student: ${input.studentName}\nClass: ${input.className}\n${gradeLine}\n${attendanceLine}\n${notesLine}`
+    'invent specifics not present in it. If the trend is declining, name it gently and ' +
+    'constructively rather than alarmingly; if improving, acknowledge the improvement ' +
+    'specifically rather than generically.'
+  const user = `Student: ${input.studentName}\nClass: ${input.className}\n${gradeLine}\n${attendanceLine}\n${trendLine}\n${notesLine}`
 
   const text = await complete(system, user, 1024)
   return text.trim()

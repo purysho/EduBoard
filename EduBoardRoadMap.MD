@@ -29,8 +29,11 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [x] Student-facing Notebook AI (chat with materials, citations) — Zhipu GLM-4-Flash
       free-tier shared key model
 - [x] Auto-generated study guides/summaries per resource
-- [ ] AI-drafted report card comments extended to auto-suggest from grade+attendance
-      trends — comment drafting exists for teacher, but not yet trend-triggered
+- [x] AI-drafted report card comments extended to auto-suggest from grade+attendance
+      trends — "Draft comment" now feeds the AI a trend direction (improving/declining/
+      steady, computed from first-to-most-recent scored assessment) alongside grade and
+      attendance, and the Trend column shows a Declining/Improving badge when a class's
+      swing crosses 8 points so a teacher notices before drafting a comment at all
 - [x] Audio overview — browser-native TTS (Web Speech API), no added cost/infra
 - [ ] AI-assisted homework feedback — first-pass suggestions on a submission before the
       teacher reviews — NOT yet built
@@ -89,8 +92,15 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 
 ## Known gaps carried forward
 
-- Inline translation on parent↔teacher messaging (Phase 1 item, not built)
-- Portal-side (not just desktop-side) notification badges
 - Digital portfolio's fuller "running record" scope (photos/files beyond graded work)
-- AI comment drafting triggered by grade/attendance trends
 - AI first-pass homework feedback before teacher review
+- Messages still aren't fully partitioned if one family has children under two
+  different teachers on the same Portal (rare edge case)
+
+## Post-roadmap additions (this pass)
+
+- [x] Inline translation on parent↔teacher messaging — either side can translate a
+      message on demand via the teacher's own AI key, cached per message+language
+- [x] Portal-side notification badge — poll-based unread-message pill + tab-title count
+- [x] AI key / digest SMTP settings made genuinely per-teacher (were a shared row)
+- [x] AI-drafted report card comments now trend-triggered (see Phase 3 above)

@@ -729,6 +729,8 @@ export interface DraftedLessonPlan {
   homework: string
 }
 
+export type GradeTrendDirection = 'improving' | 'declining' | 'steady'
+
 export interface DraftReportCommentInput {
   studentName: string
   className: string
@@ -736,6 +738,8 @@ export interface DraftReportCommentInput {
   letter: string | null
   attendanceRate: number | null
   recentNotes: string[]
+  trendDirection: GradeTrendDirection | null
+  trendDeltaPoints: number | null
 }
 
 export interface DeviceSyncStatus {
