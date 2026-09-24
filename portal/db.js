@@ -185,23 +185,23 @@ db.exec(`
     text
   );
 
-  -- Single-row config for the one shared AI key every student uses — see
-  -- portalSyncService.publishToPortal on the desktop side. Never exposed to a family's
-  -- browser; only this server calls the provider, with this key, on a student's behalf.
+  -- One row per teacher's own AI key/provider — see portalSyncService.publishToPortal on
+  -- the desktop side. Never exposed to a family's browser; only this server calls the
+  -- provider, with this key, on a student's behalf.
   CREATE TABLE IF NOT EXISTS ai_settings (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
     provider TEXT NOT NULL DEFAULT 'zhipu',
     api_key TEXT NOT NULL DEFAULT '',
     custom_base_url TEXT NOT NULL DEFAULT '',
     custom_model TEXT NOT NULL DEFAULT ''
   );
 
-  -- Single-row SMTP config for the weekly parent digest email — same "teacher provisions
-  -- once, pushed on every publish" shape as ai_settings. last_sent_at tracks the most
-  -- recent automatic send so the hourly scheduler in server.js knows not to resend
-  -- inside the same week.
+  -- One row per teacher's own SMTP config for the weekly parent digest email — same
+  -- "teacher provisions once, pushed on every publish" shape as ai_settings.
+  -- last_sent_at tracks that teacher's most recent automatic send so the hourly
+  -- scheduler in server.js knows not to resend inside the same week.
   CREATE TABLE IF NOT EXISTS digest_settings (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
+    teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
     enabled INTEGER NOT NULL DEFAULT 0,
     smtp_host TEXT NOT NULL DEFAULT '',
     smtp_port INTEGER NOT NULL DEFAULT 587,
@@ -211,6 +211,16 @@ db.exec(`
     from_name TEXT NOT NULL DEFAULT '',
     last_sent_at TEXT
   );
+
+  -- Per-message cached translation — populated lazily the first time either side
+  -- requests a translated view of a message, so translation is a read-time enrichment
+  -- (via the same per-teacher AI key), not something that has to happen at send time.
+  CREATE TABLE IF NOT EXISTS message_translations (
+    message_id TEXT PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
+    translated_body TEXT NOT NULL,
+    target_lang TEXT NOT NULL
+  );
+
 `)
 
 // CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live
@@ -234,6 +244,41 @@ ensureColumn('accounts', 'email', 'email TEXT')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
 ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 
+// ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
+// upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
+// can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and
+// migrate its one row onto the default teacher once we know who that is, below.
+function hasLegacySingleRow(table) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
+  return cols.includes('id') && !cols.includes('teacher_id')
+}
+const legacyAiSettings = hasLegacySingleRow('ai_settings') ? db.prepare('SELECT * FROM ai_settings WHERE id = 1').get() : null
+const legacyDigestSettings = hasLegacySingleRow('digest_settings') ? db.prepare('SELECT * FROM digest_settings WHERE id = 1').get() : null
+if (legacyAiSettings || legacyDigestSettings) {
+  db.exec('ALTER TABLE ai_settings RENAME TO ai_settings_old')
+  db.exec('ALTER TABLE digest_settings RENAME TO digest_settings_old')
+  db.exec(`
+    CREATE TABLE ai_settings (
+      teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
+      provider TEXT NOT NULL DEFAULT 'zhipu',
+      api_key TEXT NOT NULL DEFAULT '',
+      custom_base_url TEXT NOT NULL DEFAULT '',
+      custom_model TEXT NOT NULL DEFAULT ''
+    );
+    CREATE TABLE digest_settings (
+      teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      smtp_host TEXT NOT NULL DEFAULT '',
+      smtp_port INTEGER NOT NULL DEFAULT 587,
+      smtp_user TEXT NOT NULL DEFAULT '',
+      smtp_pass TEXT NOT NULL DEFAULT '',
+      from_email TEXT NOT NULL DEFAULT '',
+      from_name TEXT NOT NULL DEFAULT '',
+      last_sent_at TEXT
+    );
+  `)
+}
+
 // Backward compatibility for a Portal that was already running single-teacher,
 // authenticated by the old global SYNC_SECRET env var: seeds a "default" teacher row
 // from that same secret (so the existing desktop app's sync secret setting keeps
@@ -252,6 +297,40 @@ if (process.env.SYNC_SECRET) {
   }
   db.prepare('UPDATE classes SET teacher_id = ? WHERE teacher_id IS NULL').run(defaultTeacher.id)
   db.prepare('UPDATE students SET teacher_id = ? WHERE teacher_id IS NULL').run(defaultTeacher.id)
+
+  if (legacyAiSettings) {
+    db.prepare(
+      `INSERT INTO ai_settings (teacher_id, provider, api_key, custom_base_url, custom_model)
+       VALUES (?, ?, ?, ?, ?) ON CONFLICT(teacher_id) DO NOTHING`
+    ).run(
+      defaultTeacher.id,
+      legacyAiSettings.provider,
+      legacyAiSettings.api_key,
+      legacyAiSettings.custom_base_url,
+      legacyAiSettings.custom_model
+    )
+  }
+  if (legacyDigestSettings) {
+    db.prepare(
+      `INSERT INTO digest_settings
+         (teacher_id, enabled, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name, last_sent_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(teacher_id) DO NOTHING`
+    ).run(
+      defaultTeacher.id,
+      legacyDigestSettings.enabled,
+      legacyDigestSettings.smtp_host,
+      legacyDigestSettings.smtp_port,
+      legacyDigestSettings.smtp_user,
+      legacyDigestSettings.smtp_pass,
+      legacyDigestSettings.from_email,
+      legacyDigestSettings.from_name,
+      legacyDigestSettings.last_sent_at
+    )
+  }
+}
+if (legacyAiSettings || legacyDigestSettings) {
+  db.exec('DROP TABLE IF EXISTS ai_settings_old')
+  db.exec('DROP TABLE IF EXISTS digest_settings_old')
 }
 
 module.exports = db

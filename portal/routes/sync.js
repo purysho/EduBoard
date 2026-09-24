@@ -46,19 +46,15 @@ router.post('/', (req, res) => {
     digestFromName
   } = req.body
 
-  // KNOWN LIMITATION (multi-teacher): the AI key and digest SMTP config are still a
-  // single shared row (ai_settings/digest_settings, id=1), not scoped per teacher_id
-  // like classes/students/homework above — whichever teacher publishes last sets it for
-  // every teacher on this Portal. Fine for a single-teacher deployment; a school
-  // deployment with several teachers wanting their own AI key or sender address needs
-  // these two tables made per-teacher before that's safe to rely on.
-  saveAiSettings({
+  // Each teacher's AI key and digest SMTP config is their own row, scoped by
+  // req.teacherId — one teacher's publish never overwrites another's settings.
+  saveAiSettings(req.teacherId, {
     provider: aiProvider,
     apiKey: aiApiKey,
     customBaseUrl: aiCustomBaseUrl,
     customModel: aiCustomModel
   })
-  saveDigestSettings({
+  saveDigestSettings(req.teacherId, {
     enabled: digestEnabled,
     smtpHost: digestSmtpHost,
     smtpPort: digestSmtpPort,
@@ -449,7 +445,7 @@ router.post('/messages/:accountId/read', (req, res) => {
 // independently on its own Monday-morning schedule.
 router.post('/digest/send-now', async (_req, res) => {
   try {
-    const result = await sendAllDigests()
+    const result = await sendAllDigests(req.teacherId)
     res.json(result)
   } catch (err) {
     res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })

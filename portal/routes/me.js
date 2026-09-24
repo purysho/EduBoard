@@ -502,7 +502,8 @@ router.post('/ai/chat', async (req, res) => {
   }
 
   try {
-    const reply = await complete(system, text, 900)
+    const student = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
+    const reply = await complete(student.teacher_id, system, text, 900)
     res.json({ reply: reply.trim(), citations })
   } catch (err) {
     if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })

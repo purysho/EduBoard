@@ -108,12 +108,10 @@ List teachers (with a rough class/student count each) with:
 curl https://portal.yourdomain.com/api/admin/teachers -H "X-Admin-Secret: <your ADMIN_SECRET>"
 ```
 
-**Known limitation:** the AI provider/key and the weekly digest SMTP settings
-(Settings → Student AI / Weekly parent digest email on the desktop app) are still a
-single shared configuration for the whole Portal, not per-teacher — whichever teacher
-last published sets it for everyone. Fine for one teacher; a school with several
-teachers wanting their own AI key or sender address will need that split out before
-relying on it.
+The AI provider/key and the weekly digest SMTP settings (Settings → Student AI /
+Weekly parent digest email on the desktop app) are per-teacher — each teacher's own
+publish only ever writes their own `ai_settings`/`digest_settings` row, so one
+teacher's key or sender address never affects another's.
 
 **Sizing:** each teacher adds a modest amount of load (their own publish pushes, their
 families' Portal visits, and — if the digest email or student AI features are used —

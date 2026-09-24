@@ -10,10 +10,14 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 }
 
-function buildDigestHtml(account) {
+function buildDigestHtml(account, teacherId) {
   const studentIds = db
-    .prepare('SELECT student_id FROM account_students WHERE account_id = ?')
-    .all(account.id)
+    .prepare(
+      `SELECT acs.student_id FROM account_students acs
+       JOIN students s ON s.id = acs.student_id
+       WHERE acs.account_id = ? AND s.teacher_id = ?`
+    )
+    .all(account.id, teacherId)
     .map((r) => r.student_id)
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -75,13 +79,24 @@ function buildDigestHtml(account) {
     )
     .get(account.id).n
 
-  const posts = db
-    .prepare(
-      `SELECT p.body, c.name AS class_name FROM class_posts p
-       JOIN classes c ON c.id = p.class_id
-       WHERE p.created_at >= ? ORDER BY p.created_at DESC LIMIT 5`
-    )
-    .all(weekAgo)
+  const classIdsForFamily = studentIds.length
+    ? db
+        .prepare(
+          `SELECT DISTINCT class_id FROM enrollments WHERE student_id IN (${studentIds.map(() => '?').join(',')})`
+        )
+        .all(...studentIds)
+        .map((r) => r.class_id)
+    : []
+  const posts = classIdsForFamily.length
+    ? db
+        .prepare(
+          `SELECT p.body, c.name AS class_name FROM class_posts p
+           JOIN classes c ON c.id = p.class_id
+           WHERE p.created_at >= ? AND p.class_id IN (${classIdsForFamily.map(() => '?').join(',')})
+           ORDER BY p.created_at DESC LIMIT 5`
+        )
+        .all(weekAgo, ...classIdsForFamily)
+    : []
   const postsHtml = posts.length
     ? `<ul>${posts.map((p) => `<li><strong>${esc(p.class_name)}:</strong> ${esc(p.body)}</li>`).join('')}</ul>`
     : '<p style="color:#64748b; margin:4px 0">No updates this week.</p>'
@@ -99,26 +114,27 @@ function buildDigestHtml(account) {
 /** Emails every account that has both an email on file and at least one linked
  * student — accounts with no email set are silently skipped, not an error, since a
  * family isn't required to provide one. */
-async function sendAllDigests() {
+async function sendAllDigests(teacherId) {
   const accounts = db
     .prepare(
       `SELECT DISTINCT a.* FROM accounts a
        JOIN account_students acs ON acs.account_id = a.id
-       WHERE a.email IS NOT NULL AND a.email != ''`
+       JOIN students s ON s.id = acs.student_id
+       WHERE a.email IS NOT NULL AND a.email != '' AND s.teacher_id = ?`
     )
-    .all()
+    .all(teacherId)
 
   let sent = 0
   const errors = []
   for (const account of accounts) {
     try {
-      await sendMail(account.email, 'Your weekly EduBoard update', buildDigestHtml(account))
+      await sendMail(teacherId, account.email, 'Your weekly EduBoard update', buildDigestHtml(account, teacherId))
       sent++
     } catch (err) {
       errors.push({ username: account.username, error: err.message })
     }
   }
-  markDigestSent()
+  markDigestSent(teacherId)
   return { sent, total: accounts.length, errors }
 }
 
@@ -127,18 +143,21 @@ async function sendAllDigests() {
  * against firing twice if the check happens to land in that hour more than once, e.g.
  * after a restart). */
 async function runScheduledDigestIfDue() {
-  const settings = getDigestSettings()
-  if (!settings || !settings.enabled) return
   const now = new Date()
   if (now.getDay() !== 1 || now.getHours() !== 8) return
-  if (settings.last_sent_at) {
-    const daysSince = (now - new Date(settings.last_sent_at)) / (24 * 60 * 60 * 1000)
-    if (daysSince < 6) return
-  }
-  try {
-    await sendAllDigests()
-  } catch (err) {
-    console.error('Scheduled digest send failed:', err.message)
+  const teachers = db.prepare('SELECT id FROM teachers').all()
+  for (const { id: teacherId } of teachers) {
+    const settings = getDigestSettings(teacherId)
+    if (!settings || !settings.enabled) continue
+    if (settings.last_sent_at) {
+      const daysSince = (now - new Date(settings.last_sent_at)) / (24 * 60 * 60 * 1000)
+      if (daysSince < 6) continue
+    }
+    try {
+      await sendAllDigests(teacherId)
+    } catch (err) {
+      console.error(`Scheduled digest send failed for teacher ${teacherId}:`, err.message)
+    }
   }
 }
 

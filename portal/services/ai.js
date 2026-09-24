@@ -16,20 +16,20 @@ class AiNotConfiguredError extends Error {
   }
 }
 
-function getAiSettings() {
-  return db.prepare('SELECT * FROM ai_settings WHERE id = 1').get()
+function getAiSettings(teacherId) {
+  return db.prepare('SELECT * FROM ai_settings WHERE teacher_id = ?').get(teacherId)
 }
 
-function saveAiSettings({ provider, apiKey, customBaseUrl, customModel }) {
+function saveAiSettings(teacherId, { provider, apiKey, customBaseUrl, customModel }) {
   db.prepare(
-    `INSERT INTO ai_settings (id, provider, api_key, custom_base_url, custom_model)
-     VALUES (1, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
+    `INSERT INTO ai_settings (teacher_id, provider, api_key, custom_base_url, custom_model)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(teacher_id) DO UPDATE SET
        provider = excluded.provider,
        api_key = excluded.api_key,
        custom_base_url = excluded.custom_base_url,
        custom_model = excluded.custom_model`
-  ).run(provider || 'zhipu', apiKey || '', customBaseUrl || '', customModel || '')
+  ).run(teacherId, provider || 'zhipu', apiKey || '', customBaseUrl || '', customModel || '')
 }
 
 async function completeAnthropic(apiKey, system, user, maxTokens) {
@@ -74,8 +74,8 @@ async function completeOpenAiCompatible(baseUrl, model, apiKey, system, user, ma
   return data.choices?.[0]?.message?.content ?? ''
 }
 
-async function complete(system, user, maxTokens) {
-  const settings = getAiSettings()
+async function complete(teacherId, system, user, maxTokens) {
+  const settings = getAiSettings(teacherId)
   if (!settings || !settings.api_key) throw new AiNotConfiguredError()
 
   if (settings.provider === 'anthropic') {

@@ -11,15 +11,15 @@ class DigestNotConfiguredError extends Error {
   }
 }
 
-function getDigestSettings() {
-  return db.prepare('SELECT * FROM digest_settings WHERE id = 1').get()
+function getDigestSettings(teacherId) {
+  return db.prepare('SELECT * FROM digest_settings WHERE teacher_id = ?').get(teacherId)
 }
 
-function saveDigestSettings({ enabled, smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName }) {
+function saveDigestSettings(teacherId, { enabled, smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName }) {
   db.prepare(
-    `INSERT INTO digest_settings (id, enabled, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
+    `INSERT INTO digest_settings (teacher_id, enabled, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(teacher_id) DO UPDATE SET
        enabled = excluded.enabled,
        smtp_host = excluded.smtp_host,
        smtp_port = excluded.smtp_port,
@@ -28,6 +28,7 @@ function saveDigestSettings({ enabled, smtpHost, smtpPort, smtpUser, smtpPass, f
        from_email = excluded.from_email,
        from_name = excluded.from_name`
   ).run(
+    teacherId,
     enabled ? 1 : 0,
     smtpHost || '',
     smtpPort || 587,
@@ -38,14 +39,15 @@ function saveDigestSettings({ enabled, smtpHost, smtpPort, smtpUser, smtpPass, f
   )
 }
 
-function markDigestSent() {
-  db.prepare('UPDATE digest_settings SET last_sent_at = ? WHERE id = 1').run(
-    new Date().toISOString()
+function markDigestSent(teacherId) {
+  db.prepare('UPDATE digest_settings SET last_sent_at = ? WHERE teacher_id = ?').run(
+    new Date().toISOString(),
+    teacherId
   )
 }
 
-function getTransport() {
-  const s = getDigestSettings()
+function getTransport(teacherId) {
+  const s = getDigestSettings(teacherId)
   if (!s || !s.enabled || !s.smtp_host || !s.from_email) throw new DigestNotConfiguredError()
   const transport = nodemailer.createTransport({
     host: s.smtp_host,
@@ -56,8 +58,8 @@ function getTransport() {
   return { transport, from: s.from_name ? `"${s.from_name}" <${s.from_email}>` : s.from_email }
 }
 
-async function sendMail(to, subject, html) {
-  const { transport, from } = getTransport()
+async function sendMail(teacherId, to, subject, html) {
+  const { transport, from } = getTransport(teacherId)
   await transport.sendMail({ from, to, subject, html })
 }
 
