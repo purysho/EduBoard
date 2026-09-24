@@ -46,10 +46,14 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [x] Grade trend analytics per student — sparkline trend chart per class on the Student
       profile page, using existing scores/assessments data (no new tables)
 
-## Phase 5 — Operational maturity (mostly done)
+## Phase 5 — Operational maturity ✅ DONE
 
-- [ ] Offline-first Portal caching (PWA-style "last synced" view) — NOT built; this is a
-      real architecture piece (service worker, cache strategy), not a quick add
+- [x] Offline-first Portal caching (PWA-style "last synced" view) — installable PWA
+      (manifest + icon), a service worker caches the app shell so the page loads at all
+      offline, and a separate page-level Cache Storage layer caches API GET responses
+      with a "Viewing saved data — last synced [time]" banner when serving from cache.
+      Deliberately two layers (not one SW doing everything) so the page itself can tell
+      "fresh" from "cached" and never silently show stale data as if it were live.
 - [x] Audit log / activity history — new Audit Log page tracks students, classes,
       enrollments, grades, attendance, homework assignments (incl. publish/unpublish),
       and submission grading. A removed student's trail disappears from view immediately

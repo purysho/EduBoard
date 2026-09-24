@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>EduBoard Portal</title>
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" href="/icon.svg" />
+<meta name="theme-color" content="#6366f1" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -66,15 +69,73 @@
 const app = document.getElementById('app')
 const params = new URLSearchParams(location.search)
 
+// Offline-first data cache — deliberately separate from the service worker (see
+// service-worker.js), so this page-level code can tell "served fresh" from "served
+// from cache" and show an honest last-synced banner rather than silently serving stale
+// data. Only GET requests are cached; every write (submit homework, send a message,
+// etc.) always requires a live connection.
+const API_CACHE = 'eduboard-api-v1'
+const LAST_SYNCED_KEY = 'eduboard-last-synced'
+let servedFromCache = false
+
 async function api(path, opts) {
-  const res = await fetch('/api' + path, {
-    method: opts?.method || 'GET',
-    headers: opts?.body ? { 'Content-Type': 'application/json' } : undefined,
-    body: opts?.body ? JSON.stringify(opts.body) : undefined
+  const isGet = !opts?.method || opts.method === 'GET'
+  const req = '/api' + path
+
+  try {
+    const res = await fetch(req, {
+      method: opts?.method || 'GET',
+      headers: opts?.body ? { 'Content-Type': 'application/json' } : undefined,
+      body: opts?.body ? JSON.stringify(opts.body) : undefined
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Something went wrong')
+    servedFromCache = false
+    if (isGet && 'caches' in window) {
+      caches.open(API_CACHE).then((cache) =>
+        cache.put(
+          req,
+          new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })
+        )
+      )
+      localStorage.setItem(LAST_SYNCED_KEY, new Date().toISOString())
+    }
+    return data
+  } catch (err) {
+    if (isGet && 'caches' in window) {
+      const cached = await caches.match(req)
+      if (cached) {
+        servedFromCache = true
+        return cached.json()
+      }
+    }
+    throw err
+  }
+}
+
+function lastSyncedLabel() {
+  const iso = localStorage.getItem(LAST_SYNCED_KEY)
+  if (!iso) return 'unknown'
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
   })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Something went wrong')
-  return data
+}
+
+function offlineBannerHtml() {
+  if (!servedFromCache) return ''
+  return `<div class="card" style="background:#fef3c7; margin-bottom:12px">
+    <strong>Viewing saved data</strong>
+    <p class="muted" style="margin:4px 0 0">You're offline — last synced ${lastSyncedLabel()}. Reconnect to see the latest.</p>
+  </div>`
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js').catch(() => {})
+  })
 }
 
 async function main() {
@@ -85,6 +146,17 @@ async function main() {
     const me = await api('/me')
     renderDashboard(me)
   } catch {
+    // A thrown fetch (not an auth rejection) with nothing cached yet and no connection
+    // is a genuinely different situation from "not logged in" — don't send someone
+    // straight to a login form that can't succeed offline anyway.
+    if (!navigator.onLine) {
+      app.innerHTML = `
+        <h1>You're offline</h1>
+        <p class="hint">Nothing saved on this device yet. Connect once to load your dashboard — after that, it stays available offline.</p>
+        <button onclick="location.reload()">Try again</button>
+      `
+      return
+    }
     renderLogin()
   }
 }
@@ -446,6 +518,7 @@ function renderDashboard(me) {
     return
   }
   app.innerHTML =
+    offlineBannerHtml() +
     `<h1>Welcome back</h1>
      <div class="section-title">Class Story</div>
      <div id="story">Loading…</div>
