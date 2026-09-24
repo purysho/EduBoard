@@ -621,6 +621,16 @@ const migrations: Migration[] = [
         CREATE INDEX audit_log_deleted_idx ON audit_log(deleted_at);
       `)
     }
+  },
+  {
+    id: 24,
+    name: 'portal_invite_batches_printed_at',
+    up: (db) => {
+      // Set the first time a batch's strips are actually saved as a PDF (not merely
+      // generated) — lets the Portal tab show which batches a teacher has already
+      // printed, so re-printing an old batch by mistake is obvious before it happens.
+      db.exec(`ALTER TABLE portal_invite_batches ADD COLUMN printed_at TEXT`)
+    }
   }
 ]
 

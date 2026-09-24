@@ -1,4 +1,4 @@
-import { dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
 import type { DraftLessonPlanInput, DraftReportCommentInput } from '@shared/types'
@@ -65,6 +65,19 @@ import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
   ipcMain.handle(channel, (event, ...args) => fn(event, ...args))
+}
+
+/** The hidden print window created for printToPDF is never a valid dialog owner (it's
+ * never shown), so a save dialog with no parent has nothing to anchor to — on Windows in
+ * particular, that can leave it opened behind the app with no taskbar entry, looking like
+ * it never appeared at all. Anchoring to the actual visible window, and stealing focus
+ * first, makes sure it comes to the front. */
+async function showSaveDialogOnTop(
+  options: Electron.SaveDialogOptions
+): ReturnType<typeof dialog.showSaveDialog> {
+  const owner = BrowserWindow.getAllWindows().find((w) => w.isVisible())
+  if (owner) owner.focus()
+  return owner ? dialog.showSaveDialog(owner, options) : dialog.showSaveDialog(options)
 }
 
 export function registerIpcHandlers(): void {
@@ -329,7 +342,7 @@ export function registerIpcHandlers(): void {
         await waitForPrintReady(win)
         const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
 
-        const { canceled, filePath } = await dialog.showSaveDialog({
+        const { canceled, filePath } = await showSaveDialogOnTop({
           defaultPath: suggestedFileName,
           filters: [{ name: 'PDF', extensions: ['pdf'] }]
         })
@@ -637,13 +650,14 @@ export function registerIpcHandlers(): void {
         await waitForPrintReady(win)
         const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
 
-        const { canceled, filePath } = await dialog.showSaveDialog({
+        const { canceled, filePath } = await showSaveDialogOnTop({
           defaultPath: suggestedFileName,
           filters: [{ name: 'PDF', extensions: ['pdf'] }]
         })
         if (canceled || !filePath) return { saved: false as const }
 
         await writeFile(filePath, pdfBuffer)
+        portalInvitesRepo.markInviteBatchPrinted(batchId)
         return { saved: true as const, filePath }
       } finally {
         win.destroy()

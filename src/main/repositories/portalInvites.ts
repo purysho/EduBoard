@@ -31,7 +31,13 @@ export function createInviteBatch(
   const batchId = newId()
 
   db.insert(portalInviteBatches)
-    .values({ id: batchId, classId: input.classId, count: input.count, createdAt: now })
+    .values({
+      id: batchId,
+      classId: input.classId,
+      count: input.count,
+      createdAt: now,
+      printedAt: null
+    })
     .run()
 
   const invites: PortalInvite[] = Array.from({ length: input.count }, () => ({
@@ -47,7 +53,22 @@ export function createInviteBatch(
     db.insert(portalInvites).values(invite).run()
   }
 
-  return { id: batchId, classId: input.classId, count: input.count, createdAt: now, invites }
+  return {
+    id: batchId,
+    classId: input.classId,
+    count: input.count,
+    createdAt: now,
+    printedAt: null,
+    invites
+  }
+}
+
+type BatchRow = {
+  id: string
+  classId: string
+  count: number
+  createdAt: string
+  printedAt: string | null
 }
 
 export function listInviteBatchesByClass(classId: string): PortalInviteBatchWithInvites[] {
@@ -56,7 +77,7 @@ export function listInviteBatchesByClass(classId: string): PortalInviteBatchWith
     .select()
     .from(portalInviteBatches)
     .where(eq(portalInviteBatches.classId, classId))
-    .all() as { id: string; classId: string; count: number; createdAt: string }[]
+    .all() as BatchRow[]
 
   return batches.map((batch) => ({
     ...batch,
@@ -74,7 +95,7 @@ export function getInviteBatch(batchId: string): PortalInviteBatchWithInvites | 
     .select()
     .from(portalInviteBatches)
     .where(eq(portalInviteBatches.id, batchId))
-    .get() as { id: string; classId: string; count: number; createdAt: string } | undefined
+    .get() as BatchRow | undefined
   if (!batch) return null
 
   const invites = db
@@ -87,4 +108,14 @@ export function getInviteBatch(batchId: string): PortalInviteBatchWithInvites | 
 
 export function revokeInvite(inviteId: string): void {
   getDb().update(portalInvites).set({ revoked: true }).where(eq(portalInvites.id, inviteId)).run()
+}
+
+/** Marked once printBatch actually completes the save (not just generates a PDF that
+ * might have been cancelled at the file dialog) — see ipc/register.ts. */
+export function markInviteBatchPrinted(batchId: string): void {
+  getDb()
+    .update(portalInviteBatches)
+    .set({ printedAt: nowIso() })
+    .where(eq(portalInviteBatches.id, batchId))
+    .run()
 }

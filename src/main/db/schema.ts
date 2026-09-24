@@ -242,7 +242,8 @@ export const portalInviteBatches = sqliteTable(
       .notNull()
       .references(() => classes.id, { onDelete: 'cascade' }),
     count: integer('count').notNull(),
-    createdAt: text('created_at').notNull()
+    createdAt: text('created_at').notNull(),
+    printedAt: text('printed_at')
   },
   (t) => ({
     classIdx: index('portal_invite_batches_class_idx').on(t.classId)

@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Printer, Ticket, Trash2 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Check, Printer, Ticket, Trash2 } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
+import { Badge } from '@renderer/components/ui/Badge'
 import { Input, Label } from '@renderer/components/ui/Field'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import {
+  queryKeys,
   useCreatePortalInviteBatch,
   usePortalInviteBatches,
   usePublishToPortal,
@@ -20,16 +23,20 @@ export function PortalTab(): React.JSX.Element {
   const createBatch = useCreatePortalInviteBatch(classSection.id)
   const revokeInvite = useRevokePortalInvite(classSection.id)
   const publish = usePublishToPortal()
+  const qc = useQueryClient()
   const [count, setCount] = useState(40)
   const [printing, setPrinting] = useState<string | null>(null)
 
   async function handlePrint(batchId: string): Promise<void> {
     setPrinting(batchId)
     try {
-      await window.api.portalInvites.printBatch(
+      const result = await window.api.portalInvites.printBatch(
         batchId,
         `${classSection.name.replace(/[^\w -]/g, '')}-invites.pdf`
       )
+      if (result.saved) {
+        qc.invalidateQueries({ queryKey: queryKeys.portalInviteBatches(classSection.id) })
+      }
     } finally {
       setPrinting(null)
     }
@@ -100,11 +107,20 @@ export function PortalTab(): React.JSX.Element {
           {batches.map((batch) => {
             const active = batch.invites.filter((i) => !i.revoked)
             return (
-              <Card key={batch.id}>
+              <Card
+                key={batch.id}
+                className={batch.printedAt ? 'border-[var(--color-success)]/40' : undefined}
+              >
                 <CardBody className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="flex items-center gap-2 text-sm font-medium">
                       {batch.count} invites — {formatDate(batch.createdAt)}
+                      {batch.printedAt && (
+                        <Badge tone="success">
+                          <Check size={11} className="mr-0.5 inline" aria-hidden />
+                          Printed {formatDate(batch.printedAt)}
+                        </Badge>
+                      )}
                     </p>
                     <p className="text-xs text-[var(--color-text-muted)]">
                       {active.length} active, {batch.invites.length - active.length} revoked
@@ -118,7 +134,11 @@ export function PortalTab(): React.JSX.Element {
                       disabled={printing === batch.id}
                     >
                       <Printer size={13} className="mr-1 inline" aria-hidden />
-                      {printing === batch.id ? 'Printing…' : 'Print strips'}
+                      {printing === batch.id
+                        ? 'Printing…'
+                        : batch.printedAt
+                          ? 'Print again'
+                          : 'Print strips'}
                     </Button>
                     {active.length > 0 && (
                       <Button

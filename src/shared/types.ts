@@ -436,6 +436,7 @@ export interface PortalInviteBatch {
   classId: string
   count: number
   createdAt: string
+  printedAt: string | null
 }
 
 export interface PortalInviteBatchWithInvites extends PortalInviteBatch {
