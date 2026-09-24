@@ -3,7 +3,8 @@ import {
   LabelHTMLAttributes,
   ReactNode,
   SelectHTMLAttributes,
-  TextareaHTMLAttributes
+  TextareaHTMLAttributes,
+  useState
 } from 'react'
 import { cn } from '@renderer/lib/cn'
 
@@ -60,8 +61,25 @@ const MONTH_NAMES = [
 
 /** A Month/Day/Year select trio instead of the OS date picker — used everywhere a date
  * is entered (due dates, DOB, assessment/schedule dates), for a consistent look across
- * the app and to avoid the ambiguous mm/dd-vs-dd/mm reading of a typed date string. */
-export function DateSelect({
+ * the app and to avoid the ambiguous mm/dd-vs-dd/mm reading of a typed date string.
+ *
+ * Keyed by `value` so the inner component remounts (and re-derives its local Y/M/D
+ * state fresh) whenever the caller changes `value` out from under it — e.g. clearing
+ * the field after "Add date." Between those resets, the inner component owns its own
+ * state, so picking just the month doesn't get wiped out while day/year are still
+ * unset (the caller's `value` only ever holds a complete date or ''). */
+export function DateSelect(props: {
+  value: string | null | undefined
+  onChange: (value: string) => void
+  minYear?: number
+  maxYear?: number
+  required?: boolean
+  id?: string
+}): React.JSX.Element {
+  return <DateSelectFields key={props.value || ''} {...props} />
+}
+
+function DateSelectFields({
   value,
   onChange,
   minYear,
@@ -79,9 +97,16 @@ export function DateSelect({
   const thisYear = new Date().getFullYear()
   const lo = minYear ?? thisYear - 5
   const hi = maxYear ?? thisYear + 5
-  const [y = '', m = '', d = ''] = (value || '').split('-')
 
-  function emit(ny: string, nm: string, nd: string): void {
+  const [initialY = '', initialM = '', initialD = ''] = (value || '').split('-')
+  const [y, setY] = useState(initialY)
+  const [m, setM] = useState(initialM)
+  const [d, setD] = useState(initialD)
+
+  function pick(ny: string, nm: string, nd: string): void {
+    setY(ny)
+    setM(nm)
+    setD(nd)
     onChange(ny && nm && nd ? `${ny}-${nm}-${nd}` : '')
   }
 
@@ -89,7 +114,7 @@ export function DateSelect({
 
   return (
     <div id={id} className="grid grid-cols-[2fr_1fr_1.2fr] gap-2">
-      <Select value={m} onChange={(e) => emit(y, e.target.value, d)} required={required}>
+      <Select value={m} onChange={(e) => pick(y, e.target.value, d)} required={required}>
         <option value="">Month</option>
         {MONTH_NAMES.map((name, i) => (
           <option key={name} value={String(i + 1).padStart(2, '0')}>
@@ -97,7 +122,7 @@ export function DateSelect({
           </option>
         ))}
       </Select>
-      <Select value={d} onChange={(e) => emit(y, m, e.target.value)} required={required}>
+      <Select value={d} onChange={(e) => pick(y, m, e.target.value)} required={required}>
         <option value="">Day</option>
         {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
           <option key={day} value={String(day).padStart(2, '0')}>
@@ -105,7 +130,7 @@ export function DateSelect({
           </option>
         ))}
       </Select>
-      <Select value={y} onChange={(e) => emit(e.target.value, m, d)} required={required}>
+      <Select value={y} onChange={(e) => pick(e.target.value, m, d)} required={required}>
         <option value="">Year</option>
         {years.map((year) => (
           <option key={year} value={year}>
