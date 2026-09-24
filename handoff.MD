@@ -11,10 +11,10 @@ one blocking issue that testing stalled on.
 - The user's local checkout lives at `C:\Dev\eduboard` (moved out of
   `C:\Users\olive\OneDrive\Desktop\eduboard` mid-session — see "OneDrive"
   below). Portal is a sibling process run from `C:\Dev\eduboard\portal`.
-- **Testing is currently blocked**: the desktop app (`npm run dev`) cannot
-  load in the user's Electron window. See "Open blocking issue" below —
-  that's almost certainly the next thing to resolve before any further
-  feature testing can happen.
+- **Update (follow-up session, branch `claude/trusting-goodall-hxsi5s`):** the
+  `ERR_CONNECTION_REFUSED` blocker below is **resolved** — root cause and fix
+  are under "Resolved: the dev-server connection error". Several other bugs
+  found while reviewing the branch are listed there too. Testing can resume.
 
 ## What was built this session (before testing started)
 
@@ -75,6 +75,10 @@ All four of the above were verified via `npm run typecheck` + `eslint --fix`
 (no way to run the actual Electron app in this sandbox to visually confirm —
 verification was code-review-level, not click-tested).
 
+**Later correction:** `eafbd46` and `eb42363` were misdiagnoses. `eafbd46`
+itself caused the blocking error, and both have since been replaced; see
+"Resolved: the dev-server connection error" below.
+
 ## Also fixed: OneDrive
 
 The project was originally cloned into
@@ -89,7 +93,79 @@ This resolved the disk I/O error. **If a fresh chat sees SQLite disk errors
 again, check whether the project is inside a cloud-synced folder
 (OneDrive/Dropbox/etc.) first.**
 
-## Open blocking issue — read this first
+## Resolved: the dev-server connection error
+
+**Root cause.** Commit `eafbd46` was the bug, not the fix. Vite's default dev
+server host is `localhost`, and Vite binds only the *first* address Node's DNS
+lookup returns for it. On Windows with Node 17+ that is the IPv6 loopback
+`::1`, so the dev server listened on `[::1]:5173` only. Rewriting the URL to
+`127.0.0.1` made Electron dial IPv4, which is refused every time; the
+`eb42363` retry loop couldn't help. (Chromium treats the name `localhost` as
+"try both loopbacks", which is why the main window loaded fine before that
+commit.) The Windows port-exclusion/`winnat` theory was a red herring: an
+excluded port makes `listen` fail outright with `EACCES`, it doesn't accept a
+bind and then refuse connections. No `netsh`/`winnat` changes are needed.
+
+A second problem explains the port bouncing: electron-vite builds
+`ELECTRON_RENDERER_URL` from the *configured* port, not the one Vite actually
+bound. With a leftover dev server still holding 5173, Vite silently moved to
+5174 while Electron was still pointed at 5173.
+
+**Fix.**
+- `electron.vite.config.ts` pins the renderer dev server to
+  `host: '127.0.0.1'`, `port: 5173`, `strictPort: true`. Server and client
+  now always agree on one IPv4 address, and a stale process fails fast with
+  `Port 5173 is already in use` instead of silently splitting the two.
+- `loadAppRoute()` in `src/main/windows.ts` uses the URL electron-vite hands
+  it verbatim (no host rewrite, no retry loop), and the main window logs a
+  clear message instead of an unhandled rejection if the load still fails.
+
+Reproduced in a Linux sandbox by pointing `localhost` at a different loopback
+address: the old code logged the exact same `Failed to load URL:
+http://127.0.0.1:5173/#/ ... ERR_CONNECTION_REFUSED` line 20×. The fixed code
+loads both the main window and the hidden print window
+(`/print/student/...` reaches `eduboard-print-ready`).
+
+**On the user's machine:** pull the branch, then make sure nothing still holds
+port 5173 before `npm run dev`. In PowerShell:
+`Get-Process -Id (Get-NetTCPConnection -LocalPort 5173).OwningProcess` shows
+the process holding the port; stop it or reboot. If `npm run dev` then prints
+`Port 5173 is already in use`, that's a leftover process to close, not a new
+bug.
+
+### Other bugs fixed in the same follow-up
+
+- **Portal: publishing wiped other teachers' homework attachments.** Each
+  publish emptied the whole shared `data/homework-uploads` folder. Now only the
+  publishing teacher's own old files are removed, and only after the push
+  commits.
+- **Portal: publishes could start failing permanently.** A resource still
+  shared with a class that was later archived kept getting sent. The Portal
+  inserted it under a class it no longer cleans up, so the next publish hit
+  `UNIQUE constraint failed: materials.id` and every publish after that failed
+  too. Sync now accepts class-scoped rows (enrollments, grades, homework,
+  materials, invites) only for classes in the same push, and clears any
+  unreachable materials that older versions already left behind. That also
+  stops one teacher's sync secret from writing homework or grades into another
+  teacher's class.
+- **Portal: "Send digest now" always returned 500.** The handler read
+  `req.teacherId` but named its parameter `_req`.
+- **Portal: upgrade migration left old tables in place.** The per-teacher
+  `ai_settings`/`digest_settings` migration ran only if the legacy table had a
+  row. A Portal DB that never received a publish before upgrading kept the old
+  shape, and its next publish failed with `table ai_settings has no column
+  named teacher_id`. It now migrates on table shape.
+- **Desktop: `DateSelect` wiped the whole date when one field was cleared.**
+  After a full date was picked, choosing the "Day" placeholder reset month and
+  year too, because the `key={value}` remount fired. It now tracks the last
+  value it reported and re-derives only on a genuine external change.
+  Click-tested in the running app via Settings → Terms.
+- **Desktop: the sidebar polled Portal messages every 15s with no Portal
+  configured**, printing a `PortalNotConfiguredError` stack trace to the dev
+  console each time. The poll now waits until a Portal URL and sync secret are
+  set.
+
+## Original blocking issue (historical, now resolved above)
 
 After the OneDrive move and the `eb42363` retry-loop fix, the desktop app
 **still** fails to load, with a pattern that ruled out every hypothesis
@@ -139,7 +215,8 @@ net start winnat
 ```
 
 **This was not yet confirmed or tried by the user before this handoff was
-requested.** A fresh session should:
+requested.** (Superseded: see "Resolved" above; the steps below are no longer
+needed.) The original plan was:
 
 1. Ask the user for the output of that `netsh` command (or ask them to run
    it) before trying anything else.
