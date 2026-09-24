@@ -17,7 +17,23 @@ export async function loadAppRoute(win: BrowserWindow, hashRoute = '/'): Promise
     // the unambiguous IPv4 address so a second window can't get a fresh DNS answer that
     // points nowhere.
     const devUrl = process.env['ELECTRON_RENDERER_URL'].replace('localhost', '127.0.0.1')
-    await win.loadURL(`${devUrl}#${hashRoute}`)
+
+    // electron-vite starts the Electron process as soon as it sees the dev server begin
+    // listening, but "listening" and "actually ready to serve a request" aren't the same
+    // moment — on a slower machine (antivirus scanning node_modules, a cold disk cache
+    // right after `npm install`) the very first loadURL can lose that race and come back
+    // ERR_CONNECTION_REFUSED even though the server comes up a few hundred ms later.
+    // Retry a few times with a short backoff instead of failing outright on that race.
+    const maxAttempts = 20
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await win.loadURL(`${devUrl}#${hashRoute}`)
+        return
+      } catch (err) {
+        if (attempt === maxAttempts || win.isDestroyed()) throw err
+        await new Promise((resolve) => setTimeout(resolve, 250))
+      }
+    }
   } else {
     await win.loadFile(join(__dirname, '../renderer/index.html'), { hash: hashRoute })
   }
