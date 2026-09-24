@@ -9,15 +9,17 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import {
   useCreatePortalInviteBatch,
   usePortalInviteBatches,
+  usePublishToPortal,
   useRevokePortalInvite
 } from '@renderer/lib/queries'
-import { formatDate } from '@renderer/lib/format'
+import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
 
 export function PortalTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const { data: batches, isLoading } = usePortalInviteBatches(classSection.id)
   const createBatch = useCreatePortalInviteBatch(classSection.id)
   const revokeInvite = useRevokePortalInvite(classSection.id)
+  const publish = usePublishToPortal()
   const [count, setCount] = useState(40)
   const [printing, setPrinting] = useState<string | null>(null)
 
@@ -39,10 +41,31 @@ export function PortalTab(): React.JSX.Element {
     <div>
       <Card className="mb-4">
         <CardHeader>
+          <h2 className="text-sm font-semibold">Publish to Portal</h2>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Pushes your current roster, grades, attendance, and homework for every class to the
+            Portal — not just this one. Do this after making changes you want families to see.
+          </p>
+        </CardHeader>
+        <CardBody className="flex items-center gap-3">
+          <Button variant="primary" onClick={() => publish.mutate()} disabled={publish.isPending}>
+            {publish.isPending ? 'Publishing…' : 'Publish to portal'}
+          </Button>
+          {publish.isError && (
+            <p className="text-xs text-[var(--color-danger)]">
+              {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}
+            </p>
+          )}
+          {publish.isSuccess && <p className="text-xs text-[var(--color-success)]">Published.</p>}
+        </CardBody>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
           <h2 className="text-sm font-semibold">Generate Portal invites</h2>
           <p className="text-xs text-[var(--color-text-muted)]">
             Each invite is a one-time code, pre-scoped to this class, ready to print and hand out as
-            strips. The Portal itself isn&apos;t live yet — these are ready to go once it is.
+            strips for a family to redeem on the Portal.
           </p>
         </CardHeader>
         <CardBody className="flex items-end gap-3">
