@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react'
-import { MessageSquare, Send } from 'lucide-react'
+import { Languages, MessageSquare, Send } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Card } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -9,8 +9,15 @@ import { ipcErrorMessage } from '@renderer/lib/format'
 import {
   useMarkPortalThreadRead,
   usePortalMessageThreads,
-  useSendPortalMessage
+  useSendPortalMessage,
+  useTranslatePortalMessage
 } from '@renderer/lib/queries'
+
+// Fixed target — the app's own UI is English, so "translate" for a teacher always
+// means "show me this in English." (The student/family side of the same feature, on
+// the Portal itself, offers the reverse: translate the teacher's message into whatever
+// language the family picked.)
+const TARGET_LANG = 'English'
 
 export function MessagesPage(): React.JSX.Element {
   const { data: threads, isLoading, isError, error } = usePortalMessageThreads()
@@ -95,9 +102,36 @@ function ThreadPanel({
 }): React.JSX.Element {
   const { data: threads } = usePortalMessageThreads()
   const sendMessage = useSendPortalMessage()
+  const translateMessage = useTranslatePortalMessage()
   const [body, setBody] = useState('')
+  const [translations, setTranslations] = useState<Record<string, string>>({})
+  const [translatingId, setTranslatingId] = useState<string | null>(null)
 
   const thread = threads?.find((t) => t.accountId === accountId)
+
+  async function handleTranslate(messageId: string): Promise<void> {
+    if (translations[messageId] !== undefined) {
+      setTranslations((prev) => {
+        const next = { ...prev }
+        delete next[messageId]
+        return next
+      })
+      return
+    }
+    setTranslatingId(messageId)
+    try {
+      const translated = await translateMessage.mutateAsync({
+        messageId,
+        targetLang: TARGET_LANG
+      })
+      setTranslations((prev) => ({ ...prev, [messageId]: translated }))
+    } catch {
+      // Silently ignored — the original text is still shown, and the button stays
+      // available to try again (e.g. if the teacher hasn't set up an AI key yet).
+    } finally {
+      setTranslatingId(null)
+    }
+  }
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
@@ -124,12 +158,25 @@ function ThreadPanel({
                   : 'bg-[var(--color-surface-muted)] text-[var(--color-text)]'
               }`}
             >
-              <p className="whitespace-pre-wrap">{m.body}</p>
-              <p
-                className={`mt-1 text-[10px] ${m.sender === 'teacher' ? 'text-white/70' : 'text-[var(--color-text-muted)]'}`}
+              <p className="whitespace-pre-wrap">{translations[m.id] ?? m.body}</p>
+              <div
+                className={`mt-1 flex items-center gap-2 text-[10px] ${m.sender === 'teacher' ? 'text-white/70' : 'text-[var(--color-text-muted)]'}`}
               >
-                {new Date(m.createdAt).toLocaleString()}
-              </p>
+                <span>{new Date(m.createdAt).toLocaleString()}</span>
+                <button
+                  type="button"
+                  onClick={() => handleTranslate(m.id)}
+                  disabled={translatingId === m.id}
+                  className="inline-flex items-center gap-0.5 underline decoration-dotted hover:opacity-80 disabled:opacity-50"
+                >
+                  <Languages size={10} aria-hidden />
+                  {translatingId === m.id
+                    ? 'Translating…'
+                    : translations[m.id] !== undefined
+                      ? 'Show original'
+                      : 'Translate'}
+                </button>
+              </div>
             </div>
           </div>
         ))}

@@ -332,6 +332,7 @@ export interface EduBoardApi {
     listThreads(): Promise<PortalMessageThread[]>
     send(accountId: string, body: string): Promise<void>
     markRead(accountId: string): Promise<void>
+    translate(messageId: string, targetLang: string): Promise<string>
   }
   classPosts: {
     list(): Promise<ClassPost[]>

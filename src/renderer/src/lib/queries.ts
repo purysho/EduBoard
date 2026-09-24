@@ -1379,6 +1379,13 @@ export function useMarkPortalThreadRead() {
   })
 }
 
+export function useTranslatePortalMessage() {
+  return useMutation({
+    mutationFn: ({ messageId, targetLang }: { messageId: string; targetLang: string }) =>
+      api().portalMessages.translate(messageId, targetLang)
+  })
+}
+
 // ---- Class Story posts --------------------------------------------------------------------
 
 export function useClassPosts(classId: string) {

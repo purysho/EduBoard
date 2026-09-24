@@ -308,6 +308,22 @@ export async function sendTeacherMessage(accountId: string, body: string): Promi
   if (!res.ok) throw new Error(`Could not send message: ${res.status} ${await res.text()}`)
 }
 
+/** Translates one message into targetLang (e.g. "English" or "Chinese"), via the
+ * Portal's per-teacher AI key. Cached server-side, so calling this again for the same
+ * message+language is instant. */
+export async function translateMessage(messageId: string, targetLang: string): Promise<string> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/messages/${messageId}/translate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ targetLang })
+  })
+  if (!res.ok) throw new Error(`Could not translate message: ${res.status} ${await res.text()}`)
+  const data = await res.json()
+  return data.translatedBody
+}
+
 export async function markMessageThreadRead(accountId: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 

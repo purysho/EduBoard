@@ -113,6 +113,10 @@ async function api(path, opts) {
   }
 }
 
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+}
+
 function lastSyncedLabel() {
   const iso = localStorage.getItem(LAST_SYNCED_KEY)
   if (!iso) return 'unknown'
@@ -381,22 +385,60 @@ function homeworkCardHtml(h, studentId) {
     </div>`
 }
 
+let lastLoadedMessages = []
+
 async function loadMessages() {
   const box = document.getElementById('messages')
   if (!box) return
   const messages = await api('/me/messages')
+  lastLoadedMessages = messages
+  renderMessages(messages)
+  box.scrollTop = box.scrollHeight
+}
+
+function renderMessages(messages) {
+  const box = document.getElementById('messages')
+  if (!box) return
   box.innerHTML = !messages.length
     ? '<p class="muted">No messages yet — say hello below.</p>'
     : messages
         .map(
           (m) => `
       <div class="msg ${m.sender}">
-        <div class="msg-bubble">${m.body}</div>
-        <div class="muted" style="font-size:.72rem; margin-top:2px">${formatWhen(m.createdAt)}</div>
+        <div class="msg-bubble" data-msg-body="${m.id}">${esc(m.translatedBody ?? m.body)}</div>
+        <div class="muted" style="font-size:.72rem; margin-top:2px; display:flex; gap:8px; align-items:center">
+          <span>${formatWhen(m.createdAt)}</span>
+          <a href="#" data-translate="${m.id}" style="font-size:.72rem">${m.translatedBody ? 'Show original' : 'Translate'}</a>
+        </div>
       </div>`
         )
         .join('')
-  box.scrollTop = box.scrollHeight
+  box.querySelectorAll('[data-translate]').forEach((link) => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault()
+      const id = link.getAttribute('data-translate')
+      const message = lastLoadedMessages.find((m) => m.id === id)
+      if (!message) return
+      if (message.translatedBody) {
+        message.translatedBody = null
+        renderMessages(lastLoadedMessages)
+        return
+      }
+      link.textContent = 'Translating…'
+      try {
+        const targetLang = document.getElementById('msg-lang')?.value || 'English'
+        const { translatedBody } = await api(`/me/messages/${id}/translate`, {
+          method: 'POST',
+          body: { targetLang }
+        })
+        message.translatedBody = translatedBody
+        renderMessages(lastLoadedMessages)
+      } catch (err) {
+        link.textContent = 'Translate'
+        alert(err.message || 'Translation failed. Try again in a moment.')
+      }
+    })
+  })
 }
 
 async function loadPortfolio() {
@@ -558,7 +600,16 @@ function renderDashboard(me) {
       )
       .join('') +
     `<div class="section-title">Messages</div>
-     <div class="card"><div id="messages">Loading…</div>
+     <div class="card">
+       <div style="display:flex; justify-content:flex-end; margin-bottom:6px">
+         <select id="msg-lang" style="font-size:.75rem; padding:2px 4px">
+           <option value="English">Translate into English</option>
+           <option value="Chinese">Translate into Chinese (中文)</option>
+           <option value="Spanish">Translate into Spanish</option>
+           <option value="French">Translate into French</option>
+         </select>
+       </div>
+       <div id="messages">Loading…</div>
        <form id="msg-form" style="margin-top:10px">
          <textarea id="msg-body" rows="2" placeholder="Message the teacher…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
          <button type="submit">Send</button>

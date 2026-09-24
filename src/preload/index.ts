@@ -260,7 +260,9 @@ const api: EduBoardApi = {
   portalMessages: {
     listThreads: () => invoke(IpcChannels.portalMessages.listThreads),
     send: (accountId, body) => invoke(IpcChannels.portalMessages.send, accountId, body),
-    markRead: (accountId) => invoke(IpcChannels.portalMessages.markRead, accountId)
+    markRead: (accountId) => invoke(IpcChannels.portalMessages.markRead, accountId),
+    translate: (messageId, targetLang) =>
+      invoke(IpcChannels.portalMessages.translate, messageId, targetLang)
   },
   classPosts: {
     list: () => invoke(IpcChannels.classPosts.list),

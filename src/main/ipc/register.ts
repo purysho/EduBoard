@@ -50,6 +50,7 @@ import {
   listMessageThreads,
   sendTeacherMessage,
   markMessageThreadRead,
+  translateMessage,
   listClassPosts,
   createClassPost,
   deleteClassPost,
@@ -659,6 +660,9 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.portalMessages.markRead, (_e, accountId: string) =>
     markMessageThreadRead(accountId)
+  )
+  handle(IpcChannels.portalMessages.translate, (_e, messageId: string, targetLang: string) =>
+    translateMessage(messageId, targetLang)
   )
   handle(IpcChannels.classPosts.list, () => listClassPosts())
   handle(

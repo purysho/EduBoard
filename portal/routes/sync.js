@@ -4,7 +4,7 @@ const path = require('path')
 const crypto = require('crypto')
 const db = require('../db')
 const { requireSyncSecret, hashPassword } = require('../auth')
-const { saveAiSettings } = require('../services/ai')
+const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
 const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
 
@@ -427,6 +427,46 @@ router.post('/messages', (req, res) => {
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_family) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), accountId, 'teacher', text, new Date().toISOString())
   res.json({ ok: true })
+})
+
+// Same translate-and-cache endpoint as /me/messages/:id/translate, for the teacher's
+// side of the same thread — one cache row per message serves both directions, since
+// whoever asks first just supplies whichever targetLang they need.
+router.post('/messages/:id/translate', async (req, res) => {
+  const targetLang = (req.body?.targetLang || '').trim()
+  if (!targetLang) return res.status(400).json({ error: 'targetLang is required' })
+
+  const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(req.params.id)
+  if (!message || !ownsAccount(req.teacherId, message.account_id)) {
+    return res.status(404).json({ error: 'Not found' })
+  }
+
+  const cached = db
+    .prepare('SELECT * FROM message_translations WHERE message_id = ?')
+    .get(message.id)
+  if (cached && cached.target_lang === targetLang) {
+    return res.json({ translatedBody: cached.translated_body })
+  }
+
+  try {
+    const translated = await complete(
+      req.teacherId,
+      'You translate short parent-teacher messages. Reply with ONLY the translation, ' +
+        'no notes, no quotes, no original text — preserve tone and meaning exactly.',
+      `Translate this message into ${targetLang}:\n\n${message.body}`,
+      500
+    )
+    const translatedBody = translated.trim()
+    db.prepare(
+      `INSERT INTO message_translations (message_id, translated_body, target_lang)
+       VALUES (?, ?, ?)
+       ON CONFLICT(message_id) DO UPDATE SET translated_body = excluded.translated_body, target_lang = excluded.target_lang`
+    ).run(message.id, translatedBody, targetLang)
+    res.json({ translatedBody })
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+  }
 })
 
 router.post('/messages/:accountId/read', (req, res) => {

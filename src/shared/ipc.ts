@@ -219,7 +219,8 @@ export const IpcChannels = {
   portalMessages: {
     listThreads: 'portalMessages:listThreads',
     send: 'portalMessages:send',
-    markRead: 'portalMessages:markRead'
+    markRead: 'portalMessages:markRead',
+    translate: 'portalMessages:translate'
   },
   classPosts: {
     list: 'classPosts:list',

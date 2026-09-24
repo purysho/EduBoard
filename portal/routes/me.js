@@ -27,6 +27,19 @@ function getLinkedStudentIds(accountId) {
     .map((r) => r.student_id)
 }
 
+// A family's linked student(s) all belong to the same teacher in practice (an invite
+// always comes from one class); this just reads the first linked student's teacher_id.
+function getTeacherIdForAccount(accountId) {
+  const row = db
+    .prepare(
+      `SELECT s.teacher_id FROM account_students acs
+       JOIN students s ON s.id = acs.student_id
+       WHERE acs.account_id = ? LIMIT 1`
+    )
+    .get(accountId)
+  return row ? row.teacher_id : null
+}
+
 function getActiveClassIds(studentIds) {
   const classIds = new Set()
   for (const studentId of studentIds) {
@@ -380,6 +393,49 @@ router.post('/messages', (req, res) => {
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_teacher) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), req.accountId, 'family', body, new Date().toISOString())
   res.json({ ok: true })
+})
+
+// Translates one message into targetLang and caches the result — a message is
+// translated at most once per target language, not on every view. Uses the teacher's
+// own AI key (same provider as the student AI chat), so it costs nothing extra to set
+// up if that's already configured; if it isn't, the family just sees the original text
+// with no translate option, rather than an error.
+router.post('/messages/:id/translate', async (req, res) => {
+  const targetLang = (req.body?.targetLang || '').trim()
+  if (!targetLang) return res.status(400).json({ error: 'targetLang is required' })
+
+  const message = db
+    .prepare('SELECT * FROM messages WHERE id = ? AND account_id = ?')
+    .get(req.params.id, req.accountId)
+  if (!message) return res.status(404).json({ error: 'Not found' })
+
+  const cached = db
+    .prepare('SELECT * FROM message_translations WHERE message_id = ?')
+    .get(message.id)
+  if (cached && cached.target_lang === targetLang) {
+    return res.json({ translatedBody: cached.translated_body })
+  }
+
+  const teacherId = getTeacherIdForAccount(req.accountId)
+  try {
+    const translated = await complete(
+      teacherId,
+      'You translate short parent-teacher messages. Reply with ONLY the translation, ' +
+        'no notes, no quotes, no original text — preserve tone and meaning exactly.',
+      `Translate this message into ${targetLang}:\n\n${message.body}`,
+      500
+    )
+    const translatedBody = translated.trim()
+    db.prepare(
+      `INSERT INTO message_translations (message_id, translated_body, target_lang)
+       VALUES (?, ?, ?)
+       ON CONFLICT(message_id) DO UPDATE SET translated_body = excluded.translated_body, target_lang = excluded.target_lang`
+    ).run(message.id, translatedBody, targetLang)
+    res.json({ translatedBody })
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+  }
 })
 
 // Every resource the teacher shared with a class this account's student(s) are
