@@ -64,14 +64,32 @@ router.post('/', (req, res) => {
     fromName: digestFromName
   })
 
-  // Every publish replaces the whole homework_assignments table (see below), so old
-  // attachment files would otherwise pile up on disk forever — clear the folder first
-  // and let this push repopulate only what's still current.
-  for (const entry of fs.readdirSync(UPLOADS_DIR)) {
-    fs.rmSync(path.join(UPLOADS_DIR, entry), { force: true })
-  }
-
   const teacherId = req.teacherId
+
+  // Only rows for classes in this same push are accepted. Every class below is inserted
+  // under this teacher (and a class id another teacher already owns fails the insert),
+  // so this is what stops a push from writing into someone else's class — and it keeps
+  // rows for a class the desktop no longer sends (e.g. a material still shared to an
+  // archived class) from being inserted where the scoped DELETEs below can never reach
+  // them, which made every later publish fail on a duplicate id.
+  const pushedClassIds = new Set(classes.map((c) => c.id))
+  const pushedStudentIds = new Set(students.map((s) => s.id))
+  const inPushedClass = (row) => pushedClassIds.has(row.classId)
+  const inPushedRoster = (row) => inPushedClass(row) && pushedStudentIds.has(row.studentId)
+
+  // Every publish replaces this teacher's homework_assignments (see below), so their old
+  // attachment files would otherwise pile up on disk forever. The uploads folder is
+  // shared by every teacher on this Portal, so only this teacher's own previous files
+  // are candidates for removal — and only once the new push has committed.
+  const previousFiles = db
+    .prepare(
+      `SELECT h.file_path FROM homework_assignments h
+       JOIN classes c ON c.id = h.class_id
+       WHERE c.teacher_id = ? AND h.file_path IS NOT NULL`
+    )
+    .all(teacherId)
+    .map((r) => r.file_path)
+  const writtenFiles = new Set()
 
   const run = db.transaction(() => {
     // Every DELETE here is scoped to this teacher's own classIds/rows — critical in a
@@ -107,6 +125,15 @@ router.post('/', (req, res) => {
         ...ownClassIds
       )
     }
+    // Materials whose class no longer exists at all are unreachable (every read joins
+    // classes) — older Portal versions left them behind for a resource still shared to an
+    // archived class. Clearing them lets that class be published again without the
+    // material's id colliding with its own orphaned row.
+    db.prepare(
+      `DELETE FROM material_chunks WHERE material_id IN
+         (SELECT id FROM materials WHERE class_id NOT IN (SELECT id FROM classes))`
+    ).run()
+    db.prepare('DELETE FROM materials WHERE class_id NOT IN (SELECT id FROM classes)').run()
 
     const insertClass = db.prepare(
       'INSERT INTO classes (id, teacher_id, name, level_type) VALUES (?, ?, ?, ?)'
@@ -123,12 +150,14 @@ router.post('/', (req, res) => {
     const insertEnrollment = db.prepare(
       'INSERT OR REPLACE INTO enrollments (student_id, class_id, status) VALUES (?, ?, ?)'
     )
-    for (const e of enrollments) insertEnrollment.run(e.studentId, e.classId, e.status)
+    for (const e of enrollments.filter(inPushedRoster)) {
+      insertEnrollment.run(e.studentId, e.classId, e.status)
+    }
 
     const insertGrade = db.prepare(
       'INSERT OR REPLACE INTO grades (student_id, class_id, percent, letter, attendance_rate) VALUES (?, ?, ?, ?, ?)'
     )
-    for (const g of grades) {
+    for (const g of grades.filter(inPushedRoster)) {
       insertGrade.run(g.studentId, g.classId, g.percent, g.letter, g.attendanceRate)
     }
 
@@ -140,11 +169,12 @@ router.post('/', (req, res) => {
          (id, homework_assignment_id, type, prompt, options, correct_answer, points, sort_order)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    for (const h of homeworkAssignments) {
+    for (const h of homeworkAssignments.filter(inPushedClass)) {
       let filePath = null
       if (h.fileName && h.fileData) {
         const storedName = `${h.id}-${sanitizeFileName(h.fileName)}`
         fs.writeFileSync(path.join(UPLOADS_DIR, storedName), Buffer.from(h.fileData, 'base64'))
+        writtenFiles.add(storedName)
         filePath = storedName
       }
       insertHomework.run(
@@ -177,7 +207,7 @@ router.post('/', (req, res) => {
     const insertChunk = db.prepare(
       'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
     )
-    for (const m of materials) {
+    for (const m of materials.filter(inPushedClass)) {
       insertMaterial.run(m.id, m.classId, m.title, m.studyGuide || null)
       ;(m.chunks || []).forEach((text, i) => insertChunk.run(m.id, i, text))
     }
@@ -188,13 +218,17 @@ router.post('/', (req, res) => {
     const upsertInvite = db.prepare(`
       INSERT INTO invites (code, class_id, revoked, claimed_at)
       VALUES (@code, @classId, @revoked, NULL)
-      ON CONFLICT(code) DO UPDATE SET revoked = @revoked
+      ON CONFLICT(code) DO UPDATE SET revoked = @revoked WHERE invites.class_id = @classId
     `)
-    for (const i of invites) {
+    for (const i of invites.filter(inPushedClass)) {
       upsertInvite.run({ code: i.code, classId: i.classId, revoked: i.revoked ? 1 : 0 })
     }
   })
   run()
+
+  for (const file of previousFiles) {
+    if (!writtenFiles.has(file)) fs.rmSync(path.join(UPLOADS_DIR, file), { force: true })
+  }
 
   res.json({ ok: true })
 })
@@ -483,7 +517,7 @@ router.post('/messages/:accountId/read', (req, res) => {
 // Teacher-triggered immediate send, for testing or an out-of-cycle update — the
 // automatic weekly send (see services/digest.runScheduledDigestIfDue) still runs
 // independently on its own Monday-morning schedule.
-router.post('/digest/send-now', async (_req, res) => {
+router.post('/digest/send-now', async (req, res) => {
   try {
     const result = await sendAllDigests(req.teacherId)
     res.json(result)
