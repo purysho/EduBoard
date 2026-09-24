@@ -63,23 +63,12 @@ const MONTH_NAMES = [
  * is entered (due dates, DOB, assessment/schedule dates), for a consistent look across
  * the app and to avoid the ambiguous mm/dd-vs-dd/mm reading of a typed date string.
  *
- * Keyed by `value` so the inner component remounts (and re-derives its local Y/M/D
- * state fresh) whenever the caller changes `value` out from under it — e.g. clearing
- * the field after "Add date." Between those resets, the inner component owns its own
- * state, so picking just the month doesn't get wiped out while day/year are still
- * unset (the caller's `value` only ever holds a complete date or ''). */
-export function DateSelect(props: {
-  value: string | null | undefined
-  onChange: (value: string) => void
-  minYear?: number
-  maxYear?: number
-  required?: boolean
-  id?: string
-}): React.JSX.Element {
-  return <DateSelectFields key={props.value || ''} {...props} />
-}
-
-function DateSelectFields({
+ * The caller's `value` only ever holds a complete date or '', so the Y/M/D picks live in
+ * local state — picking just the month mustn't get wiped out while day/year are unset.
+ * That local state is re-derived only when `value` changes to something this component
+ * didn't report itself (e.g. the caller clearing the field after "Add date"). Clearing
+ * one dropdown back to its placeholder reports '' but keeps the other two picks. */
+export function DateSelect({
   value,
   onChange,
   minYear,
@@ -98,16 +87,20 @@ function DateSelectFields({
   const lo = minYear ?? thisYear - 5
   const hi = maxYear ?? thisYear + 5
 
-  const [initialY = '', initialM = '', initialD = ''] = (value || '').split('-')
-  const [y, setY] = useState(initialY)
-  const [m, setM] = useState(initialM)
-  const [d, setD] = useState(initialD)
+  const current = value || ''
+  const [parts, setParts] = useState(() => splitDate(current))
+  const [lastSeen, setLastSeen] = useState(current)
+  if (current !== lastSeen) {
+    setLastSeen(current)
+    setParts(splitDate(current))
+  }
+  const { y, m, d } = parts
 
   function pick(ny: string, nm: string, nd: string): void {
-    setY(ny)
-    setM(nm)
-    setD(nd)
-    onChange(ny && nm && nd ? `${ny}-${nm}-${nd}` : '')
+    const next = ny && nm && nd ? `${ny}-${nm}-${nd}` : ''
+    setParts({ y: ny, m: nm, d: nd })
+    setLastSeen(next)
+    onChange(next)
   }
 
   const years = Array.from({ length: Math.max(0, hi - lo + 1) }, (_, i) => hi - i)
@@ -140,6 +133,11 @@ function DateSelectFields({
       </Select>
     </div>
   )
+}
+
+function splitDate(value: string): { y: string; m: string; d: string } {
+  const [y = '', m = '', d = ''] = value.split('-')
+  return { y, m, d }
 }
 
 export function FormRow({
