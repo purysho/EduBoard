@@ -94,7 +94,7 @@ export function AttendanceTab(): React.JSX.Element {
           Click a cell to cycle Present → Late → Absent → Excused.
         </p>
         <div className="flex items-center gap-2">
-          <div className="w-56">
+          <div className="w-80">
             <DateSelect value={newDate} onChange={setNewDate} />
           </div>
           <Button variant="secondary" onClick={addDate}>
