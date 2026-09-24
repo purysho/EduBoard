@@ -247,24 +247,24 @@ ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
 // can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and
-// migrate its one row onto the default teacher once we know who that is, below.
+// rebuild the table in the new per-teacher shape — keyed on the table's *shape*, not on
+// whether its row exists, since the old code only wrote that row on the first publish
+// and a legacy table that never saw one still needs rebuilding. Its one row (if any) is
+// carried over onto the default teacher once we know who that is, below.
 function hasLegacySingleRow(table) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
   return cols.includes('id') && !cols.includes('teacher_id')
 }
-const legacyAiSettings = hasLegacySingleRow('ai_settings') ? db.prepare('SELECT * FROM ai_settings WHERE id = 1').get() : null
-const legacyDigestSettings = hasLegacySingleRow('digest_settings') ? db.prepare('SELECT * FROM digest_settings WHERE id = 1').get() : null
-if (legacyAiSettings || legacyDigestSettings) {
-  db.exec('ALTER TABLE ai_settings RENAME TO ai_settings_old')
-  db.exec('ALTER TABLE digest_settings RENAME TO digest_settings_old')
-  db.exec(`
+const NEW_SETTINGS_DDL = {
+  ai_settings: `
     CREATE TABLE ai_settings (
       teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
       provider TEXT NOT NULL DEFAULT 'zhipu',
       api_key TEXT NOT NULL DEFAULT '',
       custom_base_url TEXT NOT NULL DEFAULT '',
       custom_model TEXT NOT NULL DEFAULT ''
-    );
+    )`,
+  digest_settings: `
     CREATE TABLE digest_settings (
       teacher_id TEXT PRIMARY KEY REFERENCES teachers(id) ON DELETE CASCADE,
       enabled INTEGER NOT NULL DEFAULT 0,
@@ -275,8 +275,25 @@ if (legacyAiSettings || legacyDigestSettings) {
       from_email TEXT NOT NULL DEFAULT '',
       from_name TEXT NOT NULL DEFAULT '',
       last_sent_at TEXT
-    );
-  `)
+    )`
+}
+/** Rebuilds a legacy single-row settings table in the per-teacher shape, returning its
+ * old row (or null if it never had one) so the caller can carry it over. */
+function migrateLegacySettingsTable(table) {
+  if (!hasLegacySingleRow(table)) return null
+  const row = db.prepare(`SELECT * FROM ${table} WHERE id = 1`).get() ?? null
+  db.exec(`DROP TABLE ${table}`)
+  db.exec(NEW_SETTINGS_DDL[table])
+  return row
+}
+const legacyAiSettings = migrateLegacySettingsTable('ai_settings')
+const legacyDigestSettings = migrateLegacySettingsTable('digest_settings')
+if ((legacyAiSettings || legacyDigestSettings) && !process.env.SYNC_SECRET) {
+  console.warn(
+    'Portal: dropped the old shared AI/digest settings during the per-teacher upgrade — ' +
+      'SYNC_SECRET is not set, so there is no default teacher to attach them to. Each ' +
+      "teacher's next publish from the desktop app sends them again."
+  )
 }
 
 // Backward compatibility for a Portal that was already running single-teacher,
@@ -328,9 +345,4 @@ if (process.env.SYNC_SECRET) {
     )
   }
 }
-if (legacyAiSettings || legacyDigestSettings) {
-  db.exec('DROP TABLE IF EXISTS ai_settings_old')
-  db.exec('DROP TABLE IF EXISTS digest_settings_old')
-}
-
 module.exports = db
