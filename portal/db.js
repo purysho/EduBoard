@@ -12,17 +12,31 @@ db.pragma('journal_mode = WAL')
 db.pragma('foreign_keys = ON')
 
 db.exec(`
+  -- One row per teacher using this Portal — what makes it safe to run for a whole
+  -- school rather than one classroom. Each teacher's desktop app authenticates with
+  -- their own sync_secret_hash (see auth.js's requireSyncSecret); every table below
+  -- that's "synced from the desktop app" is scoped to whichever teacher pushed it.
+  CREATE TABLE IF NOT EXISTS teachers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    sync_secret_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL
+  );
+
   -- Synced from the desktop app on every "Publish to portal" push. Each table is
-  -- wholesale-replaced (delete + reinsert) on sync, since the desktop app is the
-  -- source of truth for all of this — the portal never edits it back.
+  -- wholesale-replaced (delete + reinsert) on sync, scoped to the pushing teacher's own
+  -- rows only — the desktop app is the source of truth for all of this, the portal
+  -- never edits it back.
   CREATE TABLE IF NOT EXISTS classes (
     id TEXT PRIMARY KEY,
+    teacher_id TEXT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     level_type TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS students (
     id TEXT PRIMARY KEY,
+    teacher_id TEXT NOT NULL REFERENCES teachers(id) ON DELETE CASCADE,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     date_of_birth TEXT,
@@ -217,5 +231,27 @@ ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
 ensureColumn('homework_assignments', 'topic', 'topic TEXT')
 ensureColumn('homework_submissions', 'portfolio', 'portfolio INTEGER NOT NULL DEFAULT 0')
 ensureColumn('accounts', 'email', 'email TEXT')
+ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
+ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
+
+// Backward compatibility for a Portal that was already running single-teacher,
+// authenticated by the old global SYNC_SECRET env var: seeds a "default" teacher row
+// from that same secret (so the existing desktop app's sync secret setting keeps
+// working completely unchanged) and backfills any pre-multi-tenant rows (teacher_id
+// still NULL, from before this migration ran) onto that teacher.
+if (process.env.SYNC_SECRET) {
+  const crypto = require('crypto')
+  const hash = crypto.createHash('sha256').update(process.env.SYNC_SECRET).digest('hex')
+  let defaultTeacher = db.prepare('SELECT id FROM teachers WHERE sync_secret_hash = ?').get(hash)
+  if (!defaultTeacher) {
+    const id = crypto.randomUUID()
+    db.prepare(
+      'INSERT INTO teachers (id, name, sync_secret_hash, created_at) VALUES (?, ?, ?, ?)'
+    ).run(id, 'Default teacher', hash, new Date().toISOString())
+    defaultTeacher = { id }
+  }
+  db.prepare('UPDATE classes SET teacher_id = ? WHERE teacher_id IS NULL').run(defaultTeacher.id)
+  db.prepare('UPDATE students SET teacher_id = ? WHERE teacher_id IS NULL').run(defaultTeacher.id)
+}
 
 module.exports = db

@@ -15,6 +15,7 @@ app.use('/api/sync', require('./routes/sync'))
 app.use('/api/invites', require('./routes/invites'))
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/me', require('./routes/me'))
+app.use('/api/admin', require('./routes/admin'))
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 

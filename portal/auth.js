@@ -58,13 +58,31 @@ function requireAuth(req, res, next) {
   next()
 }
 
-// The teacher-only push/pull endpoints use a single shared secret (SYNC_SECRET), not a
-// per-teacher account system — this portal is a single-teacher deployment, not a SaaS
-// serving many teachers, matching the "not a large database" brief it was scoped to.
+// Every teacher using this Portal has their own sync secret (see teachers table) —
+// looked up by its hash, never compared as plaintext, same principle as QR tokens.
+// Everything downstream (routes/sync.js, routes/me.js) scopes its queries by
+// req.teacherId, which is what makes this Portal safe to run for a whole school's
+// staff rather than just one teacher.
 function requireSyncSecret(req, res, next) {
   const secret = req.get('X-Sync-Secret')
-  if (!secret || secret !== process.env.SYNC_SECRET) {
-    return res.status(401).json({ error: 'Bad sync secret' })
+  if (!secret) return res.status(401).json({ error: 'Bad sync secret' })
+  const db = require('./db')
+  const teacher = db
+    .prepare('SELECT id FROM teachers WHERE sync_secret_hash = ?')
+    .get(hashToken(secret))
+  if (!teacher) return res.status(401).json({ error: 'Bad sync secret' })
+  req.teacherId = teacher.id
+  next()
+}
+
+// Gates the teacher-management endpoints (routes/admin.js) — a separate, higher-value
+// secret than any individual teacher's sync secret, held by whoever administers the
+// Portal (the school, or the first teacher who set it up), since it can mint new
+// teacher accounts.
+function requireAdminSecret(req, res, next) {
+  const secret = req.get('X-Admin-Secret')
+  if (!process.env.ADMIN_SECRET || !secret || secret !== process.env.ADMIN_SECRET) {
+    return res.status(401).json({ error: 'Bad admin secret' })
   }
   next()
 }
@@ -83,6 +101,7 @@ module.exports = {
   issueSessionCookie,
   requireAuth,
   requireSyncSecret,
+  requireAdminSecret,
   newRandomToken,
   hashToken
 }

@@ -46,24 +46,40 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [x] Grade trend analytics per student — sparkline trend chart per class on the Student
       profile page, using existing scores/assessments data (no new tables)
 
-## Phase 5 — Operational maturity (partial)
+## Phase 5 — Operational maturity (mostly done)
 
 - [ ] Offline-first Portal caching (PWA-style "last synced" view) — NOT built; this is a
       real architecture piece (service worker, cache strategy), not a quick add
-- [ ] Audit log / activity history (who changed what grade, when) — NOT built; score
-      history exists for one score's own edits, but there's no cross-entity activity log
+- [x] Audit log / activity history — new Audit Log page tracks students, classes,
+      enrollments, grades, attendance, homework assignments (incl. publish/unpublish),
+      and submission grading. A removed student's trail disappears from view immediately
+      but is kept 12 months (auto-purged) — a full backup is also taken right before any
+      student deletion as the real recovery mechanism.
 - [x] Bulk actions — "Mark all present" per date on the Attendance tab, "Publish all N
       drafts" on the Homework tab. Grade curves not built (no curve-application UI exists
       anywhere yet, not just as a bulk action).
 - [x] CSV/PDF export of anything — gradebook (.xlsx) and attendance (.csv) already
       existed; added homework submissions (.csv). PDF export = the existing per-student
       print report.
-- [ ] Multi-teacher/co-teacher support per class — NOT built; the whole app assumes one
-      teacher owns everything (no accounts/auth model exists on the desktop side at all)
+- [x] Multi-teacher support — the Portal is now genuinely multi-tenant: each teacher gets
+      their own sync secret (minted via a new admin API) and only ever sees their own
+      classes/students/grades/homework/invites; verified with a live two-teacher test
+      (isolated pushes, no cross-contamination). The desktop app itself is unchanged —
+      "Portal sync secret" in Settings is just that teacher's own credential now. Backward
+      compatible: an existing single-teacher Portal auto-seeds a "Default teacher" from
+      its current SYNC_SECRET on first boot after upgrading, so nothing breaks.
+      **Known gap:** the AI provider/key and digest SMTP settings are still one shared
+      config for the whole Portal, not per-teacher — documented in portal/README.md.
+      Messages are scoped to accounts with at least one of a teacher's own students, but
+      aren't fully partitioned if one family has children under two different teachers
+      on the same Portal (rare edge case, noted in code).
 
-## Phase 6 — Platform-level (only if EduBoard grows beyond a single classroom)
+## Phase 6 — Platform-level (seeded by Phase 5's multi-teacher work)
 
-- [ ] School-level admin view aggregating multiple teachers' classes
+- [x] School-level admin view — minimal version: `POST/GET/DELETE /api/admin/teachers`
+      (secured by ADMIN_SECRET) creates teachers, mints their sync secret, and lists
+      everyone on the Portal with a rough class/student count each. Not a UI/dashboard —
+      curl or a future admin page would call this API.
 - [ ] Marketplace/library of shareable lesson plans and activities between teachers
 - [ ] Behavior tracking (ClassDojo-style) as an optional module
 

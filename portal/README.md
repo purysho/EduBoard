@@ -47,11 +47,13 @@ tradeoffs if you want them again.
    ```
    SESSION_SECRET=<a long random string — generate with `openssl rand -hex 32`>
    SYNC_SECRET=<a different long random string — this is what you also paste into the desktop app's Settings>
+   ADMIN_SECRET=<a third long random string — only needed for a multi-teacher deployment, see below>
    PORT=4790
    NODE_ENV=production
    ```
-   Both secrets must be kept private — `SYNC_SECRET` in particular lets whoever has it
-   overwrite the Portal's entire dataset.
+   All three secrets must be kept private — `SYNC_SECRET` in particular lets whoever has
+   it overwrite that teacher's entire dataset, and `ADMIN_SECRET` lets whoever has it
+   create and remove teacher accounts on this Portal.
 7. **Put it behind HTTPS.** The simplest option is
    [Caddy](https://caddyserver.com/) — install it, then a `Caddyfile` like:
    ```
@@ -85,6 +87,42 @@ tradeoffs if you want them again.
    `https://portal.yourdomain.com` and Portal sync secret to the same `SYNC_SECRET` you
    set above. Click "Publish to portal" once to push your first batch of data.
 
+## Multiple teachers on one Portal (a school deployment)
+
+One Portal can serve several teachers — each gets their own sync secret and only ever
+sees their own classes, students, grades, and homework. To add a teacher:
+
+```bash
+curl -X POST https://portal.yourdomain.com/api/admin/teachers \
+  -H "X-Admin-Secret: <your ADMIN_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Ms. Chen"}'
+```
+
+The response includes a `syncSecret` — shown exactly once, so save it now. Give that
+value to the teacher to paste into their own desktop app's Settings → Portal sync
+secret; everything else (Portal URL) is the same for every teacher on this deployment.
+List teachers (with a rough class/student count each) with:
+
+```bash
+curl https://portal.yourdomain.com/api/admin/teachers -H "X-Admin-Secret: <your ADMIN_SECRET>"
+```
+
+**Known limitation:** the AI provider/key and the weekly digest SMTP settings
+(Settings → Student AI / Weekly parent digest email on the desktop app) are still a
+single shared configuration for the whole Portal, not per-teacher — whichever teacher
+last published sets it for everyone. Fine for one teacher; a school with several
+teachers wanting their own AI key or sender address will need that split out before
+relying on it.
+
+**Sizing:** each teacher adds a modest amount of load (their own publish pushes, their
+families' Portal visits, and — if the digest email or student AI features are used —
+more outbound requests). The VPS.DO HK-1H2G tier this app was originally set up on is
+fine for one or a handful of teachers; a whole school's staff publishing and families
+checking in daily will likely need a larger instance (more RAM in particular, since
+better-sqlite3 keeps the working set in memory) — budget for an upgrade before rolling
+this out school-wide, not after.
+
 ## Data it holds
 
 Only what you publish: class names/types, student names/DOB/number, per-class grade %
@@ -117,7 +155,7 @@ mail deliverability from a fresh VPS is its own headache. Instead:
 ```bash
 cd portal
 npm install
-SESSION_SECRET=test SYNC_SECRET=test PORT=4790 node server.js
+SESSION_SECRET=test SYNC_SECRET=test ADMIN_SECRET=test PORT=4790 node server.js
 ```
 Then visit `http://localhost:4790` — you'll see a login screen until an invite is
 redeemed (`http://localhost:4790/?code=<a code your desktop app generated>`).

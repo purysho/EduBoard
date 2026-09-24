@@ -46,9 +46,12 @@ router.post('/', (req, res) => {
     digestFromName
   } = req.body
 
-  // The AI key is teacher-owned config, not roster data, but it rides along on the same
-  // publish so a key change (or the teacher clearing it) takes effect on the very next
-  // sync with no separate settings push needed.
+  // KNOWN LIMITATION (multi-teacher): the AI key and digest SMTP config are still a
+  // single shared row (ai_settings/digest_settings, id=1), not scoped per teacher_id
+  // like classes/students/homework above — whichever teacher publishes last sets it for
+  // every teacher on this Portal. Fine for a single-teacher deployment; a school
+  // deployment with several teachers wanting their own AI key or sender address needs
+  // these two tables made per-teacher before that's safe to rely on.
   saveAiSettings({
     provider: aiProvider,
     apiKey: aiApiKey,
@@ -72,24 +75,53 @@ router.post('/', (req, res) => {
     fs.rmSync(path.join(UPLOADS_DIR, entry), { force: true })
   }
 
-  const run = db.transaction(() => {
-    db.prepare('DELETE FROM classes').run()
-    db.prepare('DELETE FROM students').run()
-    db.prepare('DELETE FROM enrollments').run()
-    db.prepare('DELETE FROM grades').run()
-    db.prepare('DELETE FROM homework_assignments').run()
-    db.prepare('DELETE FROM homework_questions').run()
-    db.prepare('DELETE FROM materials').run()
-    db.prepare('DELETE FROM material_chunks').run()
+  const teacherId = req.teacherId
 
-    const insertClass = db.prepare('INSERT INTO classes (id, name, level_type) VALUES (?, ?, ?)')
-    for (const c of classes) insertClass.run(c.id, c.name, c.levelType)
+  const run = db.transaction(() => {
+    // Every DELETE here is scoped to this teacher's own classIds/rows — critical in a
+    // multi-teacher Portal, since a wholesale "replace everything" push must never
+    // touch another teacher's roster just because they happen to share this server.
+    const ownClassIds = db
+      .prepare('SELECT id FROM classes WHERE teacher_id = ?')
+      .all(teacherId)
+      .map((r) => r.id)
+    const classIdPlaceholders = ownClassIds.map(() => '?').join(',') || 'NULL'
+
+    db.prepare('DELETE FROM classes WHERE teacher_id = ?').run(teacherId)
+    db.prepare('DELETE FROM students WHERE teacher_id = ?').run(teacherId)
+    if (ownClassIds.length) {
+      db.prepare(`DELETE FROM enrollments WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
+      db.prepare(`DELETE FROM grades WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
+      db.prepare(
+        `DELETE FROM homework_questions WHERE homework_assignment_id IN
+           (SELECT id FROM homework_assignments WHERE class_id IN (${classIdPlaceholders}))`
+      ).run(...ownClassIds)
+      db.prepare(`DELETE FROM homework_assignments WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
+      db.prepare(
+        `DELETE FROM material_chunks WHERE material_id IN
+           (SELECT id FROM materials WHERE class_id IN (${classIdPlaceholders}))`
+      ).run(...ownClassIds)
+      db.prepare(`DELETE FROM materials WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
+    }
+
+    const insertClass = db.prepare(
+      'INSERT INTO classes (id, teacher_id, name, level_type) VALUES (?, ?, ?, ?)'
+    )
+    for (const c of classes) insertClass.run(c.id, teacherId, c.name, c.levelType)
 
     const insertStudent = db.prepare(
-      'INSERT INTO students (id, first_name, last_name, date_of_birth, student_number) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO students (id, teacher_id, first_name, last_name, date_of_birth, student_number) VALUES (?, ?, ?, ?, ?, ?)'
     )
     for (const s of students) {
-      insertStudent.run(s.id, s.firstName, s.lastName, s.dateOfBirth, s.studentNumber)
+      insertStudent.run(s.id, teacherId, s.firstName, s.lastName, s.dateOfBirth, s.studentNumber)
     }
 
     const insertEnrollment = db.prepare(
@@ -171,11 +203,31 @@ router.post('/', (req, res) => {
   res.json({ ok: true })
 })
 
+// True for a homework assignment that belongs to one of this teacher's own classes —
+// checked before any submission-grading action touches it, so a valid sync secret for
+// teacher A can never read or grade teacher B's students' work.
+function ownsAssignment(teacherId, homeworkAssignmentId) {
+  return !!db
+    .prepare(
+      `SELECT 1 FROM homework_assignments h
+       JOIN classes c ON c.id = h.class_id
+       WHERE h.id = ? AND c.teacher_id = ?`
+    )
+    .get(homeworkAssignmentId, teacherId)
+}
+
 // Pull homework submission statuses students have set themselves, so the desktop app
 // can mirror them into its own local tracking without the portal ever writing directly
 // into the desktop's database.
-router.get('/submissions', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM homework_submissions').all()
+router.get('/submissions', (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT sub.* FROM homework_submissions sub
+       JOIN homework_assignments h ON h.id = sub.homework_assignment_id
+       JOIN classes c ON c.id = h.class_id
+       WHERE c.teacher_id = ?`
+    )
+    .all(req.teacherId)
   res.json(
     rows.map((r) => ({
       homeworkAssignmentId: r.homework_assignment_id,
@@ -197,6 +249,9 @@ router.post('/submissions/portfolio', (req, res) => {
   if (!homeworkAssignmentId || !studentId) {
     return res.status(400).json({ error: 'homeworkAssignmentId and studentId required' })
   }
+  if (!ownsAssignment(req.teacherId, homeworkAssignmentId)) {
+    return res.status(404).json({ error: 'Assignment not found' })
+  }
   db.prepare(
     `UPDATE homework_submissions SET portfolio = ?, updated_at = ?
      WHERE homework_assignment_id = ? AND student_id = ?`
@@ -208,6 +263,9 @@ router.post('/submissions/portfolio', (req, res) => {
 // with the sync secret, same as every other route in this file, since the teacher has
 // no Portal browser session of their own.
 router.get('/submissions/:homeworkId/:studentId/file', (req, res) => {
+  if (!ownsAssignment(req.teacherId, req.params.homeworkId)) {
+    return res.status(404).json({ error: 'Not found' })
+  }
   const submission = db
     .prepare(
       'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
@@ -231,6 +289,7 @@ router.post('/submissions/grade', (req, res) => {
   `)
   const run = db.transaction(() => {
     for (const g of grades) {
+      if (!ownsAssignment(req.teacherId, g.homeworkAssignmentId)) continue
       upsert.run({
         homeworkAssignmentId: g.homeworkAssignmentId,
         studentId: g.studentId,
@@ -247,8 +306,20 @@ router.post('/submissions/grade', (req, res) => {
 const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
 fs.mkdirSync(POSTS_DIR, { recursive: true })
 
-router.get('/posts', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM class_posts ORDER BY created_at DESC').all()
+function ownsClass(teacherId, classId) {
+  return !!db
+    .prepare('SELECT 1 FROM classes WHERE id = ? AND teacher_id = ?')
+    .get(classId, teacherId)
+}
+
+router.get('/posts', (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT p.* FROM class_posts p
+       JOIN classes c ON c.id = p.class_id
+       WHERE c.teacher_id = ? ORDER BY p.created_at DESC`
+    )
+    .all(req.teacherId)
   res.json(
     rows.map((r) => ({
       id: r.id,
@@ -264,6 +335,7 @@ router.post('/posts', (req, res) => {
   const { classId, body, imageName, imageData } = req.body
   const text = (body || '').trim()
   if (!classId || !text) return res.status(400).json({ error: 'classId and body required' })
+  if (!ownsClass(req.teacherId, classId)) return res.status(404).json({ error: 'Class not found' })
 
   let imagePath = null
   if (imageName && imageData) {
@@ -285,6 +357,9 @@ router.post('/posts', (req, res) => {
 
 router.delete('/posts/:id', (req, res) => {
   const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
+  if (!post || !ownsClass(req.teacherId, post.class_id)) {
+    return res.status(404).json({ error: 'Not found' })
+  }
   if (post?.image_path) fs.rmSync(path.join(POSTS_DIR, post.image_path), { force: true })
   db.prepare('DELETE FROM class_posts WHERE id = ?').run(req.params.id)
   res.json({ ok: true })
@@ -292,16 +367,26 @@ router.delete('/posts/:id', (req, res) => {
 
 // One row per family account, with its message thread and an unread count for
 // messages the family sent — what the desktop app's Messages page lists as threads.
+// Scoped to accounts with at least one student belonging to this teacher — messages
+// themselves aren't partitioned per-teacher (a family with children taught by two
+// different teachers on the same Portal would see one merged thread either way, a rare
+// edge case this simpler model accepts), but a teacher can never see a family who has
+// no relation to them at all.
 router.get('/messages/threads', (req, res) => {
   const accounts = db
     .prepare(
       `SELECT a.id, a.username, GROUP_CONCAT(s.first_name || ' ' || s.last_name, ', ') AS student_names
        FROM accounts a
-       LEFT JOIN account_students acs ON acs.account_id = a.id
-       LEFT JOIN students s ON s.id = acs.student_id
+       JOIN account_students acs ON acs.account_id = a.id
+       JOIN students s ON s.id = acs.student_id
+       WHERE a.id IN (
+         SELECT acs2.account_id FROM account_students acs2
+         JOIN students s2 ON s2.id = acs2.student_id
+         WHERE s2.teacher_id = ?
+       )
        GROUP BY a.id`
     )
-    .all()
+    .all(req.teacherId)
 
   const threads = accounts
     .map((a) => {
@@ -327,10 +412,21 @@ router.get('/messages/threads', (req, res) => {
   res.json(threads)
 })
 
+function ownsAccount(teacherId, accountId) {
+  return !!db
+    .prepare(
+      `SELECT 1 FROM account_students acs
+       JOIN students s ON s.id = acs.student_id
+       WHERE acs.account_id = ? AND s.teacher_id = ?`
+    )
+    .get(accountId, teacherId)
+}
+
 router.post('/messages', (req, res) => {
   const { accountId, body } = req.body
   const text = (body || '').trim()
   if (!accountId || !text) return res.status(400).json({ error: 'accountId and body required' })
+  if (!ownsAccount(req.teacherId, accountId)) return res.status(404).json({ error: 'Not found' })
   db.prepare(
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_family) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), accountId, 'teacher', text, new Date().toISOString())
@@ -338,6 +434,9 @@ router.post('/messages', (req, res) => {
 })
 
 router.post('/messages/:accountId/read', (req, res) => {
+  if (!ownsAccount(req.teacherId, req.params.accountId)) {
+    return res.status(404).json({ error: 'Not found' })
+  }
   db.prepare('UPDATE messages SET read_by_teacher = 1 WHERE account_id = ? AND sender = ?').run(
     req.params.accountId,
     'family'
@@ -366,7 +465,9 @@ router.post('/reset-password', (req, res) => {
     return res.status(400).json({ error: 'username and newPassword are required' })
   }
   const account = db.prepare('SELECT id FROM accounts WHERE username = ?').get(username)
-  if (!account) return res.status(404).json({ error: 'No such account' })
+  if (!account || !ownsAccount(req.teacherId, account.id)) {
+    return res.status(404).json({ error: 'No such account' })
+  }
   db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
     hashPassword(newPassword),
     account.id
