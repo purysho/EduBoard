@@ -847,6 +847,15 @@ export function useReplaceHomeworkQuestions() {
   })
 }
 
+// ---- Audit log ----------------------------------------------------------------------------
+
+export function useAuditLog(filter?: { studentId?: string; classId?: string }) {
+  return useQuery({
+    queryKey: ['auditLog', filter?.studentId ?? '', filter?.classId ?? ''] as const,
+    queryFn: () => api().auditLog.list(filter)
+  })
+}
+
 // ---- Student log entries -----------------------------------------------------------------
 
 export function useStudentLogEntries(studentId: string | undefined) {

@@ -244,6 +244,24 @@ export type StudentLogType = (typeof STUDENT_LOG_TYPES)[number]
 export const CONTACT_METHODS = ['phone', 'email', 'in-person', 'other'] as const
 export type ContactMethod = (typeof CONTACT_METHODS)[number]
 
+export const AUDIT_LOG_ACTIONS = ['create', 'update', 'delete'] as const
+export type AuditLogAction = (typeof AUDIT_LOG_ACTIONS)[number]
+
+/** One entry in the app-wide activity trail — who changed what, when. studentId/classId
+ * are set whenever the action concerns one (most do), which is what lets a student's
+ * whole trail disappear from view the moment they're removed (see deleteStudent) without
+ * actually being deleted from the database for another 12 months. */
+export interface AuditLogEntry {
+  id: string
+  entityType: string
+  entityId: string
+  action: AuditLogAction
+  summary: string
+  studentId: string | null
+  classId: string | null
+  createdAt: string
+}
+
 export interface StudentLogEntry {
   id: string
   studentId: string

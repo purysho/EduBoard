@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   FolderOpen,
   GraduationCap,
+  History,
   Layers,
   LayoutGrid,
   MessageCircle,
@@ -31,6 +32,7 @@ const navItems = [
   { to: '/timetable', label: 'Timetable', icon: CalendarDays },
   { to: '/calendar', label: 'Calendar', icon: Calendar },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/audit-log', label: 'Audit Log', icon: History },
   { to: '/settings', label: 'Settings', icon: Settings2 }
 ]
 

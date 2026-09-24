@@ -159,6 +159,9 @@ const api: EduBoardApi = {
     replace: (homeworkAssignmentId, questions) =>
       invoke(IpcChannels.homeworkQuestions.replace, homeworkAssignmentId, questions)
   },
+  auditLog: {
+    list: (filter) => invoke(IpcChannels.auditLog.list, filter)
+  },
   studentLogEntries: {
     listByStudent: (studentId) => invoke(IpcChannels.studentLogEntries.listByStudent, studentId),
     create: (input) => invoke(IpcChannels.studentLogEntries.create, input),

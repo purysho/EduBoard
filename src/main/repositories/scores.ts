@@ -2,6 +2,7 @@ import { and, desc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { assessments, scoreHistory, scores } from '../db/schema'
 import { newId, nowIso } from '../db/util'
+import { recordAudit } from './auditLog'
 import type { Score, ScoreHistoryEntry } from '@shared/types'
 import type { UpsertScoreInput } from '@shared/inputs'
 
@@ -70,6 +71,7 @@ export function upsertScore(input: UpsertScoreInput): Score {
           .run()
       }
     })
+    if (valueChanged) logScoreAudit(existing.assessmentId, existing.studentId, 'update')
     return { ...existing, ...patch }
   }
 
@@ -84,7 +86,24 @@ export function upsertScore(input: UpsertScoreInput): Score {
     updatedAt: now
   }
   db.insert(scores).values(row).run()
+  logScoreAudit(row.assessmentId, row.studentId, 'create')
   return row
+}
+
+function logScoreAudit(assessmentId: string, studentId: string, action: 'create' | 'update'): void {
+  const assessment = getDb()
+    .select({ name: assessments.name, classId: assessments.classId })
+    .from(assessments)
+    .where(eq(assessments.id, assessmentId))
+    .get() as { name: string; classId: string } | undefined
+  recordAudit({
+    entityType: 'score',
+    entityId: `${assessmentId}:${studentId}`,
+    action,
+    summary: `Grade ${action === 'create' ? 'set' : 'changed'} for "${assessment?.name ?? 'assessment'}"`,
+    studentId,
+    classId: assessment?.classId ?? null
+  })
 }
 
 export function upsertScoresBulk(inputs: UpsertScoreInput[]): void {

@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { attendanceRecords } from '../db/schema'
 import { newId, nowIso } from '../db/util'
+import { recordAudit } from './auditLog'
 import type { AttendanceRecord } from '@shared/types'
 import type { MarkAttendanceInput } from '@shared/inputs'
 
@@ -44,6 +45,16 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
   if (existing) {
     const patch = { status: input.status, note: input.note ?? existing.note }
     db.update(attendanceRecords).set(patch).where(eq(attendanceRecords.id, existing.id)).run()
+    if (patch.status !== existing.status) {
+      recordAudit({
+        entityType: 'attendance',
+        entityId: existing.id,
+        action: 'update',
+        summary: `Attendance on ${input.date} changed to "${patch.status}"`,
+        studentId: input.studentId,
+        classId: input.classId
+      })
+    }
     return { ...existing, ...patch }
   }
 
@@ -57,6 +68,14 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
     createdAt: nowIso()
   }
   db.insert(attendanceRecords).values(row).run()
+  recordAudit({
+    entityType: 'attendance',
+    entityId: row.id,
+    action: 'create',
+    summary: `Attendance on ${input.date} marked "${input.status}"`,
+    studentId: input.studentId,
+    classId: input.classId
+  })
   return row
 }
 

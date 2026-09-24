@@ -19,6 +19,7 @@ import type {
   DraftReportCommentInput,
   HomeworkAssignment,
   HomeworkAssignmentWithClass,
+  AuditLogEntry,
   HomeworkQuestion,
   HomeworkRubricScore,
   HomeworkSubmission,
@@ -232,6 +233,9 @@ export interface EduBoardApi {
   homeworkQuestions: {
     list(homeworkAssignmentId: string): Promise<HomeworkQuestion[]>
     replace(homeworkAssignmentId: string, questions: DraftHomeworkQuestion[]): Promise<void>
+  }
+  auditLog: {
+    list(filter?: { studentId?: string; classId?: string }): Promise<AuditLogEntry[]>
   }
   studentLogEntries: {
     listByStudent(studentId: string): Promise<StudentLogEntry[]>

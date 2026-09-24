@@ -3,6 +3,7 @@ import { getDb } from '../db/client'
 import { classes, homeworkAssignments, homeworkSubmissions } from '../db/schema'
 import { newId, nowIso } from '../db/util'
 import { getRosterForClass } from './enrollments'
+import { recordAudit } from './auditLog'
 import type {
   HomeworkAssignment,
   HomeworkAssignmentWithClass,
@@ -62,6 +63,13 @@ export function createHomeworkAssignment(input: CreateHomeworkAssignmentInput): 
   const now = nowIso()
   const row: HomeworkAssignment = { id: newId(), createdAt: now, updatedAt: now, ...input }
   getDb().insert(homeworkAssignments).values(row).run()
+  recordAudit({
+    entityType: 'homeworkAssignment',
+    entityId: row.id,
+    action: 'create',
+    summary: `Created assignment "${row.title}"`,
+    classId: row.classId
+  })
   return row
 }
 
@@ -69,20 +77,56 @@ export function updateHomeworkAssignment(
   id: string,
   patch: UpdateHomeworkAssignmentInput
 ): HomeworkAssignment {
+  const before = getDb()
+    .select()
+    .from(homeworkAssignments)
+    .where(eq(homeworkAssignments.id, id))
+    .get() as HomeworkAssignment | undefined
   getDb()
     .update(homeworkAssignments)
     .set({ ...patch, updatedAt: nowIso() })
     .where(eq(homeworkAssignments.id, id))
     .run()
-  return getDb()
+  const updated = getDb()
     .select()
     .from(homeworkAssignments)
     .where(eq(homeworkAssignments.id, id))
     .get() as HomeworkAssignment
+  // A status flip is the one change worth calling out specifically — everything else
+  // (title/description/due date edits) is just "updated," but publishing is the exact
+  // moment work becomes visible to students, which is what a school would want traced.
+  const summary =
+    before && before.status !== updated.status
+      ? updated.status === 'published'
+        ? `Published assignment "${updated.title}" to students`
+        : `Unpublished assignment "${updated.title}"`
+      : `Updated assignment "${updated.title}"`
+  recordAudit({
+    entityType: 'homeworkAssignment',
+    entityId: id,
+    action: 'update',
+    summary,
+    classId: updated.classId
+  })
+  return updated
 }
 
 export function deleteHomeworkAssignment(id: string): void {
+  const existing = getDb()
+    .select()
+    .from(homeworkAssignments)
+    .where(eq(homeworkAssignments.id, id))
+    .get() as HomeworkAssignment | undefined
   getDb().delete(homeworkAssignments).where(eq(homeworkAssignments.id, id)).run()
+  if (existing) {
+    recordAudit({
+      entityType: 'homeworkAssignment',
+      entityId: id,
+      action: 'delete',
+      summary: `Deleted assignment "${existing.title}"`,
+      classId: existing.classId
+    })
+  }
 }
 
 export function getHomeworkAssignment(id: string): HomeworkAssignment | undefined {
@@ -150,23 +194,39 @@ export function setSubmissionGrade(input: SetHomeworkSubmissionGradeInput): Home
     updatedAt: now
   }
 
+  let result: HomeworkSubmission
   if (existing) {
     db.update(homeworkSubmissions).set(patch).where(eq(homeworkSubmissions.id, existing.id)).run()
-    return { ...existing, ...patch }
+    result = { ...existing, ...patch }
+  } else {
+    const row: HomeworkSubmission = {
+      id: newId(),
+      homeworkAssignmentId: input.homeworkAssignmentId,
+      studentId: input.studentId,
+      submittedAt: null,
+      textAnswer: null,
+      fileName: null,
+      portfolio: false,
+      ...patch
+    }
+    db.insert(homeworkSubmissions).values(row).run()
+    result = row
   }
 
-  const row: HomeworkSubmission = {
-    id: newId(),
-    homeworkAssignmentId: input.homeworkAssignmentId,
+  const assignment = getDb()
+    .select({ title: homeworkAssignments.title, classId: homeworkAssignments.classId })
+    .from(homeworkAssignments)
+    .where(eq(homeworkAssignments.id, input.homeworkAssignmentId))
+    .get() as { title: string; classId: string } | undefined
+  recordAudit({
+    entityType: 'homeworkSubmission',
+    entityId: `${input.homeworkAssignmentId}:${input.studentId}`,
+    action: existing ? 'update' : 'create',
+    summary: `Graded "${assignment?.title ?? 'assignment'}": ${input.grade ?? 'no grade'}`,
     studentId: input.studentId,
-    submittedAt: null,
-    textAnswer: null,
-    fileName: null,
-    portfolio: false,
-    ...patch
-  }
-  db.insert(homeworkSubmissions).values(row).run()
-  return row
+    classId: assignment?.classId ?? null
+  })
+  return result
 }
 
 /** Mirrors a submission's full state as the Portal has it — used only when pulling from

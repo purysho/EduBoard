@@ -2,6 +2,7 @@ import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { classes } from '../db/schema'
 import { newId, nowIso } from '../db/util'
+import { recordAudit } from './auditLog'
 import type { ClassSection } from '@shared/types'
 import type { CreateClassInput, UpdateClassInput } from '@shared/inputs'
 
@@ -31,6 +32,13 @@ export function createClass(input: CreateClassInput): ClassSection {
     ...input
   }
   getDb().insert(classes).values(row).run()
+  recordAudit({
+    entityType: 'class',
+    entityId: row.id,
+    action: 'create',
+    summary: `Created class "${row.name}"`,
+    classId: row.id
+  })
   return row
 }
 
@@ -42,11 +50,28 @@ export function updateClass(id: string, patch: UpdateClassInput): ClassSection {
     .run()
   const updated = getClass(id)
   if (!updated) throw new Error(`Class ${id} not found after update`)
+  recordAudit({
+    entityType: 'class',
+    entityId: id,
+    action: 'update',
+    summary: `Updated class "${updated.name}"`,
+    classId: id
+  })
   return updated
 }
 
 export function deleteClass(id: string): void {
+  const existing = getClass(id)
   getDb().delete(classes).where(eq(classes.id, id)).run()
+  if (existing) {
+    recordAudit({
+      entityType: 'class',
+      entityId: id,
+      action: 'delete',
+      summary: `Deleted class "${existing.name}"`,
+      classId: id
+    })
+  }
 }
 
 export function listClassesByCourseGroup(courseGroupId: string): ClassSection[] {

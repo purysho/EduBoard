@@ -6,6 +6,7 @@ import { createMainWindow } from './windows'
 import { createAutoBackupOnLaunch } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
 import { stopExitTicketServer } from './services/exitTicketServer'
+import { purgeOldDeletedAuditEntries } from './repositories/auditLog'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')
@@ -16,6 +17,7 @@ app.whenReady().then(() => {
 
   initDb()
   createAutoBackupOnLaunch()
+  purgeOldDeletedAuditEntries()
   checkAndRecordDeviceSync()
   registerIpcHandlers()
   createMainWindow()

@@ -19,6 +19,7 @@ import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
 import * as homeworkRubricScoresRepo from '../repositories/homeworkRubricScores'
 import * as homeworkQuestionsRepo from '../repositories/homeworkQuestions'
+import * as auditLogRepo from '../repositories/auditLog'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
@@ -76,7 +77,13 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.students.update, (_e, id: string, patch: studentsRepo.UpdateStudentInput) =>
     studentsRepo.updateStudent(id, patch)
   )
-  handle(IpcChannels.students.remove, (_e, id: string) => studentsRepo.deleteStudent(id))
+  handle(IpcChannels.students.remove, (_e, id: string) => {
+    // A recovery point taken right before the one truly destructive action in this
+    // app — if a teacher deletes the wrong student, or a bug wipes more than intended,
+    // this backup (plus the audit trail's 12-month soft-delete window) is the way back.
+    backupService.createBackup()
+    studentsRepo.deleteStudent(id)
+  })
 
   // --- Terms ------------------------------------------------------------------------
   handle(IpcChannels.terms.list, () => termsRepo.listTerms())
@@ -390,6 +397,11 @@ export function registerIpcHandlers(): void {
     IpcChannels.homeworkQuestions.replace,
     (_e, homeworkAssignmentId: string, questions: homeworkQuestionsRepo.DraftHomeworkQuestion[]) =>
       homeworkQuestionsRepo.replaceHomeworkQuestions(homeworkAssignmentId, questions)
+  )
+
+  // --- Audit log ----------------------------------------------------------------------------
+  handle(IpcChannels.auditLog.list, (_e, filter?: { studentId?: string; classId?: string }) =>
+    auditLogRepo.listAuditLog(filter)
   )
 
   // --- Student log entries ---------------------------------------------------------------

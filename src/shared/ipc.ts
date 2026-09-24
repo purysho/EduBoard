@@ -132,6 +132,9 @@ export const IpcChannels = {
     list: 'homeworkQuestions:list',
     replace: 'homeworkQuestions:replace'
   },
+  auditLog: {
+    list: 'auditLog:list'
+  },
   studentLogEntries: {
     listByStudent: 'studentLogEntries:listByStudent',
     create: 'studentLogEntries:create',

@@ -590,6 +590,37 @@ const migrations: Migration[] = [
         CREATE INDEX homework_questions_assignment_idx ON homework_questions(homework_assignment_id);
       `)
     }
+  },
+  {
+    id: 23,
+    name: 'audit_log',
+    up: (db) => {
+      // A generic, append-only trail of who-did-what — one row per mutating action
+      // across students, classes, enrollments, grades, attendance, homework, and
+      // submissions. student_id is set whenever an entry concerns one specific student,
+      // which is what lets deleteStudent soft-delete (deleted_at) that student's whole
+      // trail rather than orphaning it — visible entries disappear from the log the
+      // moment a student is removed, but the rows themselves survive another 12 months
+      // (purged by purgeOldDeletedAuditEntries, run at app startup) so an accidental
+      // deletion is recoverable from a backup taken right before it, not just gone.
+      db.exec(`
+        CREATE TABLE audit_log (
+          id TEXT PRIMARY KEY,
+          entity_type TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          summary TEXT NOT NULL,
+          student_id TEXT,
+          class_id TEXT,
+          created_at TEXT NOT NULL,
+          deleted_at TEXT
+        );
+        CREATE INDEX audit_log_created_idx ON audit_log(created_at);
+        CREATE INDEX audit_log_student_idx ON audit_log(student_id);
+        CREATE INDEX audit_log_class_idx ON audit_log(class_id);
+        CREATE INDEX audit_log_deleted_idx ON audit_log(deleted_at);
+      `)
+    }
   }
 ]
 

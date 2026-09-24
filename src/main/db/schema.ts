@@ -484,6 +484,26 @@ export const homeworkQuestions = sqliteTable(
   })
 )
 
+export const auditLog = sqliteTable(
+  'audit_log',
+  {
+    id: text('id').primaryKey(),
+    entityType: text('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    action: text('action').notNull(),
+    summary: text('summary').notNull(),
+    studentId: text('student_id'),
+    classId: text('class_id'),
+    createdAt: text('created_at').notNull(),
+    deletedAt: text('deleted_at')
+  },
+  (t) => ({
+    createdIdx: index('audit_log_created_idx').on(t.createdAt),
+    studentIdx: index('audit_log_student_idx').on(t.studentId),
+    classIdx: index('audit_log_class_idx').on(t.classId)
+  })
+)
+
 export const studentLogEntries = sqliteTable(
   'student_log_entries',
   {
