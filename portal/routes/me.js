@@ -370,6 +370,18 @@ router.get('/posts/:id/image', (req, res) => {
   res.sendFile(path.join(POSTS_DIR, post.image_path))
 })
 
+// Cheap poll target for the Portal's unread-messages badge — deliberately just a count,
+// not the full /me payload, so polling every 20s or so while the tab is open doesn't
+// re-run every join in /me each time.
+router.get('/notifications', (req, res) => {
+  const unreadMessages = db
+    .prepare(
+      "SELECT COUNT(*) AS n FROM messages WHERE account_id = ? AND sender = 'teacher' AND read_by_family = 0"
+    )
+    .get(req.accountId).n
+  res.json({ unreadMessages })
+})
+
 // One thread per account with the teacher — reading it marks the teacher's messages
 // read so the family's unread badge clears; the teacher's own unread count (for
 // messages the family sent) is a separate flag, cleared from the desktop app instead.

@@ -60,6 +60,7 @@
   .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.4; white-space: pre-wrap; }
   .msg.family .msg-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
   .msg.teacher .msg-bubble { background: #f1f5f9; color: var(--ink); border-bottom-left-radius: 4px; }
+  .notif-pill { display: inline-block; margin-bottom: 12px; padding: 7px 14px; border-radius: 999px; background: var(--primary); color: #fff; font-size: .85rem; font-weight: 600; text-decoration: none; }
 </style>
 </head>
 <body>
@@ -117,6 +118,35 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
 }
 
+// Polls the cheap /me/notifications endpoint while the dashboard is open, so a family
+// sees "N new messages" without needing real push infrastructure — good enough for a
+// tab left open, and the count is also reflected in the browser tab title so it's
+// visible even when the Portal isn't the focused tab.
+let notificationPollTimer = null
+const BASE_TITLE = document.title
+
+function startNotificationPolling() {
+  if (notificationPollTimer) return
+  updateNotificationBadge()
+  notificationPollTimer = setInterval(updateNotificationBadge, 20000)
+}
+
+async function updateNotificationBadge() {
+  const el = document.getElementById('notif-badge')
+  if (!el) return
+  let unread = 0
+  try {
+    ;({ unreadMessages: unread } = await api('/me/notifications'))
+  } catch {
+    return
+  }
+  document.title = unread > 0 ? `(${unread}) ${BASE_TITLE}` : BASE_TITLE
+  el.innerHTML =
+    unread > 0
+      ? `<a href="#messages-section" class="notif-pill">${unread} new message${unread === 1 ? '' : 's'} from your teacher</a>`
+      : ''
+}
+
 function lastSyncedLabel() {
   const iso = localStorage.getItem(LAST_SYNCED_KEY)
   if (!iso) return 'unknown'
@@ -149,6 +179,7 @@ async function main() {
   try {
     const me = await api('/me')
     renderDashboard(me)
+    startNotificationPolling()
   } catch {
     // A thrown fetch (not an auth rejection) with nothing cached yet and no connection
     // is a genuinely different situation from "not logged in" — don't send someone
@@ -394,6 +425,7 @@ async function loadMessages() {
   lastLoadedMessages = messages
   renderMessages(messages)
   box.scrollTop = box.scrollHeight
+  updateNotificationBadge()
 }
 
 function renderMessages(messages) {
@@ -561,7 +593,8 @@ function renderDashboard(me) {
   }
   app.innerHTML =
     offlineBannerHtml() +
-    `<h1>Welcome back</h1>
+    `<div id="notif-badge"></div>
+     <h1>Welcome back</h1>
      <div class="section-title">Class Story</div>
      <div id="story">Loading…</div>
      <div style="display:none">
@@ -599,7 +632,7 @@ function renderDashboard(me) {
     </div>`
       )
       .join('') +
-    `<div class="section-title">Messages</div>
+    `<div class="section-title" id="messages-section">Messages</div>
      <div class="card">
        <div style="display:flex; justify-content:flex-end; margin-bottom:6px">
          <select id="msg-lang" style="font-size:.75rem; padding:2px 4px">
