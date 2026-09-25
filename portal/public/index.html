@@ -2,114 +2,226 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>EduBoard Portal</title>
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/icon.svg" />
-<meta name="theme-color" content="#6366f1" />
+<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)" />
+<!-- Added to an iPhone home screen, the Portal opens full-screen like an app. -->
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="EduBoard" />
 <!-- No web fonts: Google Fonts is blocked in mainland China, and a render-blocking
      stylesheet that never loads leaves students staring at a blank page. System fonts
      look native on every device and cost nothing to load. -->
 <style>
+  /* Same design tokens as the teacher's desktop app (src/renderer/src/assets/styles.css),
+     so the two feel like one product. Dark mode follows the device setting. */
   :root {
-    color-scheme: light;
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --ink: #0f172a;
-    --muted: #64748b;
+    color-scheme: light dark;
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --surface-muted: #f1f5f9;
     --border: #e2e8f0;
-    --bg: #f4f5fb;
+    --ink: #0f172a;
+    --ink-soft: #334155;
+    --muted: #64748b;
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --primary-soft: #eef2ff;
+    --primary-line: #c7d2fe;
+    --on-primary: #ffffff;
+    --success: #15803d;
+    --success-soft: #dcfce7;
+    --warning: #b45309;
+    --warning-soft: #fef3c7;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --late: #9a3412;
+    --late-soft: #ffedd5;
+    --ai: #6d28d9;
+    --ai-soft: #ede9fe;
+    --shadow: 0 1px 2px rgb(15 23 42 / .05), 0 1px 3px rgb(15 23 42 / .04);
+    --sidebar-w: 248px;
+    --bottom-nav-h: 64px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-muted: #1a2332;
+      --border: #263042;
+      --ink: #e5e7eb;
+      --ink-soft: #cbd5e1;
+      --muted: #94a3b8;
+      --primary: #818cf8;
+      --primary-dark: #6366f1;
+      --primary-soft: #1e1b4b;
+      --primary-line: #3730a3;
+      --on-primary: #0b1120;
+      --success: #4ade80;
+      --success-soft: #14532d;
+      --warning: #fbbf24;
+      --warning-soft: #451a03;
+      --danger: #f87171;
+      --danger-soft: #450a0a;
+      --late: #fdba74;
+      --late-soft: #431407;
+      --ai: #c4b5fd;
+      --ai-soft: #2e1065;
+      --shadow: none;
+    }
   }
   * { box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans', sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
-  .topbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #fff; border-bottom: 1px solid var(--border); }
-  .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans', sans-serif; margin: 0; background: var(--bg); color: var(--ink); -webkit-tap-highlight-color: transparent; }
+
+  /* ---- Sign-in screens: brand bar and one centred card -------------------------------- */
+  .topbar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  body.app-mode .topbar { display: none; }
+  .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; flex-shrink: 0; }
   .brand { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 16px 60px; }
-  .tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 -4px 20px; padding: 4px; background: #fff; border: 1px solid var(--border); border-radius: 12px; position: sticky; top: 8px; z-index: 5; scrollbar-width: none; }
-  .tabs::-webkit-scrollbar { display: none; }
-  button.tab { width: auto; margin: 0; padding: 8px 14px; background: transparent; color: var(--muted); border-radius: 8px; font-size: .88rem; white-space: nowrap; flex-shrink: 0; }
-  button.tab:hover:not(:disabled) { background: #f1f5f9; }
-  button.tab.active { background: #eef2ff; color: var(--primary-dark); }
-  .tab-count { display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: #fee2e2; color: #991b1b; font-size: .72rem; margin-left: 2px; }
-  button.chip { width: auto; margin: 0; padding: 7px 12px; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; }
-  button.chip:hover:not(:disabled) { background: #f8fafc; }
-  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .card.list-card { padding: 4px 0; }
-  button.list-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 12px 18px; background: transparent; color: var(--ink); border-radius: 0; text-align: left; font-weight: 400; }
-  button.list-row + button.list-row { border-top: 1px solid var(--border); }
-  button.list-row:hover:not(:disabled) { background: #f8fafc; }
-  .grade-big { font-size: 1.3rem; font-weight: 700; }
-  .student-heading { font-size: 1.2rem; margin: 24px 0 0; }
-  .highlight { box-shadow: 0 0 0 3px rgb(99 102 241 / .35); transition: box-shadow .3s; }
+  .wrap { max-width: 480px; margin: 32px auto; padding: 28px 24px 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  @media (max-width: 560px) { .wrap { margin: 0; border: none; border-radius: 0; min-height: calc(100vh - 61px); } }
+  body.app-mode .wrap { all: unset; display: block; }
+
+  /* ---- App shell: sidebar on wide screens, app bar + bottom tabs on phones ------------- */
+  .shell { min-height: 100vh; }
+  .sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sidebar-w); display: flex; flex-direction: column; background: var(--surface); border-right: 1px solid var(--border); padding: 18px 12px; z-index: 20; }
+  .side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+  .side-nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 10px 12px; background: transparent; color: var(--muted); border-radius: 10px; font-size: .92rem; font-weight: 600; text-align: left; position: relative; }
+  .nav-item:hover:not(:disabled) { background: var(--surface-muted); color: var(--ink); }
+  .nav-item[aria-current="page"] { background: var(--primary-soft); color: var(--primary); }
+  .nav-item[aria-current="page"]::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--primary); }
+  .nav-item svg, .bottom-item svg, .icon-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .nav-item .count { margin-left: auto; }
+  .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .user-chip { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; padding: 8px; background: transparent; color: var(--ink); border-radius: 10px; text-align: left; font-weight: 600; font-size: .88rem; }
+  .user-chip:hover:not(:disabled) { background: var(--surface-muted); }
+  .user-chip .avatar-sm { width: 32px; height: 32px; }
+  .main { margin-left: var(--sidebar-w); }
+  .content { max-width: 760px; margin: 0 auto; padding: 32px 24px 64px; }
+  .appbar, .bottom-nav { display: none; }
+
+  @media (max-width: 860px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .content { padding: 16px 16px calc(var(--bottom-nav-h) + var(--safe-bottom) + 24px); }
+    .appbar { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 20; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px); border-bottom: 1px solid var(--border); }
+    .appbar .brand { flex: 1; }
+    .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; height: calc(var(--bottom-nav-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px); border-top: 1px solid var(--border); }
+  }
+  .bottom-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; margin: 0; padding: 6px 2px; background: transparent; color: var(--muted); border-radius: 0; font-size: .7rem; font-weight: 600; position: relative; }
+  .bottom-item:hover:not(:disabled) { background: transparent; color: var(--ink); }
+  .bottom-item[aria-current="page"] { color: var(--primary); }
+  .bottom-item .count { position: absolute; top: 4px; left: calc(50% + 6px); }
+  button.icon-btn { width: 38px; height: 38px; margin: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--ink); border-radius: 50%; }
+  button.icon-btn:hover:not(:disabled) { background: var(--surface-muted); }
+  .count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: .68rem; font-weight: 700; }
+  .count[hidden] { display: none; }
+
+  .panel { animation: panel-in .18s ease-out; }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .panel { animation: none; } }
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 1.6rem; margin: 0 0 4px; letter-spacing: -.02em; }
+  .page-head p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+  /* ---- Building blocks ----------------------------------------------------------------- */
   h1 { font-size: 1.5rem; margin: 0 0 4px; letter-spacing: -.01em; }
   p.hint { color: var(--muted); margin: 0 0 24px; font-size: .92rem; line-height: 1.5; }
-  label { display: block; font-size: .82rem; font-weight: 600; margin: 16px 0 6px; color: #334155; }
-  input, select { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; font-size: .92rem; background: #fff; transition: border-color .15s; }
-  input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgb(99 102 241 / .12); }
-  button { width: 100%; margin-top: 22px; padding: 13px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer; transition: background .15s; }
+  label { display: block; font-size: .82rem; font-weight: 600; margin: 16px 0 6px; color: var(--ink-soft); }
+  input, select, textarea { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; font-size: .92rem; background: var(--surface); color: var(--ink); transition: border-color .15s; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+  button { width: 100%; margin-top: 22px; padding: 12px; background: var(--primary); color: var(--on-primary); border: none; border-radius: 10px; font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer; transition: background .15s, color .15s; }
   button:hover:not(:disabled) { background: var(--primary-dark); }
   button:disabled { opacity: .5; cursor: default; }
-  button.secondary { background: #fff; color: var(--ink); border: 1px solid var(--border); }
-  button.secondary:hover:not(:disabled) { background: #f8fafc; }
-  .error { color: #dc2626; font-size: .85rem; margin-top: 10px; }
-  .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgb(15 23 42 / .04); }
+  button.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+  button.secondary:hover:not(:disabled) { background: var(--surface-muted); }
+  button.chip { width: auto; margin: 0; padding: 7px 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; }
+  button.chip:hover:not(:disabled) { background: var(--surface-muted); }
+  button.chip[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .error { color: var(--danger); font-size: .85rem; margin-top: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card.inset { background: var(--surface-muted); box-shadow: none; margin-top: 12px; }
+  .card.notice { background: var(--warning-soft); border-color: transparent; }
+  .card.accent { background: var(--primary-soft); border-color: var(--primary-line); }
+  .card.list-card { padding: 4px 0; overflow: hidden; }
+  button.list-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 13px 18px; background: transparent; color: var(--ink); border-radius: 0; text-align: left; font-weight: 400; }
+  button.list-row + button.list-row { border-top: 1px solid var(--border); }
+  button.list-row:hover:not(:disabled) { background: var(--surface-muted); }
+  .grade-big { font-size: 1.3rem; font-weight: 700; }
+  .student-heading { font-size: 1.2rem; margin: 24px 0 0; }
+  .highlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 40%, transparent); transition: box-shadow .3s; }
   .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
   .row > strong { min-width: 0; overflow-wrap: anywhere; }
   .pills { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
   .muted { color: var(--muted); font-size: .85rem; }
-  .desc { color: #475569; font-size: .87rem; line-height: 1.5; margin: 8px 0 0; }
-  .tab-count[hidden] { display: none; }
+  .desc { color: var(--ink-soft); font-size: .88rem; line-height: 1.55; margin: 8px 0 0; }
   .pw-wrap { position: relative; }
   .pw-wrap input { padding-right: 70px; }
-  button.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: auto; margin: 0; padding: 6px 10px; background: transparent; color: var(--primary-dark); font-size: .8rem; }
-  button.pw-toggle:hover:not(:disabled) { background: #eef2ff; }
-  .tour { position: fixed; inset: 0; z-index: 50; background: rgb(15 23 42 / .35); display: flex; align-items: flex-start; justify-content: center; padding: 150px 16px 16px; }
-  .tour-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgb(15 23 42 / .25); }
-  .tour-card h2 { margin: 2px 0 6px; font-size: 1.15rem; }
-  .tour-card p { margin: 0; color: #475569; line-height: 1.5; font-size: .92rem; }
-  .tour-progress { font-size: .75rem !important; font-weight: 600; color: var(--primary) !important; }
-  .tour-actions { display: flex; gap: 6px; align-items: center; margin-top: 16px; }
-  button.tour-next { width: auto; margin: 0; padding: 9px 16px; }
-  body.touring .tabs { z-index: 60; pointer-events: none; }
-  button.tab.tour-spot { background: #eef2ff; color: var(--primary-dark); box-shadow: 0 0 0 2px var(--primary); }
-  @media (max-width: 560px) { .tour { align-items: flex-end; padding: 16px; } }
+  button.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: auto; margin: 0; padding: 6px 10px; background: transparent; color: var(--primary); font-size: .8rem; }
+  button.pw-toggle:hover:not(:disabled) { background: var(--primary-soft); }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  input[type=radio], input[type=checkbox] { width: auto; flex-shrink: 0; margin: 0; }
+  input[type=radio], input[type=checkbox] { width: auto; flex-shrink: 0; margin: 0; accent-color: var(--primary); }
   .pill { white-space: nowrap; flex-shrink: 0; display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
-  .pill.not_started { background: #f1f5f9; color: #64748b; }
-  .pill.submitted { background: #fef3c7; color: #92400e; }
-  .pill.done { background: #d1fae5; color: #065f46; }
+  .pill.not_started { background: var(--surface-muted); color: var(--muted); }
+  .pill.submitted { background: var(--warning-soft); color: var(--warning); }
+  .pill.done { background: var(--success-soft); color: var(--success); }
+  .pill.late { background: var(--late-soft); color: var(--late); }
+  .pill.missing { background: var(--danger-soft); color: var(--danger); }
+  .pill.used-ai { background: var(--ai-soft); color: var(--ai); }
   .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-  .avatar-empty { display: flex; align-items: center; justify-content: center; background: #e0e7ff; color: var(--primary); font-weight: 700; font-size: 1.3rem; }
-  .profile-card textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
-  .pill.used-ai { background: #ede9fe; color: #5b21b6; }
+  .avatar-sm { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; font-size: .8rem; }
+  .avatar-empty { display: flex; align-items: center; justify-content: center; background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 1.3rem; }
+  .avatar-sm.avatar-empty { font-size: .8rem; }
   .check-row { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; line-height: 1.4; }
   .check-row input { margin-top: 3px; }
   .ai-help { margin-top: 12px; }
-  [data-ai-form] textarea, [data-answer] { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
-  .pill.late { background: #ffedd5; color: #9a3412; }
-  .pill.missing { background: #fee2e2; color: #991b1b; }
-  img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; }
+  img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; background: #fff; padding: 6px; }
   a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
   a.linklike:hover { text-decoration: underline; }
   .dob-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; }
-  .dob-row select { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; background: #fff; }
   .field-note { color: var(--muted); font-size: .8rem; margin: 6px 0 0; line-height: 1.4; }
-  .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
-  .section-title:first-child { margin-top: 0; }
-  #messages, .ai-chat { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-  .msg { display: flex; flex-direction: column; max-width: 80%; }
+  .section-title { font-size: 1.05rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
+  .section-title:first-child, .page-head + .section-title { margin-top: 0; }
+  .topic-label { margin: 14px 0 6px; font-weight: 700; text-transform: uppercase; font-size: .72rem; letter-spacing: .04em; color: var(--muted); }
+  #messages, .ai-chat { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .msg { display: flex; flex-direction: column; max-width: 82%; }
   .msg.family { align-self: flex-end; align-items: flex-end; }
   .msg.teacher { align-self: flex-start; align-items: flex-start; }
-  .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.4; white-space: pre-wrap; }
-  .msg.family .msg-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
-  .msg.teacher .msg-bubble { background: #f1f5f9; color: var(--ink); border-bottom-left-radius: 4px; }
-  button.lang-switch { width: auto; margin: 0 0 0 auto; padding: 6px 12px; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; }
-  button.lang-switch:hover:not(:disabled) { background: #f8fafc; }
-  .translation { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #c7d2fe; background: #f8fafc; border-radius: 0 10px 10px 0; }
+  .msg-bubble { padding: 9px 13px; border-radius: 16px; font-size: .9rem; line-height: 1.45; white-space: pre-wrap; }
+  .msg.family .msg-bubble { background: var(--primary); color: var(--on-primary); border-bottom-right-radius: 5px; }
+  .msg.teacher .msg-bubble { background: var(--surface-muted); color: var(--ink); border-bottom-left-radius: 5px; }
+  button.lang-switch { width: auto; margin: 0 0 0 auto; padding: 6px 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; }
+  button.lang-switch:hover:not(:disabled) { background: var(--surface-muted); }
+  .side-foot button.lang-switch, .appbar button.lang-switch { margin: 0; }
+  .translation { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--primary-line); background: var(--surface-muted); border-radius: 0 10px 10px 0; }
   .translation .desc { white-space: pre-wrap; }
-  .notif-pill { display: inline-block; margin-bottom: 12px; padding: 7px 14px; border-radius: 999px; background: var(--primary); color: #fff; font-size: .85rem; font-weight: 600; text-decoration: none; }
+  .notif-pill { display: inline-block; margin-bottom: 14px; padding: 8px 14px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: .85rem; font-weight: 600; text-decoration: none; }
+  .flashcard { cursor: pointer; min-height: 110px; display: flex; flex-direction: column; justify-content: center; background: var(--surface-muted); box-shadow: none; }
+  .flashcard.flipped { background: var(--success-soft); }
+
+  /* ---- First-login tour ---------------------------------------------------------------- */
+  .tour { position: fixed; inset: 0; z-index: 50; background: rgb(2 6 23 / .45); display: flex; align-items: center; justify-content: center; padding: 16px 16px 16px calc(var(--sidebar-w) + 16px); }
+  .tour-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgb(15 23 42 / .3); }
+  .tour-card h2 { margin: 2px 0 6px; font-size: 1.15rem; }
+  .tour-card p { margin: 0; color: var(--ink-soft); line-height: 1.5; font-size: .92rem; }
+  .tour-progress { font-size: .75rem !important; font-weight: 600; color: var(--primary) !important; }
+  .tour-actions { display: flex; gap: 6px; align-items: center; margin-top: 16px; }
+  button.tour-next { width: auto; margin: 0; padding: 9px 16px; }
+  body.touring .sidebar, body.touring .bottom-nav { z-index: 60; pointer-events: none; }
+  .tour-spot { box-shadow: 0 0 0 2px var(--primary); background: var(--primary-soft) !important; color: var(--primary) !important; border-radius: 10px; }
+  @media (max-width: 860px) {
+    .tour { align-items: flex-end; padding: 16px 16px calc(var(--bottom-nav-h) + var(--safe-bottom) + 12px); }
+  }
 </style>
 <script src="/i18n.js"></script>
 </head>
@@ -226,11 +338,10 @@ async function updateNotificationBadge() {
     unread > 0
       ? `<a href="#messages" class="notif-pill">${esc(unread === 1 ? t('1 new message from your teacher') : t('{n} new messages from your teacher', { n: unread }))}</a>`
       : ''
-  const count = document.getElementById('unread-count')
-  if (count) {
+  document.querySelectorAll('.unread-count').forEach((count) => {
     count.hidden = unread === 0
     count.textContent = String(unread)
-  }
+  })
 }
 
 function lastSyncedLabel() {
@@ -246,7 +357,7 @@ function lastSyncedLabel() {
 
 function offlineBannerHtml() {
   if (!servedFromCache) return ''
-  return `<div class="card" style="background:#fef3c7; margin-bottom:12px">
+  return `<div class="card notice">
     <strong>${t('Viewing saved data')}</strong>
     <p class="muted" style="margin:4px 0 0">${esc(t("You're offline — last synced {when}. Reconnect to see the latest.", { when: lastSyncedLabel() }))}</p>
   </div>`
@@ -505,6 +616,39 @@ function wireTranslateControls(root) {
   })
 }
 
+// ---- Install as an app -----------------------------------------------------------------------
+// Chrome, Edge and Android offer an install prompt the page can trigger from a button.
+// iPhones and iPads have no such prompt, so they get the two steps instead. Nothing shows
+// once the Portal is already running as an installed app.
+let installPrompt = null
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault()
+  installPrompt = e
+  setupInstall()
+})
+
+function setupInstall() {
+  const box = document.getElementById('install-box')
+  if (!box) return
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  if (standalone) {
+    box.innerHTML = ''
+  } else if (installPrompt) {
+    box.innerHTML = `<p class="field-note" style="margin-top:14px">${t('Install the Portal to open it from your home screen like any other app.')}</p><div class="chip-row"><button type="button" class="chip" data-install>${t('Install the app')}</button></div>`
+    box.querySelector('[data-install]').onclick = async () => {
+      installPrompt.prompt()
+      await installPrompt.userChoice.catch(() => {})
+      installPrompt = null
+      setupInstall()
+    }
+  } else if (ios) {
+    box.innerHTML = `<p class="field-note" style="margin-top:14px">${t('To add the Portal to your home screen: tap the Share button, then “Add to Home Screen”.')}</p>`
+  } else {
+    box.innerHTML = ''
+  }
+}
+
 // ---- AI chat (Study Helper and per-assignment help) ----------------------------------------
 const QUICK_PROMPTS = [
   'Quiz me on what we covered this week',
@@ -713,6 +857,13 @@ async function loadProfiles(me) {
   const greeting = document.getElementById('greeting')
   const firstName = first && (first.preferredName || names[first.studentId])
   if (greeting && first) greeting.textContent = firstName ? t('Welcome back, {name}', { name: firstName }) : t('Welcome back')
+  if (first) {
+    const avatar = first.hasPhoto
+      ? `<img class="avatar-sm" alt="" src="/api/me/profiles/${encodeURIComponent(first.studentId)}/photo?v=${encodeURIComponent(first.updatedAt || '')}" />`
+      : `<span class="avatar-sm avatar-empty">${esc((firstName || '?').slice(0, 1).toUpperCase())}</span>`
+    document.querySelectorAll('.user-avatar').forEach((el) => (el.innerHTML = avatar))
+    document.querySelectorAll('.user-name').forEach((el) => (el.textContent = firstName || ''))
+  }
   // A preferred language set in the profile beats the interface language for translations.
   if (first?.preferredLanguage) setReadingLanguage(first.preferredLanguage)
 
@@ -721,7 +872,7 @@ async function loadProfiles(me) {
   const pending = profiles.find((p) => profileIsEmpty(p) && !wasDismissed(p.studentId))
   if (nudge) {
     nudge.innerHTML = pending
-      ? `<div class="card" style="background:#eef2ff; border-color:#c7d2fe">
+      ? `<div class="card accent">
            <strong>${t('Set up your profile')}</strong>
            <p class="muted" style="margin:4px 0 0">${t('Add a photo and a few words so your teacher gets to know you. Everything is optional.')}</p>
            <div class="chip-row">
@@ -823,7 +974,7 @@ function homeworkByTopicHtml(homework, studentId) {
   return entries
     .map(
       ([topic, items]) => `
-      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${esc(topic === 'Other' ? t('Other') : topic)}</p>
+      <p class="topic-label">${esc(topic === 'Other' ? t('Other') : topic)}</p>
       ${items.map((h) => homeworkCardHtml(h, studentId)).join('')}`
     )
     .join('')
@@ -835,7 +986,7 @@ function quickCheckHtml(h, studentId) {
   if (answered) {
     const correctCount = h.questions.filter((q) => q.wasCorrect).length
     return `
-      <div class="card" style="margin-top:12px; background:#f8fafc">
+      <div class="card inset">
         <p class="muted" style="margin:0 0 8px">${t('Quick check — {correct}/{total} correct', { correct: correctCount, total: h.questions.length })}</p>
         ${h.questions
           .map(
@@ -916,7 +1067,7 @@ function homeworkCardHtml(h, studentId) {
         ${
           graded
             ? `
-          <div class="card" style="margin-top:12px; background:#f8fafc">
+          <div class="card inset">
             <p class="muted" style="margin:0">${t('Your submission')}</p>
             ${h.textAnswer ? `<p class="desc">${esc(h.textAnswer)}</p>` : ''}
             ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/submission-file?studentId=${encodeURIComponent(studentId)}">\u{1F4CE} ${esc(h.submissionFileName)}</a></p>` : ''}
@@ -1125,7 +1276,7 @@ function renderFlashcards(container, cards) {
   function draw() {
     const card = cards[order[pos]]
     container.innerHTML = `
-      <div class="card" data-flip style="cursor:pointer; min-height:90px; background:${flipped ? '#f0fdf4' : '#f8fafc'}">
+      <div class="card flashcard${flipped ? ' flipped' : ''}" data-flip>
         <p class="muted" style="margin:0 0 6px; font-size:.75rem">${flipped ? t('Answer') : t('Question')} · ${t('card {n} of {total}', { n: pos + 1, total: cards.length })} · ${t('tap to flip')}</p>
         <p class="desc" style="margin:0; font-size:1rem">${esc(flipped ? card.back : card.front)}</p>
       </div>
@@ -1227,19 +1378,43 @@ const TABS = [
   ['account', 'Account']
 ]
 
+// Line icons (from the Lucide set the teacher's desktop app uses), inlined so the app
+// shell works offline and needs no icon font.
+const ICONS = {
+  home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  classwork: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+  study: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  grades: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+  messages: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  account: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+}
+function icon(name) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`
+}
+
+/** One heading per section, like a page title in an app. */
+function pageHead(title, subtitle, id = '') {
+  return `<header class="page-head"><h1${id ? ` id="${id}"` : ''}>${title}</h1>${subtitle ? `<p${id ? ` id="${id}-sub"` : ''}>${subtitle}</p>` : ''}</header>`
+}
+
+function langSwitchHtml() {
+  return `<button type="button" class="lang-switch" data-lang-switch aria-label="${UI_LANG === 'zh' ? 'Switch to English' : '切换到中文'}">${UI_LANG === 'zh' ? 'English' : '中文'}</button>`
+}
+
 // The open tab lives in the URL hash (#classwork), so reloads and the back button keep
 // the student where they were.
 function showTab(id) {
   if (!TABS.some(([tab]) => tab === id)) id = 'home'
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== id))
   document.querySelectorAll('[data-tab]').forEach((tab) => {
-    const active = tab.dataset.tab === id
-    tab.classList.toggle('active', active)
-    tab.setAttribute('aria-selected', String(active))
-    // Only the active tab is in the Tab order; arrow keys move between tabs.
-    tab.tabIndex = active ? 0 : -1
+    if (tab.dataset.tab === id) tab.setAttribute('aria-current', 'page')
+    else tab.removeAttribute('aria-current')
   })
-  if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id)
+  if (location.hash.slice(1) !== id) {
+    history.replaceState(null, '', '#' + id)
+    // A new section starts at the top, like switching screens in an app.
+    window.scrollTo(0, 0)
+  }
   // Loading the thread marks the teacher's messages as read, so only do it when the
   // student actually opens Messages. Otherwise the unread count would vanish unseen.
   if (id === 'messages') loadMessages()
@@ -1248,23 +1423,6 @@ function showTab(id) {
 
 function setupTabs() {
   document.querySelectorAll('[data-tab]').forEach((tab) => (tab.onclick = () => showTab(tab.dataset.tab)))
-  const nav = document.querySelector('.tabs')
-  if (nav) {
-    nav.onkeydown = (e) => {
-      const ids = TABS.map(([tab]) => tab)
-      const current = ids.indexOf(location.hash.slice(1) || 'home')
-      const next =
-        e.key === 'ArrowRight' ? (current + 1) % ids.length
-        : e.key === 'ArrowLeft' ? (current - 1 + ids.length) % ids.length
-        : e.key === 'Home' ? 0
-        : e.key === 'End' ? ids.length - 1
-        : -1
-      if (next < 0) return
-      e.preventDefault()
-      showTab(ids[next])
-      document.querySelector(`[data-tab="${ids[next]}"]`).focus()
-    }
-  }
   window.onhashchange = () => showTab(location.hash.slice(1))
   showTab(location.hash.slice(1) || 'home')
 }
@@ -1421,17 +1579,14 @@ function startTour({ name = '', record = true } = {}) {
     document.querySelectorAll('.tour-spot').forEach((el) => el.classList.remove('tour-spot'))
     // Point at the tab this step is about (step 5 covers Grades and Messages).
     const spots = step === 4 ? ['grades', 'messages'] : step === 0 ? [] : [s.tab]
+    // The same section is in the sidebar (computers) and the bottom bar or app bar
+    // (phones); point at whichever one is on screen.
     spots.forEach((tab) => {
-      const tabEl = document.querySelector(`[data-tab="${tab}"]`)
-      tabEl?.classList.add('tour-spot')
-      // On a phone the later tabs are scrolled out of the tab bar; bring this one into view.
-      tabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      const visible = [...document.querySelectorAll(`[data-tab="${tab}"]`)].find(
+        (el) => el.getClientRects().length > 0
+      )
+      visible?.classList.add('tour-spot')
     })
-    // Sit just below the tab bar on wider screens, so the highlighted tab and the card
-    // never overlap. (On phones the card is a bottom sheet instead; see the CSS.)
-    const nav = document.querySelector('.tabs')
-    overlay.style.paddingTop =
-      nav && window.innerWidth > 560 ? `${Math.round(nav.getBoundingClientRect().bottom + 16)}px` : ''
     overlay.querySelector('.tour-progress').textContent = t('{step} of {total}', { step: step + 1, total: TOUR_STEPS.length })
     overlay.querySelector('#tour-title').textContent = s.title(name)
     overlay.querySelector('#tour-body').textContent = s.body()
@@ -1491,21 +1646,39 @@ function renderDashboard(me) {
   )
   const missingCount = allHomework.filter((h) => h.timing === 'missing').length
 
-  app.innerHTML =
-    offlineBannerHtml() +
-    `<div id="notif-badge"></div>
-     <h1 id="greeting">${t('Welcome back')}</h1>
-     <p class="hint" style="margin-bottom:16px">${esc(dueSummary(allHomework))}</p>
-     <nav class="tabs" role="tablist" aria-label="${t('Sections')}">
-       ${TABS.map(
-         ([id, label]) =>
-           `<button type="button" role="tab" class="tab" data-tab="${id}" aria-controls="panel-${id}">${t(label)}${
-             id === 'classwork' && missingCount ? ` <span class="tab-count">${missingCount}</span>` : ''
-           }${id === 'messages' ? ' <span class="tab-count" id="unread-count" hidden></span>' : ''}</button>`
-       ).join('')}
-     </nav>
+  const countFor = (id) =>
+    id === 'classwork' && missingCount
+      ? `<span class="count" aria-label="${esc(t('{n} missing', { n: missingCount }))}">${missingCount}</span>`
+      : id === 'messages'
+        ? '<span class="count unread-count" hidden></span>'
+        : ''
+  const navButton = (cls, [id, label]) =>
+    `<button type="button" class="${cls}" data-tab="${id}">${icon(id)}<span>${t(label)}</span>${countFor(id)}</button>`
+  const firstName = me.students[0].studentName.split(' ')[0]
+  document.body.classList.add('app-mode')
 
-     <section class="panel" id="panel-home" data-panel="home" role="tabpanel">
+  app.innerHTML = `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="side-brand"><div class="badge">EB</div><div class="brand">${t('EduBoard Portal')}</div></div>
+      <nav class="side-nav" aria-label="${t('Sections')}">${TABS.map((tab) => navButton('nav-item', tab)).join('')}</nav>
+      <div class="side-foot">
+        ${langSwitchHtml()}
+        <div class="user-chip" aria-hidden="true"><span class="user-avatar"></span><span class="user-name">${esc(firstName)}</span></div>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="appbar">
+        <div class="badge">EB</div><div class="brand">EduBoard</div>
+        ${langSwitchHtml()}
+        <button type="button" class="icon-btn" data-tab="account" aria-label="${t('Account')}"><span class="user-avatar">${icon('account')}</span></button>
+      </header>
+      <main class="content">
+     ${offlineBannerHtml()}
+     <div id="notif-badge"></div>
+
+     <section class="panel" id="panel-home" data-panel="home">
+       ${pageHead(t('Welcome back'), esc(dueSummary(allHomework)), 'greeting')}
        <div id="profile-nudge"></div>
        <div class="section-title">${t('Due soon')}</div>
        ${dueSoonHtml(allHomework, multi)}
@@ -1513,7 +1686,8 @@ function renderDashboard(me) {
        <div id="story">${t('Loading…')}</div>
      </section>
 
-     <section class="panel" id="panel-classwork" data-panel="classwork" role="tabpanel" hidden>
+     <section class="panel" id="panel-classwork" data-panel="classwork" hidden>
+       ${pageHead(t('Classwork'), t('Every assignment, grouped by unit.'))}
        ${me.students
          .map(
            (s) => `
@@ -1529,7 +1703,8 @@ function renderDashboard(me) {
          .join('')}
      </section>
 
-     <section class="panel" id="panel-study" data-panel="study" role="tabpanel" hidden>
+     <section class="panel" id="panel-study" data-panel="study" hidden>
+       ${pageHead(t('Study'), t('Your teacher’s materials, flashcards and practice quizzes, and an AI Study Helper.'))}
        <div style="display:none">
          <div class="section-title">${t('Materials')}</div>
          <div id="materials"></div>
@@ -1547,7 +1722,8 @@ function renderDashboard(me) {
          .join('')}
      </section>
 
-     <section class="panel" id="panel-grades" data-panel="grades" role="tabpanel" hidden>
+     <section class="panel" id="panel-grades" data-panel="grades" hidden>
+       ${pageHead(t('Grades'), t('Your marks and attendance in each class.'))}
        ${me.students
          .map(
            (s) => `
@@ -1569,7 +1745,8 @@ function renderDashboard(me) {
        </div>
      </section>
 
-     <section class="panel" id="panel-messages" data-panel="messages" role="tabpanel" hidden>
+     <section class="panel" id="panel-messages" data-panel="messages" hidden>
+       ${pageHead(t('Messages'), t('A private chat with your teacher.'))}
        <div class="card">
          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px">
            <strong>${t('Your teacher')}</strong>
@@ -1585,7 +1762,8 @@ function renderDashboard(me) {
        </div>
      </section>
 
-     <section class="panel" id="panel-account" data-panel="account" role="tabpanel" hidden>
+     <section class="panel" id="panel-account" data-panel="account" hidden>
+       ${pageHead(t('Account'), t('Your profile, language and sign-in.'))}
        <div class="section-title">${t('Profile')}</div>
        <div id="profiles"></div>
        <div class="section-title">${t('Language')} · Language</div>
@@ -1625,11 +1803,20 @@ function renderDashboard(me) {
            <button class="chip" id="logout">${t('Log out')}</button>
          </div>
          <div id="qrbox"></div>
+         <div id="install-box"></div>
        </div>
-     </section>`
+     </section>
+      </main>
+    </div>
+    <nav class="bottom-nav" aria-label="${t('Sections')}">${TABS.filter(([id]) => id !== 'account').map((tab) => navButton('bottom-item', tab)).join('')}</nav>
+  </div>`
 
   setupTabs()
   wirePasswordToggles()
+  document.querySelectorAll('[data-lang-switch]').forEach((btn) => {
+    btn.onclick = () => setUiLang(UI_LANG === 'zh' ? 'en' : 'zh')
+  })
+  setupInstall()
   document.querySelectorAll('[data-ui-lang]').forEach((btn) => {
     btn.onclick = () => {
       if (btn.dataset.uiLang !== UI_LANG) setUiLang(btn.dataset.uiLang)

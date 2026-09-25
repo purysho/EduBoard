@@ -17,6 +17,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Seating charts](#seating-charts)
 - [Exit tickets](#exit-tickets)
 - [Resources library](#resources-library)
+- [Students using AI](#students-using-ai)
 - [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
 - [Backing up your data](#backing-up-your-data)
@@ -218,9 +219,25 @@ Because everything happens over your local WiFi rather than the internet, this w
 - **New resource** → choose a type (**Link**, **File**, or **Note**), give it a title, and fill in the URL or pick a file from your computer (for File) or just write the note (for Note). Add tags (comma-separated) and, optionally, one of your standards to make it easy to find later.
 - Filter by typing in the search box or clicking a tag chip; click a link or file resource to open it in your browser or default app, or click a note to view/edit it.
 - Files are referenced by their path on disk, the same as gradebook submissions — keep the original file where EduBoard can find it.
-- **Study tools (needs an AI key in Settings):** click **Index for Notebook** first. Then **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. Flashcards and quizzes open in a review window where you can read every card and question (the correct answer is ticked) and **Regenerate** or **Remove** them. If the resource is shared with a class, students get them on the Portal to practise with; the practice quiz is self-checked and never counts toward a grade.
+- **Study tools (needs an AI key in Settings):** **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. They work on PDFs, Word (.docx), PowerPoint (.pptx, including speaker notes), OpenDocument, .txt and .md files, links and notes, and index the resource themselves the first time. Older .doc/.ppt files need saving as .docx/.pptx first; scanned PDFs (pictures of pages) have no text to read. Flashcards and quizzes open in a review window where you can read every card and question (the correct answer is ticked) and **Regenerate** or **Remove** them. If the resource is shared with a class, students get them on the Portal to practise with; the practice quiz is self-checked and never counts toward a grade.
 
 ![Resources library](screenshots/resources.png)
+
+---
+
+## Students using AI
+
+Students can use AI on the Portal in two places: the **Study Helper** (Study tab), and **Get AI help** inside each assignment. It uses the **Student AI** key from Settings. The AI is told to help them understand and plan, not to write their answer. Students are told, on screen, that you can see what they ask.
+
+A submission shows a purple **Used AI** badge in the assignment's grading window when any of these is true:
+
+- the student asked the AI about this assignment (from **Get AI help**);
+- the student ticked **I used AI** when turning it in. The box is there for outside tools like ChatGPT too;
+- their typed answer reuses wording from answers the Study Helper gave them (about 20% or more).
+
+Hover the badge to see which, and click it to read the actual questions and answers.
+
+What it can't see: EduBoard only knows about the Portal's own AI. Use of ChatGPT or other tools only shows up if the student ticks the box. No AI-writing "detector" is used, because none is reliable and a false accusation is worse than a missed one. Treat a text match as a reason to talk to the student, not as proof.
 
 ---
 

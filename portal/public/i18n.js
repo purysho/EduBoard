@@ -294,6 +294,17 @@ const ZH = {
   '{step} of {total}': '{step}/{total}',
 
   // Dashboard
+  'Every assignment, grouped by unit.': '所有作业，按单元分组。',
+  'Your teacher’s materials, flashcards and practice quizzes, and an AI Study Helper.':
+    '老师的课程资料、闪卡和练习题，还有 AI 学习助手。',
+  'Your marks and attendance in each class.': '你在每门课的成绩和出勤。',
+  'A private chat with your teacher.': '和老师的私聊。',
+  'Your profile, language and sign-in.': '个人资料、语言和登录设置。',
+  'Install the Portal to open it from your home screen like any other app.':
+    '安装后可以像其他应用一样从主屏幕打开。',
+  'Install the app': '安装应用',
+  'To add the Portal to your home screen: tap the Share button, then “Add to Home Screen”.':
+    '添加到主屏幕：点“分享”按钮，然后选“添加到主屏幕”。',
   Welcome: '欢迎',
   'No student linked to this account yet.': '这个账户还没有关联学生。',
   Profile: '个人资料',
