@@ -19,21 +19,50 @@ import {
 import { cn } from '@renderer/lib/cn'
 import { usePortalMessageThreads, useSettings } from '@renderer/lib/queries'
 
-const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
-  { to: '/classes', label: 'Classes', icon: GraduationCap },
-  { to: '/students', label: 'Students', icon: Users },
-  { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
-  { to: '/resources', label: 'Resources', icon: FolderOpen },
-  { to: '/notebook', label: 'Notebook', icon: BookOpenText },
-  { to: '/messages', label: 'Messages', icon: MessageSquare },
-  { to: '/communications', label: 'Communications', icon: MessageCircle },
-  { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
-  { to: '/timetable', label: 'Timetable', icon: CalendarDays },
-  { to: '/calendar', label: 'Calendar', icon: Calendar },
-  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { to: '/audit-log', label: 'Audit Log', icon: History },
-  { to: '/settings', label: 'Settings', icon: Settings2 }
+// Grouped so fourteen destinations scan as four short lists instead of one long one.
+const navGroups: {
+  heading: string | null
+  items: { to: string; label: string; icon: typeof LayoutGrid; end?: boolean }[]
+}[] = [
+  {
+    heading: null,
+    items: [
+      { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
+      { to: '/classes', label: 'Classes', icon: GraduationCap },
+      { to: '/students', label: 'Students', icon: Users }
+    ]
+  },
+  {
+    heading: 'Teaching',
+    items: [
+      { to: '/calendar', label: 'Calendar', icon: Calendar },
+      { to: '/timetable', label: 'Timetable', icon: CalendarDays },
+      { to: '/resources', label: 'Resources', icon: FolderOpen },
+      { to: '/notebook', label: 'Notebook', icon: BookOpenText }
+    ]
+  },
+  {
+    heading: 'Grading',
+    items: [
+      { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
+      { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
+      { to: '/analytics', label: 'Analytics', icon: BarChart3 }
+    ]
+  },
+  {
+    heading: 'Families & students',
+    items: [
+      { to: '/messages', label: 'Messages', icon: MessageSquare },
+      { to: '/communications', label: 'Communications', icon: MessageCircle }
+    ]
+  },
+  {
+    heading: 'Admin',
+    items: [
+      { to: '/audit-log', label: 'Audit Log', icon: History },
+      { to: '/settings', label: 'Settings', icon: Settings2 }
+    ]
+  }
 ]
 
 export function Sidebar(): React.JSX.Element {
@@ -55,40 +84,49 @@ export function Sidebar(): React.JSX.Element {
           EduBoard
         </span>
       </div>
-      <nav className="flex flex-col gap-0.5 px-3">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              cn(
-                'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
-                  : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]'
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span
-                  className={cn(
-                    'absolute left-0 h-5 w-0.5 rounded-full bg-[var(--color-primary)] transition-opacity',
-                    isActive ? 'opacity-100' : 'opacity-0'
-                  )}
-                  aria-hidden
-                />
-                <item.icon size={17} strokeWidth={2} aria-hidden />
-                {item.label}
-                {item.to === '/messages' && unreadMessages > 0 && (
-                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
-                    {unreadMessages > 99 ? '99+' : unreadMessages}
-                  </span>
-                )}
-              </>
+      <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3">
+        {navGroups.map((group) => (
+          <div key={group.heading ?? 'main'} className="flex flex-col gap-0.5">
+            {group.heading && (
+              <p className="mt-4 mb-1 px-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {group.heading}
+              </p>
             )}
-          </NavLink>
+            {group.items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  cn(
+                    'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
+                      : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={cn(
+                        'absolute left-0 h-5 w-0.5 rounded-full bg-[var(--color-primary)] transition-opacity',
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      )}
+                      aria-hidden
+                    />
+                    <item.icon size={17} strokeWidth={2} aria-hidden />
+                    {item.label}
+                    {item.to === '/messages' && unreadMessages > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
+                        {unreadMessages > 99 ? '99+' : unreadMessages}
+                      </span>
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
       <div className="mt-auto flex items-center gap-1.5 px-5 py-4 text-xs text-[var(--color-text-muted)]">

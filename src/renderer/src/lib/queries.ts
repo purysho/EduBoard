@@ -1385,7 +1385,12 @@ export function scheduleAutoPublishToPortal(): void {
 }
 
 export function usePullSubmissionsFromPortal() {
-  return useMutation({ mutationFn: () => api().portalSync.pullSubmissions() })
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().portalSync.pullSubmissions(),
+    // Any open submissions list should show what was just pulled.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['homework'] })
+  })
 }
 
 // ---- Portal messages ---------------------------------------------------------------------

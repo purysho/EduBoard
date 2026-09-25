@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
   ClipboardList,
@@ -30,6 +30,8 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { cn } from '@renderer/lib/cn'
 import {
   useDraftSubmissionFeedback,
+  usePullSubmissionsFromPortal,
+  useSettings,
   useCreateHomeworkAssignment,
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
@@ -44,7 +46,7 @@ import {
   useSetHomeworkSubmissionPortfolio,
   useUpdateHomeworkAssignment
 } from '@renderer/lib/queries'
-import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { formatDate, formatDueDate, ipcErrorMessage } from '@renderer/lib/format'
 import { submissionTiming, type SubmissionTiming } from '@shared/deadlines'
 
 // Due dates end at midnight where the teacher is. The desktop app runs on the teacher's
@@ -147,7 +149,7 @@ export function HomeworkTab(): React.JSX.Element {
                         </Badge>
                         {a.dueDate && (
                           <span className="text-xs text-[var(--color-text-muted)]">
-                            Due {formatDate(a.dueDate)}
+                            Due {formatDueDate(a.dueDate)}
                           </span>
                         )}
                       </div>
@@ -421,6 +423,16 @@ function SubmissionsModal({
 }): React.JSX.Element {
   const { data: submissions, isLoading } = useHomeworkSubmissions(assignment.id, classId)
   const [exporting, setExporting] = useState(false)
+  const { data: settings } = useSettings()
+  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const pull = usePullSubmissionsFromPortal()
+  const { mutate: pullNow } = pull
+
+  // Opening an assignment is exactly when the teacher wants the latest submissions, so
+  // fetch them from the Portal then rather than relying on a manual "Pull" elsewhere.
+  useEffect(() => {
+    if (portalConfigured) pullNow()
+  }, [portalConfigured, assignment.id, pullNow])
   const timings = (submissions ?? []).map((s) =>
     submissionTiming({
       dueDate: assignment.dueDate,
@@ -464,12 +476,32 @@ function SubmissionsModal({
         <p className="text-sm text-[var(--color-text-muted)]">No students enrolled.</p>
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            Use &quot;Pull from Portal&quot; on the class&apos;s Portal tab first to fetch what
-            students have turned in.
-            {assignment.dueDate &&
-              ` Due ${assignment.dueDate}, by midnight your time. ${missingCount} missing, ${lateCount} late.`}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
+            <span>
+              {assignment.dueDate
+                ? `Due ${formatDueDate(assignment.dueDate)} (midnight your time) · ${missingCount} missing · ${lateCount} late`
+                : 'No due date'}
+            </span>
+            {portalConfigured && (
+              <span className="flex items-center gap-2">
+                {pull.isPending
+                  ? 'Checking the Portal…'
+                  : pull.isError
+                    ? `Couldn't reach the Portal: ${ipcErrorMessage(pull.error, 'unknown error')}`
+                    : pull.isSuccess
+                      ? 'Up to date with the Portal'
+                      : null}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={pull.isPending}
+                  onClick={() => pullNow()}
+                >
+                  Refresh
+                </Button>
+              </span>
+            )}
+          </div>
           {submissions.map((s) => (
             <SubmissionRow
               key={s.studentId}

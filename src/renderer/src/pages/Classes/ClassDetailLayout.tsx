@@ -18,15 +18,16 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { cn } from '@renderer/lib/cn'
 
 const TABS = [
+  // Day-to-day tabs first; occasional ones (exit tickets, seating, reports) further right.
   { to: '', label: 'Roster', icon: Users, end: true },
   { to: 'gradebook', label: 'Gradebook', icon: ClipboardList },
+  { to: 'homework', label: 'Homework', icon: FileCheck2 },
   { to: 'attendance', label: 'Attendance', icon: CalendarCheck },
   { to: 'lessons', label: 'Lesson plans', icon: NotebookPen },
-  { to: 'seating', label: 'Seating chart', icon: LayoutGrid },
-  { to: 'exit-ticket', label: 'Exit ticket', icon: MonitorSmartphone },
-  { to: 'homework', label: 'Homework', icon: FileCheck2 },
   { to: 'story', label: 'Class Story', icon: Newspaper },
   { to: 'portal', label: 'Portal', icon: Ticket },
+  { to: 'exit-ticket', label: 'Exit ticket', icon: MonitorSmartphone },
+  { to: 'seating', label: 'Seating chart', icon: LayoutGrid },
   { to: 'report', label: 'Report', icon: BarChart3 },
   { to: 'settings', label: 'Settings', icon: Settings2 }
 ]
@@ -62,7 +63,8 @@ export function ClassDetailLayout(): React.JSX.Element {
         </div>
       </div>
 
-      <div className="mb-6 flex gap-1 border-b border-[var(--color-border)]">
+      {/* Scrolls sideways on its own when the window is narrow, instead of widening the page. */}
+      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
@@ -70,7 +72,7 @@ export function ClassDetailLayout(): React.JSX.Element {
             end={tab.end}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                'flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
                 isActive
                   ? 'border-[var(--color-primary)] text-[var(--color-primary)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
