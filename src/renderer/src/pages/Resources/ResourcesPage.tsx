@@ -31,6 +31,14 @@ import { PracticeSetModal } from './PracticeSetModal'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
 
+// The AI buttons index a resource themselves if needed, so they don't wait for "Index
+// for Notebook". Only a resource with nothing to read hides them.
+function canUseAi(resource: LessonResource): boolean {
+  if (resource.type === 'note') return !!resource.notes?.trim()
+  if (resource.type === 'link') return !!resource.url
+  return !!resource.filePath
+}
+
 export function ResourcesPage(): React.JSX.Element {
   const { data: resources, isLoading } = useLessonResources()
   const { data: standards } = useStandards()
@@ -249,7 +257,7 @@ export function ResourcesPage(): React.JSX.Element {
                             ? 'Re-index'
                             : 'Index for Notebook'}
                       </button>
-                      {resource.indexedAt && (
+                      {canUseAi(resource) && (
                         <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
                           onClick={() => handleStudyGuide(resource)}
@@ -263,7 +271,7 @@ export function ResourcesPage(): React.JSX.Element {
                               : 'Study guide'}
                         </button>
                       )}
-                      {resource.indexedAt && (
+                      {canUseAi(resource) && (
                         <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                           onClick={() =>
@@ -274,7 +282,7 @@ export function ResourcesPage(): React.JSX.Element {
                           Flashcards{resource.flashcards ? ` (${resource.flashcards.length})` : ''}
                         </button>
                       )}
-                      {resource.indexedAt && (
+                      {canUseAi(resource) && (
                         <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                           onClick={() => setPractice({ resourceId: resource.id, kind: 'quiz' })}

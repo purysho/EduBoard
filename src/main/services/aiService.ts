@@ -28,6 +28,16 @@ const OPENAI_COMPATIBLE_PRESETS: Record<
   zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash-250414' }
 }
 
+const AI_TIMEOUT_MS = 180_000
+
+/** A provider failure reworded for the teacher (see describeAiFailure). */
+export class AiRequestError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'AiRequestError'
+  }
+}
+
 export class AiNotConfiguredError extends Error {
   constructor() {
     super('No AI API key set — add one in Settings to use AI features.')
@@ -49,7 +59,7 @@ async function completeAnthropic(
   user: string,
   maxTokens: number
 ): Promise<string> {
-  const client = new Anthropic({ apiKey })
+  const client = new Anthropic({ apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 1 })
   const response = await client.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: maxTokens,
@@ -73,6 +83,9 @@ async function completeOpenAiCompatible(
   maxTokens: number
 ): Promise<string> {
   const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    // Without a limit a stalled provider leaves the button saying "Writing…" forever.
+    // Generous, because a long study guide on a free model can take a minute or two.
+    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -151,7 +164,7 @@ export function describeAiFailure(err: unknown): string {
   if (err instanceof AiNotConfiguredError) return 'No key entered yet.'
   const message = err instanceof Error ? err.message : String(err)
   const status =
-    /AI provider error (\d{3})/.exec(message)?.[1] ?? /\b(401|403|404|429)\b/.exec(message)?.[1]
+    /AI provider error (\d{3})/.exec(message)?.[1] ?? /\b(400|401|403|404|429)\b/.exec(message)?.[1]
   const detail = message.replace(/^AI provider error \d{3}: /, '').slice(0, 300)
   switch (status) {
     case '401':
@@ -159,8 +172,13 @@ export function describeAiFailure(err: unknown): string {
       return `The provider rejected the key. Check it was copied in full. (${detail})`
     case '404':
       return `The provider doesn't recognise this model or address. (${detail})`
+    case '400':
+      return `The provider refused the request, often because the model name is wrong or the text is too long for it. (${detail})`
     case '429':
       return `The key works but is out of quota or rate-limited right now. (${detail})`
+  }
+  if (err instanceof Error && (err.name === 'TimeoutError' || /timed? ?out/i.test(message))) {
+    return 'The AI provider took too long to answer. Try again, or try a shorter resource.'
   }
   if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network/i.test(message)) {
     return `Couldn't reach the provider. Check this computer's internet connection or VPN. (${detail})`
@@ -189,7 +207,12 @@ export async function testConnection(config: AiConnectionConfig): Promise<AiConn
  * Notebook's question-answering, which needs to hand over a variable amount of
  * retrieved context rather than a fixed template). */
 export async function askAi(system: string, user: string, maxTokens: number): Promise<string> {
-  return complete(system, user, maxTokens)
+  try {
+    return await complete(system, user, maxTokens)
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError) throw err
+    throw new AiRequestError(describeAiFailure(err))
+  }
 }
 
 export async function draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan> {

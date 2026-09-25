@@ -36,6 +36,43 @@ export const PRACTICE_LIMITS = {
 const isText = (v: unknown, max: number): v is string =>
   typeof v === 'string' && v.trim().length > 0 && v.length <= max
 
+/** One card, cleaned, or null if it's unusable. */
+export function cleanFlashcard(c: unknown): Flashcard | null {
+  const L = PRACTICE_LIMITS.flashcards
+  const card = c as Record<string, unknown> | null
+  if (!card || typeof card !== 'object') return null
+  if (!isText(card.front, L.frontChars) || !isText(card.back, L.backChars)) return null
+  return { front: card.front.trim(), back: card.back.trim() }
+}
+
+/** One question, cleaned, or null if it's unusable. */
+export function cleanPracticeQuestion(q: unknown): PracticeQuestion | null {
+  const L = PRACTICE_LIMITS.quiz
+  const item = q as Record<string, unknown> | null
+  if (!item || typeof item !== 'object') return null
+  const options = item.options
+  if (
+    !isText(item.question, L.questionChars) ||
+    !isText(item.explanation, L.explanationChars) ||
+    !Array.isArray(options) ||
+    options.length < L.minOptions ||
+    options.length > L.maxOptions ||
+    !options.every((o) => isText(o, L.optionChars)) ||
+    new Set(options.map((o: string) => o.trim().toLowerCase())).size !== options.length ||
+    !Number.isInteger(item.answerIndex) ||
+    (item.answerIndex as number) < 0 ||
+    (item.answerIndex as number) >= options.length
+  ) {
+    return null
+  }
+  return {
+    question: item.question.trim(),
+    options: (options as string[]).map((o) => o.trim()),
+    answerIndex: item.answerIndex as number,
+    explanation: item.explanation.trim()
+  }
+}
+
 /** Returns the cleaned cards, or a reason the set is unusable. */
 export function validateFlashcards(
   value: unknown
@@ -47,11 +84,9 @@ export function validateFlashcards(
   }
   const cards: Flashcard[] = []
   for (const [i, c] of value.entries()) {
-    const card = c as Record<string, unknown> | null
-    if (!card || !isText(card.front, L.frontChars) || !isText(card.back, L.backChars)) {
-      return { ok: false, reason: `card ${i + 1} is malformed or too long` }
-    }
-    cards.push({ front: card.front.trim(), back: card.back.trim() })
+    const card = cleanFlashcard(c)
+    if (!card) return { ok: false, reason: `card ${i + 1} is malformed or too long` }
+    cards.push(card)
   }
   return { ok: true, value: cards }
 }
@@ -67,29 +102,9 @@ export function validatePracticeQuiz(
   }
   const questions: PracticeQuestion[] = []
   for (const [i, q] of value.entries()) {
-    const item = q as Record<string, unknown> | null
-    const options = item?.options
-    if (
-      !item ||
-      !isText(item.question, L.questionChars) ||
-      !isText(item.explanation, L.explanationChars) ||
-      !Array.isArray(options) ||
-      options.length < L.minOptions ||
-      options.length > L.maxOptions ||
-      !options.every((o) => isText(o, L.optionChars)) ||
-      new Set(options.map((o: string) => o.trim().toLowerCase())).size !== options.length ||
-      !Number.isInteger(item.answerIndex) ||
-      (item.answerIndex as number) < 0 ||
-      (item.answerIndex as number) >= options.length
-    ) {
-      return { ok: false, reason: `question ${i + 1} is malformed` }
-    }
-    questions.push({
-      question: item.question.trim(),
-      options: (options as string[]).map((o) => o.trim()),
-      answerIndex: item.answerIndex as number,
-      explanation: item.explanation.trim()
-    })
+    const question = cleanPracticeQuestion(q)
+    if (!question) return { ok: false, reason: `question ${i + 1} is malformed` }
+    questions.push(question)
   }
   return { ok: true, value: questions }
 }

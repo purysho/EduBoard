@@ -1,5 +1,7 @@
 import {
   PRACTICE_LIMITS,
+  cleanFlashcard,
+  cleanPracticeQuestion,
   validateFlashcards,
   validatePracticeQuiz,
   type Flashcard,
@@ -43,9 +45,59 @@ export function buildPracticePrompt(
   return { system, user: `<source_material>\n${source}\n</source_material>` }
 }
 
-function stripCodeFence(text: string): string {
-  const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
-  return match ? match[1] : text
+/** The JSON part of a reply. Models often add a sentence before it ("Here are your
+ * flashcards:") or a code fence around it despite being asked not to. */
+function extractJson(reply: string): unknown {
+  const fenced = reply.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+  const candidates = [fenced?.[1], reply.trim()]
+  for (const open of ['[', '{']) {
+    const close = open === '[' ? ']' : '}'
+    const start = reply.indexOf(open)
+    const end = reply.lastIndexOf(close)
+    if (start >= 0 && end > start) candidates.push(reply.slice(start, end + 1))
+  }
+  for (const candidate of candidates) {
+    if (!candidate) continue
+    try {
+      return JSON.parse(candidate)
+    } catch {
+      // try the next way of finding it
+    }
+  }
+  throw new AiDraftFormatError('not JSON')
+}
+
+/** {"flashcards": [...]} or {"questions": [...]}: an object holding exactly one list. */
+function unwrapList(value: unknown): unknown {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const lists = Object.values(value).filter(Array.isArray)
+    if (lists.length === 1) return lists[0]
+  }
+  return value
+}
+
+/** Common harmless variations in a question: "2" for 2, or "answer": "C" / the correct
+ * option's text instead of answerIndex. Anything else is left for the validator. */
+function normaliseQuestion(q: unknown): unknown {
+  if (!q || typeof q !== 'object') return q
+  const item = { ...(q as Record<string, unknown>) }
+  if (typeof item.answerIndex === 'string' && /^\d+$/.test(item.answerIndex.trim())) {
+    item.answerIndex = Number(item.answerIndex)
+  }
+  if (
+    item.answerIndex === undefined &&
+    typeof item.answer === 'string' &&
+    Array.isArray(item.options)
+  ) {
+    const answer = item.answer.trim()
+    const byText = (item.options as unknown[]).findIndex(
+      (o) => typeof o === 'string' && o.trim().toLowerCase() === answer.toLowerCase()
+    )
+    const byLetter = /^[A-Ea-e]$/.test(answer) ? answer.toUpperCase().charCodeAt(0) - 65 : -1
+    const index = byText >= 0 ? byText : byLetter
+    if (index >= 0 && index < item.options.length) item.answerIndex = index
+  }
+  return item
 }
 
 export function parsePracticeSet(kind: 'flashcards', reply: string): Flashcard[]
@@ -54,17 +106,32 @@ export function parsePracticeSet(
   kind: PracticeKind,
   reply: string
 ): Flashcard[] | PracticeQuestion[]
+/**
+ * Turns the model's reply into a set that passes the shared validators. Individual
+ * unusable items are dropped and an over-long set is cut to the maximum, rather than
+ * throwing away a whole set for one bad card; the result is then validated as a whole,
+ * so nothing that fails the Portal's own checks is ever saved.
+ */
 export function parsePracticeSet(
   kind: PracticeKind,
   reply: string
 ): Flashcard[] | PracticeQuestion[] {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(stripCodeFence(reply).trim())
-  } catch {
-    throw new AiDraftFormatError('not JSON')
+  const list = unwrapList(extractJson(reply))
+  if (!Array.isArray(list)) throw new AiDraftFormatError('not a list')
+
+  const limits = kind === 'flashcards' ? PRACTICE_LIMITS.flashcards : PRACTICE_LIMITS.quiz
+  const cleaned =
+    kind === 'flashcards'
+      ? list.map(cleanFlashcard)
+      : list.map((q) => cleanPracticeQuestion(normaliseQuestion(q)))
+  const usable = cleaned.filter((x) => x !== null).slice(0, limits.max)
+
+  const result = kind === 'flashcards' ? validateFlashcards(usable) : validatePracticeQuiz(usable)
+  if (!result.ok) {
+    const noun = kind === 'flashcards' ? 'cards' : 'questions'
+    throw new AiDraftFormatError(
+      `only ${usable.length} usable ${noun} out of ${list.length}, need at least ${limits.min}`
+    )
   }
-  const result = kind === 'flashcards' ? validateFlashcards(parsed) : validatePracticeQuiz(parsed)
-  if (!result.ok) throw new AiDraftFormatError(result.reason)
   return result.value
 }
