@@ -600,7 +600,11 @@ function wireTranslateControls(root) {
           <div data-translation-text>${parts
             .map((text, i) => (i === 0 && result.title ? `<p style="margin:0"><strong>${esc(text)}</strong></p>` : `<p class="desc">${esc(text)}</p>`))
             .join('')}</div>
-          ${result.truncated ? `<p class="field-note">${t('Only the first part was translated because it is very long.')}</p>` : ''}`
+          ${result.truncated ? `<p class="field-note">${t('Only the first part was translated because it is very long.')}</p>` : ''}
+          <div class="chip-row"><button type="button" class="chip" data-listen-translation>${t('Listen to translation')}</button></div>`
+        const listenTranslation = box.querySelector('[data-listen-translation]')
+        listenTranslation.onclick = () =>
+          speak(box.querySelector('[data-translation-text]').innerText, listenTranslation)
         box.dataset.language = readingLanguage
         box.hidden = false
         btn.textContent = t('Hide translation')
@@ -1308,10 +1312,10 @@ async function loadMaterials() {
   wireTranslateControls(box)
   box.querySelectorAll('[data-listen]').forEach((el) => {
     el.onclick = () => {
-      // Reads the translation instead when one is showing.
+      // Always the teacher's original text. A translation has its own Listen button, so
+      // a student learning English hears the English even with the translation open.
       const detail = document.getElementById('detail-' + el.dataset.listen)
-      const translation = detail.querySelector('[data-translation]:not([hidden]) [data-translation-text]')
-      speak((translation || detail.querySelector('[data-guide-text]')).textContent, el)
+      speak(detail.querySelector('[data-guide-text]').textContent, el)
     }
   })
 }

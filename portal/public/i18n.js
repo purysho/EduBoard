@@ -179,6 +179,7 @@ const ZH = {
   'Only the first part was translated because it is very long.': '内容太长，只翻译了前面一部分。',
   'Translate into {language}': '翻译成{language}',
   'Translate messages into': '消息翻译成',
+  'Listen to translation': '朗读译文',
   English: '英文',
   'Chinese (中文)': '中文',
   'Spanish (Español)': '西班牙语 (Español)',
