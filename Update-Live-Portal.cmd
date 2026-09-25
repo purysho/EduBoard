@@ -19,7 +19,9 @@ echo   Connecting to root@%HOST% ...
 echo   When asked for a password, type the server's root password (from VPS.do).
 echo   Nothing appears while you type it; that's normal. Then press Enter.
 echo.
-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh | bash"
+rem Uses the copy of the updater installed on the server (works once the repository is
+rem private); falls back to downloading it for a server that doesn't have it yet.
+ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "S=/opt/eduboard/portal/scripts/update-server.sh; if [ -f $S ]; then cp $S /tmp/eb-update.sh; else curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh -o /tmp/eb-update.sh; fi && bash /tmp/eb-update.sh"
 if errorlevel 1 goto :failed
 echo.
 echo   All done. Publish from EduBoard again to send your classes and attachments.

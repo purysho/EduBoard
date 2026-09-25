@@ -16,6 +16,12 @@
 # Options (environment variables):
 #   EDUBOARD_BRANCH   which branch to install (default below)
 #   EDUBOARD_TARBALL  install from a local .tar.gz of the repository instead of GitHub
+#   GITHUB_TOKEN      a read-only GitHub token, needed once the repository is private.
+#                     It's saved to /root/.eduboard-github-token (root-only) and used
+#                     automatically on later updates, so it only has to be given once.
+#
+# Once the repository is private, run the copy this script installs on the server:
+#   bash /opt/eduboard/portal/scripts/update-server.sh
 set -euo pipefail
 
 BRANCH="${EDUBOARD_BRANCH:-claude/trusting-goodall-hxsi5s}"
@@ -58,8 +64,23 @@ if [ -n "${EDUBOARD_TARBALL:-}" ]; then
   cp "$EDUBOARD_TARBALL" "$WORK/src.tar.gz"
 else
   say "Downloading the Portal ($BRANCH)"
-  curl -fsSL "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" -o "$WORK/src.tar.gz" ||
-    fail "Download failed; nothing was changed."
+  TOKEN_FILE=/root/.eduboard-github-token
+  TOKEN="${GITHUB_TOKEN:-}"
+  if [ -n "$TOKEN" ]; then
+    (umask 077 && printf '%s' "$TOKEN" > "$TOKEN_FILE")
+    echo "    saved the GitHub token for next time"
+  elif [ -r "$TOKEN_FILE" ]; then
+    TOKEN="$(cat "$TOKEN_FILE")"
+  fi
+  if [ -n "$TOKEN" ]; then
+    # The API's tarball works for private repositories (the plain archive link doesn't).
+    curl -fsSL -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/repos/$REPO/tarball/$BRANCH" -o "$WORK/src.tar.gz" ||
+      fail "Download failed. The GitHub token may have expired or lack access to $REPO; nothing was changed."
+  else
+    curl -fsSL "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" -o "$WORK/src.tar.gz" ||
+      fail "Download failed. If the repository is private, run again with a token: GITHUB_TOKEN=... bash $0. Nothing was changed."
+  fi
 fi
 tar -xzf "$WORK/src.tar.gz" -C "$WORK"
 NEW_PORTAL="$(find "$WORK" -mindepth 2 -maxdepth 2 -type d -name portal | head -1)"

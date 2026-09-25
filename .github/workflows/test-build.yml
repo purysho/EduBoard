@@ -7,6 +7,14 @@ name: Test build (Windows installer)
 on:
   push:
     branches: ['claude/**', 'v0.3-dev']
+    # A private repository has a monthly Actions allowance (Windows minutes count
+    # double), so changes that can't affect the desktop installer don't build one.
+    paths-ignore:
+      - 'portal/**'
+      - 'docs/**'
+      - '**/*.md'
+      - '**/*.MD'
+      - '*.cmd'
   workflow_dispatch:
 
 permissions:

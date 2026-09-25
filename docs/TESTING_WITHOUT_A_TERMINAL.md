@@ -45,7 +45,26 @@ VNC:** download the branch as a ZIP and double-click **Update-Live-Portal.cmd**.
 connects with Windows' built-in SSH, asks for the server's root password and runs the same
 update.
 
-If the console can't paste, type the address carefully. If it stops with an error, nothing after that step was changed and the backup
+If the console can't paste, type the address carefully.
+
+#### If the repository is private
+
+The line above downloads from GitHub without logging in, which only works while the
+repository is public. For a private repository, give the server a read-only GitHub token
+once:
+
+1. On GitHub: your picture → **Settings** → **Developer settings** → **Personal access
+   tokens** → **Fine-grained tokens** → **Generate new token**. Repository access: **Only
+   select repositories** → EduBoard. Permissions: **Contents: Read-only**. Pick an
+   expiry (e.g. one year) and copy the token.
+2. In Command Prompt (paste the token in place of `TOKEN`):
+
+   ```
+   ssh root@portal.edu-board.com "cp /opt/eduboard/portal/scripts/update-server.sh /tmp/eb-update.sh && GITHUB_TOKEN=TOKEN bash /tmp/eb-update.sh"
+   ```
+
+The server keeps the token (readable by root only), so later updates are just
+**Update-Live-Portal.cmd**. When the token expires, repeat these two steps. If it stops with an error, nothing after that step was changed and the backup
 in `/root/` has the data as it was.
 
 ### On your own computer, before it goes live (Start-Test-Portal.cmd)
