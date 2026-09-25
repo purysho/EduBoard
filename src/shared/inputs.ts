@@ -178,7 +178,7 @@ export type CreatePortalInviteBatchInput = { classId: string; count: number }
 
 export type CreateLessonResourceInput = Omit<
   LessonResource,
-  'id' | 'createdAt' | 'updatedAt' | 'indexedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'indexedAt' | 'flashcards' | 'practiceQuiz'
 >
 export type UpdateLessonResourceInput = Partial<CreateLessonResourceInput>
 

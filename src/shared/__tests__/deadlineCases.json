@@ -1,0 +1,109 @@
+{
+  "_comment": "Shared by src/shared/__tests__/deadlines.test.ts and portal/test/deadlines.test.js, so the TypeScript and plain-JS copies of the deadline rule can't drift apart.",
+  "deadlines": [
+    {
+      "dueDate": "2026-10-02",
+      "timeZone": "Asia/Shanghai",
+      "deadline": "2026-10-02T16:00:00.000Z"
+    },
+    { "dueDate": "2026-10-02", "timeZone": "UTC", "deadline": "2026-10-03T00:00:00.000Z" },
+    {
+      "dueDate": "2026-12-31",
+      "timeZone": "America/New_York",
+      "deadline": "2027-01-01T05:00:00.000Z"
+    },
+    {
+      "dueDate": "2026-03-07",
+      "timeZone": "America/New_York",
+      "deadline": "2026-03-08T05:00:00.000Z"
+    },
+    {
+      "dueDate": "2026-03-08",
+      "timeZone": "America/New_York",
+      "deadline": "2026-03-09T04:00:00.000Z"
+    },
+    {
+      "dueDate": "2026-10-24",
+      "timeZone": "Europe/London",
+      "deadline": "2026-10-24T23:00:00.000Z"
+    },
+    {
+      "dueDate": "2026-10-25",
+      "timeZone": "Europe/London",
+      "deadline": "2026-10-26T00:00:00.000Z"
+    },
+    { "dueDate": "2026-10-02", "timeZone": "Asia/Kolkata", "deadline": "2026-10-02T18:30:00.000Z" },
+    {
+      "dueDate": "2026-10-02T00:00:00.000Z",
+      "timeZone": "UTC",
+      "deadline": "2026-10-03T00:00:00.000Z"
+    },
+    { "dueDate": "not a date", "timeZone": "UTC", "deadline": null },
+    { "dueDate": null, "timeZone": "UTC", "deadline": null }
+  ],
+  "timing": [
+    {
+      "name": "just before the deadline",
+      "dueDate": "2026-10-02",
+      "status": "submitted",
+      "submittedAt": "2026-10-02T15:59:59.000Z",
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-10T00:00:00.000Z",
+      "expected": "on_time"
+    },
+    {
+      "name": "exactly at the deadline",
+      "dueDate": "2026-10-02",
+      "status": "submitted",
+      "submittedAt": "2026-10-02T16:00:00.000Z",
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-10T00:00:00.000Z",
+      "expected": "late"
+    },
+    {
+      "name": "graded work keeps its late flag",
+      "dueDate": "2026-10-02",
+      "status": "done",
+      "submittedAt": "2026-10-05T01:00:00.000Z",
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-10T00:00:00.000Z",
+      "expected": "late"
+    },
+    {
+      "name": "not started, deadline passed",
+      "dueDate": "2026-10-02",
+      "status": "not_started",
+      "submittedAt": null,
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-02T16:00:00.000Z",
+      "expected": "missing"
+    },
+    {
+      "name": "not started, still time",
+      "dueDate": "2026-10-02",
+      "status": "not_started",
+      "submittedAt": null,
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-02T15:59:00.000Z",
+      "expected": "not_due"
+    },
+    {
+      "name": "graded from paper, no submission time",
+      "dueDate": "2026-10-02",
+      "status": "done",
+      "submittedAt": null,
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-10T00:00:00.000Z",
+      "expected": null
+    },
+    {
+      "name": "no due date",
+      "dueDate": null,
+      "status": "not_started",
+      "submittedAt": null,
+      "timeZone": "Asia/Shanghai",
+      "now": "2026-10-10T00:00:00.000Z",
+      "expected": null
+    }
+  ]
+}

@@ -990,6 +990,30 @@ export function useAskNotebook() {
   })
 }
 
+export function useDraftPracticeSet() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ resourceId, kind }: { resourceId: string; kind: 'flashcards' | 'quiz' }) =>
+      api().notebook.draftPracticeSet(resourceId, kind),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+export function useClearPracticeSet() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ resourceId, kind }: { resourceId: string; kind: 'flashcards' | 'quiz' }) =>
+      api().notebook.clearPracticeSet(resourceId, kind),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
 export function useDraftStudyGuide() {
   const qc = useQueryClient()
   return useMutation({
@@ -1274,6 +1298,18 @@ export function useSetHomeworkSubmissionGrade() {
       qc.invalidateQueries({
         queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
       })
+  })
+}
+
+export function useDraftSubmissionFeedback() {
+  return useMutation({
+    mutationFn: ({
+      homeworkAssignmentId,
+      studentId
+    }: {
+      homeworkAssignmentId: string
+      studentId: string
+    }) => api().homeworkAssignments.draftFeedback(homeworkAssignmentId, studentId)
   })
 }
 

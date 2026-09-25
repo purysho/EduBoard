@@ -1,0 +1,424 @@
+{
+  "_comment": "Shared by src/shared/__tests__/practiceSets.test.ts and portal/test/practiceSets.test.js so the two validators agree.",
+  "flashcards": [
+    {
+      "name": "valid set",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        },
+        {
+          "front": "Q2",
+          "back": "A2"
+        },
+        {
+          "front": "Q3",
+          "back": "A3"
+        },
+        {
+          "front": "Q4",
+          "back": "A4"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "name": "too few",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "too many",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        },
+        {
+          "front": "Q2",
+          "back": "A2"
+        },
+        {
+          "front": "Q3",
+          "back": "A3"
+        },
+        {
+          "front": "Q4",
+          "back": "A4"
+        },
+        {
+          "front": "Q5",
+          "back": "A5"
+        },
+        {
+          "front": "Q6",
+          "back": "A6"
+        },
+        {
+          "front": "Q7",
+          "back": "A7"
+        },
+        {
+          "front": "Q8",
+          "back": "A8"
+        },
+        {
+          "front": "Q9",
+          "back": "A9"
+        },
+        {
+          "front": "Q10",
+          "back": "A10"
+        },
+        {
+          "front": "Q11",
+          "back": "A11"
+        },
+        {
+          "front": "Q12",
+          "back": "A12"
+        },
+        {
+          "front": "Q13",
+          "back": "A13"
+        },
+        {
+          "front": "Q14",
+          "back": "A14"
+        },
+        {
+          "front": "Q15",
+          "back": "A15"
+        },
+        {
+          "front": "Q16",
+          "back": "A16"
+        },
+        {
+          "front": "Q17",
+          "back": "A17"
+        },
+        {
+          "front": "Q18",
+          "back": "A18"
+        },
+        {
+          "front": "Q19",
+          "back": "A19"
+        },
+        {
+          "front": "Q20",
+          "back": "A20"
+        },
+        {
+          "front": "Q21",
+          "back": "A21"
+        },
+        {
+          "front": "Q22",
+          "back": "A22"
+        },
+        {
+          "front": "Q23",
+          "back": "A23"
+        },
+        {
+          "front": "Q24",
+          "back": "A24"
+        },
+        {
+          "front": "Q25",
+          "back": "A25"
+        },
+        {
+          "front": "Q26",
+          "back": "A26"
+        },
+        {
+          "front": "Q27",
+          "back": "A27"
+        },
+        {
+          "front": "Q28",
+          "back": "A28"
+        },
+        {
+          "front": "Q29",
+          "back": "A29"
+        },
+        {
+          "front": "Q30",
+          "back": "A30"
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "not a list",
+      "value": {
+        "front": "x"
+      },
+      "ok": false
+    },
+    {
+      "name": "blank back",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        },
+        {
+          "front": "Q2",
+          "back": "A2"
+        },
+        {
+          "front": "Q3",
+          "back": "A3"
+        },
+        {
+          "front": "x",
+          "back": "  "
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "over-long front",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        },
+        {
+          "front": "Q2",
+          "back": "A2"
+        },
+        {
+          "front": "Q3",
+          "back": "A3"
+        },
+        {
+          "front": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "back": "y"
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "non-text side",
+      "value": [
+        {
+          "front": "Q0",
+          "back": "A0"
+        },
+        {
+          "front": "Q1",
+          "back": "A1"
+        },
+        {
+          "front": "Q2",
+          "back": "A2"
+        },
+        {
+          "front": "Q3",
+          "back": "A3"
+        },
+        {
+          "front": 1,
+          "back": "y"
+        }
+      ],
+      "ok": false
+    }
+  ],
+  "quiz": [
+    {
+      "name": "valid quiz",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        }
+      ],
+      "ok": true
+    },
+    {
+      "name": "too few",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "answer index out of range",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 4,
+          "explanation": "Because."
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "answer index not an integer",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": "1",
+          "explanation": "Because."
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "duplicate options",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "A", "c"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "one option",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a"],
+          "answerIndex": 0,
+          "explanation": "Because."
+        }
+      ],
+      "ok": false
+    },
+    {
+      "name": "missing explanation",
+      "value": [
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": "Because."
+        },
+        {
+          "question": "What?",
+          "options": ["a", "b", "c", "d"],
+          "answerIndex": 1,
+          "explanation": ""
+        }
+      ],
+      "ok": false
+    }
+  ]
+}

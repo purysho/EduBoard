@@ -631,6 +631,19 @@ const migrations: Migration[] = [
       // printed, so re-printing an old batch by mistake is obvious before it happens.
       db.exec(`ALTER TABLE portal_invite_batches ADD COLUMN printed_at TEXT`)
     }
+  },
+  {
+    id: 25,
+    name: 'lesson_resources_practice_sets',
+    up: (db) => {
+      // AI-drafted flashcards and a multiple-choice practice quiz per resource, stored as
+      // JSON arrays (validated by src/shared/practiceSets.ts before they're written) and
+      // published to students with the resource, like study_guide.
+      db.exec(`
+        ALTER TABLE lesson_resources ADD COLUMN flashcards TEXT;
+        ALTER TABLE lesson_resources ADD COLUMN practice_quiz TEXT;
+      `)
+    }
   }
 ]
 

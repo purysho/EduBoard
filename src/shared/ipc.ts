@@ -155,7 +155,9 @@ export const IpcChannels = {
     indexResource: 'notebook:indexResource',
     indexAll: 'notebook:indexAll',
     ask: 'notebook:ask',
-    draftStudyGuide: 'notebook:draftStudyGuide'
+    draftStudyGuide: 'notebook:draftStudyGuide',
+    draftPracticeSet: 'notebook:draftPracticeSet',
+    clearPracticeSet: 'notebook:clearPracticeSet'
   },
   courseGroups: {
     list: 'courseGroups:list',
@@ -203,7 +205,8 @@ export const IpcChannels = {
     openPath: 'homeworkAssignments:openPath',
     setSubmissionGrade: 'homeworkAssignments:setSubmissionGrade',
     setSubmissionPortfolio: 'homeworkAssignments:setSubmissionPortfolio',
-    openSubmissionFile: 'homeworkAssignments:openSubmissionFile'
+    openSubmissionFile: 'homeworkAssignments:openSubmissionFile',
+    draftFeedback: 'homeworkAssignments:draftFeedback'
   },
   portalInvites: {
     createBatch: 'portalInvites:createBatch',

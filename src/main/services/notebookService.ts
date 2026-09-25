@@ -4,7 +4,8 @@ import { PDFParse } from 'pdf-parse'
 import {
   getLessonResource,
   setLessonResourceStudyGuide,
-  touchLessonResourceIndexedAt
+  touchLessonResourceIndexedAt,
+  setLessonResourcePracticeSet
 } from '../repositories/lessonResources'
 import {
   getAllResourceChunkText,
@@ -12,6 +13,7 @@ import {
   searchResourceChunks
 } from '../repositories/resourceChunks'
 import { askAi } from './aiService'
+import { buildPracticePrompt, parsePracticeSet, type PracticeKind } from './practicePrompt'
 import type { LessonResource, NotebookAnswer } from '@shared/types'
 
 const CHUNK_TARGET_CHARS = 800
@@ -56,9 +58,20 @@ async function extractText(resource: LessonResource): Promise<string> {
 
   // type === 'file'
   if (!resource.filePath) throw new NotebookExtractionError('This resource has no file.')
-  const ext = extname(resource.filePath).toLowerCase()
+  return extractFileText(resource.filePath)
+}
+
+/** File types extractFileText can read. */
+export function canExtractText(filePath: string): boolean {
+  return ['.pdf', '.txt', '.md', '.markdown'].includes(extname(filePath).toLowerCase())
+}
+
+/** Plain text from a PDF, .txt or .md file on disk. Also used to read students'
+ * attached work when drafting feedback (see feedbackDraft.ts). */
+export async function extractFileText(filePath: string): Promise<string> {
+  const ext = extname(filePath).toLowerCase()
   if (ext === '.pdf') {
-    const buffer = await readFile(resource.filePath)
+    const buffer = await readFile(filePath)
     const parser = new PDFParse({ data: buffer })
     try {
       const parsed = await parser.getText()
@@ -68,7 +81,7 @@ async function extractText(resource: LessonResource): Promise<string> {
     }
   }
   if (['.txt', '.md', '.markdown'].includes(ext)) {
-    return readFile(resource.filePath, 'utf-8')
+    return readFile(filePath, 'utf-8')
   }
   throw new NotebookExtractionError(
     `Can't extract text from a "${ext || 'unknown'}" file yet — only PDF, .txt, and .md are supported.`
@@ -133,6 +146,26 @@ export async function draftStudyGuide(resourceId: string): Promise<string> {
   const guide = await askAi(system, text, 2048)
   setLessonResourceStudyGuide(resourceId, guide.trim())
   return guide.trim()
+}
+
+/** Drafts flashcards or a practice quiz from a resource's indexed text, validates the
+ * model's reply (see practicePrompt.ts) and only then saves it, replacing any earlier
+ * set of that kind. Shared resources publish it to students automatically. */
+export async function draftPracticeSet(resourceId: string, kind: PracticeKind): Promise<number> {
+  const text = getAllResourceChunkText(resourceId)
+  if (!text.trim()) {
+    throw new NotebookExtractionError(
+      'Index this resource first — there’s no extracted text to build from yet.'
+    )
+  }
+  const { system, user } = buildPracticePrompt(kind, text)
+  const set = parsePracticeSet(kind, await askAi(system, user, 4096))
+  setLessonResourcePracticeSet(resourceId, kind, set)
+  return set.length
+}
+
+export function clearPracticeSet(resourceId: string, kind: PracticeKind): void {
+  setLessonResourcePracticeSet(resourceId, kind, null)
 }
 
 /** Retrieves the top matching chunks (optionally scoped to a chosen set of resources),

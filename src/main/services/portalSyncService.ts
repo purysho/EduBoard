@@ -13,6 +13,8 @@ import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
+import { safeDownloadPath } from './untrustedFiles'
+import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
   Student,
@@ -88,6 +90,8 @@ export async function publishToPortal(): Promise<void> {
     classId: string
     title: string
     studyGuide: string | null
+    flashcards: Flashcard[] | null
+    practiceQuiz: PracticeQuestion[] | null
     chunks: string[]
   }[] = []
 
@@ -104,6 +108,8 @@ export async function publishToPortal(): Promise<void> {
       classId: resource.classId,
       title: resource.title,
       studyGuide: resource.studyGuide,
+      flashcards: resource.flashcards,
+      practiceQuiz: resource.practiceQuiz,
       chunks
     })
   }
@@ -191,7 +197,10 @@ export async function publishToPortal(): Promise<void> {
       digestSmtpUser: settings.digestSmtpUser,
       digestSmtpPass: settings.digestSmtpPass,
       digestFromEmail: settings.digestFromEmail,
-      digestFromName: settings.digestFromName
+      digestFromName: settings.digestFromName,
+      // Due dates end at midnight in this zone (see src/shared/deadlines.ts), so the
+      // Portal's Late/Missing labels match what the teacher sees here.
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
     })
   })
   if (!res.ok) throw new Error(`Portal sync failed: ${res.status} ${await res.text()}`)
@@ -280,7 +289,9 @@ export async function downloadSubmissionFile(
 
   const dir = join(tmpdir(), 'eduboard-submissions')
   mkdirSync(dir, { recursive: true })
-  const destPath = join(dir, `${studentId}-${fileName}`)
+  // fileName is whatever the student's browser sent. Never let it choose where on disk
+  // this lands (see untrustedFiles.ts).
+  const destPath = safeDownloadPath(dir, studentId, fileName)
   writeFileSync(destPath, Buffer.from(await res.arrayBuffer()))
   return destPath
 }

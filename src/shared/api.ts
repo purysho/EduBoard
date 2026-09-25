@@ -2,6 +2,7 @@
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
 import type {
+  FeedbackDraft,
   AnalyticsOverview,
   AppSettings,
   Assessment,
@@ -258,6 +259,9 @@ export interface EduBoardApi {
     indexAll(): Promise<number>
     ask(question: string, resourceIds: string[] | null): Promise<NotebookAnswer>
     draftStudyGuide(resourceId: string): Promise<string>
+    /** Returns how many cards/questions were saved. */
+    draftPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<number>
+    clearPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<void>
   }
   courseGroups: {
     list(): Promise<CourseGroup[]>
@@ -313,6 +317,8 @@ export interface EduBoardApi {
       studentId: string,
       fileName: string
     ): Promise<string>
+    /** AI-proposed feedback for one submission. Saves nothing. */
+    draftFeedback(homeworkAssignmentId: string, studentId: string): Promise<FeedbackDraft>
   }
   portalInvites: {
     createBatch(input: CreatePortalInviteBatchInput): Promise<PortalInviteBatchWithInvites>

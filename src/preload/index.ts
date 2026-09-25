@@ -182,7 +182,11 @@ const api: EduBoardApi = {
     indexResource: (resourceId) => invoke(IpcChannels.notebook.indexResource, resourceId),
     indexAll: () => invoke(IpcChannels.notebook.indexAll),
     ask: (question, resourceIds) => invoke(IpcChannels.notebook.ask, question, resourceIds),
-    draftStudyGuide: (resourceId) => invoke(IpcChannels.notebook.draftStudyGuide, resourceId)
+    draftStudyGuide: (resourceId) => invoke(IpcChannels.notebook.draftStudyGuide, resourceId),
+    draftPracticeSet: (resourceId, kind) =>
+      invoke(IpcChannels.notebook.draftPracticeSet, resourceId, kind),
+    clearPracticeSet: (resourceId, kind) =>
+      invoke(IpcChannels.notebook.clearPracticeSet, resourceId, kind)
   },
   courseGroups: {
     list: () => invoke(IpcChannels.courseGroups.list),
@@ -243,7 +247,9 @@ const api: EduBoardApi = {
         homeworkAssignmentId,
         studentId,
         fileName
-      )
+      ),
+    draftFeedback: (homeworkAssignmentId, studentId) =>
+      invoke(IpcChannels.homeworkAssignments.draftFeedback, homeworkAssignmentId, studentId)
   },
   portalInvites: {
     createBatch: (input) => invoke(IpcChannels.portalInvites.createBatch, input),

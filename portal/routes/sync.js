@@ -7,6 +7,17 @@ const { requireSyncSecret, hashPassword, passwordProblem, revokeSessions } = req
 const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
 const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
+const { isValidTimeZone } = require('../services/deadlines')
+const { validateFlashcards, validatePracticeQuiz } = require('../services/practiceSets')
+
+// A practice set is stored only if it passes the same validation the desktop applies.
+// Anything else is dropped (the material still publishes), since this is rendered to
+// students and the payload's shape is never trusted.
+function validatedJson(validate, value) {
+  if (value == null) return null
+  const result = validate(value)
+  return result.ok ? JSON.stringify(result.value) : null
+}
 
 const router = express.Router()
 router.use(requireSyncSecret)
@@ -42,8 +53,15 @@ router.post('/', (req, res) => {
     digestSmtpUser,
     digestSmtpPass,
     digestFromEmail,
-    digestFromName
+    digestFromName,
+    timeZone
   } = req.body
+
+  // The teacher's own IANA time zone, which decides when a due date ends (see
+  // services/deadlines.js). An unrecognised value is ignored, never stored.
+  if (isValidTimeZone(timeZone)) {
+    db.prepare('UPDATE teachers SET timezone = ? WHERE id = ?').run(timeZone, req.teacherId)
+  }
 
   // Each teacher's AI key and digest SMTP config is their own row, scoped by
   // req.teacherId — one teacher's publish never overwrites another's settings.
@@ -201,13 +219,20 @@ router.post('/', (req, res) => {
     }
 
     const insertMaterial = db.prepare(
-      'INSERT INTO materials (id, class_id, title, study_guide) VALUES (?, ?, ?, ?)'
+      'INSERT INTO materials (id, class_id, title, study_guide, flashcards, practice_quiz) VALUES (?, ?, ?, ?, ?, ?)'
     )
     const insertChunk = db.prepare(
       'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
     )
     for (const m of materials.filter(inPushedClass)) {
-      insertMaterial.run(m.id, m.classId, m.title, m.studyGuide || null)
+      insertMaterial.run(
+        m.id,
+        m.classId,
+        m.title,
+        m.studyGuide || null,
+        validatedJson(validateFlashcards, m.flashcards),
+        validatedJson(validatePracticeQuiz, m.practiceQuiz)
+      )
       ;(m.chunks || []).forEach((text, i) => insertChunk.run(m.id, i, text))
     }
 

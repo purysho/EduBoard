@@ -3,6 +3,7 @@ import { getDb } from '../db/client'
 import { lessonResources } from '../db/schema'
 import { newId, nowIso } from '../db/util'
 import type { LessonResource } from '@shared/types'
+import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type { CreateLessonResourceInput, UpdateLessonResourceInput } from '@shared/inputs'
 
 export type { CreateLessonResourceInput, UpdateLessonResourceInput }
@@ -25,6 +26,8 @@ export function createLessonResource(input: CreateLessonResourceInput): LessonRe
     createdAt: now,
     updatedAt: now,
     indexedAt: null,
+    flashcards: null,
+    practiceQuiz: null,
     ...input
   }
   getDb().insert(lessonResources).values(row).run()
@@ -56,6 +59,25 @@ export function setLessonResourceStudyGuide(id: string, studyGuide: string): voi
   getDb()
     .update(lessonResources)
     .set({ studyGuide, updatedAt: nowIso() })
+    .where(eq(lessonResources.id, id))
+    .run()
+}
+
+export type PracticeSetKind = 'flashcards' | 'quiz'
+
+/** Saves (or with null, removes) one of a resource's validated practice sets. */
+export function setLessonResourcePracticeSet(
+  id: string,
+  kind: PracticeSetKind,
+  value: Flashcard[] | PracticeQuestion[] | null
+): void {
+  getDb()
+    .update(lessonResources)
+    .set(
+      kind === 'flashcards'
+        ? { flashcards: value as Flashcard[] | null, updatedAt: nowIso() }
+        : { practiceQuiz: value as PracticeQuestion[] | null, updatedAt: nowIso() }
+    )
     .where(eq(lessonResources.id, id))
     .run()
 }

@@ -23,7 +23,13 @@ import * as auditLogRepo from '../repositories/auditLog'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
-import { indexResource, askNotebook, draftStudyGuide } from '../services/notebookService'
+import {
+  indexResource,
+  askNotebook,
+  draftStudyGuide,
+  draftPracticeSet,
+  clearPracticeSet
+} from '../services/notebookService'
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
@@ -61,6 +67,8 @@ import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
+import { isSafeToOpen } from '../services/untrustedFiles'
+import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
@@ -483,6 +491,16 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.notebook.ask, (_e, question: string, resourceIds: string[] | null) =>
     askNotebook(question, resourceIds)
   )
+  handle(
+    IpcChannels.notebook.draftPracticeSet,
+    (_e, resourceId: string, kind: 'flashcards' | 'quiz') =>
+      draftPracticeSet(resourceId, kind === 'quiz' ? 'quiz' : 'flashcards')
+  )
+  handle(
+    IpcChannels.notebook.clearPracticeSet,
+    (_e, resourceId: string, kind: 'flashcards' | 'quiz') =>
+      clearPracticeSet(resourceId, kind === 'quiz' ? 'quiz' : 'flashcards')
+  )
   handle(IpcChannels.notebook.draftStudyGuide, (_e, resourceId: string) =>
     draftStudyGuide(resourceId)
   )
@@ -623,8 +641,18 @@ export function registerIpcHandlers(): void {
     IpcChannels.homeworkAssignments.openSubmissionFile,
     async (_e, homeworkAssignmentId: string, studentId: string, fileName: string) => {
       const localPath = await downloadSubmissionFile(homeworkAssignmentId, studentId, fileName)
-      return shell.openPath(localPath)
+      // A student's upload might be a program. Open documents directly; for anything
+      // else, show the file in its folder and let the teacher decide.
+      if (isSafeToOpen(localPath)) return shell.openPath(localPath)
+      shell.showItemInFolder(localPath)
+      return ''
     }
+  )
+
+  handle(
+    IpcChannels.homeworkAssignments.draftFeedback,
+    (_e, homeworkAssignmentId: string, studentId: string) =>
+      draftSubmissionFeedback(homeworkAssignmentId, studentId)
   )
 
   // --- Portal invites -------------------------------------------------------------------------

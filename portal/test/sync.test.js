@@ -113,3 +113,59 @@ test('"send digest now" responds instead of crashing', async (t) => {
   assert.equal(res.status, 200)
   assert.deepEqual(res.json, { sent: 0, total: 0, errors: [] })
 })
+
+test('homework shows Late/Missing using the time zone the teacher published', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const day = (offsetDays) => new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10)
+  const payload = classPayload({
+    extra: {
+      timeZone: 'Asia/Shanghai',
+      homeworkAssignments: [
+        { id: 'past-missing', classId: 'c1', title: 'Old', dueDate: day(-3) },
+        { id: 'past-late', classId: 'c1', title: 'Late one', dueDate: day(-3) },
+        { id: 'future', classId: 'c1', title: 'Upcoming', dueDate: day(3) }
+      ]
+    }
+  })
+  const { cookie } = await makeStudentAccount(portal, { payload })
+  await portal.call('POST', '/api/me/homework/past-late/submit', {
+    cookie,
+    body: { studentId: 's1', textAnswer: 'sorry this is late' }
+  })
+  await portal.call('POST', '/api/me/homework/future/submit', {
+    cookie,
+    body: { studentId: 's1', textAnswer: 'early' }
+  })
+  const hw = (await portal.call('GET', '/api/me', { cookie })).json.students[0].classes[0].homework
+  const timing = Object.fromEntries(hw.map((h) => [h.id, h.timing]))
+  assert.deepEqual(timing, { 'past-missing': 'missing', 'past-late': 'late', future: 'on_time' })
+
+  // A junk time zone from a buggy client is ignored rather than stored.
+  const bad = await portal.sync('', { ...payload, timeZone: 'Not/AZone' })
+  assert.equal(bad.status, 200)
+})
+
+test('flashcards and practice quizzes reach students only if they pass validation', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const cards = Array.from({ length: 5 }, (_, i) => ({ front: `Term ${i}`, back: `Meaning ${i}` }))
+  const q = { question: 'Which organelle?', options: ['Nucleus', 'Mitochondria'], answerIndex: 1, explanation: 'Energy.' }
+  const payload = classPayload({
+    extra: {
+      materials: [
+        { id: 'good', classId: 'c1', title: 'Cells', chunks: ['x'], flashcards: cards, practiceQuiz: [q, q, q] },
+        // A tampered or buggy client: out-of-range answer, not enough cards.
+        { id: 'bad', classId: 'c1', title: 'Broken', chunks: ['x'], flashcards: cards.slice(0, 2), practiceQuiz: [{ ...q, answerIndex: 9 }, q, q] }
+      ]
+    }
+  })
+  const { cookie } = await makeStudentAccount(portal, { payload })
+  const materials = (await portal.call('GET', '/api/me/materials', { cookie })).json
+  const byId = Object.fromEntries(materials.map((m) => [m.id, m]))
+  assert.equal(byId.good.flashcards.length, 5)
+  assert.equal(byId.good.practiceQuiz[0].answerIndex, 1)
+  assert.equal(byId.bad.flashcards, null)
+  assert.equal(byId.bad.practiceQuiz, null)
+  assert.equal(byId.bad.title, 'Broken', 'the material itself still publishes')
+})

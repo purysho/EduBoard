@@ -243,6 +243,9 @@ ensureColumn('homework_submissions', 'portfolio', 'portfolio INTEGER NOT NULL DE
 ensureColumn('accounts', 'email', 'email TEXT')
 ensureColumn('accounts', 'session_version', 'session_version INTEGER NOT NULL DEFAULT 0')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
+ensureColumn('teachers', 'timezone', 'timezone TEXT')
+ensureColumn('materials', 'flashcards', 'flashcards TEXT')
+ensureColumn('materials', 'practice_quiz', 'practice_quiz TEXT')
 ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server

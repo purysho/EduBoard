@@ -27,6 +27,7 @@ import {
 import { ipcErrorMessage } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { ResourceFormModal } from './ResourceFormModal'
+import { PracticeSetModal } from './PracticeSetModal'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
 
@@ -69,6 +70,13 @@ export function ResourcesPage(): React.JSX.Element {
   const [showAdd, setShowAdd] = useState(false)
   const [editingResource, setEditingResource] = useState<LessonResource | null>(null)
   const [pendingDelete, setPendingDelete] = useState<LessonResource | null>(null)
+  const [practice, setPractice] = useState<{
+    resourceId: string
+    kind: 'flashcards' | 'quiz'
+  } | null>(null)
+  const practiceResource = practice
+    ? resources?.find((r) => r.id === practice.resourceId)
+    : undefined
 
   const standardById = new Map((standards ?? []).map((s) => [s.id, s]))
 
@@ -255,6 +263,27 @@ export function ResourcesPage(): React.JSX.Element {
                               : 'Study guide'}
                         </button>
                       )}
+                      {resource.indexedAt && (
+                        <button
+                          className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                          onClick={() =>
+                            setPractice({ resourceId: resource.id, kind: 'flashcards' })
+                          }
+                        >
+                          <Sparkles size={12} aria-hidden />
+                          Flashcards{resource.flashcards ? ` (${resource.flashcards.length})` : ''}
+                        </button>
+                      )}
+                      {resource.indexedAt && (
+                        <button
+                          className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                          onClick={() => setPractice({ resourceId: resource.id, kind: 'quiz' })}
+                        >
+                          <Sparkles size={12} aria-hidden />
+                          Practice quiz
+                          {resource.practiceQuiz ? ` (${resource.practiceQuiz.length})` : ''}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </CardBody>
@@ -265,6 +294,13 @@ export function ResourcesPage(): React.JSX.Element {
       )}
 
       <ResourceFormModal open={showAdd} onClose={() => setShowAdd(false)} />
+      {practice && practiceResource && (
+        <PracticeSetModal
+          resource={practiceResource}
+          kind={practice.kind}
+          onClose={() => setPractice(null)}
+        />
+      )}
       {editingResource && (
         <ResourceFormModal
           open

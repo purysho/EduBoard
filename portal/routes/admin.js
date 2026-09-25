@@ -10,6 +10,11 @@ const { requireAdminSecret, newRandomToken, hashToken } = require('../auth')
 
 const router = express.Router()
 router.use(requireAdminSecret)
+// Responses can carry a freshly minted sync secret; keep them out of every cache.
+router.use((_req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
 
 // Returns the raw sync secret exactly once — only its hash is ever stored, same
 // principle as a QR quick-login token. Hand it to the teacher to paste into their
@@ -17,6 +22,7 @@ router.use(requireAdminSecret)
 router.post('/teachers', (req, res) => {
   const name = (req.body?.name || '').trim()
   if (!name) return res.status(400).json({ error: 'name is required' })
+  if (name.length > 100) return res.status(400).json({ error: 'name is too long' })
 
   const id = crypto.randomUUID()
   const syncSecret = newRandomToken()

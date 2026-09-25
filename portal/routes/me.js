@@ -15,6 +15,7 @@ const {
 } = require('../auth')
 const { complete, AiNotConfiguredError } = require('../services/ai')
 const { rateLimit, LIMITS } = require('../rateLimit')
+const { submissionTiming, DEFAULT_TIMEZONE } = require('../services/deadlines')
 
 const router = express.Router()
 router.use(requireAuth)
@@ -82,8 +83,13 @@ router.get('/', (req, res) => {
   const studentIds = getLinkedStudentIds(req.accountId)
   if (!studentIds.length) return res.json({ students: [] })
 
+  const now = new Date()
   const students = studentIds.map((studentId) => {
     const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId)
+    const timeZone =
+      db
+        .prepare('SELECT t.timezone FROM teachers t JOIN students s ON s.teacher_id = t.id WHERE s.id = ?')
+        .get(studentId)?.timezone || DEFAULT_TIMEZONE
     const classes = db
       .prepare(
         `SELECT c.id, c.name, c.level_type, g.percent, g.letter, g.attendance_rate
@@ -140,6 +146,14 @@ router.get('/', (req, res) => {
               submissionFileName: submission?.file_name ?? null,
               grade: submission?.grade ?? null,
               feedback: submission?.feedback ?? null,
+              // on_time | late | missing | not_due, or null with no due date.
+              timing: submissionTiming({
+                dueDate: h.due_date,
+                status: submission?.status ?? 'not_started',
+                submittedAt: submission?.submitted_at ?? null,
+                timeZone,
+                now
+              }),
               questions
             }
           })
@@ -212,7 +226,10 @@ router.post('/homework/:id/submit', (req, res) => {
   let storedFileName = null
   let storedFilePath = null
   if (fileName && fileData) {
-    storedFileName = fileName
+    // The display name is the student's own, but never a path: the teacher's desktop app
+    // saves the file under this name when they open it.
+    storedFileName =
+      String(fileName).split(/[\\/]/).pop().replace(/[\u0000-\u001f]/g, '').slice(-150) || 'file'
     const storedName = `${req.params.id}-${studentId}-${sanitizeFileName(fileName)}`
     require('fs').writeFileSync(
       path.join(SUBMISSIONS_DIR, storedName),
@@ -504,7 +521,9 @@ router.get('/materials', (req, res) => {
       id: r.id,
       title: r.title,
       className: r.class_name,
-      studyGuide: r.study_guide
+      studyGuide: r.study_guide,
+      flashcards: r.flashcards ? JSON.parse(r.flashcards) : null,
+      practiceQuiz: r.practice_quiz ? JSON.parse(r.practice_quiz) : null
     }))
   )
 })

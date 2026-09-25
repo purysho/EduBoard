@@ -45,6 +45,8 @@
   .pill.not_started { background: #f1f5f9; color: #64748b; }
   .pill.submitted { background: #fef3c7; color: #92400e; }
   .pill.done { background: #d1fae5; color: #065f46; }
+  .pill.late { background: #ffedd5; color: #9a3412; }
+  .pill.missing { background: #fee2e2; color: #991b1b; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; }
   a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
   a.linklike:hover { text-decoration: underline; }
@@ -398,7 +400,11 @@ function homeworkCardHtml(h, studentId) {
     <div class="card">
       <div class="row" data-toggle="${detailId}" style="cursor:pointer">
         <strong>${esc(h.title)}</strong>
-        <span class="pill ${esc(h.status)}">${esc(h.status.replace('_', ' '))}</span>
+        <span>
+          ${h.timing === 'late' ? '<span class="pill late">Late</span>' : ''}
+          ${h.timing === 'missing' ? '<span class="pill missing">Missing</span>' : ''}
+          <span class="pill ${esc(h.status)}">${esc(h.status.replace('_', ' '))}</span>
+        </span>
       </div>
       ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${esc(h.dueDate)}</p>` : ''}
       <div id="detail-${detailId}" style="display:none; margin-top:10px">
@@ -563,9 +569,25 @@ async function loadMaterials() {
              </div>`
           : '<p class="muted" style="margin-top:6px">No study guide yet for this one.</p>'
       }
+      ${
+        m.flashcards || m.practiceQuiz
+          ? `<div style="margin-top:8px">
+               ${m.flashcards ? `<button class="secondary" data-practice-cards="${i}">\u{1F0CF} Flashcards (${m.flashcards.length})</button>` : ''}
+               ${m.practiceQuiz ? `<button class="secondary" data-practice-quiz="${i}">\u{2753} Practice quiz (${m.practiceQuiz.length})</button>` : ''}
+               <div id="practice-${i}" style="margin-top:8px"></div>
+             </div>`
+          : ''
+      }
     </div>`
     })
     .join('')
+
+  box.querySelectorAll('[data-practice-cards]').forEach((el) => {
+    el.onclick = () => renderFlashcards(document.getElementById('practice-' + el.dataset.practiceCards), items[el.dataset.practiceCards].flashcards)
+  })
+  box.querySelectorAll('[data-practice-quiz]').forEach((el) => {
+    el.onclick = () => renderPracticeQuiz(document.getElementById('practice-' + el.dataset.practiceQuiz), items[el.dataset.practiceQuiz].practiceQuiz)
+  })
 
   box.querySelectorAll('[data-toggle]').forEach((el) => {
     el.onclick = () => {
@@ -579,6 +601,82 @@ async function loadMaterials() {
       speak(detail.textContent, el)
     }
   })
+}
+
+// Self-study flashcards: one card at a time, tap to flip. Nothing is sent to the server;
+// the whole set arrived with the materials list.
+function renderFlashcards(container, cards) {
+  let order = cards.map((_, i) => i)
+  let pos = 0
+  let flipped = false
+  function draw() {
+    const card = cards[order[pos]]
+    container.innerHTML = `
+      <div class="card" data-flip style="cursor:pointer; min-height:90px; background:${flipped ? '#f0fdf4' : '#f8fafc'}">
+        <p class="muted" style="margin:0 0 6px; font-size:.75rem">${flipped ? 'Answer' : 'Question'} · card ${pos + 1} of ${cards.length} · tap to flip</p>
+        <p class="desc" style="margin:0; font-size:1rem">${esc(flipped ? card.back : card.front)}</p>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:6px">
+        <button class="secondary" data-prev ${pos === 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="secondary" data-next ${pos === cards.length - 1 ? 'disabled' : ''}>Next →</button>
+        <button class="secondary" data-shuffle>Shuffle</button>
+        <button class="secondary" data-close>Close</button>
+      </div>`
+    container.querySelector('[data-flip]').onclick = () => { flipped = !flipped; draw() }
+    container.querySelector('[data-prev]').onclick = () => { pos--; flipped = false; draw() }
+    container.querySelector('[data-next]').onclick = () => { pos++; flipped = false; draw() }
+    container.querySelector('[data-shuffle]').onclick = () => {
+      order = order.map((v) => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map((p) => p[1])
+      pos = 0
+      flipped = false
+      draw()
+    }
+    container.querySelector('[data-close]').onclick = () => { container.innerHTML = '' }
+  }
+  draw()
+}
+
+// Self-study practice quiz, checked in the browser. Unlike homework Quick Checks it's
+// not graded or recorded: the answers are meant to be seen once you check.
+function renderPracticeQuiz(container, questions) {
+  container.innerHTML = `
+    <form class="card" data-practice-form>
+      ${questions
+        .map(
+          (q, qi) => `
+        <div style="margin-bottom:12px" data-question="${qi}">
+          <p style="margin:0 0 6px; font-weight:600">${qi + 1}. ${esc(q.question)}</p>
+          ${q.options
+            .map(
+              (o, oi) => `
+            <label style="display:flex; align-items:center; gap:8px; margin:4px 0">
+              <input type="radio" name="pq-${qi}" value="${oi}" /> ${esc(o)}
+            </label>`
+            )
+            .join('')}
+          <p class="desc" data-explain style="display:none; margin:6px 0 0"></p>
+        </div>`
+        )
+        .join('')}
+      <button type="submit">Check answers</button>
+      <button type="button" class="secondary" data-close>Close</button>
+      <p data-score style="font-weight:600"></p>
+    </form>`
+  const form = container.querySelector('[data-practice-form]')
+  form.querySelector('[data-close]').onclick = () => { container.innerHTML = '' }
+  form.onsubmit = (e) => {
+    e.preventDefault()
+    let right = 0
+    questions.forEach((q, qi) => {
+      const picked = form.querySelector(`input[name="pq-${qi}"]:checked`)
+      const correct = picked && Number(picked.value) === q.answerIndex
+      if (correct) right++
+      const explain = form.querySelector(`[data-question="${qi}"] [data-explain]`)
+      explain.style.display = 'block'
+      explain.textContent = `${correct ? '✅ Correct.' : `❌ Answer: ${q.options[q.answerIndex]}.`} ${q.explanation}`
+    })
+    form.querySelector('[data-score]').textContent = `You got ${right} of ${questions.length}.`
+  }
 }
 
 function formatWhen(iso) {

@@ -1,5 +1,6 @@
 // Shared domain types used by both the main (Node/Electron) process and the renderer (React) UI.
 // Keep these framework-agnostic — no Electron or DOM types here.
+import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
 
@@ -303,6 +304,10 @@ export interface LessonResource {
   /** An AI-generated summary of this resource, shown to students alongside the source
    * material and read aloud via the browser's TTS — see aiService.draftStudyGuide. */
   studyGuide: string | null
+  /** AI-drafted self-study sets published with the resource (see practiceSets.ts). Set
+   * only through notebookService.draftPracticeSet, never by the edit form. */
+  flashcards: Flashcard[] | null
+  practiceQuiz: PracticeQuestion[] | null
 }
 
 export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const
@@ -409,6 +414,15 @@ export interface HomeworkSubmission {
   feedback: string | null
   gradedAt: string | null
   portfolio: boolean
+}
+
+/** An AI-proposed grade and comment for one submission. Never saved by itself: it only
+ * pre-fills the teacher's grade/feedback boxes. `flags` are notes for the teacher alone
+ * (blank work, an unreadable file, text that tried to instruct the grader). */
+export interface FeedbackDraft {
+  feedback: string
+  suggestedGrade: string | null
+  flags: string[]
 }
 
 /** One row per student for one assignment — what the per-assignment roster view

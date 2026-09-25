@@ -1,7 +1,18 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { ClipboardList, Copy, ListChecks, Paperclip, Plus, Star, Trash2, X } from 'lucide-react'
+import {
+  ClipboardList,
+  Copy,
+  ListChecks,
+  Paperclip,
+  Plus,
+  Sparkles,
+  Star,
+  Trash2,
+  X
+} from 'lucide-react'
 import type {
+  FeedbackDraft,
   ClassSection,
   HomeworkAssignment,
   HomeworkQuestionType,
@@ -18,6 +29,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { cn } from '@renderer/lib/cn'
 import {
+  useDraftSubmissionFeedback,
   useCreateHomeworkAssignment,
   useDeleteHomeworkAssignment,
   useHomeworkAssignments,
@@ -32,7 +44,12 @@ import {
   useSetHomeworkSubmissionPortfolio,
   useUpdateHomeworkAssignment
 } from '@renderer/lib/queries'
-import { formatDate } from '@renderer/lib/format'
+import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { submissionTiming, type SubmissionTiming } from '@shared/deadlines'
+
+// Due dates end at midnight where the teacher is. The desktop app runs on the teacher's
+// own computer, so its local zone is that zone (and it's what publish sends the Portal).
+const TEACHER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 const STATUS_LABEL: Record<HomeworkSubmissionStatus, string> = {
   not_started: 'Not started',
@@ -404,6 +421,16 @@ function SubmissionsModal({
 }): React.JSX.Element {
   const { data: submissions, isLoading } = useHomeworkSubmissions(assignment.id, classId)
   const [exporting, setExporting] = useState(false)
+  const timings = (submissions ?? []).map((s) =>
+    submissionTiming({
+      dueDate: assignment.dueDate,
+      status: s.status,
+      submittedAt: s.submittedAt,
+      timeZone: TEACHER_TIME_ZONE
+    })
+  )
+  const lateCount = timings.filter((t) => t === 'late').length
+  const missingCount = timings.filter((t) => t === 'missing').length
 
   async function handleExportCsv(): Promise<void> {
     setExporting(true)
@@ -440,9 +467,16 @@ function SubmissionsModal({
           <p className="text-xs text-[var(--color-text-muted)]">
             Use &quot;Pull from Portal&quot; on the class&apos;s Portal tab first to fetch what
             students have turned in.
+            {assignment.dueDate &&
+              ` Due ${assignment.dueDate}, by midnight your time. ${missingCount} missing, ${lateCount} late.`}
           </p>
           {submissions.map((s) => (
-            <SubmissionRow key={s.studentId} assignment={assignment} submission={s} />
+            <SubmissionRow
+              key={s.studentId}
+              assignment={assignment}
+              submission={s}
+              timing={timings[submissions.indexOf(s)]}
+            />
           ))}
         </div>
       )}
@@ -452,10 +486,12 @@ function SubmissionsModal({
 
 function SubmissionRow({
   assignment,
-  submission
+  submission,
+  timing
 }: {
   assignment: HomeworkAssignment
   submission: HomeworkSubmissionWithStudent
+  timing: SubmissionTiming | null
 }): React.JSX.Element {
   const assignmentId = assignment.id
   const setGrade = useSetHomeworkSubmissionGrade()
@@ -504,6 +540,13 @@ function SubmissionRow({
               <Star size={16} fill={submission.portfolio ? 'currentColor' : 'none'} aria-hidden />
             </button>
           )}
+          {timing === 'late' && (
+            <Badge tone="warning">
+              Late
+              {submission.submittedAt ? ` · ${formatDate(submission.submittedAt, 'MMM d, p')}` : ''}
+            </Badge>
+          )}
+          {timing === 'missing' && <Badge tone="danger">Missing</Badge>}
           <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
         </div>
       </div>
@@ -536,12 +579,13 @@ function SubmissionRow({
             value={grade}
             onChange={(e) => setGradeValue(e.target.value)}
           />
-          <Input
+          <Textarea
             placeholder="Feedback"
+            rows={2}
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
           />
-          <div className="col-span-2">
+          <div className="col-span-2 flex items-start gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -557,6 +601,14 @@ function SubmissionRow({
             >
               {setGrade.isPending ? 'Saving…' : 'Save grade'}
             </Button>
+            <AiDraftButton
+              homeworkAssignmentId={assignmentId}
+              studentId={submission.studentId}
+              onDraft={(d) => {
+                if (d.suggestedGrade) setGradeValue(d.suggestedGrade)
+                setFeedback(d.feedback)
+              }}
+            />
           </div>
         </div>
       )}
@@ -569,6 +621,56 @@ function SubmissionRow({
           studentId={submission.studentId}
           studentName={submission.studentName}
         />
+      )}
+    </div>
+  )
+}
+
+/** Asks the AI for a first-pass grade and comment and hands it to `onDraft`, which only
+ * fills the form. Nothing is saved until the teacher clicks Save. The AI's notes for
+ * the teacher (blank work, unreadable file, text that tried to instruct the grader)
+ * are shown here and never reach the student. */
+function AiDraftButton({
+  homeworkAssignmentId,
+  studentId,
+  onDraft
+}: {
+  homeworkAssignmentId: string
+  studentId: string
+  onDraft: (draft: FeedbackDraft) => void
+}): React.JSX.Element {
+  const draft = useDraftSubmissionFeedback()
+  return (
+    <div className="space-y-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={draft.isPending}
+        onClick={() =>
+          draft.mutate({ homeworkAssignmentId, studentId }, { onSuccess: (d) => onDraft(d) })
+        }
+      >
+        <Sparkles size={13} className="mr-1 inline" aria-hidden />
+        {draft.isPending ? 'Drafting…' : 'Draft with AI'}
+      </Button>
+      {draft.isSuccess && (
+        <div className="rounded-md bg-[var(--color-surface-muted)] px-2.5 py-1.5 text-xs text-[var(--color-text-muted)]">
+          AI draft filled in below. Review and edit it; nothing is saved until you click Save.
+          {draft.data.suggestedGrade && <> Suggested grade: {draft.data.suggestedGrade}.</>}
+          {draft.data.flags.length > 0 && (
+            <ul className="mt-1 list-disc pl-4 text-[var(--color-warning)]">
+              {draft.data.flags.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {draft.isError && (
+        <p className="text-xs text-[var(--color-danger)]">
+          {ipcErrorMessage(draft.error, 'Could not draft feedback.')}
+        </p>
       )}
     </div>
   )
@@ -686,11 +788,18 @@ function HomeworkRubricScoringModal({
             </div>
           ))}
           <div>
-            <p className="mb-1.5 text-sm font-semibold">Feedback (optional)</p>
+            <div className="mb-1.5 flex items-start justify-between gap-2">
+              <p className="text-sm font-semibold">Feedback (optional)</p>
+              <AiDraftButton
+                homeworkAssignmentId={homeworkAssignmentId}
+                studentId={studentId}
+                onDraft={(d) => setFeedback(d.feedback)}
+              />
+            </div>
             <textarea
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              rows={2}
+              rows={4}
               placeholder="A note for the student…"
               className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
             />
