@@ -39,8 +39,13 @@ checks it's working.
 
 3. It ends with **Done. The Portal is running the new version.** and the backup's name.
 
-If the console can't paste, type the address carefully, or connect with an SSH app
-instead. If it stops with an error, nothing after that step was changed and the backup
+**If the VNC button does nothing**, the browser is blocking its pop-up window: allow
+pop-ups for my.vps.do (in Brave, turn Shields off for the site) or use Edge. **Or skip
+VNC:** download the branch as a ZIP and double-click **Update-Live-Portal.cmd**. It
+connects with Windows' built-in SSH, asks for the server's root password and runs the same
+update.
+
+If the console can't paste, type the address carefully. If it stops with an error, nothing after that step was changed and the backup
 in `/root/` has the data as it was.
 
 ### On your own computer, before it goes live (Start-Test-Portal.cmd)
