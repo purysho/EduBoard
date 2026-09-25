@@ -17,7 +17,8 @@ function parseBirthDate(value, today = new Date()) {
   if (!m) return null
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])]
   const date = new Date(Date.UTC(y, mo - 1, d))
-  const real = date.getUTCFullYear() === y && date.getUTCMonth() === mo - 1 && date.getUTCDate() === d
+  const real =
+    date.getUTCFullYear() === y && date.getUTCMonth() === mo - 1 && date.getUTCDate() === d
   if (!real || y < 1900 || date.getTime() > today.getTime()) return null
   return m[0]
 }
@@ -31,9 +32,11 @@ function validateProfilePatch(body, today = new Date()) {
   for (const [field, max] of Object.entries(TEXT_LIMITS)) {
     if (!(field in body)) continue
     const raw = body[field]
-    if (raw !== null && typeof raw !== 'string') return { ok: false, reason: `${field} must be text` }
+    if (raw !== null && typeof raw !== 'string')
+      return { ok: false, reason: `${field} must be text` }
     const text = (raw ?? '').trim()
-    if (text.length > max) return { ok: false, reason: `${field} is too long (${max} characters max)` }
+    if (text.length > max)
+      return { ok: false, reason: `${field} is too long (${max} characters max)` }
     value[field] = text || null
   }
   if ('dateOfBirth' in body) {
@@ -96,4 +99,11 @@ function toTeacherView(studentId, row) {
   }
 }
 
-module.exports = { validateProfilePatch, parseBirthDate, toOwnerView, toTeacherView, COLUMNS, TEXT_LIMITS }
+module.exports = {
+  validateProfilePatch,
+  parseBirthDate,
+  toOwnerView,
+  toTeacherView,
+  COLUMNS,
+  TEXT_LIMITS
+}

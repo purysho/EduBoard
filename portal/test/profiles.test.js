@@ -18,7 +18,9 @@ async function twoStudents(portal) {
 }
 
 const jpeg = () =>
-  sharp({ create: { width: 900, height: 700, channels: 3, background: '#cc6633' } }).jpeg().toBuffer()
+  sharp({ create: { width: 900, height: 700, channels: 3, background: '#cc6633' } })
+    .jpeg()
+    .toBuffer()
 
 test('a student fills in and edits their own profile; blanks clear fields', async (t) => {
   const portal = await startPortal()
@@ -49,7 +51,10 @@ test('a student fills in and edits their own profile; blanks clear fields', asyn
   assert.equal(saved.json.privateNotes, 'Revise chapter 3 before Friday')
   assert.ok(!('isAdmin' in saved.json))
 
-  const cleared = await portal.call('PUT', '/api/me/profiles/s1', { cookie: ada, body: { bio: '   ' } })
+  const cleared = await portal.call('PUT', '/api/me/profiles/s1', {
+    cookie: ada,
+    body: { bio: '   ' }
+  })
   assert.equal(cleared.json.bio, null)
   assert.equal(cleared.json.pronouns, 'she/her', 'fields not sent are left alone')
 })
@@ -81,10 +86,17 @@ test("no one can read or change another student's profile", async (t) => {
   const { ada, bo } = await twoStudents(portal)
   await portal.call('PUT', '/api/me/profiles/s1', { cookie: ada, body: { privateNotes: 'secret' } })
 
-  assert.equal((await portal.call('PUT', '/api/me/profiles/s1', { cookie: bo, body: { bio: 'hacked' } })).status, 404)
+  assert.equal(
+    (await portal.call('PUT', '/api/me/profiles/s1', { cookie: bo, body: { bio: 'hacked' } }))
+      .status,
+    404
+  )
   assert.equal((await portal.call('GET', '/api/me/profiles/s1/photo', { cookie: bo })).status, 404)
   const boProfiles = (await portal.call('GET', '/api/me/profiles', { cookie: bo })).json
-  assert.deepEqual(boProfiles.map((p) => p.studentId), ['s2'])
+  assert.deepEqual(
+    boProfiles.map((p) => p.studentId),
+    ['s2']
+  )
   assert.equal((await portal.call('GET', '/api/me/profiles')).status, 401)
 })
 

@@ -62,7 +62,10 @@ function verify(token) {
   const [body, sig] = token.split('.')
   if (!body || !sig) return null
   const expected = crypto.createHmac('sha256', SESSION_SECRET).update(body).digest('base64url')
-  if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+  if (
+    sig.length !== expected.length ||
+    !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
+  ) {
     return null
   }
   const payload = JSON.parse(Buffer.from(body, 'base64url').toString())

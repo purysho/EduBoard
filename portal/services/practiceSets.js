@@ -5,7 +5,15 @@
 
 const PRACTICE_LIMITS = {
   flashcards: { min: 4, max: 30, frontChars: 300, backChars: 600 },
-  quiz: { min: 3, max: 15, questionChars: 500, optionChars: 250, explanationChars: 700, minOptions: 2, maxOptions: 5 }
+  quiz: {
+    min: 3,
+    max: 15,
+    questionChars: 500,
+    optionChars: 250,
+    explanationChars: 700,
+    minOptions: 2,
+    maxOptions: 5
+  }
 }
 
 const isText = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.length <= max

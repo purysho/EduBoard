@@ -33,7 +33,8 @@ test('login: failures lock that username only, and the correct password waits it
   const portal = await startPortal({ RATE_LOGIN_FAILS_PER_USER: '3' })
   t.after(portal.stop)
   const { username, password } = await makeStudentAccount(portal)
-  const login = (u, p) => portal.call('POST', '/api/auth/login', { body: { username: u, password: p } })
+  const login = (u, p) =>
+    portal.call('POST', '/api/auth/login', { body: { username: u, password: p } })
 
   for (let i = 0; i < 3; i++) assert.equal((await login(username, randomSecret())).status, 401)
   assert.equal((await login(username, password)).status, 429)
@@ -82,9 +83,8 @@ test('changing your password signs out every other session', async (t) => {
   const portal = await startPortal()
   t.after(portal.stop)
   const { cookie: sessionA, username, password } = await makeStudentAccount(portal)
-  const sessionB = (
-    await portal.call('POST', '/api/auth/login', { body: { username, password } })
-  ).cookie
+  const sessionB = (await portal.call('POST', '/api/auth/login', { body: { username, password } }))
+    .cookie
   assert.equal((await portal.call('GET', '/api/me', { cookie: sessionB })).status, 200)
 
   const wrong = await portal.call('POST', '/api/me/password', {
@@ -122,7 +122,10 @@ test("a teacher's password reset signs the student out everywhere, QR codes incl
       .get().n
   assert.equal(activeQrCodes(), 1)
 
-  assert.equal((await portal.sync('/reset-password', { username, newPassword: 'short' })).status, 400)
+  assert.equal(
+    (await portal.sync('/reset-password', { username, newPassword: 'short' })).status,
+    400
+  )
   assert.equal((await portal.sync('/reset-password', { username, newPassword })).status, 200)
   assert.equal((await portal.call('GET', '/api/me', { cookie })).status, 401)
   assert.equal(activeQrCodes(), 0)

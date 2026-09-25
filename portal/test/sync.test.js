@@ -117,7 +117,8 @@ test('"send digest now" responds instead of crashing', async (t) => {
 test('homework shows Late/Missing using the time zone the teacher published', async (t) => {
   const portal = await startPortal()
   t.after(portal.stop)
-  const day = (offsetDays) => new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10)
+  const day = (offsetDays) =>
+    new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10)
   const payload = classPayload({
     extra: {
       timeZone: 'Asia/Shanghai',
@@ -150,13 +151,32 @@ test('flashcards and practice quizzes reach students only if they pass validatio
   const portal = await startPortal()
   t.after(portal.stop)
   const cards = Array.from({ length: 5 }, (_, i) => ({ front: `Term ${i}`, back: `Meaning ${i}` }))
-  const q = { question: 'Which organelle?', options: ['Nucleus', 'Mitochondria'], answerIndex: 1, explanation: 'Energy.' }
+  const q = {
+    question: 'Which organelle?',
+    options: ['Nucleus', 'Mitochondria'],
+    answerIndex: 1,
+    explanation: 'Energy.'
+  }
   const payload = classPayload({
     extra: {
       materials: [
-        { id: 'good', classId: 'c1', title: 'Cells', chunks: ['x'], flashcards: cards, practiceQuiz: [q, q, q] },
+        {
+          id: 'good',
+          classId: 'c1',
+          title: 'Cells',
+          chunks: ['x'],
+          flashcards: cards,
+          practiceQuiz: [q, q, q]
+        },
         // A tampered or buggy client: out-of-range answer, not enough cards.
-        { id: 'bad', classId: 'c1', title: 'Broken', chunks: ['x'], flashcards: cards.slice(0, 2), practiceQuiz: [{ ...q, answerIndex: 9 }, q, q] }
+        {
+          id: 'bad',
+          classId: 'c1',
+          title: 'Broken',
+          chunks: ['x'],
+          flashcards: cards.slice(0, 2),
+          practiceQuiz: [{ ...q, answerIndex: 9 }, q, q]
+        }
       ]
     }
   })
@@ -173,7 +193,9 @@ test('flashcards and practice quizzes reach students only if they pass validatio
 test('submissions are checked by content: disguised programs and macro files are refused', async (t) => {
   const portal = await startPortal()
   t.after(portal.stop)
-  const payload = classPayload({ extra: { homeworkAssignments: [{ id: 'h1', classId: 'c1', title: 'Essay' }] } })
+  const payload = classPayload({
+    extra: { homeworkAssignments: [{ id: 'h1', classId: 'c1', title: 'Essay' }] }
+  })
   const { cookie } = await makeStudentAccount(portal, { payload })
   const submit = (fileName, bytes) =>
     portal.call('POST', '/api/me/homework/h1/submit', {

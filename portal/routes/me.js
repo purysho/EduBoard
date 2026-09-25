@@ -47,7 +47,9 @@ require('fs').mkdirSync(PROFILE_PHOTOS_DIR, { recursive: true })
 require('fs').mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
-  return String(name).replace(/[^\w.\-]+/g, '_').slice(-120)
+  return String(name)
+    .replace(/[^\w.\-]+/g, '_')
+    .slice(-120)
 }
 
 // A family account covers one student today (redemption links exactly one), but the
@@ -92,7 +94,9 @@ router.get('/', (req, res) => {
     const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId)
     const timeZone =
       db
-        .prepare('SELECT t.timezone FROM teachers t JOIN students s ON s.teacher_id = t.id WHERE s.id = ?')
+        .prepare(
+          'SELECT t.timezone FROM teachers t JOIN students s ON s.teacher_id = t.id WHERE s.id = ?'
+        )
         .get(studentId)?.timezone || DEFAULT_TIMEZONE
     const classes = db
       .prepare(
@@ -192,7 +196,9 @@ router.get('/homework/:id/file', (req, res) => {
   const linked = getLinkedStudentIds(req.accountId)
   const enrolled = linked.some((studentId) =>
     db
-      .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+      .prepare(
+        "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
+      )
       .get(studentId, hw.class_id)
   )
   if (!enrolled) return res.status(403).json({ error: 'Not your class' })
@@ -218,12 +224,12 @@ router.post('/homework/:id/submit', (req, res) => {
     return res.status(413).json({ error: 'That file is too large (20 MB max).' })
   }
 
-  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(
-    req.params.id
-  )
+  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(req.params.id)
   if (!hw) return res.status(404).json({ error: 'Assignment not found' })
   const enrolled = db
-    .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+    .prepare(
+      "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
+    )
     .get(studentId, hw.class_id)
   if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
 
@@ -240,7 +246,11 @@ router.post('/homework/:id/submit', (req, res) => {
     // The display name is the student's own, but never a path: the teacher's desktop app
     // saves the file under this name when they open it.
     storedFileName =
-      String(fileName).split(/[\\/]/).pop().replace(/[\u0000-\u001f]/g, '').slice(-150) || 'file'
+      String(fileName)
+        .split(/[\\/]/)
+        .pop()
+        .replace(/[\u0000-\u001f]/g, '')
+        .slice(-150) || 'file'
     const storedName = `${req.params.id}-${studentId}-${sanitizeFileName(fileName)}`
     require('fs').writeFileSync(path.join(SUBMISSIONS_DIR, storedName), bytes)
     storedFilePath = storedName
@@ -284,12 +294,12 @@ router.post('/homework/:id/answers', (req, res) => {
     return res.status(400).json({ error: 'answers required' })
   }
 
-  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(
-    req.params.id
-  )
+  const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(req.params.id)
   if (!hw) return res.status(404).json({ error: 'Assignment not found' })
   const enrolled = db
-    .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+    .prepare(
+      "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
+    )
     .get(studentId, hw.class_id)
   if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
 
@@ -298,7 +308,10 @@ router.post('/homework/:id/answers', (req, res) => {
     .all(req.params.id)
   if (!questions.length) return res.status(400).json({ error: 'This assignment has no questions' })
 
-  const normalize = (s) => String(s ?? '').trim().toLowerCase()
+  const normalize = (s) =>
+    String(s ?? '')
+      .trim()
+      .toLowerCase()
   let earned = 0
   let possible = 0
   const results = []
@@ -420,7 +433,9 @@ router.get('/posts/:id/image', (req, res) => {
   if (!post || !post.image_path) return res.status(404).json({ error: 'No image' })
   const enrolled = studentIds.some((studentId) =>
     db
-      .prepare("SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'")
+      .prepare(
+        "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
+      )
       .get(studentId, post.class_id)
   )
   if (!enrolled) return res.status(403).json({ error: 'Not your class' })
@@ -450,9 +465,7 @@ router.get('/messages', (req, res) => {
   const rows = db
     .prepare('SELECT * FROM messages WHERE account_id = ? ORDER BY created_at')
     .all(req.accountId)
-  res.json(
-    rows.map((r) => ({ id: r.id, sender: r.sender, body: r.body, createdAt: r.created_at }))
-  )
+  res.json(rows.map((r) => ({ id: r.id, sender: r.sender, body: r.body, createdAt: r.created_at })))
 })
 
 router.post('/messages', (req, res) => {
@@ -642,9 +655,7 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
 // sent unless both this is set AND the teacher has SMTP configured. Empty string
 // clears it (opt back out).
 router.get('/account', (req, res) => {
-  const account = db.prepare('SELECT username, email FROM accounts WHERE id = ?').get(
-    req.accountId
-  )
+  const account = db.prepare('SELECT username, email FROM accounts WHERE id = ?').get(req.accountId)
   res.json(account)
 })
 

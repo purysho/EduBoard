@@ -93,7 +93,14 @@ async function complete(teacherId, system, user, maxTokens) {
     )
   }
   const preset = PRESETS[settings.provider] || PRESETS.zhipu
-  return completeOpenAiCompatible(preset.baseUrl, preset.model, settings.api_key, system, user, maxTokens)
+  return completeOpenAiCompatible(
+    preset.baseUrl,
+    preset.model,
+    settings.api_key,
+    system,
+    user,
+    maxTokens
+  )
 }
 
 module.exports = { getAiSettings, saveAiSettings, complete, AiNotConfiguredError }

@@ -18,7 +18,8 @@ async function processProfilePhoto(fileName, bytes) {
   if (!PHOTO_EXTENSIONS.includes(ext)) {
     return { ok: false, reason: 'Photos must be .jpg, .png or .webp' }
   }
-  if (bytes.length > MAX_PHOTO_BYTES) return { ok: false, reason: 'That photo is too large (8 MB max)' }
+  if (bytes.length > MAX_PHOTO_BYTES)
+    return { ok: false, reason: 'That photo is too large (8 MB max)' }
   const check = checkUpload(String(fileName), bytes)
   if (!check.ok) return { ok: false, reason: `That isn't a usable photo: ${check.reason}` }
 
@@ -40,7 +41,9 @@ async function processProfilePhoto(fileName, bytes) {
     const tooBig = /pixel limit/i.test(err.message)
     return {
       ok: false,
-      reason: tooBig ? 'That image is too big to process' : "That image couldn't be read — it may be damaged"
+      reason: tooBig
+        ? 'That image is too big to process'
+        : "That image couldn't be read — it may be damaged"
     }
   }
 }

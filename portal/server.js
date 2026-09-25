@@ -73,6 +73,9 @@ app.listen(port, () => {
 // its own; see digest.runScheduledDigestIfDue for the actual "is it due" logic (Monday
 // 8am server-local, at most once every 6 days).
 const { runScheduledDigestIfDue } = require('./services/digest')
-setInterval(() => {
-  runScheduledDigestIfDue().catch((err) => console.error('Digest scheduler error:', err.message))
-}, 60 * 60 * 1000)
+setInterval(
+  () => {
+    runScheduledDigestIfDue().catch((err) => console.error('Digest scheduler error:', err.message))
+  },
+  60 * 60 * 1000
+)

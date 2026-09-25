@@ -44,7 +44,8 @@ router.get('/qr-login', secretUrlPerIp, (req, res) => {
   const row = db
     .prepare('SELECT * FROM qr_tokens WHERE token_hash = ? AND revoked = 0')
     .get(hashToken(token))
-  if (!row) return res.status(401).send('This QR code is no longer valid — ask your teacher for a new one.')
+  if (!row)
+    return res.status(401).send('This QR code is no longer valid — ask your teacher for a new one.')
 
   issueSessionCookie(res, row.account_id)
   res.redirect('/')

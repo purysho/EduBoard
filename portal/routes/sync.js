@@ -30,7 +30,9 @@ fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 fs.mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
-  return String(name).replace(/[^\w.\-]+/g, '_').slice(-120)
+  return String(name)
+    .replace(/[^\w.\-]+/g, '_')
+    .slice(-120)
 }
 
 // Full push from the desktop app. Each table is wholesale-replaced inside one
@@ -410,9 +412,12 @@ router.post('/posts', (req, res) => {
     return res.json({ ok: true })
   }
 
-  db.prepare(
-    'INSERT INTO class_posts (id, class_id, body, created_at) VALUES (?, ?, ?, ?)'
-  ).run(crypto.randomUUID(), classId, text, new Date().toISOString())
+  db.prepare('INSERT INTO class_posts (id, class_id, body, created_at) VALUES (?, ?, ?, ?)').run(
+    crypto.randomUUID(),
+    classId,
+    text,
+    new Date().toISOString()
+  )
   res.json({ ok: true })
 })
 

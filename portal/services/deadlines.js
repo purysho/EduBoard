@@ -15,7 +15,14 @@ function zoneOffsetMs(instant, timeZone) {
     second: '2-digit'
   }).formatToParts(new Date(instant))
   const get = (type) => Number(parts.find((p) => p.type === type)?.value)
-  const asUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'))
+  const asUtc = Date.UTC(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour'),
+    get('minute'),
+    get('second')
+  )
   return asUtc - Math.floor(instant / 1000) * 1000
 }
 

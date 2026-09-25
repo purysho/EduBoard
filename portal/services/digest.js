@@ -7,7 +7,10 @@ const db = require('../db')
 const { sendMail, markDigestSent, getDigestSettings } = require('./mailer')
 
 function esc(s) {
-  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  return String(s ?? '').replace(
+    /[&<>"]/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
+  )
 }
 
 function buildDigestHtml(account, teacherId) {
@@ -128,7 +131,12 @@ async function sendAllDigests(teacherId) {
   const errors = []
   for (const account of accounts) {
     try {
-      await sendMail(teacherId, account.email, 'Your weekly EduBoard update', buildDigestHtml(account, teacherId))
+      await sendMail(
+        teacherId,
+        account.email,
+        'Your weekly EduBoard update',
+        buildDigestHtml(account, teacherId)
+      )
       sent++
     } catch (err) {
       errors.push({ username: account.username, error: err.message })

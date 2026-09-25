@@ -5,7 +5,9 @@ const sharp = require('sharp')
 const { processProfilePhoto } = require('../services/profilePhoto')
 
 const solid = (format, width = 800, height = 600) =>
-  sharp({ create: { width, height, channels: 3, background: '#3366cc' } })[format]().toBuffer()
+  sharp({ create: { width, height, channels: 3, background: '#3366cc' } })
+    [format]()
+    .toBuffer()
 
 // A PNG whose header claims a 30000x30000 canvas: a few bytes on disk, gigabytes once
 // decoded. Must be refused from the header alone.
@@ -31,7 +33,11 @@ function pngBomb() {
   ])
 }
 
-for (const [format, name] of [['jpeg', 'me.jpg'], ['png', 'me.png'], ['webp', 'me.webp']]) {
+for (const [format, name] of [
+  ['jpeg', 'me.jpg'],
+  ['png', 'me.png'],
+  ['webp', 'me.webp']
+]) {
   test(`accepts a real ${format} and stores a 512x512 WebP`, async () => {
     const result = await processProfilePhoto(name, await solid(format))
     assert.equal(result.ok, true, result.reason)
@@ -44,7 +50,10 @@ for (const [format, name] of [['jpeg', 'me.jpg'], ['png', 'me.png'], ['webp', 'm
 
 test('strips EXIF, including GPS location, from phone photos', async () => {
   const withGps = await sharp(await solid('jpeg'))
-    .withExif({ IFD0: { Make: 'PhoneCo', Copyright: 'x' }, IFD3: { GPSLatitudeRef: 'N', GPSLatitude: '22/1 16/1 0/1' } })
+    .withExif({
+      IFD0: { Make: 'PhoneCo', Copyright: 'x' },
+      IFD3: { GPSLatitudeRef: 'N', GPSLatitude: '22/1 16/1 0/1' }
+    })
     .jpeg()
     .toBuffer()
   assert.ok((await sharp(withGps).metadata()).exif, 'fixture really has EXIF')
@@ -59,7 +68,10 @@ test('refuses other formats, even real images', async () => {
   for (const [name, bytes] of [
     ['me.gif', await solid('gif')],
     ['me.tiff', await solid('tiff')],
-    ['me.svg', Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>')],
+    [
+      'me.svg',
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>')
+    ],
     ['me.heic', Buffer.from('....ftypheic')]
   ]) {
     assert.equal((await processProfilePhoto(name, bytes)).ok, false, name)
@@ -72,7 +84,11 @@ test('refuses disguised files', async () => {
     ['an SVG renamed .png', 'me.png', Buffer.from('<svg><script>alert(1)</script></svg>')],
     ['a GIF renamed .png', 'me.png', await solid('gif')],
     ['a PNG renamed .jpg', 'me.jpg', await solid('png')],
-    ['a JPEG header with nothing after it', 'me.jpg', Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10])],
+    [
+      'a JPEG header with nothing after it',
+      'me.jpg',
+      Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10])
+    ],
     ['an empty file', 'me.png', Buffer.alloc(0)]
   ]
   for (const [label, name, bytes] of cases) {

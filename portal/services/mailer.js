@@ -15,7 +15,10 @@ function getDigestSettings(teacherId) {
   return db.prepare('SELECT * FROM digest_settings WHERE teacher_id = ?').get(teacherId)
 }
 
-function saveDigestSettings(teacherId, { enabled, smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName }) {
+function saveDigestSettings(
+  teacherId,
+  { enabled, smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName }
+) {
   db.prepare(
     `INSERT INTO digest_settings (teacher_id, enabled, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)

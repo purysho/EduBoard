@@ -246,7 +246,10 @@ db.exec(`
 // server — this covers adding a column to a table that's already been created there,
 // so new columns don't need a manual ALTER TABLE on every deploy.
 function ensureColumn(table, column, ddl) {
-  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
+  const cols = db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .map((c) => c.name)
   if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`)
 }
 ensureColumn('homework_assignments', 'file_name', 'file_name TEXT')
@@ -275,7 +278,10 @@ ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 // and a legacy table that never saw one still needs rebuilding. Its one row (if any) is
 // carried over onto the default teacher once we know who that is, below.
 function hasLegacySingleRow(table) {
-  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
+  const cols = db
+    .prepare(`PRAGMA table_info(${table})`)
+    .all()
+    .map((c) => c.name)
   return cols.includes('id') && !cols.includes('teacher_id')
 }
 const NEW_SETTINGS_DDL = {
