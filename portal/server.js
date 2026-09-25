@@ -3,6 +3,33 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 
 const app = express()
+app.disable('x-powered-by')
+
+// The README deploys this behind Caddy on the same machine, so the client's real IP is
+// in X-Forwarded-For. Trust that header only from loopback by default. Trusting it from
+// anywhere would let any client spoof its IP and dodge every per-IP rate limit. Set
+// TRUST_PROXY (an Express "trust proxy" value) for a different topology.
+function parseTrustProxy(value) {
+  if (!value) return 'loopback'
+  if (value === 'true' || value === 'false') return value === 'true'
+  if (/^\d+$/.test(value)) return Number(value) // number of proxy hops
+  return value // IPs/subnets or names like "loopback, uniquelocal"
+}
+app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY))
+
+app.use((_req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    // QR-login and invite links carry secrets in the URL; never leak them via Referer.
+    'Referrer-Policy': 'no-referrer',
+    'Cross-Origin-Opener-Policy': 'same-origin'
+  })
+  if (process.env.NODE_ENV === 'production') {
+    res.set('Strict-Transport-Security', 'max-age=15552000')
+  }
+  next()
+})
 // Default express.json() caps request bodies at 100kb — far below what a single sync
 // payload needs once it carries a base64-encoded homework attachment (up to ~8MB raw,
 // see MAX_HOMEWORK_FILE_BYTES) or several shared materials' worth of chunk text. 50mb
@@ -18,6 +45,23 @@ app.use('/api/me', require('./routes/me'))
 app.use('/api/admin', require('./routes/admin'))
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
+
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }))
+
+// Express's default handler answers with an HTML page that includes the stack trace
+// outside production. Never show internals to a browser. Log them server-side and
+// return a plain JSON error the Portal page already knows how to display.
+// eslint-disable-next-line no-unused-vars -- Express identifies error handlers by arity
+app.use((err, _req, res, _next) => {
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'That upload is too large.' })
+  }
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Malformed request.' })
+  }
+  console.error(err)
+  res.status(500).json({ error: 'Something went wrong on the server. Please try again.' })
+})
 
 const port = process.env.PORT || 4790
 app.listen(port, () => {

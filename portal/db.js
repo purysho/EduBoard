@@ -4,7 +4,7 @@
 const path = require('path')
 const Database = require('better-sqlite3')
 
-const DB_PATH = process.env.PORTAL_DB_PATH || path.join(__dirname, 'data', 'portal.db')
+const { DB_PATH } = require('./paths')
 require('fs').mkdirSync(path.dirname(DB_PATH), { recursive: true })
 
 const db = new Database(DB_PATH)
@@ -241,6 +241,7 @@ ensureColumn('homework_submissions', 'graded_at', 'graded_at TEXT')
 ensureColumn('homework_assignments', 'topic', 'topic TEXT')
 ensureColumn('homework_submissions', 'portfolio', 'portfolio INTEGER NOT NULL DEFAULT 0')
 ensureColumn('accounts', 'email', 'email TEXT')
+ensureColumn('accounts', 'session_version', 'session_version INTEGER NOT NULL DEFAULT 0')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
 ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 

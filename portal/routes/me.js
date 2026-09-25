@@ -3,14 +3,42 @@ const crypto = require('crypto')
 const path = require('path')
 const QRCode = require('qrcode')
 const db = require('../db')
-const { requireAuth, newRandomToken, hashToken } = require('../auth')
+const {
+  requireAuth,
+  newRandomToken,
+  hashToken,
+  hashPassword,
+  verifyPassword,
+  passwordProblem,
+  revokeSessions,
+  issueSessionCookie
+} = require('../auth')
 const { complete, AiNotConfiguredError } = require('../services/ai')
+const { rateLimit, LIMITS } = require('../rateLimit')
 
 const router = express.Router()
 router.use(requireAuth)
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
-const SUBMISSIONS_DIR = path.join(__dirname, '..', 'data', 'submission-uploads')
+// Every AI call spends the teacher's own API key, so each family account gets a short
+// burst limit and a daily budget, shared across chat and translation.
+const aiLimits = [
+  rateLimit({
+    ...LIMITS.aiPerAccountBurst,
+    keyFn: (req) => req.accountId,
+    message: "You're sending AI requests too quickly. Wait a minute and try again."
+  }),
+  rateLimit({
+    ...LIMITS.aiPerAccountDaily,
+    keyFn: (req) => req.accountId,
+    message: "You've reached today's AI limit for this account. It resets within 24 hours."
+  })
+]
+
+// A submitted file travels base64-encoded inside the JSON body. Cap the decoded size
+// well under the 50mb body limit so one upload can't fill the VPS's small disk.
+const MAX_SUBMISSION_BYTES = 20 * 1024 * 1024
+
+const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR } = require('../paths')
 require('fs').mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
@@ -165,6 +193,11 @@ router.post('/homework/:id/submit', (req, res) => {
   }
   if (!textAnswer && !fileData) {
     return res.status(400).json({ error: 'Add some text or a file before submitting' })
+  }
+  // base64 is 4 chars per 3 bytes; checking the encoded length avoids decoding a huge
+  // string only to reject it.
+  if (fileData && (String(fileData).length * 3) / 4 > MAX_SUBMISSION_BYTES) {
+    return res.status(413).json({ error: 'That file is too large (20 MB max).' })
   }
 
   const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(
@@ -324,7 +357,6 @@ router.get('/portfolio', (req, res) => {
   )
 })
 
-const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
 require('fs').mkdirSync(POSTS_DIR, { recursive: true })
 
 // Every post from every class this account's student(s) are actively enrolled in,
@@ -412,7 +444,7 @@ router.post('/messages', (req, res) => {
 // own AI key (same provider as the student AI chat), so it costs nothing extra to set
 // up if that's already configured; if it isn't, the family just sees the original text
 // with no translate option, rather than an error.
-router.post('/messages/:id/translate', async (req, res) => {
+router.post('/messages/:id/translate', aiLimits, async (req, res) => {
   const targetLang = (req.body?.targetLang || '').trim()
   if (!targetLang) return res.status(400).json({ error: 'targetLang is required' })
 
@@ -532,7 +564,7 @@ function buildStudyContext(studentId) {
   return `This student is enrolled in: ${classList}.\nTheir recent/current homework:\n${hwList}`
 }
 
-router.post('/ai/chat', async (req, res) => {
+router.post('/ai/chat', aiLimits, async (req, res) => {
   const { studentId, message } = req.body
   const text = (message || '').trim()
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
@@ -591,9 +623,38 @@ router.get('/account', (req, res) => {
 
 router.post('/account', (req, res) => {
   const email = (req.body?.email || '').trim()
+  if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+    return res.status(400).json({ error: "That doesn't look like an email address" })
+  }
   db.prepare('UPDATE accounts SET email = ? WHERE id = ?').run(email || null, req.accountId)
   res.json({ ok: true })
 })
+
+// Changing your own password needs the current one, which makes this a guessing oracle
+// for anyone holding a stolen session, hence the tight per-account limit. Success signs
+// out every other session (e.g. a shared lab computer left logged in) and reissues this
+// browser's cookie, so the person changing it stays signed in.
+router.post(
+  '/password',
+  rateLimit({ ...LIMITS.passwordChangePerAccount, keyFn: (req) => req.accountId }),
+  (req, res) => {
+    const { currentPassword, newPassword } = req.body || {}
+    const account = db.prepare('SELECT password_hash FROM accounts WHERE id = ?').get(req.accountId)
+    if (!verifyPassword(currentPassword || '', account?.password_hash)) {
+      return res.status(400).json({ error: 'Your current password is incorrect' })
+    }
+    const problem = passwordProblem(newPassword)
+    if (problem) return res.status(400).json({ error: problem })
+
+    db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
+      hashPassword(newPassword),
+      req.accountId
+    )
+    revokeSessions(req.accountId)
+    issueSessionCookie(res, req.accountId)
+    res.json({ ok: true })
+  }
+)
 
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR
 // image — the raw token is shown/embedded exactly once, here; only its hash is stored.

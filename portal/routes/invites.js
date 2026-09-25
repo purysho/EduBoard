@@ -1,9 +1,13 @@
 const express = require('express')
 const crypto = require('crypto')
 const db = require('../db')
-const { hashPassword, issueSessionCookie } = require('../auth')
+const { hashPassword, issueSessionCookie, passwordProblem } = require('../auth')
+const { rateLimit, LIMITS } = require('../rateLimit')
 
 const router = express.Router()
+// An invite code in the URL is the only thing gating a class roster, so guessing codes
+// must be slow.
+router.use(rateLimit(LIMITS.secretUrlPerIp))
 
 function getValidInvite(code) {
   const invite = db.prepare('SELECT * FROM invites WHERE code = ?').get(code)
@@ -46,6 +50,11 @@ router.post('/:code/redeem', (req, res) => {
   if (!studentId || !username || !password) {
     return res.status(400).json({ error: 'All fields are required' })
   }
+  if (typeof username !== 'string' || username.trim().length < 3 || username.length > 40) {
+    return res.status(400).json({ error: 'Username must be 3–40 characters' })
+  }
+  const problem = passwordProblem(password)
+  if (problem) return res.status(400).json({ error: problem })
 
   const enrolled = db
     .prepare(

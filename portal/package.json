@@ -2,11 +2,12 @@
   "name": "eduboard-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "EduBoard's remote student/parent Portal — a small standalone service, deployed separately from the desktop app.",
+  "description": "EduBoard's remote student/parent Portal \u2014 a small standalone service, deployed separately from the desktop app.",
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test \"test/*.test.js\""
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
@@ -15,5 +16,8 @@
     "express": "^4.21.0",
     "nodemailer": "^6.9.15",
     "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

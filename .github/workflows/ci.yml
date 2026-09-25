@@ -31,3 +31,26 @@ jobs:
 
       - name: Build (renderer/main/preload)
         run: npx electron-vite build
+
+  portal:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: portal
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check
+        run: for f in *.js routes/*.js services/*.js test/*.js; do node --check "$f"; done
+
+      - name: Unit & end-to-end tests
+        run: npm test

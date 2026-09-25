@@ -7,6 +7,7 @@
 // hands out working passwords.
 const crypto = require('crypto')
 const bcrypt = require('bcryptjs')
+const { RateLimiter, tooMany, LIMITS } = require('./rateLimit')
 
 const SESSION_SECRET = process.env.SESSION_SECRET
 if (!SESSION_SECRET) {
@@ -18,8 +19,36 @@ function hashPassword(password) {
   return bcrypt.hashSync(password, 10)
 }
 
+// Compared against when a username doesn't exist, so "no such user" costs the same
+// bcrypt time as "wrong password" and response timing doesn't reveal which usernames exist.
+const DUMMY_HASH = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10)
+
 function verifyPassword(password, hash) {
-  return bcrypt.compareSync(password, hash)
+  return bcrypt.compareSync(password, hash || DUMMY_HASH) && !!hash
+}
+
+// bcrypt only reads the first 72 bytes, so a longer password would silently match any
+// other password sharing that prefix — reject it instead of truncating behind the user's back.
+const MIN_PASSWORD_LENGTH = 8
+const MAX_PASSWORD_BYTES = 72
+
+/** Returns an error message for an unacceptable new password, or null if it's fine. */
+function passwordProblem(password) {
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+  }
+  if (Buffer.byteLength(password, 'utf8') > MAX_PASSWORD_BYTES) {
+    return 'Password is too long (72 bytes max)'
+  }
+  return null
+}
+
+/** Constant-time string equality — hashing first makes both sides the same length, so
+ * timingSafeEqual never throws and the comparison time never depends on the input. */
+function secretsEqual(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest()
+  const hb = crypto.createHash('sha256').update(String(b)).digest()
+  return crypto.timingSafeEqual(ha, hb)
 }
 
 function sign(payload) {
@@ -41,8 +70,13 @@ function verify(token) {
   return payload
 }
 
+// Sessions are stateless signed cookies, so they can't be deleted server-side. Instead
+// each cookie carries the account's session_version, and bumping that column (password
+// change, teacher-triggered reset) invalidates every cookie issued before it.
 function issueSessionCookie(res, accountId) {
-  const token = sign({ accountId, exp: Date.now() + SESSION_TTL_MS })
+  const db = require('./db')
+  const row = db.prepare('SELECT session_version FROM accounts WHERE id = ?').get(accountId)
+  const token = sign({ accountId, sv: row?.session_version ?? 0, exp: Date.now() + SESSION_TTL_MS })
   res.cookie('eduboard_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -54,9 +88,34 @@ function issueSessionCookie(res, accountId) {
 function requireAuth(req, res, next) {
   const payload = verify(req.cookies?.eduboard_session)
   if (!payload) return res.status(401).json({ error: 'Not logged in' })
+  const db = require('./db')
+  const account = db
+    .prepare('SELECT session_version FROM accounts WHERE id = ?')
+    .get(payload.accountId)
+  if (!account || account.session_version !== (payload.sv ?? 0)) {
+    res.clearCookie('eduboard_session')
+    return res.status(401).json({ error: 'Not logged in' })
+  }
   req.accountId = payload.accountId
   next()
 }
+
+/** Signs out every existing session for this account (see issueSessionCookie) and
+ * cancels its quick-login QR codes. Those are a second credential, and a password change
+ * or reset is exactly when an old one might be in the wrong hands. */
+function revokeSessions(accountId) {
+  const db = require('./db')
+  db.transaction(() => {
+    db.prepare('UPDATE accounts SET session_version = session_version + 1 WHERE id = ?').run(
+      accountId
+    )
+    db.prepare('UPDATE qr_tokens SET revoked = 1 WHERE account_id = ?').run(accountId)
+  })()
+}
+
+// Only *failed* secret checks count, per client IP: a guesser is cut off quickly while a
+// teacher publishing all day with the right secret is never throttled.
+const badSecretLimiter = new RateLimiter(LIMITS.badSecretPerIp)
 
 // Every teacher using this Portal has their own sync secret (see teachers table) —
 // looked up by its hash, never compared as plaintext, same principle as QR tokens.
@@ -64,13 +123,18 @@ function requireAuth(req, res, next) {
 // req.teacherId, which is what makes this Portal safe to run for a whole school's
 // staff rather than just one teacher.
 function requireSyncSecret(req, res, next) {
+  if (badSecretLimiter.isBlocked(req.ip)) {
+    return tooMany(res, badSecretLimiter.retryAfterSec(req.ip))
+  }
   const secret = req.get('X-Sync-Secret')
-  if (!secret) return res.status(401).json({ error: 'Bad sync secret' })
   const db = require('./db')
-  const teacher = db
-    .prepare('SELECT id FROM teachers WHERE sync_secret_hash = ?')
-    .get(hashToken(secret))
-  if (!teacher) return res.status(401).json({ error: 'Bad sync secret' })
+  const teacher = secret
+    ? db.prepare('SELECT id FROM teachers WHERE sync_secret_hash = ?').get(hashToken(secret))
+    : null
+  if (!teacher) {
+    badSecretLimiter.consume(req.ip)
+    return res.status(401).json({ error: 'Bad sync secret' })
+  }
   req.teacherId = teacher.id
   next()
 }
@@ -80,8 +144,13 @@ function requireSyncSecret(req, res, next) {
 // Portal (the school, or the first teacher who set it up), since it can mint new
 // teacher accounts.
 function requireAdminSecret(req, res, next) {
+  if (badSecretLimiter.isBlocked(req.ip)) {
+    return tooMany(res, badSecretLimiter.retryAfterSec(req.ip))
+  }
   const secret = req.get('X-Admin-Secret')
-  if (!process.env.ADMIN_SECRET || !secret || secret !== process.env.ADMIN_SECRET) {
+  const expected = process.env.ADMIN_SECRET
+  if (!expected || !secret || !secretsEqual(secret, expected)) {
+    badSecretLimiter.consume(req.ip)
     return res.status(401).json({ error: 'Bad admin secret' })
   }
   next()
@@ -98,6 +167,9 @@ function hashToken(token) {
 module.exports = {
   hashPassword,
   verifyPassword,
+  passwordProblem,
+  secretsEqual,
+  revokeSessions,
   issueSessionCookie,
   requireAuth,
   requireSyncSecret,

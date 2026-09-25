@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 const db = require('../db')
-const { requireSyncSecret, hashPassword } = require('../auth')
+const { requireSyncSecret, hashPassword, passwordProblem, revokeSessions } = require('../auth')
 const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
 const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
@@ -11,8 +11,7 @@ const { sendAllDigests } = require('../services/digest')
 const router = express.Router()
 router.use(requireSyncSecret)
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'homework-uploads')
-const SUBMISSIONS_DIR = path.join(__dirname, '..', 'data', 'submission-uploads')
+const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR } = require('../paths')
 fs.mkdirSync(UPLOADS_DIR, { recursive: true })
 fs.mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
@@ -333,7 +332,6 @@ router.post('/submissions/grade', (req, res) => {
   res.json({ ok: true })
 })
 
-const POSTS_DIR = path.join(__dirname, '..', 'data', 'post-images')
 fs.mkdirSync(POSTS_DIR, { recursive: true })
 
 function ownsClass(teacherId, classId) {
@@ -534,6 +532,8 @@ router.post('/reset-password', (req, res) => {
   if (!username || !newPassword) {
     return res.status(400).json({ error: 'username and newPassword are required' })
   }
+  const problem = passwordProblem(newPassword)
+  if (problem) return res.status(400).json({ error: problem })
   const account = db.prepare('SELECT id FROM accounts WHERE username = ?').get(username)
   if (!account || !ownsAccount(req.teacherId, account.id)) {
     return res.status(404).json({ error: 'No such account' })
@@ -542,6 +542,9 @@ router.post('/reset-password', (req, res) => {
     hashPassword(newPassword),
     account.id
   )
+  // A reset usually means the account may be compromised. Sign out every existing
+  // session, including anyone who got in with the old password.
+  revokeSessions(account.id)
   res.json({ ok: true })
 })
 
