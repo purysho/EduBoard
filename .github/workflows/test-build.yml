@@ -1,0 +1,62 @@
+name: Test build (Windows installer)
+
+# Builds a Windows installer for any branch, so a change can be tried on a real PC by
+# downloading and double-clicking, with no terminal. Nothing is published: the
+# installer is attached to the workflow run as a downloadable artifact (kept 14 days).
+# Tagged releases still go through release.yml.
+on:
+  push:
+    branches: ['claude/**', 'v0.3-dev']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Tests run on Linux like ci.yml (which only covers main), so the same checks that
+  # gate a merge also run on these branches. The installer job doesn't wait for them.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - name: Portal tests
+        working-directory: portal
+        run: |
+          npm ci
+          npm test
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build installer (unsigned)
+        shell: bash
+        run: npm run build:win -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EduBoard-Windows-${{ github.sha }}
+          path: |
+            dist/EduBoard-Setup.exe
+            dist/EduBoard-Portable.exe
+          retention-days: 14
+          if-no-files-found: error

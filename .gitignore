@@ -12,3 +12,6 @@ data/
 *.db-journal
 release/
 coverage/
+
+# Local test Portal (Start-Test-Portal.cmd): its secrets and data
+portal/local-test/

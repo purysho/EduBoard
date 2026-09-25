@@ -27,6 +27,12 @@ hosting on mainland China), and is cheap (a few dollars/month for something this
 See the main project's chat history / CLAUDE.md for the fuller reachability/legal
 tradeoffs if you want them again.
 
+## Trying it on your own computer first
+
+Double-click `Start-Test-Portal.cmd` in the repository root (Windows), or run
+`node portal/scripts/local-test.js`. It sets itself up, publishes a demo class and
+opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITHOUT_A_TERMINAL.md).
+
 ## Deploying (Hong Kong VPS)
 
 1. **Get a VPS.** Any mainstream provider with a Hong Kong region works. The cheapest
@@ -60,6 +66,7 @@ tradeoffs if you want them again.
    | Variable | Default | What it does |
    |---|---|---|
    | `PORTAL_DATA_DIR` | `portal/data` | Where the database and every upload live. Back up this one folder. |
+   | `HOST` | all interfaces | Set `127.0.0.1` to accept connections from this machine only (Caddy on the same machine still works). The local test launcher sets this. |
    | `PORTAL_TIMEZONE` | `UTC` | Only used until a teacher's desktop app publishes once. After that, each teacher's own time zone decides when their due dates end (Late/Missing labels). |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
    | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |

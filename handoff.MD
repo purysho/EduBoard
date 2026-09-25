@@ -15,6 +15,14 @@ one blocking issue that testing stalled on.
   `ERR_CONNECTION_REFUSED` blocker below is **resolved** — root cause and fix
   are under "Resolved: the dev-server connection error". Several other bugs
   found while reviewing the branch are listed there too. Testing can resume.
+- **Latest round (same branch):** students can switch the Portal between English
+  and 中文 and translate anything the teacher wrote. The free Zhipu model name
+  was outdated (`glm-4-flash` → `glm-4-flash-250414`), and Settings now has
+  **Test connection** buttons. Testing without a terminal is covered in
+  `docs/TESTING_WITHOUT_A_TERMINAL.md`: a Windows installer is built by
+  GitHub Actions, and `Start-Test-Portal.cmd` runs a local Portal. The live
+  Portal is at portal.edu-board.com; it needs the new `portal/` code
+  deployed before students see any of this.
 
 ## What was built this session (before testing started)
 
