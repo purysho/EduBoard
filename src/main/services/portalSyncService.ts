@@ -13,13 +13,15 @@ import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
-import { safeDownloadPath } from './untrustedFiles'
+import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
+import { checkUpload } from '@shared/fileSafety'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
   Student,
   HomeworkSubmissionStatus,
-  PortalMessageThread
+  PortalMessageThread,
+  PortalStudentProfile
 } from '@shared/types'
 
 export class PortalNotConfiguredError extends Error {
@@ -292,8 +294,56 @@ export async function downloadSubmissionFile(
   // fileName is whatever the student's browser sent. Never let it choose where on disk
   // this lands (see untrustedFiles.ts).
   const destPath = safeDownloadPath(dir, studentId, fileName)
-  writeFileSync(destPath, Buffer.from(await res.arrayBuffer()))
+  const bytes = Buffer.from(await res.arrayBuffer())
+  // Checked again here, not only on upload: files turned in before the Portal checked
+  // contents, or through an older Portal, must not reach the disk unvetted.
+  const check = checkUpload(fileName, bytes)
+  if (!check.ok) {
+    throw new Error(`EduBoard didn't open this file because ${check.reason}.`)
+  }
+  writeFileSync(destPath, bytes)
+  markAsDownloadedFromInternet(destPath)
   return destPath
+}
+
+/** A student's Portal profile as shared with the teacher, fetched live (nothing is
+ * mirrored locally). The photo arrives as bytes and is only passed on as an image if it
+ * really is one. The Portal re-encodes every photo, so anything else means tampering. */
+export async function getPortalProfile(studentId: string): Promise<PortalStudentProfile | null> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const headers = { 'X-Sync-Secret': portalSyncSecret }
+
+  const res = await fetch(`${portalUrl}/api/sync/profiles`, { headers })
+  if (!res.ok) throw new Error(`Could not load Portal profiles: ${res.status}`)
+  const profiles = (await res.json()) as (Omit<PortalStudentProfile, 'photoDataUrl'> & {
+    hasPhoto: boolean
+  })[]
+  const profile = profiles.find((p) => p.studentId === studentId)
+  if (!profile) return null
+
+  let photoDataUrl: string | null = null
+  if (profile.hasPhoto) {
+    const photo = await fetch(
+      `${portalUrl}/api/sync/profiles/${encodeURIComponent(studentId)}/photo`,
+      { headers }
+    )
+    const bytes = photo.ok ? Buffer.from(await photo.arrayBuffer()) : null
+    if (bytes && checkUpload('photo.webp', bytes).ok) {
+      photoDataUrl = `data:image/webp;base64,${bytes.toString('base64')}`
+    }
+  }
+  return {
+    studentId: profile.studentId,
+    preferredName: profile.preferredName,
+    pronouns: profile.pronouns,
+    bio: profile.bio,
+    birthday: profile.birthday,
+    goals: profile.goals,
+    teacherNote: profile.teacherNote,
+    preferredLanguage: profile.preferredLanguage,
+    photoDataUrl,
+    updatedAt: profile.updatedAt
+  }
 }
 
 /** Every family's message thread, fetched live from the Portal — nothing here is

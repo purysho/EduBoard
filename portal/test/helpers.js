@@ -49,7 +49,10 @@ async function startPortal(extraEnv = {}) {
     } catch {
       // not listening yet
     }
-    if (child.exitCode !== null) throw new Error(`Portal exited early:\n${output}`)
+    if (child.exitCode !== null) {
+      fs.rmSync(dataDir, { recursive: true, force: true })
+      throw new Error(`Portal exited early:\n${output}`)
+    }
     await new Promise((r) => setTimeout(r, 50))
   }
 

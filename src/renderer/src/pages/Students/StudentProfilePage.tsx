@@ -11,6 +11,8 @@ import {
   useClasses,
   useDeleteStudent,
   useEnrollmentsByStudent,
+  usePortalProfile,
+  useSettings,
   useStudents
 } from '@renderer/lib/queries'
 import { formatDate, studentFullName } from '@renderer/lib/format'
@@ -57,24 +59,28 @@ export function StudentProfilePage(): React.JSX.Element {
       />
 
       <div className="grid grid-cols-3 gap-6">
-        <Card className="col-span-1 h-fit">
-          <CardHeader>
-            <h2 className="text-sm font-semibold">Details</h2>
-          </CardHeader>
-          <CardBody className="space-y-3 text-sm">
-            <DetailRow label="Student #" value={student.studentNumber} />
-            <DetailRow label="Date of birth" value={formatDate(student.dateOfBirth)} />
-            <DetailRow label="Email" value={student.email} />
-            <DetailRow label="Guardian" value={student.guardianName} />
-            <DetailRow label="Guardian contact" value={student.guardianContact} />
-            {student.notes && (
-              <div>
-                <p className="text-xs font-medium text-[var(--color-text-muted)]">Notes</p>
-                <p className="mt-1 whitespace-pre-wrap">{student.notes}</p>
-              </div>
-            )}
-          </CardBody>
-        </Card>
+        <div className="col-span-1 space-y-6">
+          <Card className="h-fit">
+            <CardHeader>
+              <h2 className="text-sm font-semibold">Details</h2>
+            </CardHeader>
+            <CardBody className="space-y-3 text-sm">
+              <DetailRow label="Student #" value={student.studentNumber} />
+              <DetailRow label="Date of birth" value={formatDate(student.dateOfBirth)} />
+              <DetailRow label="Email" value={student.email} />
+              <DetailRow label="Guardian" value={student.guardianName} />
+              <DetailRow label="Guardian contact" value={student.guardianContact} />
+              {student.notes && (
+                <div>
+                  <p className="text-xs font-medium text-[var(--color-text-muted)]">Notes</p>
+                  <p className="mt-1 whitespace-pre-wrap">{student.notes}</p>
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
+          <PortalProfileCard studentId={student.id} />
+        </div>
 
         <Card className="col-span-2 h-fit">
           <CardHeader>
@@ -150,5 +156,66 @@ function DetailRow({
       <p className="text-xs font-medium text-[var(--color-text-muted)]">{label}</p>
       <p>{value || '—'}</p>
     </div>
+  )
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** What the student chose to share on their Portal profile, loaded live. Shows nothing
+ * when no Portal is configured or the student hasn't made a profile yet. */
+function PortalProfileCard({ studentId }: { studentId: string }): React.JSX.Element | null {
+  const { data: settings } = useSettings()
+  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const { data: profile, isError } = usePortalProfile(studentId, { enabled: portalConfigured })
+  if (!portalConfigured || isError || !profile) return null
+
+  const [mm, dd] = (profile.birthday ?? '').split('-')
+  const birthday = mm && dd ? `${MONTHS[Number(mm) - 1] ?? ''} ${Number(dd)}` : null
+
+  return (
+    <Card className="h-fit">
+      <CardHeader>
+        <h2 className="text-sm font-semibold">Portal profile</h2>
+      </CardHeader>
+      <CardBody className="space-y-3 text-sm">
+        <div className="flex items-center gap-3">
+          {profile.photoDataUrl ? (
+            <img
+              src={profile.photoDataUrl}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover"
+            />
+          ) : null}
+          <div>
+            {profile.preferredName && (
+              <p className="font-medium">Goes by {profile.preferredName}</p>
+            )}
+            {profile.pronouns && (
+              <p className="text-[var(--color-text-muted)]">{profile.pronouns}</p>
+            )}
+          </div>
+        </div>
+        {profile.bio && <p className="whitespace-pre-wrap">{profile.bio}</p>}
+        <DetailRow label="Birthday" value={birthday} />
+        <DetailRow label="Preferred language" value={profile.preferredLanguage} />
+        {profile.goals && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)]">Learning goals</p>
+            <p className="mt-1 whitespace-pre-wrap">{profile.goals}</p>
+          </div>
+        )}
+        {profile.teacherNote && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)]">
+              What they&apos;d like you to know
+            </p>
+            <p className="mt-1 whitespace-pre-wrap">{profile.teacherNote}</p>
+          </div>
+        )}
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Written by the student on the Portal.
+        </p>
+      </CardBody>
+    </Card>
   )
 }

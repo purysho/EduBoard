@@ -1399,6 +1399,15 @@ export function usePortalMessageThreads(options?: { enabled?: boolean }) {
   })
 }
 
+export function usePortalProfile(studentId: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['portalProfile', studentId],
+    queryFn: () => api().portalProfiles.get(studentId),
+    enabled: options?.enabled ?? true,
+    staleTime: 60_000
+  })
+}
+
 export function useSendPortalMessage() {
   const qc = useQueryClient()
   return useMutation({

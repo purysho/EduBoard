@@ -499,17 +499,21 @@ function SubmissionRow({
   const [grade, setGradeValue] = useState(submission.grade ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
   const [opening, setOpening] = useState(false)
+  const [openError, setOpenError] = useState<string | null>(null)
   const [scoringRubric, setScoringRubric] = useState(false)
 
   async function handleOpenFile(): Promise<void> {
     if (!submission.fileName) return
     setOpening(true)
+    setOpenError(null)
     try {
       await window.api.homeworkAssignments.openSubmissionFile(
         assignmentId,
         submission.studentId,
         submission.fileName
       )
+    } catch (e) {
+      setOpenError(ipcErrorMessage(e, 'Could not open the file.'))
     } finally {
       setOpening(false)
     }
@@ -565,6 +569,7 @@ function SubmissionRow({
           {opening ? 'Opening…' : submission.fileName}
         </Button>
       )}
+      {openError && <p className="mt-1 text-xs text-[var(--color-danger)]">{openError}</p>}
       {submission.status !== 'not_started' && assignment.rubricId && (
         <div className="mt-3">
           <Button variant="secondary" size="sm" onClick={() => setScoringRubric(true)}>

@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs'
 import { basename, extname, join, resolve, sep } from 'path'
 
 // Files students upload through the Portal are untrusted twice over: the *name* is
@@ -54,4 +55,17 @@ const SAFE_TO_OPEN = new Set([
 
 export function isSafeToOpen(fileName: string): boolean {
   return SAFE_TO_OPEN.has(extname(fileName).toLowerCase())
+}
+
+/** Tags a downloaded file with Windows' Mark of the Web (the Zone.Identifier stream a
+ * browser adds). Office then opens it in Protected View with macros blocked, and
+ * SmartScreen warns before anything runs, the same as for a file from an email or a
+ * website. No-op elsewhere, or on drives without NTFS streams. */
+export function markAsDownloadedFromInternet(filePath: string): void {
+  if (process.platform !== 'win32') return
+  try {
+    writeFileSync(`${filePath}:Zone.Identifier`, '[ZoneTransfer]\r\nZoneId=3\r\n')
+  } catch {
+    // FAT32/exFAT USB sticks have no alternate data streams. The content check still ran.
+  }
 }

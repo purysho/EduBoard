@@ -1,0 +1,179 @@
+{
+  "_comment": "Shared by src/shared/__tests__/fileSafety.test.ts and portal/test/fileSafety.test.js. Bytes are base64.",
+  "cases": [
+    {
+      "name": "a real PDF",
+      "fileName": "essay.pdf",
+      "base64": "JVBERi0xLjcKMSAwIG9iajw8Pj5lbmRvYmo=",
+      "ok": true
+    },
+    {
+      "name": "a real .docx",
+      "fileName": "essay.docx",
+      "base64": "UEsDBBQAAAAIAJIVOV19j8M5SgAAAE0AAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbLMJqSxILVaoyM3JK7ZVyigpKbDS1y9OzkjNTSzWyy9IzQPKpOUX5SaWALlF6foFicnZiemp+kYGBmb6yfl5Jal5JbolIDOU9O0AUEsDBBQAAAAIAJIVOV0V+fgMFwAAAB4AAAARAAAAd29yZC9kb2N1bWVudC54bWyzKbdKyU8uzU3NK7FLLS5OrLTRRxIBAFBLAQIUAxQAAAAIAJIVOV19j8M5SgAAAE0AAAATAAAAAAAAAAAAAACAAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQDFAAAAAgAkhU5XRX5+AwXAAAAHgAAABEAAAAAAAAAAAAAAIABewAAAHdvcmQvZG9jdW1lbnQueG1sUEsFBgAAAAACAAIAgAAAAMEAAAAAAA==",
+      "ok": true
+    },
+    {
+      "name": "a real .odt",
+      "fileName": "essay.odt",
+      "base64": "UEsDBBQAAAAAAAAAIQBexjIMJwAAACcAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlvbi92bmQub2FzaXMub3BlbmRvY3VtZW50LnRleHRQSwMEFAAAAAgAkhU5XTFGq2oaAAAAGgAAAAsAAABjb250ZW50LnhtbLPJT0vLTE61SslPLs1NzSvRTc7PKwHS+nYAUEsBAhQDFAAAAAAAAAAhAF7GMgwnAAAAJwAAAAgAAAAAAAAAAAAAAIABAAAAAG1pbWV0eXBlUEsBAhQDFAAAAAgAkhU5XTFGq2oaAAAAGgAAAAsAAAAAAAAAAAAAAIABTQAAAGNvbnRlbnQueG1sUEsFBgAAAAACAAIAbwAAAJAAAAAAAA==",
+      "ok": true
+    },
+    {
+      "name": "a legacy .doc without macros",
+      "fileName": "essay.doc",
+      "base64": "0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "ok": true
+    },
+    {
+      "name": "an RTF document",
+      "fileName": "essay.rtf",
+      "base64": "e1xydGYxXGFuc2kgSGVsbG99",
+      "ok": true
+    },
+    {
+      "name": "plain text",
+      "fileName": "notes.txt",
+      "base64": "TXkgZXNzYXkgYWJvdXQgY2VsbHMu",
+      "ok": true
+    },
+    {
+      "name": "a batch script renamed .txt (opens in Notepad, harmless)",
+      "fileName": "notes.txt",
+      "base64": "QGVjaG8gb2ZmDQpzdGFydCBjYWxjLmV4ZQ0K",
+      "ok": true
+    },
+    {
+      "name": "PNG",
+      "fileName": "photo.png",
+      "base64": "iVBORw0KGgoAAAANSUhEUg==",
+      "ok": true
+    },
+    {
+      "name": "JPEG",
+      "fileName": "photo.JPG",
+      "base64": "/9j/4AAQSkZJRg==",
+      "ok": true
+    },
+    {
+      "name": "WebP",
+      "fileName": "photo.webp",
+      "base64": "UklGRiQAAABXRUJQVlA4IA==",
+      "ok": true
+    },
+    {
+      "name": "MP4",
+      "fileName": "talk.mp4",
+      "base64": "AAAAGGZ0eXBpc29tAAACAA==",
+      "ok": true
+    },
+    {
+      "name": "a .bat file",
+      "fileName": "run.bat",
+      "base64": "QGVjaG8gb2Zm",
+      "ok": false
+    },
+    {
+      "name": "an .exe",
+      "fileName": "setup.exe",
+      "base64": "TVqQAAMAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGU=",
+      "ok": false
+    },
+    {
+      "name": "an .exe renamed .docx",
+      "fileName": "essay.docx",
+      "base64": "TVqQAAMAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGU=",
+      "ok": false
+    },
+    {
+      "name": "an .exe renamed .pdf",
+      "fileName": "essay.pdf",
+      "base64": "TVqQAAMAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGU=",
+      "ok": false
+    },
+    {
+      "name": "an .exe renamed .jpg",
+      "fileName": "photo.jpg",
+      "base64": "TVqQAAMAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGU=",
+      "ok": false
+    },
+    {
+      "name": "an .exe renamed .txt",
+      "fileName": "notes.txt",
+      "base64": "TVqQAAMAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVGhpcyBwcm9ncmFtIGNhbm5vdCBiZSBydW4gaW4gRE9TIG1vZGU=",
+      "ok": false
+    },
+    {
+      "name": "a Windows shortcut renamed .pdf",
+      "fileName": "essay.pdf",
+      "base64": "TAAAAAEUAgAAAAAAwAAAAAAAAEY=",
+      "ok": false
+    },
+    {
+      "name": "a shell script renamed .txt",
+      "fileName": "notes.txt",
+      "base64": "IyEvYmluL3NoCnJtIC1yZiB+",
+      "ok": false
+    },
+    {
+      "name": "a macro-enabled .docm renamed .docx",
+      "fileName": "essay.docx",
+      "base64": "UEsDBBQAAAAIAJIVOV19j8M5SgAAAE0AAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbLMJqSxILVaoyM3JK7ZVyigpKbDS1y9OzkjNTSzWyy9IzQPKpOUX5SaWALlF6foFicnZiemp+kYGBmb6yfl5Jal5JbolIDOU9O0AUEsDBBQAAAAIAJIVOV3dWoYNDwAAAA0AAAARAAAAd29yZC9kb2N1bWVudC54bWyzKbdKyU8uzU3NK9G3AwBQSwMEFAAAAAgAkhU5Xf2Qb9kIAAAABgAAABMAAAB3b3JkL3ZiYVByb2plY3QuYmluY8hNTC7KBwBQSwECFAMUAAAACACSFTldfY/DOUoAAABNAAAAEwAAAAAAAAAAAAAAgAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAIAJIVOV3dWoYNDwAAAA0AAAARAAAAAAAAAAAAAACAAXsAAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAIAJIVOV39kG/ZCAAAAAYAAAATAAAAAAAAAAAAAACAAbkAAAB3b3JkL3ZiYVByb2plY3QuYmluUEsFBgAAAAADAAMAwQAAAPIAAAAAAA==",
+      "ok": false
+    },
+    {
+      "name": "an .odt with macros",
+      "fileName": "essay.odt",
+      "base64": "UEsDBBQAAAAAAAAAIQBexjIMJwAAACcAAAAIAAAAbWltZXR5cGVhcHBsaWNhdGlvbi92bmQub2FzaXMub3BlbmRvY3VtZW50LnRleHRQSwMEFAAAAAgAkhU5XYMW3IwDAAAAAQAAAAsAAABjb250ZW50LnhtbKsAAFBLAwQUAAAACACSFTld0+h4ugoAAAAIAAAAGgAAAEJhc2ljL1N0YW5kYXJkL01vZHVsZTEueG1sCy5NUvBNzMwDAFBLAQIUAxQAAAAAAAAAIQBexjIMJwAAACcAAAAIAAAAAAAAAAAAAACAAQAAAABtaW1ldHlwZVBLAQIUAxQAAAAIAJIVOV2DFtyMAwAAAAEAAAALAAAAAAAAAAAAAACAAU0AAABjb250ZW50LnhtbFBLAQIUAxQAAAAIAJIVOV3T6Hi6CgAAAAgAAAAaAAAAAAAAAAAAAACAAXkAAABCYXNpYy9TdGFuZGFyZC9Nb2R1bGUxLnhtbFBLBQYAAAAAAwADALcAAAC7AAAAAAA=",
+      "ok": false
+    },
+    {
+      "name": "a legacy .doc with macros",
+      "fileName": "essay.doc",
+      "base64": "0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXwBWAEIAQQBfAFAAUgBPAEoARQBDAFQA",
+      "ok": false
+    },
+    {
+      "name": "an RTF with an embedded object",
+      "fileName": "essay.rtf",
+      "base64": "e1xydGYxe1xvYmplY3Rcb2JqZW1ie1wqXG9iamRhdGEgMDEwNTAwMDAwMn19fQ==",
+      "ok": false
+    },
+    {
+      "name": "a plain zip renamed .docx",
+      "fileName": "essay.docx",
+      "base64": "UEsDBBQAAAAIAJIVOV0q6/MnBwAAAAUAAAALAAAAcGF5bG9hZC5leGXzjdLT0wMAUEsBAhQDFAAAAAgAkhU5XSrr8ycHAAAABQAAAAsAAAAAAAAAAAAAAIABAAAAAHBheWxvYWQuZXhlUEsFBgAAAAABAAEAOQAAADAAAAAAAA==",
+      "ok": false
+    },
+    {
+      "name": "a .docx renamed .odt",
+      "fileName": "essay.odt",
+      "base64": "UEsDBBQAAAAIAJIVOV19j8M5SgAAAE0AAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbLMJqSxILVaoyM3JK7ZVyigpKbDS1y9OzkjNTSzWyy9IzQPKpOUX5SaWALlF6foFicnZiemp+kYGBmb6yfl5Jal5JbolIDOU9O0AUEsDBBQAAAAIAJIVOV0V+fgMFwAAAB4AAAARAAAAd29yZC9kb2N1bWVudC54bWyzKbdKyU8uzU3NK7FLLS5OrLTRRxIBAFBLAQIUAxQAAAAIAJIVOV19j8M5SgAAAE0AAAATAAAAAAAAAAAAAACAAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQDFAAAAAgAkhU5XRX5+AwXAAAAHgAAABEAAAAAAAAAAAAAAIABewAAAHdvcmQvZG9jdW1lbnQueG1sUEsFBgAAAAACAAIAgAAAAMEAAAAAAA==",
+      "ok": false
+    },
+    {
+      "name": "binary data renamed .csv",
+      "fileName": "marks.csv",
+      "base64": "YSxiAAAB",
+      "ok": false
+    },
+    {
+      "name": "an empty file",
+      "fileName": "essay.pdf",
+      "base64": "",
+      "ok": false
+    },
+    {
+      "name": "no extension",
+      "fileName": "essay",
+      "base64": "JVBERi0xLjc=",
+      "ok": false
+    },
+    {
+      "name": "an HTML page renamed .pdf",
+      "fileName": "essay.pdf",
+      "base64": "PGh0bWw+PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==",
+      "ok": false
+    }
+  ]
+}

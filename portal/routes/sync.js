@@ -9,6 +9,9 @@ const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
 const { isValidTimeZone } = require('../services/deadlines')
 const { validateFlashcards, validatePracticeQuiz } = require('../services/practiceSets')
+const { checkUpload } = require('../services/fileSafety')
+const { toTeacherView } = require('../services/profile')
+const { PROFILE_PHOTOS_DIR } = require('../paths')
 
 // A practice set is stored only if it passes the same validation the desktop applies.
 // Anything else is dropped (the material still publishes), since this is rendered to
@@ -392,6 +395,11 @@ router.post('/posts', (req, res) => {
 
   let imagePath = null
   if (imageName && imageData) {
+    // Shown inline to every family in the class, so it must really be an image.
+    const check = checkUpload(String(imageName), Buffer.from(String(imageData), 'base64'))
+    if (!check.ok || !['png', 'jpg', 'gif', 'webp'].includes(check.kind)) {
+      return res.status(400).json({ error: 'The photo must be a PNG, JPEG, GIF or WebP image.' })
+    }
     const id = crypto.randomUUID()
     const storedName = `${id}-${sanitizeFileName(imageName)}`
     fs.writeFileSync(path.join(POSTS_DIR, storedName), Buffer.from(imageData, 'base64'))
@@ -571,6 +579,32 @@ router.post('/reset-password', (req, res) => {
   // session, including anyone who got in with the old password.
   revokeSessions(account.id)
   res.json({ ok: true })
+})
+
+// Profiles of this teacher's own students, as the teacher may see them: no private
+// notes, and birthday only as month-day when the student chose to share it.
+router.get('/profiles', (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT p.* FROM student_profiles p
+       JOIN students s ON s.id = p.student_id
+       WHERE s.teacher_id = ?`
+    )
+    .all(req.teacherId)
+  res.json(rows.map((r) => toTeacherView(r.student_id, r)))
+})
+
+router.get('/profiles/:studentId/photo', (req, res) => {
+  const row = db
+    .prepare(
+      `SELECT p.photo_file FROM student_profiles p
+       JOIN students s ON s.id = p.student_id
+       WHERE p.student_id = ? AND s.teacher_id = ?`
+    )
+    .get(req.params.studentId, req.teacherId)
+  if (!row?.photo_file) return res.status(404).json({ error: 'No photo' })
+  res.set('Content-Type', 'image/webp')
+  res.sendFile(path.join(PROFILE_PHOTOS_DIR, row.photo_file))
 })
 
 module.exports = router

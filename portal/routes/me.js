@@ -16,6 +16,9 @@ const {
 const { complete, AiNotConfiguredError } = require('../services/ai')
 const { rateLimit, LIMITS } = require('../rateLimit')
 const { submissionTiming, DEFAULT_TIMEZONE } = require('../services/deadlines')
+const { checkUpload } = require('../services/fileSafety')
+const { validateProfilePatch, toOwnerView, COLUMNS } = require('../services/profile')
+const { processProfilePhoto } = require('../services/profilePhoto')
 
 const router = express.Router()
 router.use(requireAuth)
@@ -39,7 +42,8 @@ const aiLimits = [
 // well under the 50mb body limit so one upload can't fill the VPS's small disk.
 const MAX_SUBMISSION_BYTES = 20 * 1024 * 1024
 
-const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR } = require('../paths')
+const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR, PROFILE_PHOTOS_DIR } = require('../paths')
+require('fs').mkdirSync(PROFILE_PHOTOS_DIR, { recursive: true })
 require('fs').mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
@@ -226,15 +230,19 @@ router.post('/homework/:id/submit', (req, res) => {
   let storedFileName = null
   let storedFilePath = null
   if (fileName && fileData) {
+    const bytes = Buffer.from(String(fileData), 'base64')
+    // Checked by content, not just by name: a program renamed "essay.docx" or a Word file
+    // carrying macros is refused here, before it can reach the teacher's computer.
+    const check = checkUpload(String(fileName), bytes)
+    if (!check.ok) {
+      return res.status(400).json({ error: `This file can't be submitted: ${check.reason}.` })
+    }
     // The display name is the student's own, but never a path: the teacher's desktop app
     // saves the file under this name when they open it.
     storedFileName =
       String(fileName).split(/[\\/]/).pop().replace(/[\u0000-\u001f]/g, '').slice(-150) || 'file'
     const storedName = `${req.params.id}-${studentId}-${sanitizeFileName(fileName)}`
-    require('fs').writeFileSync(
-      path.join(SUBMISSIONS_DIR, storedName),
-      Buffer.from(fileData, 'base64')
-    )
+    require('fs').writeFileSync(path.join(SUBMISSIONS_DIR, storedName), bytes)
     storedFilePath = storedName
   }
 
@@ -702,6 +710,95 @@ router.delete('/qr/:id', (req, res) => {
     req.accountId
   )
   res.json({ ok: true })
+})
+
+// ---- Student profiles -------------------------------------------------------------------
+// One profile per linked student. Every route checks the student belongs to this
+// account, so changing the id in a URL never reaches someone else's profile.
+
+function ownsStudent(req, studentId) {
+  return getLinkedStudentIds(req.accountId).includes(studentId)
+}
+
+function getProfileRow(studentId) {
+  return db.prepare('SELECT * FROM student_profiles WHERE student_id = ?').get(studentId)
+}
+
+router.get('/profiles', (req, res) => {
+  res.json(getLinkedStudentIds(req.accountId).map((id) => toOwnerView(id, getProfileRow(id))))
+})
+
+router.put('/profiles/:studentId', (req, res) => {
+  const { studentId } = req.params
+  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  const result = validateProfilePatch(req.body)
+  if (!result.ok) return res.status(400).json({ error: result.reason })
+
+  const fields = Object.keys(result.value)
+  const now = new Date().toISOString()
+  db.prepare(
+    'INSERT INTO student_profiles (student_id, updated_at) VALUES (?, ?) ON CONFLICT(student_id) DO NOTHING'
+  ).run(studentId, now)
+  if (fields.length) {
+    const sets = fields.map((f) => `${COLUMNS[f]} = @${f}`).join(', ')
+    const params = { ...result.value, studentId, now }
+    if ('shareBirthday' in params) params.shareBirthday = params.shareBirthday ? 1 : 0
+    db.prepare(
+      `UPDATE student_profiles SET ${sets}, updated_at = @now WHERE student_id = @studentId`
+    ).run(params)
+  }
+  res.json(toOwnerView(studentId, getProfileRow(studentId)))
+})
+
+const photoUploads = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  keyFn: (req) => req.accountId,
+  message: 'Too many photo uploads. Try again in an hour.'
+})
+
+router.post('/profiles/:studentId/photo', photoUploads, async (req, res) => {
+  const { studentId } = req.params
+  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  const { fileName, fileData } = req.body || {}
+  if (!fileName || !fileData) return res.status(400).json({ error: 'Choose a photo first' })
+
+  const result = await processProfilePhoto(fileName, Buffer.from(String(fileData), 'base64'))
+  if (!result.ok) return res.status(400).json({ error: result.reason })
+
+  // A fresh random name each time, so a cached old photo can never be served for a new one.
+  const stored = `${studentId.replace(/[^\w-]/g, '_')}-${crypto.randomUUID()}.webp`
+  require('fs').writeFileSync(path.join(PROFILE_PHOTOS_DIR, stored), result.webp)
+  const previous = getProfileRow(studentId)?.photo_file
+  const now = new Date().toISOString()
+  db.prepare(
+    `INSERT INTO student_profiles (student_id, photo_file, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(student_id) DO UPDATE SET photo_file = excluded.photo_file, updated_at = excluded.updated_at`
+  ).run(studentId, stored, now)
+  if (previous) require('fs').rmSync(path.join(PROFILE_PHOTOS_DIR, previous), { force: true })
+  res.json(toOwnerView(studentId, getProfileRow(studentId)))
+})
+
+router.delete('/profiles/:studentId/photo', (req, res) => {
+  const { studentId } = req.params
+  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  const previous = getProfileRow(studentId)?.photo_file
+  if (previous) {
+    db.prepare(
+      'UPDATE student_profiles SET photo_file = NULL, updated_at = ? WHERE student_id = ?'
+    ).run(new Date().toISOString(), studentId)
+    require('fs').rmSync(path.join(PROFILE_PHOTOS_DIR, previous), { force: true })
+  }
+  res.json(toOwnerView(studentId, getProfileRow(studentId)))
+})
+
+router.get('/profiles/:studentId/photo', (req, res) => {
+  const { studentId } = req.params
+  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  const file = getProfileRow(studentId)?.photo_file
+  if (!file) return res.status(404).json({ error: 'No photo' })
+  res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'private, max-age=300' })
+  res.sendFile(path.join(PROFILE_PHOTOS_DIR, file))
 })
 
 module.exports = router

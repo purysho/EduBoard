@@ -3,6 +3,7 @@
 // checked against the same interface instead of preload's object literal being trusted.
 import type {
   FeedbackDraft,
+  PortalStudentProfile,
   AnalyticsOverview,
   AppSettings,
   Assessment,
@@ -333,6 +334,10 @@ export interface EduBoardApi {
   portalSync: {
     publish(): Promise<void>
     pullSubmissions(): Promise<number>
+  }
+  portalProfiles: {
+    /** The student's Portal profile as shared with the teacher, or null if they haven't made one. */
+    get(studentId: string): Promise<PortalStudentProfile | null>
   }
   portalMessages: {
     listThreads(): Promise<PortalMessageThread[]>

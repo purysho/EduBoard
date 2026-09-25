@@ -219,6 +219,9 @@ export const IpcChannels = {
     publish: 'portalSync:publish',
     pullSubmissions: 'portalSync:pullSubmissions'
   },
+  portalProfiles: {
+    get: 'portalProfiles:get'
+  },
   portalMessages: {
     listThreads: 'portalMessages:listThreads',
     send: 'portalMessages:send',

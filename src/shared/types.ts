@@ -416,6 +416,23 @@ export interface HomeworkSubmission {
   portfolio: boolean
 }
 
+/** What a student chose to share from their Portal profile. Their private notes and
+ * full date of birth never leave the Portal; `birthday` is "MM-DD", and only when the
+ * student opted to share it. */
+export interface PortalStudentProfile {
+  studentId: string
+  preferredName: string | null
+  pronouns: string | null
+  bio: string | null
+  birthday: string | null
+  goals: string | null
+  teacherNote: string | null
+  preferredLanguage: string | null
+  /** A data: URL of the student's (Portal-re-encoded) photo, or null. */
+  photoDataUrl: string | null
+  updatedAt: string
+}
+
 /** An AI-proposed grade and comment for one submission. Never saved by itself: it only
  * pre-fills the teacher's grade/feedback boxes. `flags` are notes for the teacher alone
  * (blank work, an unreadable file, text that tried to instruct the grader). */

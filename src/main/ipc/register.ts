@@ -61,7 +61,8 @@ import {
   createClassPost,
   deleteClassPost,
   sendDigestNow,
-  resetPortalPassword
+  resetPortalPassword,
+  getPortalProfile
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -697,6 +698,7 @@ export function registerIpcHandlers(): void {
   // --- Portal sync ---------------------------------------------------------------------------
   handle(IpcChannels.portalSync.publish, () => publishToPortal())
   handle(IpcChannels.portalSync.pullSubmissions, () => pullSubmissionsFromPortal())
+  handle(IpcChannels.portalProfiles.get, (_e, studentId: string) => getPortalProfile(studentId))
   handle(IpcChannels.portalMessages.listThreads, () => listMessageThreads())
   handle(IpcChannels.portalMessages.send, (_e, accountId: string, body: string) =>
     sendTeacherMessage(accountId, body)

@@ -215,6 +215,25 @@ db.exec(`
   -- Per-message cached translation — populated lazily the first time either side
   -- requests a translated view of a message, so translation is a read-time enrichment
   -- (via the same per-teacher AI key), not something that has to happen at send time.
+  -- A student's own profile, created and edited on the Portal (the desktop app never
+  -- overwrites it). Keyed by student, not account, so a family account with two
+  -- children has two profiles. private_notes is never shown to the teacher, and the
+  -- birthday only as month/day when share_birthday is on (see routes/sync.js).
+  CREATE TABLE IF NOT EXISTS student_profiles (
+    student_id TEXT PRIMARY KEY,
+    preferred_name TEXT,
+    pronouns TEXT,
+    bio TEXT,
+    date_of_birth TEXT,
+    share_birthday INTEGER NOT NULL DEFAULT 0,
+    goals TEXT,
+    teacher_note TEXT,
+    preferred_language TEXT,
+    private_notes TEXT,
+    photo_file TEXT,
+    updated_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS message_translations (
     message_id TEXT PRIMARY KEY REFERENCES messages(id) ON DELETE CASCADE,
     translated_body TEXT NOT NULL,

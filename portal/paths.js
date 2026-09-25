@@ -10,5 +10,6 @@ module.exports = {
   DB_PATH: process.env.PORTAL_DB_PATH || path.join(DATA_DIR, 'portal.db'),
   UPLOADS_DIR: path.join(DATA_DIR, 'homework-uploads'),
   SUBMISSIONS_DIR: path.join(DATA_DIR, 'submission-uploads'),
-  POSTS_DIR: path.join(DATA_DIR, 'post-images')
+  POSTS_DIR: path.join(DATA_DIR, 'post-images'),
+  PROFILE_PHOTOS_DIR: path.join(DATA_DIR, 'profile-photos')
 }

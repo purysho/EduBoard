@@ -169,3 +169,26 @@ test('flashcards and practice quizzes reach students only if they pass validatio
   assert.equal(byId.bad.practiceQuiz, null)
   assert.equal(byId.bad.title, 'Broken', 'the material itself still publishes')
 })
+
+test('submissions are checked by content: disguised programs and macro files are refused', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const payload = classPayload({ extra: { homeworkAssignments: [{ id: 'h1', classId: 'c1', title: 'Essay' }] } })
+  const { cookie } = await makeStudentAccount(portal, { payload })
+  const submit = (fileName, bytes) =>
+    portal.call('POST', '/api/me/homework/h1/submit', {
+      cookie,
+      body: { studentId: 's1', fileName, fileData: Buffer.from(bytes).toString('base64') }
+    })
+
+  const exeAsDocx = await submit('essay.docx', Buffer.concat([Buffer.from('MZ'), Buffer.alloc(64)]))
+  assert.equal(exeAsDocx.status, 400)
+  assert.match(exeAsDocx.json.error, /Windows program/)
+  assert.equal((await submit('run.bat', '@echo off')).status, 400)
+  assert.equal((await submit('essay.pdf', '<html><script>x</script>')).status, 400)
+
+  const ok = await submit('C:\\\\Users\\\\me\\\\..\\\\essay.pdf', '%PDF-1.7 fine')
+  assert.equal(ok.status, 200)
+  const pulled = await portal.sync('/submissions')
+  assert.equal(pulled.json[0].fileName, 'essay.pdf', 'no path survives in the stored name')
+})

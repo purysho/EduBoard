@@ -45,6 +45,9 @@
   .pill.not_started { background: #f1f5f9; color: #64748b; }
   .pill.submitted { background: #fef3c7; color: #92400e; }
   .pill.done { background: #d1fae5; color: #065f46; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .avatar-empty { display: flex; align-items: center; justify-content: center; background: #e0e7ff; color: var(--primary); font-weight: 700; font-size: 1.3rem; }
+  .profile-card textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
   .pill.late { background: #ffedd5; color: #9a3412; }
   .pill.missing { background: #fee2e2; color: #991b1b; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; }
@@ -242,26 +245,31 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ]
 
-function dobPickerHtml() {
+function dobPickerHtml(prefix = 'dob', value = '') {
+  const [vy = '', vm = '', vd = ''] = (value || '').split('-')
+  const sel = (a, b) => (a === b ? ' selected' : '')
   const thisYear = new Date().getFullYear()
-  const months = MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}">${m}</option>`).join('')
-  const days = Array.from({ length: 31 }, (_, i) => i + 1)
-    .map((d) => `<option value="${String(d).padStart(2, '0')}">${d}</option>`).join('')
-  const years = Array.from({ length: 100 }, (_, i) => thisYear - i)
-    .map((y) => `<option value="${y}">${y}</option>`).join('')
+  const months = MONTHS.map((m, i) => {
+    const v = String(i + 1).padStart(2, '0')
+    return `<option value="${v}"${sel(v, vm)}>${m}</option>`
+  }).join('')
+  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'))
+    .map((d) => `<option value="${d}"${sel(d, vd)}>${Number(d)}</option>`).join('')
+  const years = Array.from({ length: 100 }, (_, i) => String(thisYear - i))
+    .map((y) => `<option value="${y}"${sel(y, vy)}>${y}</option>`).join('')
   return `
     <div class="dob-row">
-      <select id="dob-m"><option value="">Month</option>${months}</select>
-      <select id="dob-d"><option value="">Day</option>${days}</select>
-      <select id="dob-y"><option value="">Year</option>${years}</select>
+      <select id="${prefix}-m" aria-label="Month"><option value="">Month</option>${months}</select>
+      <select id="${prefix}-d" aria-label="Day"><option value="">Day</option>${days}</select>
+      <select id="${prefix}-y" aria-label="Year"><option value="">Year</option>${years}</select>
     </div>
   `
 }
 
-function readDob() {
-  const m = document.getElementById('dob-m').value
-  const d = document.getElementById('dob-d').value
-  const y = document.getElementById('dob-y').value
+function readDob(prefix = 'dob') {
+  const m = document.getElementById(`${prefix}-m`).value
+  const d = document.getElementById(`${prefix}-d`).value
+  const y = document.getElementById(`${prefix}-y`).value
   if (!m || !d || !y) return ''
   return `${y}-${m}-${d}`
 }
@@ -316,6 +324,157 @@ async function renderRedeem(code) {
       document.getElementById('err').textContent = e.message
     }
   }
+}
+
+const LANGUAGES = [
+  ['English', 'English'], ['Chinese', 'Chinese (中文)'], ['Spanish', 'Spanish (Español)'],
+  ['French', 'French (Français)'], ['German', 'German (Deutsch)'], ['Japanese', 'Japanese (日本語)'],
+  ['Korean', 'Korean (한국어)'], ['Russian', 'Russian (Русский)'], ['Arabic', 'Arabic (العربية)'],
+  ['Portuguese', 'Portuguese (Português)'], ['Vietnamese', 'Vietnamese (Tiếng Việt)'], ['Hindi', 'Hindi (हिन्दी)']
+]
+
+// ---- Profiles -----------------------------------------------------------------------------
+// One profile per linked student. Everything is optional. Private notes are visible only
+// here; the birthday is shared with the teacher (month and day only) only if ticked.
+function profileIsEmpty(p) {
+  return !p.hasPhoto && !p.preferredName && !p.pronouns && !p.bio && !p.goals && !p.teacherNote && !p.dateOfBirth
+}
+
+function dismissedKey(studentId) {
+  return 'profile-dismissed-' + studentId
+}
+function wasDismissed(studentId) {
+  try { return !!sessionStorage.getItem(dismissedKey(studentId)) } catch { return false }
+}
+function markDismissed(studentId) {
+  try { sessionStorage.setItem(dismissedKey(studentId), '1') } catch { /* private mode */ }
+}
+
+function profileCardHtml(p, studentName) {
+  const id = esc(p.studentId)
+  const photo = p.hasPhoto
+    ? `<img class="avatar" src="/api/me/profiles/${encodeURIComponent(p.studentId)}/photo?v=${encodeURIComponent(p.updatedAt || '')}" alt="Profile photo" />`
+    : `<div class="avatar avatar-empty" aria-hidden="true">${esc((p.preferredName || studentName).slice(0, 1).toUpperCase())}</div>`
+  const langOptions = ['<option value="">Not set</option>']
+    .concat(LANGUAGES.map(([v, label]) => `<option value="${v}"${p.preferredLanguage === v ? ' selected' : ''}>${label}</option>`))
+    .join('')
+  const empty = profileIsEmpty(p)
+  const open = empty && !wasDismissed(p.studentId)
+  return `
+    <div class="card profile-card">
+      <div class="row" style="justify-content:flex-start; gap:12px">
+        ${photo}
+        <div style="flex:1; min-width:0">
+          <strong>${esc(p.preferredName || studentName)}</strong>${p.pronouns ? ` <span class="muted">(${esc(p.pronouns)})</span>` : ''}
+          <p class="muted" style="margin:2px 0 0">${p.bio ? esc(p.bio) : empty ? 'Set up your profile so your teacher gets to know you.' : ''}</p>
+        </div>
+        <button class="secondary" style="width:auto; margin:0" data-profile-toggle="${id}">${empty ? 'Set up profile' : 'Edit profile'}</button>
+      </div>
+      <form data-profile-form="${id}" style="display:${open ? 'block' : 'none'}; margin-top:14px">
+        <label>Photo <span class="muted">(.jpg, .png or .webp, up to 8 MB)</span></label>
+        <div style="display:flex; gap:8px; align-items:center">
+          <input type="file" data-photo accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+          ${p.hasPhoto ? `<button type="button" class="secondary" style="width:auto; margin:0" data-photo-remove>Remove</button>` : ''}
+        </div>
+        <p class="field-note">Photos are resized and cleaned (location data removed) before they're saved.</p>
+        <label>Preferred name</label>
+        <input name="preferredName" maxlength="60" value="${esc(p.preferredName || '')}" placeholder="${esc(studentName)}" />
+        <label>Pronouns</label>
+        <input name="pronouns" maxlength="30" value="${esc(p.pronouns || '')}" placeholder="e.g. she/her, he/him, they/them" />
+        <label>About me</label>
+        <textarea name="bio" maxlength="600" rows="3" placeholder="A few words about you">${esc(p.bio || '')}</textarea>
+        <label>Date of birth</label>
+        ${dobPickerHtml('pdob-' + id, p.dateOfBirth)}
+        <label style="display:flex; gap:8px; align-items:center; font-weight:400; margin-top:8px">
+          <input type="checkbox" name="shareBirthday" style="width:auto" ${p.shareBirthday ? 'checked' : ''} />
+          Share my birthday (month and day, not year) with my teacher
+        </label>
+        <label>My learning goals</label>
+        <textarea name="goals" maxlength="600" rows="2" placeholder="What do you want to get better at this term?">${esc(p.goals || '')}</textarea>
+        <label>Anything my teacher should know</label>
+        <textarea name="teacherNote" maxlength="600" rows="2" placeholder="e.g. how you learn best, accessibility needs">${esc(p.teacherNote || '')}</textarea>
+        <label>Preferred language</label>
+        <select name="preferredLanguage">${langOptions}</select>
+        <label>Private notes <span class="muted">(only you can see these)</span></label>
+        <textarea name="privateNotes" maxlength="5000" rows="3" placeholder="Reminders, ideas, anything">${esc(p.privateNotes || '')}</textarea>
+        <p class="field-note">Your teacher sees everything here except your private notes and your date of birth.</p>
+        <button type="submit">Save profile</button>
+        <p class="error" data-profile-status></p>
+      </form>
+    </div>`
+}
+
+async function loadProfiles(me) {
+  const box = document.getElementById('profiles')
+  if (!box) return
+  let profiles
+  try {
+    profiles = await api('/me/profiles')
+  } catch {
+    return
+  }
+  const names = Object.fromEntries(me.students.map((s) => [s.studentId, s.studentName.split(' ')[0]]))
+  box.innerHTML = profiles.map((p) => profileCardHtml(p, names[p.studentId] || 'Student')).join('')
+
+  const first = profiles[0]
+  const greeting = document.getElementById('greeting')
+  if (greeting && first) greeting.textContent = `Welcome back, ${first.preferredName || names[first.studentId] || ''}`.trim()
+  const lang = document.getElementById('msg-lang')
+  if (lang && first?.preferredLanguage) lang.value = first.preferredLanguage
+
+  box.querySelectorAll('[data-profile-toggle]').forEach((btn) => {
+    btn.onclick = () => {
+      const form = box.querySelector(`[data-profile-form="${CSS.escape(btn.dataset.profileToggle)}"]`)
+      const opening = form.style.display === 'none'
+      form.style.display = opening ? 'block' : 'none'
+      if (!opening) markDismissed(btn.dataset.profileToggle)
+    }
+  })
+  box.querySelectorAll('[data-profile-form]').forEach((form) => {
+    const studentId = form.dataset.profileForm
+    const status = form.querySelector('[data-profile-status]')
+    const url = `/me/profiles/${encodeURIComponent(studentId)}`
+    const removeBtn = form.querySelector('[data-photo-remove]')
+    if (removeBtn) {
+      removeBtn.onclick = async () => {
+        try {
+          await api(url + '/photo', { method: 'DELETE' })
+          loadProfiles(me)
+        } catch (e) {
+          status.textContent = e.message
+        }
+      }
+    }
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      status.textContent = 'Saving…'
+      try {
+        const file = form.querySelector('[data-photo]').files[0]
+        if (file) {
+          await api(url + '/photo', { method: 'POST', body: { fileName: file.name, fileData: await readFileAsBase64(file) } })
+        }
+        const fd = new FormData(form)
+        await api(url, {
+          method: 'PUT',
+          body: {
+            preferredName: fd.get('preferredName'),
+            pronouns: fd.get('pronouns'),
+            bio: fd.get('bio'),
+            dateOfBirth: readDob('pdob-' + studentId),
+            shareBirthday: fd.get('shareBirthday') === 'on',
+            goals: fd.get('goals'),
+            teacherNote: fd.get('teacherNote'),
+            preferredLanguage: fd.get('preferredLanguage'),
+            privateNotes: fd.get('privateNotes')
+          }
+        })
+        markDismissed(studentId)
+        await loadProfiles(me)
+      } catch (ex) {
+        status.textContent = ex.message
+      }
+    }
+  })
 }
 
 function readFileAsBase64(file) {
@@ -431,7 +590,8 @@ function homeworkCardHtml(h, studentId) {
             <label>Your answer</label>
             <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${esc(h.textAnswer || '')}</textarea>
             <label>Attach a file</label>
-            <input data-file type="file" />
+            <input data-file type="file" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.csv,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.png,.jpg,.jpeg,.gif,.webp,.heic,.mp3,.m4a,.wav,.mp4,.mov,.webm" />
+            <p class="field-note">Documents, images, audio or video, up to 20 MB. Programs and files with macros are refused.</p>
             <button type="submit">${h.status === 'submitted' ? 'Update submission' : 'Turn in'}</button>
             <p class="error"></p>
           </form>`
@@ -572,8 +732,8 @@ async function loadMaterials() {
       ${
         m.flashcards || m.practiceQuiz
           ? `<div style="margin-top:8px">
-               ${m.flashcards ? `<button class="secondary" data-practice-cards="${i}">\u{1F0CF} Flashcards (${m.flashcards.length})</button>` : ''}
-               ${m.practiceQuiz ? `<button class="secondary" data-practice-quiz="${i}">\u{2753} Practice quiz (${m.practiceQuiz.length})</button>` : ''}
+               ${m.flashcards ? `<button class="secondary" data-practice-cards="${i}">Flashcards (${m.flashcards.length})</button>` : ''}
+               ${m.practiceQuiz ? `<button class="secondary" data-practice-quiz="${i}">Practice quiz (${m.practiceQuiz.length})</button>` : ''}
                <div id="practice-${i}" style="margin-top:8px"></div>
              </div>`
           : ''
@@ -710,7 +870,8 @@ function renderDashboard(me) {
   app.innerHTML =
     offlineBannerHtml() +
     `<div id="notif-badge"></div>
-     <h1>Welcome back</h1>
+     <h1 id="greeting">Welcome back</h1>
+     <div id="profiles"></div>
      <div class="section-title">Class Story</div>
      <div id="story">Loading…</div>
      <div style="display:none">
@@ -752,10 +913,7 @@ function renderDashboard(me) {
      <div class="card">
        <div style="display:flex; justify-content:flex-end; margin-bottom:6px">
          <select id="msg-lang" style="font-size:.75rem; padding:2px 4px">
-           <option value="English">Translate into English</option>
-           <option value="Chinese">Translate into Chinese (中文)</option>
-           <option value="Spanish">Translate into Spanish</option>
-           <option value="French">Translate into French</option>
+           ${LANGUAGES.map(([v, label]) => `<option value="${v}">Translate into ${label}</option>`).join('')}
          </select>
        </div>
        <div id="messages">Loading…</div>
@@ -769,7 +927,7 @@ function renderDashboard(me) {
        <p class="muted" style="margin:0 0 8px">Get a weekly summary emailed to you — grades, attendance, what's due, and any class updates.</p>
        <form id="email-form" style="display:flex; gap:8px">
          <input id="email-input" type="email" placeholder="you@example.com" style="flex:1; box-sizing:border-box; padding:10px; border:1px solid var(--border); border-radius:10px; font:inherit" />
-         <button type="submit">Save</button>
+         <button type="submit" style="width:auto; margin-top:0">Save</button>
        </form>
        <p id="email-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
      </div>
@@ -880,6 +1038,7 @@ function renderDashboard(me) {
     }
   })
 
+  loadProfiles(me)
   loadClassStory()
   loadPortfolio()
   loadMaterials()
