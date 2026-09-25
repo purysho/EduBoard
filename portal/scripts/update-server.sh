@@ -79,28 +79,91 @@ OWNER="$(stat -c %U "$PORTAL_DIR")"
 if [ "$OWNER" != "root" ]; then chown -R --from=root "$OWNER" "$PORTAL_DIR" 2>/dev/null || true; fi
 
 # ---- 5. Restart -----------------------------------------------------------------------------
+# Find the running Portal itself (a node process in, or started from, the Portal folder),
+# then ask the system what started it, rather than guessing service names.
 say "Restarting the Portal"
+PORTAL_PIDS=""
+for d in /proc/[0-9]*; do
+  cmd="$(tr '\0' ' ' < "$d/cmdline" 2>/dev/null || true)"
+  cwd="$(readlink "$d/cwd" 2>/dev/null || true)"
+  case "$cmd" in
+    *node*"$PORTAL_DIR/server.js"*) PORTAL_PIDS="$PORTAL_PIDS ${d#/proc/}" ;;
+    *node*server.js*) [ "$cwd" = "$PORTAL_DIR" ] && PORTAL_PIDS="$PORTAL_PIDS ${d#/proc/}" ;;
+  esac
+done
+PID="$(echo "$PORTAL_PIDS" | awk '{print $1}')"
+
 RESTARTED=""
-if command -v systemctl >/dev/null && systemctl list-units --type=service --all 2>/dev/null | grep -q .; then
-  for unit in $(systemctl list-units --type=service --all --no-legend 2>/dev/null | awk '{print $1}' | grep -iE 'eduboard|portal' || true); do
-    if systemctl cat "$unit" 2>/dev/null | grep -q "$PORTAL_DIR"; then
-      systemctl restart "$unit" && RESTARTED="systemd service $unit"
+RUN_ENV=""
+if [ -n "$PID" ]; then
+  RUN_ENV="$(tr '\0' '\n' < "/proc/$PID/environ" 2>/dev/null || true)"
+  UNIT="$(grep -oE '[^/]+\.service' "/proc/$PID/cgroup" 2>/dev/null | grep -vE '^(user@|session-)' | head -1 || true)"
+  PM2_HOME_OF="$(echo "$RUN_ENV" | sed -n 's/^PM2_HOME=//p' | head -1)"
+  PM_ID="$(echo "$RUN_ENV" | sed -n 's/^pm_id=//p' | head -1)"
+  if [ -n "$PM2_HOME_OF" ] && [ -n "$PM_ID" ]; then
+    PM2_USER="$(stat -c %U "/proc/$PID")"
+    PM2_BIN="$(command -v pm2 || true)"
+    [ -z "$PM2_BIN" ] && PM2_BIN="$(dirname "$(readlink -f "/proc/$PID/exe")")/pm2"
+    if [ -x "$PM2_BIN" ] &&
+      runuser -u "$PM2_USER" -- env PM2_HOME="$PM2_HOME_OF" "$PM2_BIN" restart "$PM_ID" >/dev/null 2>&1; then
+      RESTARTED="pm2 app $PM_ID (user $PM2_USER)"
     fi
-  done
+  elif [ -n "$UNIT" ] && systemctl restart "$UNIT" 2>/dev/null; then
+    RESTARTED="systemd service $UNIT"
+  fi
 fi
-if [ -z "$RESTARTED" ] && command -v pm2 >/dev/null; then
-  NAME="$(pm2 jlist 2>/dev/null | node -e '
-    let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
-      const app = JSON.parse(s || "[]").find((a) => (a.pm2_env?.pm_cwd || "").startsWith(process.argv[1]))
-      if (app) console.log(app.name)
-    })' "$PORTAL_DIR" || true)"
-  [ -n "$NAME" ] && pm2 restart "$NAME" >/dev/null && RESTARTED="pm2 app $NAME"
+
+# Started by hand (e.g. with nohup) or not running at all: set it up as a proper service
+# so it also comes back after a reboot, using the settings the running Portal had.
+if [ -z "$RESTARTED" ] && command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then
+  ENV_FILE="/etc/eduboard-portal.env"
+  # Holds the Portal's secrets: readable by root only, from the moment it's created.
+  umask 077
+  if [ -n "$RUN_ENV" ]; then
+    echo "$RUN_ENV" | grep -E '^(SESSION_SECRET|SYNC_SECRET|ADMIN_SECRET|PORT|HOST|NODE_ENV|TRUST_PROXY|PORTAL_[A-Z_]*|RATE_[A-Z_]*|SMTP_[A-Z_]*)=' > "$ENV_FILE.new"
+  elif [ -f "$PORTAL_DIR/.env" ]; then
+    cp "$PORTAL_DIR/.env" "$ENV_FILE.new"
+  fi
+  if [ -s "$ENV_FILE.new" ] && grep -q '^SESSION_SECRET=' "$ENV_FILE.new"; then
+    mv "$ENV_FILE.new" "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+    RUN_USER="$( [ -n "$PID" ] && stat -c %U "/proc/$PID" || stat -c %U "$PORTAL_DIR")"
+    NODE_BIN="$( [ -n "$PID" ] && readlink -f "/proc/$PID/exe" || command -v node)"
+    cat > /etc/systemd/system/eduboard-portal.service <<UNIT
+[Unit]
+Description=EduBoard Portal
+After=network.target
+
+[Service]
+WorkingDirectory=$PORTAL_DIR
+ExecStart=$NODE_BIN server.js
+EnvironmentFile=$ENV_FILE
+User=$RUN_USER
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+    systemctl daemon-reload
+    for p in $PORTAL_PIDS; do kill "$p" 2>/dev/null || true; done
+    sleep 2
+    systemctl enable --now eduboard-portal >/dev/null 2>&1 && RESTARTED="new systemd service eduboard-portal (starts on boot)"
+  else
+    rm -f "$ENV_FILE.new"
+  fi
 fi
-[ -n "$RESTARTED" ] || fail "Updated, but couldn't find how the Portal is started, so it wasn't restarted. Restart it (or reboot the server) to finish."
+
+if [ -z "$RESTARTED" ]; then
+  echo "    Couldn't restart it automatically. Details for whoever set up the server:"
+  echo "    running Portal process: ${PID:-none found}"
+  [ -n "$PID" ] && echo "    started as: $(tr '\0' ' ' < "/proc/$PID/cmdline")" && echo "    cgroup: $(head -3 "/proc/$PID/cgroup" | tr '\n' ' ')"
+  fail "Updated, but not restarted. Rebooting the server from the VPS.do panel will start the new version if the Portal starts on boot."
+fi
 echo "    restarted $RESTARTED"
 
 # ---- 6. Check -------------------------------------------------------------------------------
-PORT="$(grep -E '^PORT=' "$PORTAL_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '"'"'")"
+PORT="$(echo "$RUN_ENV" | sed -n 's/^PORT=//p' | head -1)"
+[ -z "$PORT" ] && PORT="$(grep -E '^PORT=' "$PORTAL_DIR/.env" 2>/dev/null | tail -1 | cut -d= -f2 | tr -d '"'"'")"
 PORT="${PORT:-4790}"
 say "Checking it's up on port $PORT"
 for _ in $(seq 1 30); do
