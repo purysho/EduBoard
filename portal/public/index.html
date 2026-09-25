@@ -1182,6 +1182,44 @@ async function loadPortfolio() {
 // TTS cost or API key, and works offline once the page is loaded. Quality varies by
 // device/OS voice, but it's a real "audio overview" with zero added infrastructure.
 let currentUtterance = null
+// Splits text into runs of Chinese and non-Chinese (English, and anything else written in
+// Latin letters), so each run can be read by a voice that knows that language. Digits,
+// spaces and punctuation stay with the run they're in. On a phone set to Chinese the
+// browser's default voice is Chinese, and a Chinese voice reading English skips the words
+// and reads only the letters and numbers it knows ("A1 … 1 … 0100").
+function speechSegments(text) {
+  const segments = []
+  for (const ch of String(text)) {
+    const lang = /[\u3400-\u9fff\uf900-\ufaff]/.test(ch) ? 'zh' : /\p{L}/u.test(ch) ? 'en' : null
+    const last = segments[segments.length - 1]
+    if (last && (lang === null || last.lang === lang || last.lang === null)) {
+      last.text += ch
+      if (last.lang === null) last.lang = lang
+    } else {
+      segments.push({ lang, text: ch })
+    }
+  }
+  return segments
+    .filter((s) => /[\p{L}\p{N}]/u.test(s.text))
+    .map((s) => ({ lang: s.lang || (UI_LANG === 'zh' ? 'zh' : 'en'), text: s.text.trim() }))
+}
+
+/** The device's best voice for 'en' or 'zh', or null to let the browser pick by lang. */
+function voiceFor(lang) {
+  const voices = window.speechSynthesis.getVoices()
+  const prefer = lang === 'zh' ? ['zh-CN', 'zh-Hans', 'zh'] : ['en-US', 'en-GB', 'en']
+  for (const code of prefer) {
+    const match = voices.find((v) => v.lang.replace('_', '-').toLowerCase().startsWith(code.toLowerCase()))
+    if (match) return match
+  }
+  return null
+}
+// Some browsers load their voice list a moment after the page; ask early so it's ready.
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices()
+  window.speechSynthesis.addEventListener?.('voiceschanged', () => window.speechSynthesis.getVoices())
+}
+
 function speak(text, buttonEl) {
   if (!('speechSynthesis' in window)) {
     alert(t('Audio isn’t supported in this browser.'))
@@ -1198,18 +1236,29 @@ function speak(text, buttonEl) {
     restore()
     return
   }
-  const utter = new SpeechSynthesisUtterance(text)
-  // Pick a Chinese voice for Chinese text (e.g. a translated study guide); the browser's
-  // default voice would read it as nonsense or skip it.
-  if (/[\u4e00-\u9fff]/.test(text)) utter.lang = 'zh-CN'
-  utter.rate = 0.95
-  utter.onend = () => {
+  const segments = speechSegments(text)
+  if (!segments.length) return
+  window.speechSynthesis.cancel()
+  let last = null
+  for (const segment of segments) {
+    const utter = new SpeechSynthesisUtterance(segment.text)
+    utter.lang = segment.lang === 'zh' ? 'zh-CN' : 'en-US'
+    const voice = voiceFor(segment.lang)
+    if (voice) utter.voice = voice
+    // A little slower for English, which most students here are learning.
+    utter.rate = segment.lang === 'en' ? 0.9 : 1
+    window.speechSynthesis.speak(utter)
+    last = utter
+  }
+  const done = () => {
+    if (currentUtterance !== last) return
     currentUtterance = null
     restore()
   }
-  currentUtterance = utter
+  last.onend = done
+  last.onerror = done
+  currentUtterance = last
   if (buttonEl) buttonEl.textContent = t('Stop')
-  window.speechSynthesis.speak(utter)
 }
 
 async function loadMaterials() {
