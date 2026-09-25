@@ -6,6 +6,7 @@ const db = require('../db')
 const { requireSyncSecret, hashPassword, passwordProblem, revokeSessions } = require('../auth')
 const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
 const { isLanguage, buildTranslationPrompt, cleanReply } = require('../services/translate')
+const { aiUsageSummary, listInteractions } = require('../services/aiUsage')
 const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
 const { isValidTimeZone } = require('../services/deadlines')
@@ -297,9 +298,24 @@ router.get('/submissions', (req, res) => {
       textAnswer: r.text_answer,
       fileName: r.file_name,
       grade: r.grade,
-      feedback: r.feedback
+      feedback: r.feedback,
+      aiDeclared: !!r.ai_declared,
+      aiHelpCount: r.ai_help_count || 0,
+      aiOverlap: r.ai_overlap,
+      ...aiUsageSummary(r)
     }))
   )
+})
+
+// Everything a student asked the Study Helper, with the answers, optionally for one
+// assignment: what the teacher sees behind a "Used AI" badge.
+router.get('/ai-activity', (req, res) => {
+  const { studentId, homeworkId } = req.query
+  const owned = db
+    .prepare('SELECT 1 FROM students WHERE id = ? AND teacher_id = ?')
+    .get(String(studentId || ''), req.teacherId)
+  if (!owned) return res.status(404).json({ error: 'Student not found' })
+  res.json(listInteractions(String(studentId), homeworkId ? String(homeworkId) : null))
 })
 
 // Teacher stars/unstars a graded submission for the student's Portfolio — pushed

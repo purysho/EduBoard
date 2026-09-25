@@ -225,7 +225,10 @@ export const homeworkSubmissions = sqliteTable(
     grade: text('grade'),
     feedback: text('feedback'),
     gradedAt: text('graded_at'),
-    portfolio: integer('portfolio', { mode: 'boolean' }).notNull().default(false)
+    portfolio: integer('portfolio', { mode: 'boolean' }).notNull().default(false),
+    aiDeclared: integer('ai_declared', { mode: 'boolean' }).notNull().default(false),
+    aiHelpCount: integer('ai_help_count').notNull().default(0),
+    aiOverlap: real('ai_overlap')
   },
   (t) => ({
     assignmentStudentUnique: uniqueIndex('homework_submissions_assignment_student_unique').on(

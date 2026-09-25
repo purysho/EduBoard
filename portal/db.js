@@ -242,6 +242,21 @@ db.exec(`
 
   -- Translations of what students read (homework, posts, study guides), keyed by a hash
   -- of language + text so identical text is translated once and edited text again.
+  -- Every Study Helper question a student asks and the answer they got, so the teacher
+  -- can see how AI was used (students are told this on the Study Helper). homework_id is
+  -- set when the student asked from an assignment ("Get AI help"). No foreign keys on
+  -- purpose: a publish replaces students and homework rows, and this log must survive it.
+  CREATE TABLE IF NOT EXISTS ai_interactions (
+    id TEXT PRIMARY KEY,
+    account_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    homework_id TEXT,
+    question TEXT NOT NULL,
+    reply TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS ai_interactions_student ON ai_interactions (student_id, created_at);
+
   CREATE TABLE IF NOT EXISTS content_translations (
     key TEXT PRIMARY KEY,
     target_lang TEXT NOT NULL,
@@ -279,6 +294,12 @@ ensureColumn('teachers', 'timezone', 'timezone TEXT')
 ensureColumn('materials', 'flashcards', 'flashcards TEXT')
 ensureColumn('materials', 'practice_quiz', 'practice_quiz TEXT')
 ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
+// How AI was involved in a submission, worked out when it was turned in (see
+// services/aiUsage.js): the student said so, asked the Study Helper about this
+// assignment, and/or their answer reuses wording from AI answers they were given.
+ensureColumn('homework_submissions', 'ai_declared', 'ai_declared INTEGER NOT NULL DEFAULT 0')
+ensureColumn('homework_submissions', 'ai_help_count', 'ai_help_count INTEGER NOT NULL DEFAULT 0')
+ensureColumn('homework_submissions', 'ai_overlap', 'ai_overlap REAL')
 
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite

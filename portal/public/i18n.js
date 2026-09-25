@@ -229,6 +229,22 @@ const ZH = {
   'Thinking…': '思考中…',
   'Sources:': '来源：',
 
+  // AI help and "Used AI"
+  'Used AI': '使用了 AI',
+  'Get AI help': 'AI 辅导',
+  'The AI helps you understand the task and plan your answer. It won’t write it for you. Your teacher can see what you ask, and this assignment will show as “Used AI”.':
+    'AI 会帮你理解题目、规划答案，但不会替你写。老师可以看到你问了什么，这项作业也会显示为“使用了 AI”。',
+  'I used AI (the Study Helper, ChatGPT or any other AI tool) for this work':
+    '我在这项作业中使用了 AI（学习助手、ChatGPT 或其他 AI 工具）',
+  'You asked the AI about this assignment, so it will show as “Used AI” to your teacher.':
+    '你就这项作业询问过 AI，所以老师会看到它显示为“使用了 AI”。',
+  'Your teacher can see what you ask the Study Helper and its answers. Copying its answers into your homework shows as “Used AI”.':
+    '老师可以看到你向学习助手提的问题和它的回答。把它的回答抄进作业会显示为“使用了 AI”。',
+  'Quiz me on what we covered this week': '就本周学的内容考考我',
+  'Explain the main idea simply': '用简单的话解释主要内容',
+  'Check my understanding: I’ll explain it and you tell me what I missed':
+    '检查我的理解：我来解释，你告诉我漏了什么',
+
   // Home and dates
   'No updates yet.': '暂无动态。',
   today: '今天',

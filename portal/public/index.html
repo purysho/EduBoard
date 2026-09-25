@@ -83,6 +83,11 @@
   .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .avatar-empty { display: flex; align-items: center; justify-content: center; background: #e0e7ff; color: var(--primary); font-weight: 700; font-size: 1.3rem; }
   .profile-card textarea { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
+  .pill.used-ai { background: #ede9fe; color: #5b21b6; }
+  .check-row { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; line-height: 1.4; }
+  .check-row input { margin-top: 3px; }
+  .ai-help { margin-top: 12px; }
+  [data-ai-form] textarea, [data-answer] { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
   .pill.late { background: #ffedd5; color: #9a3412; }
   .pill.missing { background: #fee2e2; color: #991b1b; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; }
@@ -500,6 +505,126 @@ function wireTranslateControls(root) {
   })
 }
 
+// ---- AI chat (Study Helper and per-assignment help) ----------------------------------------
+const QUICK_PROMPTS = [
+  'Quiz me on what we covered this week',
+  'Explain the main idea simply',
+  'Check my understanding: I’ll explain it and you tell me what I missed'
+]
+
+function aiChatHtml(studentId, homeworkId, withPrompts = false) {
+  return `
+    <div data-ai-chat-root data-student="${esc(studentId)}" data-homework="${esc(homeworkId || '')}">
+      <div class="ai-chat" data-ai-log></div>
+      ${withPrompts ? `<div class="chip-row" style="margin-top:0">${QUICK_PROMPTS.map((q) => `<button type="button" class="chip" data-ai-prompt="${esc(t(q))}">${esc(t(q))}</button>`).join('')}</div>` : ''}
+      <form data-ai-form style="margin-top:10px">
+        <textarea rows="2" maxlength="2000" placeholder="${t("Ask about your homework or a topic you're stuck on…")}"></textarea>
+        <button type="submit">${t('Ask')}</button>
+        <p class="error" role="alert"></p>
+      </form>
+    </div>`
+}
+
+function aiBubblesHtml(question, reply, citations) {
+  const citeHtml = citations && citations.length
+    ? `<div class="muted" style="font-size:.76rem; margin-top:4px">${t('Sources:')} ${citations.map((c) => `[${c.number}] ${esc(c.title)}`).join(' · ')}</div>`
+    : ''
+  return `
+    <div class="msg family"><div class="msg-bubble">${esc(question)}</div></div>
+    <div class="msg teacher"><div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button type="button" class="chip" style="margin-top:6px" data-listen-reply>${t('Listen')}</button></div>`
+}
+
+function wireListenButtons(root) {
+  root.querySelectorAll('[data-listen-reply]').forEach((btn) => {
+    btn.onclick = () => speak(btn.closest('.msg').querySelector('.msg-bubble').textContent, btn)
+  })
+}
+
+async function loadAiHistory(root) {
+  if (root.dataset.loaded) return
+  root.dataset.loaded = '1'
+  const log = root.querySelector('[data-ai-log]')
+  const q = new URLSearchParams({ studentId: root.dataset.student })
+  if (root.dataset.homework) q.set('homeworkId', root.dataset.homework)
+  try {
+    const history = await api('/me/ai/history?' + q)
+    log.insertAdjacentHTML('afterbegin', history.map((i) => aiBubblesHtml(i.question, i.reply)).join(''))
+    wireListenButtons(log)
+    log.scrollTop = log.scrollHeight
+  } catch {
+    // Offline or AI not set up: the chat still works for new questions.
+  }
+}
+
+function wireAiChats(root) {
+  root.querySelectorAll('[data-ai-help-toggle]').forEach((btn) => {
+    btn.onclick = () => {
+      const panel = btn.nextElementSibling
+      panel.hidden = !panel.hidden
+      if (!panel.hidden) {
+        const chat = panel.querySelector('[data-ai-chat-root]')
+        loadAiHistory(chat)
+        chat.querySelector('textarea').focus()
+      }
+    }
+  })
+  root.querySelectorAll('[data-ai-chat-root]').forEach((chat) => {
+    // The Study Helper's history loads when the Study tab is first opened (see showTab).
+    const form = chat.querySelector('[data-ai-form]')
+    const textarea = form.querySelector('textarea')
+    chat.querySelectorAll('[data-ai-prompt]').forEach((chip) => {
+      chip.onclick = () => {
+        textarea.value = chip.dataset.aiPrompt
+        form.requestSubmit()
+      }
+    })
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const message = textarea.value.trim()
+      if (!message) return
+      const err = form.querySelector('.error')
+      const log = chat.querySelector('[data-ai-log]')
+      const button = form.querySelector('button[type=submit]')
+      err.textContent = ''
+      button.disabled = true
+      const pending = document.createElement('div')
+      pending.innerHTML = `<div class="msg family"><div class="msg-bubble">${esc(message)}</div></div><div class="msg teacher"><div class="msg-bubble muted">${t('Thinking…')}</div></div>`
+      log.appendChild(pending)
+      log.scrollTop = log.scrollHeight
+      textarea.value = ''
+      try {
+        const { reply, citations } = await api('/me/ai/chat', {
+          method: 'POST',
+          body: {
+            studentId: chat.dataset.student,
+            homeworkId: chat.dataset.homework || undefined,
+            message,
+            language: readingLanguage
+          }
+        })
+        pending.innerHTML = aiBubblesHtml(message, reply, citations)
+        wireListenButtons(pending)
+        // Asking about an assignment marks it; show that on its submit form right away.
+        const declared = chat.closest('.card')?.querySelector('[data-ai-declared]')
+        if (chat.dataset.homework && declared && !declared.disabled) {
+          declared.checked = true
+          declared.disabled = true
+          declared
+            .closest('label')
+            .insertAdjacentHTML('afterend', `<p class="field-note" data-ai-auto>${t('You asked the AI about this assignment, so it will show as “Used AI” to your teacher.')}</p>`)
+        }
+      } catch (ex) {
+        pending.remove()
+        textarea.value = message
+        err.textContent = ex.message
+      } finally {
+        button.disabled = false
+      }
+      log.scrollTop = log.scrollHeight
+    }
+  })
+}
+
 // ---- Profiles -----------------------------------------------------------------------------
 // One profile per linked student. Everything is optional. Private notes are visible only
 // here; the birthday is shared with the teacher (month and day only) only if ticked.
@@ -753,6 +878,20 @@ function quickCheckHtml(h, studentId) {
 
 const STATUS_LABELS = { not_started: 'Not started', submitted: 'Submitted', done: 'Done' }
 
+// "Get AI help" inside an assignment. Help asked here is tied to the assignment: the
+// student is told plainly that their teacher sees it and that the work will show as
+// "Used AI". Students should never be surprised by what their teacher can see.
+function aiHelpHtml(h, studentId) {
+  return `
+    <div class="ai-help">
+      <button type="button" class="chip" data-ai-help-toggle>✨ ${t('Get AI help')}</button>
+      <div data-ai-help-panel hidden>
+        <p class="field-note" style="margin:8px 0">${t('The AI helps you understand the task and plan your answer. It won’t write it for you. Your teacher can see what you ask, and this assignment will show as “Used AI”.')}</p>
+        ${aiChatHtml(studentId, h.id)}
+      </div>
+    </div>`
+}
+
 function homeworkCardHtml(h, studentId) {
   const graded = h.status === 'done'
   const detailId = esc(`${h.id}-${studentId}`)
@@ -763,6 +902,7 @@ function homeworkCardHtml(h, studentId) {
         <span class="pills">
           ${h.timing === 'late' ? `<span class="pill late">${t('Late')}</span>` : ''}
           ${h.timing === 'missing' ? `<span class="pill missing">${t('Missing')}</span>` : ''}
+          ${h.usedAi ? `<span class="pill used-ai">${t('Used AI')}</span>` : ''}
           <span class="pill ${esc(h.status)}">${esc(t(STATUS_LABELS[h.status] || h.status))}</span>
         </span>
       </div>
@@ -772,6 +912,7 @@ function homeworkCardHtml(h, studentId) {
         ${translateControlHtml('homework', h.id)}
         ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} ${t('(from your teacher)')}</a></p>` : ''}
         ${quickCheckHtml(h, studentId)}
+        ${graded ? '' : aiHelpHtml(h, studentId)}
         ${
           graded
             ? `
@@ -794,6 +935,11 @@ function homeworkCardHtml(h, studentId) {
             <label>${t('Attach a file')}</label>
             <input data-file type="file" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.csv,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.png,.jpg,.jpeg,.gif,.webp,.heic,.mp3,.m4a,.wav,.mp4,.mov,.webm" />
             <p class="field-note">${t('Documents, images, audio or video, up to 20 MB. Programs and files with macros are refused.')}</p>
+            <label class="check-row">
+              <input type="checkbox" data-ai-declared ${h.aiHelpCount ? 'checked disabled' : ''} />
+              ${t('I used AI (the Study Helper, ChatGPT or any other AI tool) for this work')}
+            </label>
+            ${h.aiHelpCount ? `<p class="field-note" data-ai-auto>${t('You asked the AI about this assignment, so it will show as “Used AI” to your teacher.')}</p>` : ''}
             <button type="submit">${h.status === 'submitted' ? t('Update submission') : t('Turn in')}</button>
             <p class="error"></p>
           </form>`
@@ -1097,6 +1243,7 @@ function showTab(id) {
   // Loading the thread marks the teacher's messages as read, so only do it when the
   // student actually opens Messages. Otherwise the unread count would vanish unseen.
   if (id === 'messages') loadMessages()
+  if (id === 'study') document.querySelectorAll('[data-panel="study"] [data-ai-chat-root]').forEach(loadAiHistory)
 }
 
 function setupTabs() {
@@ -1392,13 +1539,9 @@ function renderDashboard(me) {
            (s) => `
          <div class="section-title">${t('Study Helper')}${multi ? ` · ${esc(s.studentName)}` : ''}</div>
          <div class="card">
-           <p class="muted" style="margin:0 0 8px">${t("Ask about your homework or class materials. Answers cite your teacher's materials where they can.")}</p>
-           <div id="ai-chat-${esc(s.studentId)}" class="ai-chat"></div>
-           <form data-ai-chat="${esc(s.studentId)}" style="margin-top:10px">
-             <textarea rows="2" placeholder="${t("Ask about your homework or a topic you're stuck on…")}" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
-             <button type="submit">${t('Ask')}</button>
-             <p class="error"></p>
-           </form>
+           <p class="muted" style="margin:0 0 4px">${t("Ask about your homework or class materials. Answers cite your teacher's materials where they can.")}</p>
+           <p class="field-note" style="margin:0 0 10px">${t('Your teacher can see what you ask the Study Helper and its answers. Copying its answers into your homework shows as “Used AI”.')}</p>
+           ${aiChatHtml(s.studentId, null, true)}
          </div>`
          )
          .join('')}
@@ -1524,13 +1667,22 @@ function renderDashboard(me) {
       const fileInput = form.querySelector('[data-file]')
       const file = fileInput.files[0]
       const err = form.querySelector('.error')
+      const aiBox = form.querySelector('[data-ai-declared]')
       err.textContent = ''
 
       try {
         const fileData = file ? await readFileAsBase64(file) : null
         await api(`/me/homework/${hwId}/submit`, {
           method: 'POST',
-          body: { studentId, textAnswer, fileName: file?.name || null, fileData }
+          body: {
+            studentId,
+            textAnswer,
+            fileName: file?.name || null,
+            fileData,
+            // Only the student's own tick is a declaration. A box ticked automatically
+            // (they asked the AI here) is already recorded on the server.
+            aiDeclared: !!aiBox?.checked && !aiBox.disabled
+          }
         })
         location.reload()
       } catch (ex) {
@@ -1562,42 +1714,7 @@ function renderDashboard(me) {
     }
   })
 
-  document.querySelectorAll('[data-ai-chat]').forEach((form) => {
-    form.onsubmit = async (e) => {
-      e.preventDefault()
-      const studentId = form.dataset.aiChat
-      const textarea = form.querySelector('textarea')
-      const err = form.querySelector('.error')
-      const message = textarea.value.trim()
-      if (!message) return
-      err.textContent = ''
-      const box = document.getElementById('ai-chat-' + studentId)
-      box.insertAdjacentHTML('beforeend', `<div class="msg family"><div class="msg-bubble">${esc(message)}</div></div>`)
-      textarea.value = ''
-      const thinking = document.createElement('div')
-      thinking.className = 'msg teacher'
-      thinking.innerHTML = `<div class="msg-bubble muted">${t('Thinking…')}</div>`
-      box.appendChild(thinking)
-      box.scrollTop = box.scrollHeight
-      try {
-        const { reply, citations } = await api('/me/ai/chat', {
-          method: 'POST',
-          body: { studentId, message, language: readingLanguage }
-        })
-        const citeHtml = citations && citations.length
-          ? `<div class="muted" style="font-size:.76rem; margin-top:4px">${t('Sources:')} ${citations
-              .map((c) => `[${c.number}] ${esc(c.title)}`)
-              .join(' · ')}</div>`
-          : ''
-        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="chip" style="margin-top:6px" data-listen-reply>${t('Listen')}</button>`
-        thinking.querySelector('[data-listen-reply]').onclick = (evt) => speak(reply, evt.target)
-      } catch (ex) {
-        thinking.remove()
-        err.textContent = ex.message
-      }
-      box.scrollTop = box.scrollHeight
-    }
-  })
+  wireAiChats(app)
 
   loadProfiles(me)
   loadClassStory()

@@ -414,6 +414,10 @@ export interface HomeworkSubmission {
   feedback: string | null
   gradedAt: string | null
   portfolio: boolean
+  /** From the Portal: see src/shared/aiUsage.ts. */
+  aiDeclared: boolean
+  aiHelpCount: number
+  aiOverlap: number | null
 }
 
 /** What a student chose to share from their Portal profile. Their private notes and

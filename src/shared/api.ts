@@ -2,6 +2,7 @@
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
 import type { SetupProgress } from './setupChecklist'
+import type { PortalAiInteraction } from './aiUsage'
 import type {
   FeedbackDraft,
   PortalStudentProfile,
@@ -340,6 +341,7 @@ export interface EduBoardApi {
   portalSync: {
     publish(): Promise<void>
     pullSubmissions(): Promise<number>
+    aiActivity(studentId: string, homeworkId: string | null): Promise<PortalAiInteraction[]>
   }
   portalProfiles: {
     /** The student's Portal profile as shared with the teacher, or null if they haven't made one. */

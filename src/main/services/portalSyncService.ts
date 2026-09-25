@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import type { PortalAiInteraction } from '@shared/aiUsage'
 import { listClasses } from '../repositories/classes'
 import { getRosterForClass } from '../repositories/enrollments'
 import {
@@ -232,6 +233,9 @@ export async function pullSubmissionsFromPortal(): Promise<number> {
     fileName: string | null
     grade: string | null
     feedback: string | null
+    aiDeclared?: boolean
+    aiHelpCount?: number
+    aiOverlap?: number | null
   }[]
   for (const row of rows) {
     upsertSubmissionFromPortal(row)
@@ -371,6 +375,23 @@ export async function sendTeacherMessage(accountId: string, body: string): Promi
     body: JSON.stringify({ accountId, body })
   })
   if (!res.ok) throw new Error(`Could not send message: ${res.status} ${await res.text()}`)
+}
+
+/** Every question a student asked the Portal's Study Helper and the answers, optionally
+ * just those asked from one assignment: what's behind a "Used AI" badge. */
+export async function getStudentAiActivity(
+  studentId: string,
+  homeworkId: string | null
+): Promise<PortalAiInteraction[]> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const query = new URLSearchParams({ studentId })
+  if (homeworkId) query.set('homeworkId', homeworkId)
+  const res = await fetch(`${portalUrl}/api/sync/ai-activity?${query}`, {
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (res.status === 404) return []
+  if (!res.ok) throw new Error(`Could not load AI activity: ${res.status} ${await res.text()}`)
+  return (await res.json()) as PortalAiInteraction[]
 }
 
 /** Translates one message into targetLang (e.g. "English" or "Chinese"), via the

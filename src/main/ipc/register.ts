@@ -54,6 +54,7 @@ import * as portalInvitesRepo from '../repositories/portalInvites'
 import {
   publishToPortal,
   pullSubmissionsFromPortal,
+  getStudentAiActivity,
   pushSubmissionGrade,
   pushSubmissionPortfolio,
   downloadSubmissionFile,
@@ -707,6 +708,9 @@ export function registerIpcHandlers(): void {
   // --- Portal sync ---------------------------------------------------------------------------
   handle(IpcChannels.portalSync.publish, () => publishToPortal())
   handle(IpcChannels.portalSync.pullSubmissions, () => pullSubmissionsFromPortal())
+  handle(IpcChannels.portalSync.aiActivity, (_e, studentId: string, homeworkId: string | null) =>
+    getStudentAiActivity(String(studentId), homeworkId ? String(homeworkId) : null)
+  )
   handle(IpcChannels.portalProfiles.get, (_e, studentId: string) => getPortalProfile(studentId))
   handle(IpcChannels.portalMessages.listThreads, () => listMessageThreads())
   handle(IpcChannels.portalMessages.send, (_e, accountId: string, body: string) =>

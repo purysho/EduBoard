@@ -48,6 +48,8 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate, formatDueDate, ipcErrorMessage } from '@renderer/lib/format'
 import { submissionTiming, type SubmissionTiming } from '@shared/deadlines'
+import { aiUsageReasons } from '@shared/aiUsage'
+import { AiActivityModal } from './AiActivityModal'
 
 // Due dates end at midnight where the teacher is. The desktop app runs on the teacher's
 // own computer, so its local zone is that zone (and it's what publish sends the Portal).
@@ -533,6 +535,8 @@ function SubmissionRow({
   const [opening, setOpening] = useState(false)
   const [openError, setOpenError] = useState<string | null>(null)
   const [scoringRubric, setScoringRubric] = useState(false)
+  const [showAi, setShowAi] = useState(false)
+  const aiReasons = aiUsageReasons(submission)
 
   async function handleOpenFile(): Promise<void> {
     if (!submission.fileName) return
@@ -583,9 +587,27 @@ function SubmissionRow({
             </Badge>
           )}
           {timing === 'missing' && <Badge tone="danger">Missing</Badge>}
+          {aiReasons.length > 0 && (
+            <button
+              type="button"
+              title={`${aiReasons.join('. ')}. Click to see the AI conversation.`}
+              onClick={() => setShowAi(true)}
+            >
+              <Badge tone="primary">Used AI</Badge>
+            </button>
+          )}
           <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
         </div>
       </div>
+      {showAi && (
+        <AiActivityModal
+          studentId={submission.studentId}
+          studentName={submission.studentName}
+          homeworkId={assignmentId}
+          reasons={aiReasons}
+          onClose={() => setShowAi(false)}
+        />
+      )}
       {submission.textAnswer && (
         <p className="mt-2 text-sm text-[var(--color-text-muted)]">{submission.textAnswer}</p>
       )}

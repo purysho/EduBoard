@@ -644,6 +644,20 @@ const migrations: Migration[] = [
         ALTER TABLE lesson_resources ADD COLUMN practice_quiz TEXT;
       `)
     }
+  },
+  {
+    id: 26,
+    name: 'homework_submission_ai_usage',
+    up: (db) => {
+      // How the Portal's AI was involved in a submission, copied from the Portal on pull:
+      // the student ticked "I used AI", how often they asked the AI about this assignment,
+      // and how much of their typed answer matches AI answers they were given.
+      db.exec(`
+        ALTER TABLE homework_submissions ADD COLUMN ai_declared INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE homework_submissions ADD COLUMN ai_help_count INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE homework_submissions ADD COLUMN ai_overlap REAL;
+      `)
+    }
   }
 ]
 

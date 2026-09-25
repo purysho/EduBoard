@@ -73,6 +73,8 @@ test('every interface string on the page has a Chinese translation', () => {
   for (const m of tabs.matchAll(/\['\w+', '([^']+)'\]/g)) keys.add(m[1])
   const statuses = /const STATUS_LABELS = \{([^}]*)\}/.exec(page)[1]
   for (const m of statuses.matchAll(/'([^']+)'/g)) keys.add(m[1])
+  const prompts = /const QUICK_PROMPTS = \[([\s\S]*?)\n\]/.exec(page)[1]
+  for (const m of prompts.matchAll(/'([^']+)'/g)) keys.add(m[1])
   const languages = /const LANGUAGES = \[([\s\S]*?)\n\]/.exec(page)[1]
   for (const m of languages.matchAll(/\['\w+', '([^']+)'\]/g)) keys.add(m[1])
 

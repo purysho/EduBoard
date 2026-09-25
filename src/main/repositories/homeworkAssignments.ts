@@ -164,6 +164,9 @@ export function listSubmissionsForAssignment(
       feedback: submission?.feedback ?? null,
       gradedAt: submission?.gradedAt ?? null,
       portfolio: submission?.portfolio ?? false,
+      aiDeclared: submission?.aiDeclared ?? false,
+      aiHelpCount: submission?.aiHelpCount ?? 0,
+      aiOverlap: submission?.aiOverlap ?? null,
       studentName: `${student.firstName} ${student.lastName}`
     }
   })
@@ -207,6 +210,9 @@ export function setSubmissionGrade(input: SetHomeworkSubmissionGradeInput): Home
       textAnswer: null,
       fileName: null,
       portfolio: false,
+      aiDeclared: false,
+      aiHelpCount: 0,
+      aiOverlap: null,
       ...patch
     }
     db.insert(homeworkSubmissions).values(row).run()
@@ -242,6 +248,9 @@ export function upsertSubmissionFromPortal(input: {
   fileName: string | null
   grade: string | null
   feedback: string | null
+  aiDeclared?: boolean
+  aiHelpCount?: number
+  aiOverlap?: number | null
 }): void {
   const db = getDb()
   const now = nowIso()
@@ -263,6 +272,10 @@ export function upsertSubmissionFromPortal(input: {
     fileName: input.fileName,
     grade: input.grade,
     feedback: input.feedback,
+    // An older Portal doesn't send these; treat that as "no AI recorded".
+    aiDeclared: input.aiDeclared ?? false,
+    aiHelpCount: input.aiHelpCount ?? 0,
+    aiOverlap: input.aiOverlap ?? null,
     updatedAt: now
   }
 
@@ -336,7 +349,10 @@ export function setSubmissionStatus(input: SetHomeworkSubmissionStatusInput): Ho
     grade: null,
     feedback: null,
     gradedAt: null,
-    portfolio: false
+    portfolio: false,
+    aiDeclared: false,
+    aiHelpCount: 0,
+    aiOverlap: null
   }
   db.insert(homeworkSubmissions).values(row).run()
   return row
