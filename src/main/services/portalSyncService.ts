@@ -16,7 +16,7 @@ import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
-import { portalUrlProblem } from '@shared/portalUrl'
+import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
@@ -49,7 +49,7 @@ function readHomeworkFile(filePath: string | null): string | null {
 
 function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } {
   const settings = getSettings()
-  const portalUrl = settings.portalUrl.trim().replace(/\/$/, '')
+  const portalUrl = normalizePortalUrl(settings.portalUrl)
   const portalSyncSecret = settings.portalSyncSecret.trim()
   if (!portalUrl || !portalSyncSecret) throw new PortalNotConfiguredError()
   // Never send the secret or student data over an unencrypted connection.

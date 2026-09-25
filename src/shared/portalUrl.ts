@@ -4,9 +4,26 @@
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1'])
 
+/** The address as it will be used: "portal.school.edu" becomes
+ * "https://portal.school.edu" (and a bare localhost address becomes http://, for the
+ * local test Portal), with no trailing slash. Anything else is returned as typed so
+ * portalUrlProblem can explain what's wrong with it. */
+export function normalizePortalUrl(value: string): string {
+  let url = value.trim()
+  if (!url) return ''
+  // Only a missing scheme is filled in. "javascript:…" or "mailto:…" already has one;
+  // "localhost:4790" doesn't (a colon followed by a port number isn't a scheme).
+  const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(url) || /^[a-z][a-z0-9+.-]*:(?!\d)/i.test(url)
+  if (!hasScheme) {
+    const host = url.split(/[/:]/)[0].toLowerCase()
+    url = `${LOCAL_HOSTS.has(host) ? 'http' : 'https'}://${url}`
+  }
+  return url.replace(/\/+$/, '')
+}
+
 /** Why this Portal address can't be used, or null if it's fine. Empty means "not set". */
 export function portalUrlProblem(value: string): string | null {
-  const trimmed = value.trim()
+  const trimmed = normalizePortalUrl(value)
   if (!trimmed) return null
   let url: URL
   try {

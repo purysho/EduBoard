@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import type { AiConnectionConfig, AiConnectionTestResult, AppSettings } from '@shared/types'
-import { portalUrlProblem } from '@shared/portalUrl'
+import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -75,7 +75,8 @@ export function SettingsPage(): React.JSX.Element {
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
-    if (form) await updateSettings.mutateAsync(form)
+    if (form)
+      await updateSettings.mutateAsync({ ...form, portalUrl: normalizePortalUrl(form.portalUrl) })
   }
 
   if (isLoading || !form) return <Spinner />
@@ -211,6 +212,13 @@ export function SettingsPage(): React.JSX.Element {
                 {portalUrlError && (
                   <p className="mt-1 text-xs text-[var(--color-danger)]">{portalUrlError}</p>
                 )}
+                {!portalUrlError &&
+                  form.portalUrl.trim() &&
+                  normalizePortalUrl(form.portalUrl) !== form.portalUrl.trim() && (
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      Will connect to {normalizePortalUrl(form.portalUrl)}
+                    </p>
+                  )}
               </FormRow>
               <FormRow
                 label="Portal sync secret"
