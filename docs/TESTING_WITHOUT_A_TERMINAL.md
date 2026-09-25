@@ -54,11 +54,16 @@ Nothing touches the live site or real students.
    can join as a student.
 4. To connect the desktop app to this test copy, go to **Settings**:
    - **Portal URL:** `http://localhost:4790`
-   - **Portal sync secret:** the one shown in the window. It's already copied, so
-     just paste it.
+   - **Portal sync secret:** the black window that opened when you double-clicked
+     `Start-Test-Portal.cmd` shows a line starting **Portal sync secret:**, followed
+     by a 48-character code. It's already copied, so press Ctrl+V. It's also saved in
+     `portal\local-test\settings.json` as `"syncSecret"`. (This is not the
+     "digest" shown on GitHub. That's just a checksum of the download.)
 
    Then **Publish to Portal**. Your classes replace the demo class. Remember to
-   switch Settings back to `https://portal.edu-board.com` afterwards.
+   switch Settings back to `https://portal.edu-board.com` afterwards, with that
+   Portal's own sync secret: the `SYNC_SECRET` set on the server (usually in the
+   Portal folder's `.env` file).
 
 5. Close the window to stop it. Everything is kept in `portal\local-test`. Delete that
    folder to start from scratch.
