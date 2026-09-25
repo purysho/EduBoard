@@ -127,6 +127,19 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
       download folder, and executables were opened directly. Names are now reduced to a
       safe base name and only document/media types open directly
 - [ ] School single sign-on — depends on which identity provider a school uses
+      (deferred: invite codes are enough for now)
+
+## Student profiles and upload safety
+
+- [x] Student profiles on the Portal: photo, preferred name, pronouns, about me, date of
+      birth, learning goals, "anything my teacher should know", preferred language,
+      private notes. Teacher sees them on the desktop student page, minus private notes
+      and minus the birth year (birthday only if the student opts in)
+- [x] Profile photos: JPEG/PNG/WebP only, content-checked, decompression-bomb limit,
+      re-encoded to 512×512 WebP (strips EXIF/GPS and hidden payloads)
+- [x] Uploads checked by content on the Portal and again on the desktop before opening:
+      disguised programs, macro-enabled Office files and RTF embedded objects refused;
+      Windows downloads get Mark of the Web (Office Protected View)
 
 ## Post-roadmap additions (this pass)
 

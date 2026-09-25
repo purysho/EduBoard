@@ -143,6 +143,27 @@ and attendance rate, homework titles/descriptions/due dates, and invite codes. N
 guardian contact info, no detailed score history, no teacher notes — deliberately a
 narrow slice, not a mirror of the full desktop database.
 
+Plus what students add themselves: homework submissions, messages, and their profile.
+
+**Student profiles.** After signing up, a student can fill in (all optional) a photo,
+preferred name, pronouns, an "about me", date of birth, learning goals, "anything my
+teacher should know", a preferred language (also the default for translating
+messages), and private notes. The teacher sees the profile on the student's page in the
+desktop app, except the private notes (never shared) and the date of birth (shared
+only as month and day, and only if the student ticks the box). Photos must be JPEG,
+PNG or WebP. They're checked by content, capped at 8 MB, and rebuilt from their pixels
+as a 512×512 WebP, which removes location data and anything hidden in the file.
+
+**Uploaded files are checked by content, not just by name.** A submission must be a
+document, image, audio or video type, and its bytes must match that type: a program
+renamed `essay.docx` is refused, as are Office files with macros and RTF files with
+embedded objects. The desktop app re-checks every file before opening it, and on
+Windows marks it as downloaded from the internet, so Office opens it in Protected View.
+
+**Photo processing uses [sharp](https://sharp.pixelplumbing.com/)**, which `npm install`
+fetches as a prebuilt binary for Linux, macOS and Windows. Nothing else to install on
+the server.
+
 ## Recovery, not self-service email resets
 
 There's no "forgot password" email flow by design — this app has no mail service, and
