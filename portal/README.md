@@ -34,7 +34,7 @@ tradeoffs if you want them again.
 2. **Point a domain at it.** Buy/reuse a domain, add an A record to the VPS's IP. You
    need a domain for HTTPS (a magic-login link or password over plain HTTP would leak
    credentials to anyone on the network).
-3. **Install Node.js** (18+) on the VPS.
+3. **Install Node.js** (22+) on the VPS.
 4. **Copy this `portal/` directory** to the VPS (e.g. `git clone` the whole EduBoard
    repo, or `scp` just this folder — it doesn't need the rest of the repo).
 5. **Install dependencies:**
@@ -54,6 +54,22 @@ tradeoffs if you want them again.
    All three secrets must be kept private — `SYNC_SECRET` in particular lets whoever has
    it overwrite that teacher's entire dataset, and `ADMIN_SECRET` lets whoever has it
    create and remove teacher accounts on this Portal.
+
+   Optional settings (the defaults suit one teacher's classes behind Caddy):
+
+   | Variable | Default | What it does |
+   |---|---|---|
+   | `PORTAL_DATA_DIR` | `portal/data` | Where the database and every upload live. Back up this one folder. |
+   | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
+   | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |
+   | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |
+   | `RATE_SECRET_URL_PER_IP` | `60` | Invite-code and QR-login requests per IP per 15 min. |
+   | `RATE_BAD_SECRET_PER_IP` | `20` | Wrong sync/admin secrets per IP per 15 min. Correct ones never count. |
+   | `RATE_AI_PER_MINUTE` | `6` | AI chat + translation requests per student account per minute. |
+   | `RATE_AI_PER_DAY` | `100` | The same, per 24 hours. These calls spend your own AI key. |
+   | `RATE_PASSWORD_CHANGE` | `5` | Password-change attempts per account per 15 min. |
+
+   Rate limits are kept in memory, so restarting the Portal resets them.
 7. **Put it behind HTTPS.** The simplest option is
    [Caddy](https://caddyserver.com/) — install it, then a `Caddyfile` like:
    ```
@@ -133,15 +149,14 @@ narrow slice, not a mirror of the full desktop database.
 There's no "forgot password" email flow by design — this app has no mail service, and
 mail deliverability from a fresh VPS is its own headache. Instead:
 
-- **Forgot password** → from the desktop app, call the teacher-triggered reset
-  (`POST /api/sync/reset-password` with `SYNC_SECRET`) — a "Reset a family's password"
-  action belongs in the desktop app's Settings once you want it; for now this is a raw
-  API call, e.g.:
-  ```bash
-  curl -X POST https://portal.yourdomain.com/api/sync/reset-password \
-    -H "Content-Type: application/json" -H "X-Sync-Secret: <your secret>" \
-    -d '{"username":"theirusername","newPassword":"a-temporary-password"}'
-  ```
+- **Forgot password, or locked out** → in the desktop app, Settings → Portal sync →
+  "Reset a student's Portal password". Enter their username, click Generate (or type a
+  temporary password), and give it to them. The reset signs that account out on every
+  device. It only works for accounts linked to your own students. Students can then
+  pick their own password under Account on the Portal.
+- **Too many wrong passwords** → the account is paused for up to 15 minutes, even for
+  the right password. Waiting works. A reset from the desktop app gives them a password
+  that works once the pause ends.
 - **Lost the saved QR image** → the family just logs in with username/password and
   downloads a fresh one; no teacher involvement needed at all.
 - **Lost/revoked invite strip** → generate and print a new batch from the class's
@@ -155,5 +170,9 @@ cd portal
 npm install
 SESSION_SECRET=test SYNC_SECRET=test ADMIN_SECRET=test PORT=4790 node server.js
 ```
+
+Automated tests (`npm test`) start real Portal processes on throwaway data folders and
+cover the security rules: rate limits, session revocation, and one teacher never
+touching another's data. CI runs them on every pull request.
 Then visit `http://localhost:4790` — you'll see a login screen until an invite is
 redeemed (`http://localhost:4790/?code=<a code your desktop app generated>`).

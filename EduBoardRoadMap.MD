@@ -97,6 +97,21 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - Messages still aren't fully partitioned if one family has children under two
   different teachers on the same Portal (rare edge case)
 
+## Security hardening before real student use
+
+- [x] Rate limits: login (per IP and per username), invite/QR secret URLs, sync/admin
+      secret guessing (failures only), per-student AI burst + daily caps
+- [x] Constant-time admin secret check; bcrypt timing equalised for unknown usernames
+- [x] Portal page escapes every teacher-, student- and AI-supplied string. AI study
+      guides and chat replies were rendered as raw HTML, a stored-XSS risk
+- [x] Logout and any 401 clear the offline cache, so a shared computer never shows the
+      previous student's data
+- [x] Student self-service password change; a change or teacher reset signs out every
+      session. Teacher reset is now a button in desktop Settings (was curl-only)
+- [x] Security headers, loopback-only proxy trust, JSON errors without stack traces,
+      20 MB submission cap, minimum password length, `PORTAL_DATA_DIR`
+- [x] Portal test suite (`portal/test`, 20 tests) running in CI
+
 ## Post-roadmap additions (this pass)
 
 - [x] Inline translation on parent↔teacher messaging — either side can translate a
