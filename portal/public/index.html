@@ -25,7 +25,23 @@
   .topbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #fff; border-bottom: 1px solid var(--border); }
   .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
   .brand { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
-  .wrap { max-width: 520px; margin: 0 auto; padding: 40px 20px 60px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 32px 16px 60px; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 -4px 20px; padding: 4px; background: #fff; border: 1px solid var(--border); border-radius: 12px; position: sticky; top: 8px; z-index: 5; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  button.tab { width: auto; margin: 0; padding: 8px 14px; background: transparent; color: var(--muted); border-radius: 8px; font-size: .88rem; white-space: nowrap; flex-shrink: 0; }
+  button.tab:hover:not(:disabled) { background: #f1f5f9; }
+  button.tab.active { background: #eef2ff; color: var(--primary-dark); }
+  .tab-count { display: inline-block; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: #fee2e2; color: #991b1b; font-size: .72rem; margin-left: 2px; }
+  button.chip { width: auto; margin: 0; padding: 7px 12px; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; }
+  button.chip:hover:not(:disabled) { background: #f8fafc; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .card.list-card { padding: 4px 0; }
+  button.list-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 12px 18px; background: transparent; color: var(--ink); border-radius: 0; text-align: left; font-weight: 400; }
+  button.list-row + button.list-row { border-top: 1px solid var(--border); }
+  button.list-row:hover:not(:disabled) { background: #f8fafc; }
+  .grade-big { font-size: 1.3rem; font-weight: 700; }
+  .student-heading { font-size: 1.2rem; margin: 24px 0 0; }
+  .highlight { box-shadow: 0 0 0 3px rgb(99 102 241 / .35); transition: box-shadow .3s; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; letter-spacing: -.01em; }
   p.hint { color: var(--muted); margin: 0 0 24px; font-size: .92rem; line-height: 1.5; }
   label { display: block; font-size: .82rem; font-weight: 600; margin: 16px 0 6px; color: #334155; }
@@ -39,9 +55,13 @@
   .error { color: #dc2626; font-size: .85rem; margin-top: 10px; }
   .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgb(15 23 42 / .04); }
   .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .row > strong { min-width: 0; overflow-wrap: anywhere; }
+  .pills { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
   .muted { color: var(--muted); font-size: .85rem; }
   .desc { color: #475569; font-size: .87rem; line-height: 1.5; margin: 8px 0 0; }
-  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+  .tab-count[hidden] { display: none; }
+  input[type=radio], input[type=checkbox] { width: auto; flex-shrink: 0; margin: 0; }
+  .pill { white-space: nowrap; flex-shrink: 0; display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
   .pill.not_started { background: #f1f5f9; color: #64748b; }
   .pill.submitted { background: #fef3c7; color: #92400e; }
   .pill.done { background: #d1fae5; color: #065f46; }
@@ -166,8 +186,13 @@ async function updateNotificationBadge() {
   document.title = unread > 0 ? `(${unread}) ${BASE_TITLE}` : BASE_TITLE
   el.innerHTML =
     unread > 0
-      ? `<a href="#messages-section" class="notif-pill">${unread} new message${unread === 1 ? '' : 's'} from your teacher</a>`
+      ? `<a href="#messages" class="notif-pill">${unread} new message${unread === 1 ? '' : 's'} from your teacher</a>`
       : ''
+  const count = document.getElementById('unread-count')
+  if (count) {
+    count.hidden = unread === 0
+    count.textContent = String(unread)
+  }
 }
 
 function lastSyncedLabel() {
@@ -368,13 +393,13 @@ function profileCardHtml(p, studentName) {
           <strong>${esc(p.preferredName || studentName)}</strong>${p.pronouns ? ` <span class="muted">(${esc(p.pronouns)})</span>` : ''}
           <p class="muted" style="margin:2px 0 0">${p.bio ? esc(p.bio) : empty ? 'Set up your profile so your teacher gets to know you.' : ''}</p>
         </div>
-        <button class="secondary" style="width:auto; margin:0" data-profile-toggle="${id}">${empty ? 'Set up profile' : 'Edit profile'}</button>
+        <button class="chip" data-profile-toggle="${id}">${empty ? 'Set up profile' : 'Edit profile'}</button>
       </div>
       <form data-profile-form="${id}" style="display:${open ? 'block' : 'none'}; margin-top:14px">
         <label>Photo <span class="muted">(.jpg, .png or .webp, up to 8 MB)</span></label>
         <div style="display:flex; gap:8px; align-items:center">
           <input type="file" data-photo accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-          ${p.hasPhoto ? `<button type="button" class="secondary" style="width:auto; margin:0" data-photo-remove>Remove</button>` : ''}
+          ${p.hasPhoto ? `<button type="button" class="chip" data-photo-remove>Remove</button>` : ''}
         </div>
         <p class="field-note">Photos are resized and cleaned (location data removed) before they're saved.</p>
         <label>Preferred name</label>
@@ -421,6 +446,36 @@ async function loadProfiles(me) {
   if (greeting && first) greeting.textContent = `Welcome back, ${first.preferredName || names[first.studentId] || ''}`.trim()
   const lang = document.getElementById('msg-lang')
   if (lang && first?.preferredLanguage) lang.value = first.preferredLanguage
+
+  // A gentle prompt on Home until each profile is started (or the student says not now).
+  const nudge = document.getElementById('profile-nudge')
+  const pending = profiles.find((p) => profileIsEmpty(p) && !wasDismissed(p.studentId))
+  if (nudge) {
+    nudge.innerHTML = pending
+      ? `<div class="card" style="background:#eef2ff; border-color:#c7d2fe">
+           <strong>Set up your profile</strong>
+           <p class="muted" style="margin:4px 0 0">Add a photo and a few words so your teacher gets to know you. Everything is optional.</p>
+           <div class="chip-row">
+             <button class="chip" data-nudge-go>Set up profile</button>
+             <button class="chip" data-nudge-later>Not now</button>
+           </div>
+         </div>`
+      : ''
+    if (pending) {
+      nudge.querySelector('[data-nudge-go]').onclick = () => {
+        showTab('account')
+        const form = box.querySelector(`[data-profile-form="${CSS.escape(pending.studentId)}"]`)
+        if (form) {
+          form.style.display = 'block'
+          form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }
+      nudge.querySelector('[data-nudge-later]').onclick = () => {
+        markDismissed(pending.studentId)
+        nudge.innerHTML = ''
+      }
+    }
+  }
 
   box.querySelectorAll('[data-profile-toggle]').forEach((btn) => {
     btn.onclick = () => {
@@ -559,13 +614,13 @@ function homeworkCardHtml(h, studentId) {
     <div class="card">
       <div class="row" data-toggle="${detailId}" style="cursor:pointer">
         <strong>${esc(h.title)}</strong>
-        <span>
+        <span class="pills">
           ${h.timing === 'late' ? '<span class="pill late">Late</span>' : ''}
           ${h.timing === 'missing' ? '<span class="pill missing">Missing</span>' : ''}
           <span class="pill ${esc(h.status)}">${esc(h.status.replace('_', ' '))}</span>
         </span>
       </div>
-      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${esc(h.dueDate)}</p>` : ''}
+      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${esc(formatDue(h.dueDate))}</p>` : ''}
       <div id="detail-${detailId}" style="display:none; margin-top:10px">
         ${h.description ? `<p class="desc">${esc(h.description)}</p>` : ''}
         ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} (from your teacher)</a></p>` : ''}
@@ -688,20 +743,25 @@ function speak(text, buttonEl) {
     alert('Audio isn’t supported in this browser.')
     return
   }
+  // Remember the button's own label so "Stop" can hand it back afterwards.
+  if (buttonEl && !buttonEl.dataset.label) buttonEl.dataset.label = buttonEl.textContent
+  const restore = () => {
+    if (buttonEl) buttonEl.textContent = buttonEl.dataset.label
+  }
   if (currentUtterance) {
     window.speechSynthesis.cancel()
     currentUtterance = null
-    if (buttonEl) buttonEl.textContent = '🔊 Listen'
+    restore()
     return
   }
   const utter = new SpeechSynthesisUtterance(text)
   utter.rate = 0.95
   utter.onend = () => {
     currentUtterance = null
-    if (buttonEl) buttonEl.textContent = '🔊 Listen'
+    restore()
   }
   currentUtterance = utter
-  if (buttonEl) buttonEl.textContent = '⏹ Stop'
+  if (buttonEl) buttonEl.textContent = 'Stop'
   window.speechSynthesis.speak(utter)
 }
 
@@ -721,23 +781,17 @@ async function loadMaterials() {
     <div class="card">
       <div class="row"><strong>${esc(m.title)}</strong><span class="muted">${esc(m.className)}</span></div>
       ${
-        m.studyGuide
-          ? `<div style="margin-top:8px">
-               <button class="secondary" data-toggle="${guideId}">Show study guide</button>
-               <button class="secondary" data-listen="${guideId}">🔊 Listen</button>
-               <div id="detail-${guideId}" class="desc" style="display:none; margin-top:8px; white-space:pre-wrap">${esc(m.studyGuide)}</div>
+        m.studyGuide || m.flashcards || m.practiceQuiz
+          ? `<div class="chip-row">
+               ${m.studyGuide ? `<button class="chip" data-toggle="${guideId}">Study guide</button>` : ''}
+               ${m.studyGuide ? `<button class="chip" data-listen="${guideId}">Listen</button>` : ''}
+               ${m.flashcards ? `<button class="chip" data-practice-cards="${i}">Flashcards (${m.flashcards.length})</button>` : ''}
+               ${m.practiceQuiz ? `<button class="chip" data-practice-quiz="${i}">Practice quiz (${m.practiceQuiz.length})</button>` : ''}
              </div>`
-          : '<p class="muted" style="margin-top:6px">No study guide yet for this one.</p>'
+          : '<p class="muted" style="margin-top:6px">No study aids for this one yet.</p>'
       }
-      ${
-        m.flashcards || m.practiceQuiz
-          ? `<div style="margin-top:8px">
-               ${m.flashcards ? `<button class="secondary" data-practice-cards="${i}">Flashcards (${m.flashcards.length})</button>` : ''}
-               ${m.practiceQuiz ? `<button class="secondary" data-practice-quiz="${i}">Practice quiz (${m.practiceQuiz.length})</button>` : ''}
-               <div id="practice-${i}" style="margin-top:8px"></div>
-             </div>`
-          : ''
-      }
+      ${m.studyGuide ? `<div id="detail-${guideId}" class="desc" style="display:none; margin-top:10px; white-space:pre-wrap">${esc(m.studyGuide)}</div>` : ''}
+      <div id="practice-${i}" style="margin-top:8px"></div>
     </div>`
     })
     .join('')
@@ -777,10 +831,10 @@ function renderFlashcards(container, cards) {
         <p class="desc" style="margin:0; font-size:1rem">${esc(flipped ? card.back : card.front)}</p>
       </div>
       <div style="display:flex; gap:6px; margin-top:6px">
-        <button class="secondary" data-prev ${pos === 0 ? 'disabled' : ''}>← Prev</button>
-        <button class="secondary" data-next ${pos === cards.length - 1 ? 'disabled' : ''}>Next →</button>
-        <button class="secondary" data-shuffle>Shuffle</button>
-        <button class="secondary" data-close>Close</button>
+        <button class="chip" data-prev ${pos === 0 ? 'disabled' : ''}>← Prev</button>
+        <button class="chip" data-next ${pos === cards.length - 1 ? 'disabled' : ''}>Next →</button>
+        <button class="chip" data-shuffle>Shuffle</button>
+        <button class="chip" data-close>Close</button>
       </div>`
     container.querySelector('[data-flip]').onclick = () => { flipped = !flipped; draw() }
     container.querySelector('[data-prev]').onclick = () => { pos--; flipped = false; draw() }
@@ -819,7 +873,7 @@ function renderPracticeQuiz(container, questions) {
         )
         .join('')}
       <button type="submit">Check answers</button>
-      <button type="button" class="secondary" data-close>Close</button>
+      <div class="chip-row"><button type="button" class="chip" data-close>Close</button></div>
       <p data-score style="font-weight:600"></p>
     </form>`
   const form = container.querySelector('[data-practice-form]')
@@ -862,90 +916,263 @@ async function loadClassStory() {
         .join('')
 }
 
+// ---- Tabs, dates, "due soon" --------------------------------------------------------------
+const TABS = [
+  ['home', 'Home'],
+  ['classwork', 'Classwork'],
+  ['study', 'Study'],
+  ['grades', 'Grades'],
+  ['messages', 'Messages'],
+  ['account', 'Account']
+]
+
+// The open tab lives in the URL hash (#classwork), so reloads and the back button keep
+// the student where they were.
+function showTab(id) {
+  if (!TABS.some(([t]) => t === id)) id = 'home'
+  document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== id))
+  document.querySelectorAll('[data-tab]').forEach((t) => {
+    const active = t.dataset.tab === id
+    t.classList.toggle('active', active)
+    t.setAttribute('aria-selected', String(active))
+  })
+  if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id)
+  // Loading the thread marks the teacher's messages as read, so only do it when the
+  // student actually opens Messages. Otherwise the unread count would vanish unseen.
+  if (id === 'messages') loadMessages()
+}
+
+function setupTabs() {
+  document.querySelectorAll('[data-tab]').forEach((t) => (t.onclick = () => showTab(t.dataset.tab)))
+  window.onhashchange = () => showTab(location.hash.slice(1))
+  showTab(location.hash.slice(1) || 'home')
+}
+
+/** Local calendar date from 'YYYY-MM-DD' (never parsed as UTC, which would shift a day). */
+function parseDay(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '')
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null
+}
+
+function daysFromToday(day) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.round((day - today) / 86400000)
+}
+
+/** "Mon 28 Sep · in 3 days", "Today", "Yesterday", "2 days ago". */
+function formatDue(dueDate) {
+  const day = parseDay(dueDate)
+  if (!day) return ''
+  const label = day.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+  const n = daysFromToday(day)
+  const rel =
+    n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n > 1 ? `in ${n} days` : `${-n} days ago`
+  return `${label} · ${rel}`
+}
+
+/** Missing work first, then anything not yet started that's due in the next 7 days. */
+function dueSoonItems(all) {
+  return all
+    .filter((h) => {
+      if (h.timing === 'missing') return true
+      if (h.status !== 'not_started') return false
+      const day = parseDay(h.dueDate)
+      if (!day) return false
+      const n = daysFromToday(day)
+      return n >= 0 && n <= 7
+    })
+    .sort((a, b) => {
+      if ((a.timing === 'missing') !== (b.timing === 'missing')) return a.timing === 'missing' ? -1 : 1
+      return (a.dueDate || '').localeCompare(b.dueDate || '')
+    })
+}
+
+function dueSummary(all) {
+  const missing = all.filter((h) => h.timing === 'missing').length
+  const soon = dueSoonItems(all).length - missing
+  const parts = []
+  if (missing) parts.push(`${missing} missing`)
+  if (soon) parts.push(`${soon} due this week`)
+  return parts.length ? parts.join(' · ') : "You're all caught up."
+}
+
+function dueSoonHtml(all, multi) {
+  const items = dueSoonItems(all)
+  if (!items.length) {
+    return '<div class="card"><p class="muted" style="margin:0">Nothing due in the next 7 days, and nothing missing.</p></div>'
+  }
+  return `<div class="card list-card">${items
+    .map(
+      (h) => `
+    <button type="button" class="list-row" data-open-hw="${esc(h.id)}" data-student="${esc(h.studentId)}">
+      <span style="min-width:0">
+        <strong>${esc(h.title)}</strong>
+        <span class="muted" style="display:block">${esc(h.className)}${multi ? ' · ' + esc(h.studentName) : ''} · ${esc(formatDue(h.dueDate))}</span>
+      </span>
+      ${h.timing === 'missing' ? '<span class="pill missing">Missing</span>' : '<span class="pill not_started">To do</span>'}
+    </button>`
+    )
+    .join('')}</div>`
+}
+
 function renderDashboard(me) {
   if (!me.students.length) {
     app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
     return
   }
+  const multi = me.students.length > 1
+  const allHomework = me.students.flatMap((s) =>
+    s.classes.flatMap((c) => (c.homework || []).map((h) => ({ ...h, className: c.name, studentId: s.studentId, studentName: s.studentName })))
+  )
+  const missingCount = allHomework.filter((h) => h.timing === 'missing').length
+
   app.innerHTML =
     offlineBannerHtml() +
     `<div id="notif-badge"></div>
      <h1 id="greeting">Welcome back</h1>
-     <div id="profiles"></div>
-     <div class="section-title">Class Story</div>
-     <div id="story">Loading…</div>
-     <div style="display:none">
-       <div class="section-title">Portfolio</div>
-       <div id="portfolio"></div>
-     </div>
-     <div style="display:none">
-       <div class="section-title">Materials</div>
-       <div id="materials"></div>
-     </div>` +
-    me.students
-      .map(
-        (s) => `
-    <h1>${esc(s.studentName)}</h1>
-    ${s.classes
-      .map(
-        (c) => `
-      <div class="section-title">${esc(c.name)}</div>
-      <div class="card">
-        <div class="row"><strong>Grade</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + esc(c.letter ?? '') + ')' : 'No grade yet'}</span></div>
-        <div class="row" style="margin-top:6px"><strong>Attendance</strong><span class="muted">${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
-      </div>
-        ${c.homework ? homeworkByTopicHtml(c.homework, s.studentId) : ''}`
-      )
-      .join('')
-  }
-    <div class="section-title">Study Helper</div>
-    <div class="card">
-      <div id="ai-chat-${esc(s.studentId)}" class="ai-chat"></div>
-      <form data-ai-chat="${esc(s.studentId)}" style="margin-top:10px">
-        <textarea rows="2" placeholder="Ask about your homework or a topic you're stuck on…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
-        <button type="submit">Ask</button>
-        <p class="error"></p>
-      </form>
-    </div>`
-      )
-      .join('') +
-    `<div class="section-title" id="messages-section">Messages</div>
-     <div class="card">
-       <div style="display:flex; justify-content:flex-end; margin-bottom:6px">
-         <select id="msg-lang" style="font-size:.75rem; padding:2px 4px">
-           ${LANGUAGES.map(([v, label]) => `<option value="${v}">Translate into ${label}</option>`).join('')}
-         </select>
+     <p class="hint" style="margin-bottom:16px">${esc(dueSummary(allHomework))}</p>
+     <nav class="tabs" role="tablist" aria-label="Sections">
+       ${TABS.map(
+         ([id, label]) =>
+           `<button type="button" role="tab" class="tab" data-tab="${id}" aria-controls="panel-${id}">${label}${
+             id === 'classwork' && missingCount ? ` <span class="tab-count">${missingCount}</span>` : ''
+           }${id === 'messages' ? ' <span class="tab-count" id="unread-count" hidden></span>' : ''}</button>`
+       ).join('')}
+     </nav>
+
+     <section class="panel" id="panel-home" data-panel="home" role="tabpanel">
+       <div id="profile-nudge"></div>
+       <div class="section-title">Due soon</div>
+       ${dueSoonHtml(allHomework, multi)}
+       <div class="section-title">Class Story</div>
+       <div id="story">Loading…</div>
+     </section>
+
+     <section class="panel" id="panel-classwork" data-panel="classwork" role="tabpanel" hidden>
+       ${me.students
+         .map(
+           (s) => `
+         ${multi ? `<h2 class="student-heading">${esc(s.studentName)}</h2>` : ''}
+         ${s.classes
+           .map(
+             (c) => `
+           <div class="section-title">${esc(c.name)}</div>
+           ${c.homework && c.homework.length ? homeworkByTopicHtml(c.homework, s.studentId) : '<p class="muted">No homework yet.</p>'}`
+           )
+           .join('')}`
+         )
+         .join('')}
+     </section>
+
+     <section class="panel" id="panel-study" data-panel="study" role="tabpanel" hidden>
+       <div style="display:none">
+         <div class="section-title">Materials</div>
+         <div id="materials"></div>
        </div>
-       <div id="messages">Loading…</div>
-       <form id="msg-form" style="margin-top:10px">
-         <textarea id="msg-body" rows="2" placeholder="Message the teacher…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
-         <button type="submit">Send</button>
-       </form>
-     </div>
-     <div class="section-title">Email updates</div>
-     <div class="card">
-       <p class="muted" style="margin:0 0 8px">Get a weekly summary emailed to you — grades, attendance, what's due, and any class updates.</p>
-       <form id="email-form" style="display:flex; gap:8px">
-         <input id="email-input" type="email" placeholder="you@example.com" style="flex:1; box-sizing:border-box; padding:10px; border:1px solid var(--border); border-radius:10px; font:inherit" />
-         <button type="submit" style="width:auto; margin-top:0">Save</button>
-       </form>
-       <p id="email-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
-     </div>
-     <div class="section-title">Account</div>
-     <div class="card">
-       <p class="muted" style="margin:0 0 8px">Change your password. This signs you out on every other device and cancels any quick-login QR codes.</p>
-       <form id="password-form">
-         <label>Current password</label>
-         <input id="pw-current" type="password" autocomplete="current-password" required />
-         <label>New password (at least 8 characters)</label>
-         <input id="pw-new" type="password" autocomplete="new-password" minlength="8" required />
-         <button type="submit">Change password</button>
-       </form>
-       <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
-     </div>
-     <button class="secondary" id="qr">Get quick-login QR</button>
-     <button class="secondary" id="logout">Log out</button>
-     <div id="qrbox"></div>`
+       ${me.students
+         .map(
+           (s) => `
+         <div class="section-title">Study Helper${multi ? ` · ${esc(s.studentName)}` : ''}</div>
+         <div class="card">
+           <p class="muted" style="margin:0 0 8px">Ask about your homework or class materials. Answers cite your teacher's materials where they can.</p>
+           <div id="ai-chat-${esc(s.studentId)}" class="ai-chat"></div>
+           <form data-ai-chat="${esc(s.studentId)}" style="margin-top:10px">
+             <textarea rows="2" placeholder="Ask about your homework or a topic you're stuck on…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+             <button type="submit">Ask</button>
+             <p class="error"></p>
+           </form>
+         </div>`
+         )
+         .join('')}
+     </section>
+
+     <section class="panel" id="panel-grades" data-panel="grades" role="tabpanel" hidden>
+       ${me.students
+         .map(
+           (s) => `
+         ${multi ? `<h2 class="student-heading">${esc(s.studentName)}</h2>` : ''}
+         ${s.classes
+           .map(
+             (c) => `
+           <div class="card">
+             <div class="row"><strong>${esc(c.name)}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
+             <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? 'Letter grade ' + esc(c.letter) : 'No grade yet'}</span><span class="muted">Attendance ${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
+           </div>`
+           )
+           .join('')}`
+         )
+         .join('')}
+       <div style="display:none">
+         <div class="section-title">Portfolio</div>
+         <div id="portfolio"></div>
+       </div>
+     </section>
+
+     <section class="panel" id="panel-messages" data-panel="messages" role="tabpanel" hidden>
+       <div class="card">
+         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px">
+           <strong>Your teacher</strong>
+           <select id="msg-lang" aria-label="Translate messages into" style="font-size:.75rem; padding:4px 6px; width:auto; max-width:100%; min-width:0">
+             ${LANGUAGES.map(([v, label]) => `<option value="${v}">Translate into ${label}</option>`).join('')}
+           </select>
+         </div>
+         <div id="messages">Loading…</div>
+         <form id="msg-form" style="margin-top:10px">
+           <textarea id="msg-body" rows="2" placeholder="Message the teacher…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+           <button type="submit">Send</button>
+         </form>
+       </div>
+     </section>
+
+     <section class="panel" id="panel-account" data-panel="account" role="tabpanel" hidden>
+       <div class="section-title">Profile</div>
+       <div id="profiles"></div>
+       <div class="section-title">Email updates</div>
+       <div class="card">
+         <p class="muted" style="margin:0 0 8px">Get a weekly summary emailed to you — grades, attendance, what's due, and any class updates.</p>
+         <form id="email-form" style="display:flex; gap:8px">
+           <input id="email-input" type="email" placeholder="you@example.com" style="flex:1; box-sizing:border-box; padding:10px; border:1px solid var(--border); border-radius:10px; font:inherit" />
+           <button type="submit" style="width:auto; margin-top:0">Save</button>
+         </form>
+         <p id="email-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
+       </div>
+       <div class="section-title">Password</div>
+       <div class="card">
+         <p class="muted" style="margin:0 0 8px">Change your password. This signs you out on every other device and cancels any quick-login QR codes.</p>
+         <form id="password-form">
+           <label>Current password</label>
+           <input id="pw-current" type="password" autocomplete="current-password" required />
+           <label>New password (at least 8 characters)</label>
+           <input id="pw-new" type="password" autocomplete="new-password" minlength="8" required />
+           <button type="submit">Change password</button>
+         </form>
+         <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
+       </div>
+       <div class="section-title">This device</div>
+       <div class="card">
+         <div style="display:flex; gap:8px; flex-wrap:wrap">
+           <button class="chip" id="qr">Get quick-login QR</button>
+           <button class="chip" id="logout">Log out</button>
+         </div>
+         <div id="qrbox"></div>
+       </div>
+     </section>`
+
+  setupTabs()
+  document.querySelectorAll('[data-open-hw]').forEach((row) => {
+    row.onclick = () => {
+      showTab('classwork')
+      const detailId = `${row.dataset.openHw}-${row.dataset.student}`
+      const detail = document.getElementById('detail-' + detailId)
+      if (!detail) return
+      detail.style.display = 'block'
+      const card = detail.closest('.card')
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      card.classList.add('highlight')
+      setTimeout(() => card.classList.remove('highlight'), 1600)
+    }
+  })
 
   document.querySelectorAll('[data-toggle]').forEach((el) => {
     el.onclick = () => {
@@ -1028,7 +1255,7 @@ function renderDashboard(me) {
               .map((c) => `[${c.number}] ${esc(c.title)}`)
               .join(' · ')}</div>`
           : ''
-        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="secondary" style="margin-top:4px; padding:2px 8px; font-size:.76rem" data-listen-reply>🔊</button>`
+        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="chip" style="margin-top:6px" data-listen-reply>Listen</button>`
         thinking.querySelector('[data-listen-reply]').onclick = (evt) => speak(reply, evt.target)
       } catch (ex) {
         thinking.remove()
@@ -1042,7 +1269,6 @@ function renderDashboard(me) {
   loadClassStory()
   loadPortfolio()
   loadMaterials()
-  loadMessages()
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()
     const input = document.getElementById('msg-body')
