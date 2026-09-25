@@ -216,6 +216,7 @@ Because everything happens over your local WiFi rather than the internet, this w
 - **New resource** → choose a type (**Link**, **File**, or **Note**), give it a title, and fill in the URL or pick a file from your computer (for File) or just write the note (for Note). Add tags (comma-separated) and, optionally, one of your standards to make it easy to find later.
 - Filter by typing in the search box or clicking a tag chip; click a link or file resource to open it in your browser or default app, or click a note to view/edit it.
 - Files are referenced by their path on disk, the same as gradebook submissions — keep the original file where EduBoard can find it.
+- **Study tools (needs an AI key in Settings):** click **Index for Notebook** first. Then **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. Flashcards and quizzes open in a review window where you can read every card and question (the correct answer is ticked) and **Regenerate** or **Remove** them. If the resource is shared with a class, students get them on the Portal to practise with; the practice quiz is self-checked and never counts toward a grade.
 
 ![Resources library](screenshots/resources.png)
 

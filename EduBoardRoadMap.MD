@@ -35,8 +35,7 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
       attendance, and the Trend column shows a Declining/Improving badge when a class's
       swing crosses 8 points so a teacher notices before drafting a comment at all
 - [x] Audio overview — browser-native TTS (Web Speech API), no added cost/infra
-- [ ] AI-assisted homework feedback — first-pass suggestions on a submission before the
-      teacher reviews — NOT yet built
+- [x] AI-assisted homework feedback — see "Classroom + NotebookLM gaps" below
 
 ## Phase 4 — Assessment depth ✅ DONE
 
@@ -93,7 +92,6 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 ## Known gaps carried forward
 
 - Digital portfolio's fuller "running record" scope (photos/files beyond graded work)
-- AI first-pass homework feedback before teacher review
 - Messages still aren't fully partitioned if one family has children under two
   different teachers on the same Portal (rare edge case)
 
@@ -111,6 +109,24 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
 - [x] Security headers, loopback-only proxy trust, JSON errors without stack traces,
       20 MB submission cap, minimum password length, `PORTAL_DATA_DIR`
 - [x] Portal test suite (`portal/test`, 20 tests) running in CI
+
+## Classroom + NotebookLM gaps (this pass)
+
+- [x] Late / Missing status — a due date ends at midnight in the teacher's own time zone
+      (sent on publish). Students see Late/Missing labels on the Portal; the desktop
+      submissions list shows the same, with a missing/late count per assignment
+- [x] AI first-pass feedback — "Draft with AI" on a submission fills the grade and
+      feedback boxes (reads the written answer and PDF/text attachments, grades against
+      the rubric if linked). Saves nothing until the teacher does; flags blank work,
+      unreadable files and attempts to instruct the grader
+- [x] Flashcards and practice quizzes per resource — drafted on the desktop, reviewed in
+      a window with Regenerate/Remove, published with shared resources; students flip
+      cards and self-check the quiz on the Portal (no per-student AI cost)
+- [x] Portal admin page (`/admin.html`) — add, list and remove teachers
+- [x] Security fix: a student's upload name could make the desktop save outside its
+      download folder, and executables were opened directly. Names are now reduced to a
+      safe base name and only document/media types open directly
+- [ ] School single sign-on — depends on which identity provider a school uses
 
 ## Post-roadmap additions (this pass)
 

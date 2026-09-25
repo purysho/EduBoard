@@ -60,6 +60,7 @@ tradeoffs if you want them again.
    | Variable | Default | What it does |
    |---|---|---|
    | `PORTAL_DATA_DIR` | `portal/data` | Where the database and every upload live. Back up this one folder. |
+   | `PORTAL_TIMEZONE` | `UTC` | Only used until a teacher's desktop app publishes once. After that, each teacher's own time zone decides when their due dates end (Late/Missing labels). |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
    | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |
    | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |
@@ -106,23 +107,21 @@ tradeoffs if you want them again.
 ## Multiple teachers on one Portal (a school deployment)
 
 One Portal can serve several teachers — each gets their own sync secret and only ever
-sees their own classes, students, grades, and homework. To add a teacher:
+sees their own classes, students, grades, and homework. To manage teachers, open
+`https://portal.yourdomain.com/admin.html` and enter your `ADMIN_SECRET`. From there you
+can:
 
-```bash
-curl -X POST https://portal.yourdomain.com/api/admin/teachers \
-  -H "X-Admin-Secret: <your ADMIN_SECRET>" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Ms. Chen"}'
-```
+- **Add a teacher.** Their sync secret is shown exactly once, so copy it then and give
+  it to them privately to paste into their desktop app's Settings → Portal sync secret.
+  The Portal URL is the same for every teacher on this deployment.
+- **See who's using the Portal**, with a class and student count for each teacher.
+- **Remove a teacher.** Their sync secret stops working at once, and their classes and
+  students are deleted from the Portal. Their desktop app keeps all its own data.
 
-The response includes a `syncSecret` — shown exactly once, so save it now. Give that
-value to the teacher to paste into their own desktop app's Settings → Portal sync
-secret; everything else (Portal URL) is the same for every teacher on this deployment.
-List teachers (with a rough class/student count each) with:
-
-```bash
-curl https://portal.yourdomain.com/api/admin/teachers -H "X-Admin-Secret: <your ADMIN_SECRET>"
-```
+The admin secret is remembered only in that browser tab and is never put in a URL.
+Wrong guesses are rate limited like every other secret. The same actions are available
+as an API (`GET/POST /api/admin/teachers`, `DELETE /api/admin/teachers/:id`, with an
+`X-Admin-Secret` header) if you'd rather script them.
 
 The AI provider/key and the weekly digest SMTP settings (Settings → Student AI /
 Weekly parent digest email on the desktop app) are per-teacher — each teacher's own
