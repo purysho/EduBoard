@@ -5,6 +5,7 @@ const crypto = require('crypto')
 const db = require('../db')
 const { requireSyncSecret, hashPassword, passwordProblem, revokeSessions } = require('../auth')
 const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
+const { isLanguage, buildTranslationPrompt, cleanReply } = require('../services/translate')
 const { saveDigestSettings } = require('../services/mailer')
 const { sendAllDigests } = require('../services/digest')
 const { isValidTimeZone } = require('../services/deadlines')
@@ -503,8 +504,8 @@ router.post('/messages', (req, res) => {
 // side of the same thread — one cache row per message serves both directions, since
 // whoever asks first just supplies whichever targetLang they need.
 router.post('/messages/:id/translate', async (req, res) => {
-  const targetLang = (req.body?.targetLang || '').trim()
-  if (!targetLang) return res.status(400).json({ error: 'targetLang is required' })
+  const targetLang = req.body?.targetLang
+  if (!isLanguage(targetLang)) return res.status(400).json({ error: 'Unsupported language' })
 
   const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(req.params.id)
   if (!message || !ownsAccount(req.teacherId, message.account_id)) {
@@ -519,14 +520,8 @@ router.post('/messages/:id/translate', async (req, res) => {
   }
 
   try {
-    const translated = await complete(
-      req.teacherId,
-      'You translate short parent-teacher messages. Reply with ONLY the translation, ' +
-        'no notes, no quotes, no original text — preserve tone and meaning exactly.',
-      `Translate this message into ${targetLang}:\n\n${message.body}`,
-      500
-    )
-    const translatedBody = translated.trim()
+    const { system, user } = buildTranslationPrompt(targetLang, message.body)
+    const translatedBody = cleanReply(await complete(req.teacherId, system, user, 1500))
     db.prepare(
       `INSERT INTO message_translations (message_id, translated_body, target_lang)
        VALUES (?, ?, ?)

@@ -100,14 +100,32 @@
   .msg-bubble { padding: 8px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.4; white-space: pre-wrap; }
   .msg.family .msg-bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
   .msg.teacher .msg-bubble { background: #f1f5f9; color: var(--ink); border-bottom-left-radius: 4px; }
+  button.lang-switch { width: auto; margin: 0 0 0 auto; padding: 6px 12px; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; }
+  button.lang-switch:hover:not(:disabled) { background: #f8fafc; }
+  .translation { margin-top: 10px; padding: 10px 12px; border-left: 3px solid #c7d2fe; background: #f8fafc; border-radius: 0 10px 10px 0; }
+  .translation .desc { white-space: pre-wrap; }
   .notif-pill { display: inline-block; margin-bottom: 12px; padding: 7px 14px; border-radius: 999px; background: var(--primary); color: #fff; font-size: .85rem; font-weight: 600; text-decoration: none; }
 </style>
+<script src="/i18n.js"></script>
 </head>
 <body>
-<div class="topbar"><div class="badge">EB</div><div class="brand">EduBoard Portal</div></div>
+<div class="topbar">
+  <div class="badge">EB</div><div class="brand" id="brand">EduBoard Portal</div>
+  <!-- Shows the language you'd switch TO, written in that language, so it's findable by
+       someone who can't read the current one. -->
+  <button type="button" class="lang-switch" id="lang-switch"></button>
+</div>
 <div class="wrap" id="app">Loading…</div>
 <script>
 const app = document.getElementById('app')
+document.getElementById('brand').textContent = t('EduBoard Portal')
+app.textContent = t('Loading…')
+{
+  const switcher = document.getElementById('lang-switch')
+  switcher.textContent = UI_LANG === 'zh' ? 'English' : '中文'
+  switcher.setAttribute('aria-label', UI_LANG === 'zh' ? 'Switch to English' : '切换到中文')
+  switcher.onclick = () => setUiLang(UI_LANG === 'zh' ? 'en' : 'zh')
+}
 const params = new URLSearchParams(location.search)
 
 // Offline-first data cache — deliberately separate from the service worker (see
@@ -147,7 +165,7 @@ async function api(path, opts) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     if (res.status === 401) await clearSavedData()
-    throw new Error(data.error || 'Something went wrong')
+    throw new Error(tError(data.error || 'Something went wrong'))
   }
   servedFromCache = false
   if (isGet && 'caches' in window) {
@@ -201,7 +219,7 @@ async function updateNotificationBadge() {
   document.title = unread > 0 ? `(${unread}) ${BASE_TITLE}` : BASE_TITLE
   el.innerHTML =
     unread > 0
-      ? `<a href="#messages" class="notif-pill">${unread} new message${unread === 1 ? '' : 's'} from your teacher</a>`
+      ? `<a href="#messages" class="notif-pill">${esc(unread === 1 ? t('1 new message from your teacher') : t('{n} new messages from your teacher', { n: unread }))}</a>`
       : ''
   const count = document.getElementById('unread-count')
   if (count) {
@@ -212,8 +230,8 @@ async function updateNotificationBadge() {
 
 function lastSyncedLabel() {
   const iso = localStorage.getItem(LAST_SYNCED_KEY)
-  if (!iso) return 'unknown'
-  return new Date(iso).toLocaleString(undefined, {
+  if (!iso) return t('unknown')
+  return new Date(iso).toLocaleString(uiLocale(), {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -224,8 +242,8 @@ function lastSyncedLabel() {
 function offlineBannerHtml() {
   if (!servedFromCache) return ''
   return `<div class="card" style="background:#fef3c7; margin-bottom:12px">
-    <strong>Viewing saved data</strong>
-    <p class="muted" style="margin:4px 0 0">You're offline — last synced ${lastSyncedLabel()}. Reconnect to see the latest.</p>
+    <strong>${t('Viewing saved data')}</strong>
+    <p class="muted" style="margin:4px 0 0">${esc(t("You're offline — last synced {when}. Reconnect to see the latest.", { when: lastSyncedLabel() }))}</p>
   </div>`
 }
 
@@ -249,9 +267,9 @@ async function main() {
     // straight to a login form that can't succeed offline anyway.
     if (!navigator.onLine) {
       app.innerHTML = `
-        <h1>You're offline</h1>
-        <p class="hint">Nothing saved on this device yet. Connect once to load your dashboard — after that, it stays available offline.</p>
-        <button onclick="location.reload()">Try again</button>
+        <h1>${t("You're offline")}</h1>
+        <p class="hint">${t('Nothing saved on this device yet. Connect once to load your dashboard — after that, it stays available offline.')}</p>
+        <button onclick="location.reload()">${t('Try again')}</button>
       `
       return
     }
@@ -265,7 +283,7 @@ function passwordFieldHtml(id, autocomplete, extra = '') {
   return `
     <div class="pw-wrap">
       <input id="${id}" type="password" autocomplete="${autocomplete}" required ${extra} />
-      <button type="button" class="pw-toggle" data-pw-toggle="${id}" aria-label="Show password" aria-pressed="false">Show</button>
+      <button type="button" class="pw-toggle" data-pw-toggle="${id}" aria-label="${t('Show password')}" aria-pressed="false">${t('Show')}</button>
     </div>`
 }
 
@@ -275,29 +293,28 @@ function wirePasswordToggles(root = document) {
       const input = document.getElementById(btn.dataset.pwToggle)
       const show = input.type === 'password'
       input.type = show ? 'text' : 'password'
-      btn.textContent = show ? 'Hide' : 'Show'
+      btn.textContent = show ? t('Hide') : t('Show')
       btn.setAttribute('aria-pressed', String(show))
-      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password')
+      btn.setAttribute('aria-label', show ? t('Hide password') : t('Show password'))
     }
   })
 }
 
 function renderLogin() {
   app.innerHTML = `
-    <h1>Welcome back</h1>
-    <p class="hint">Sign in to see your homework, grades and class materials.</p>
+    <h1>${t('Welcome back')}</h1>
+    <p class="hint">${t('Sign in to see your homework, grades and class materials.')}</p>
     <form id="login-form">
-      <label for="u">Username</label>
+      <label for="u">${t('Username')}</label>
       <input id="u" autocomplete="username" autocapitalize="none" required />
-      <label for="p">Password</label>
+      <label for="p">${t('Password')}</label>
       ${passwordFieldHtml('p', 'current-password')}
-      <button type="submit" id="go">Log in</button>
+      <button type="submit" id="go">${t('Log in')}</button>
       <p class="error" id="err" role="alert"></p>
     </form>
     <p class="field-note" style="margin-top:18px">
-      <strong>Forgot your password?</strong> Ask your teacher to reset it. They'll give you a
-      temporary one to log in with, and you can change it under Account.<br />
-      <strong>New here?</strong> Use the invite link or QR code your teacher gave you.
+      <strong>${t('Forgot your password?')}</strong> ${t("Ask your teacher to reset it. They'll give you a temporary one to log in with, and you can change it under Account.")}<br />
+      <strong>${t('New here?')}</strong> ${t('Use the invite link or QR code your teacher gave you.')}
     </p>
   `
   wirePasswordToggles()
@@ -318,10 +335,10 @@ function renderLogin() {
   }
 }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
+// Month names in the interface language ("March" or "3月").
+const MONTHS = Array.from({ length: 12 }, (_, i) =>
+  new Intl.DateTimeFormat(uiLocale(), { month: 'long' }).format(new Date(2000, i, 1))
+)
 
 function dobPickerHtml(prefix = 'dob', value = '') {
   const [vy = '', vm = '', vd = ''] = (value || '').split('-')
@@ -337,9 +354,9 @@ function dobPickerHtml(prefix = 'dob', value = '') {
     .map((y) => `<option value="${y}"${sel(y, vy)}>${y}</option>`).join('')
   return `
     <div class="dob-row">
-      <select id="${prefix}-m" aria-label="Month"><option value="">Month</option>${months}</select>
-      <select id="${prefix}-d" aria-label="Day"><option value="">Day</option>${days}</select>
-      <select id="${prefix}-y" aria-label="Year"><option value="">Year</option>${years}</select>
+      <select id="${prefix}-m" aria-label="${t('Month')}"><option value="">${t('Month')}</option>${months}</select>
+      <select id="${prefix}-d" aria-label="${t('Day')}"><option value="">${t('Day')}</option>${days}</select>
+      <select id="${prefix}-y" aria-label="${t('Year')}"><option value="">${t('Year')}</option>${years}</select>
     </div>
   `
 }
@@ -353,30 +370,30 @@ function readDob(prefix = 'dob') {
 }
 
 async function renderRedeem(code) {
-  app.innerHTML = 'Loading…'
+  app.innerHTML = t('Loading…')
   let info
   try {
     info = await api('/invites/' + encodeURIComponent(code))
   } catch (e) {
-    app.innerHTML = `<h1>Can't join</h1><p class="error">${esc(e.message)}</p>`
+    app.innerHTML = `<h1>${t("Can't join")}</h1><p class="error">${esc(e.message)}</p>`
     return
   }
   const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
   app.innerHTML = `
-    <h1>Join ${esc(info.className)}</h1>
-    <p class="hint">Pick your name, confirm your date of birth, and choose a username and password.</p>
+    <h1>${esc(t('Join {className}', { className: info.className }))}</h1>
+    <p class="hint">${t('Pick your name, confirm your date of birth, and choose a username and password.')}</p>
     <form id="join-form">
-      <label for="sid">Student</label>
+      <label for="sid">${t('Student')}</label>
       <select id="sid">${info.students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
-      <label>Date of birth</label>
+      <label>${t('Date of birth')}</label>
       ${dobPickerHtml()}
       <p class="field-note" id="dob-note"></p>
-      <label for="u">Username</label>
+      <label for="u">${t('Username')}</label>
       <input id="u" autocomplete="username" autocapitalize="none" minlength="3" maxlength="40" required />
-      <p class="field-note">3–40 characters. You'll use it to log in.</p>
-      <label for="p">Password</label>
-      ${passwordFieldHtml('p', 'new-password', 'minlength="8" placeholder="At least 8 characters"')}
-      <button type="submit" id="go">Create account</button>
+      <p class="field-note">${t("3–40 characters. You'll use it to log in.")}</p>
+      <label for="p">${t('Password')}</label>
+      ${passwordFieldHtml('p', 'new-password', `minlength="8" placeholder="${t('At least 8 characters')}"`)}
+      <button type="submit" id="go">${t('Create account')}</button>
       <p class="error" id="err" role="alert"></p>
     </form>
   `
@@ -384,8 +401,8 @@ async function renderRedeem(code) {
   function updateDobNote() {
     const selected = studentsById[document.getElementById('sid').value]
     document.getElementById('dob-note').textContent = selected?.hasDob
-      ? "This confirms it's really you — must match what your teacher has on file."
-      : 'Your teacher hasn’t recorded this yet — enter it now so it’s on file for next time.'
+      ? t("This confirms it's really you — must match what your teacher has on file.")
+      : t('Your teacher hasn’t recorded this yet — enter it now so it’s on file for next time.')
   }
   document.getElementById('sid').onchange = updateDobNote
   updateDobNote()
@@ -416,6 +433,73 @@ const LANGUAGES = [
   ['Portuguese', 'Portuguese (Português)'], ['Vietnamese', 'Vietnamese (Tiếng Việt)'], ['Hindi', 'Hindi (हिन्दी)']
 ]
 
+// The language AI translations go into: the interface language, unless the student
+// picked a preferred language in their profile or in the Messages language list.
+let readingLanguage = defaultReadingLanguage()
+function setReadingLanguage(language) {
+  if (!LANGUAGES.some(([v]) => v === language)) return
+  readingLanguage = language
+  const select = document.getElementById('msg-lang')
+  if (select) select.value = language
+}
+/** "Chinese (中文)" in the English interface, "中文" in the Chinese one. */
+function languageLabel(language) {
+  return t((LANGUAGES.find(([v]) => v === language) || [language, language])[1])
+}
+
+// ---- Translating what the teacher wrote -----------------------------------------------------
+// A Translate button under homework instructions, class posts and study guides. The
+// translation appears under the original (not instead of it), so a student can compare
+// the two and an AI mistake is visible rather than silently replacing the teacher's words.
+function translateControlHtml(kind, id) {
+  return `
+    <div class="chip-row" style="margin-top:8px">
+      <button type="button" class="chip" data-translate-kind="${esc(kind)}" data-translate-id="${esc(id)}">${t('Translate')}</button>
+    </div>
+    <div class="translation" data-translation hidden aria-live="polite"></div>`
+}
+
+function wireTranslateControls(root) {
+  root.querySelectorAll('[data-translate-kind]').forEach((btn) => {
+    if (btn.dataset.wired) return
+    btn.dataset.wired = '1'
+    const box = btn.parentElement.nextElementSibling
+    btn.onclick = async () => {
+      // Once loaded, the button just shows and hides it, until the language changes.
+      if (box.dataset.language === readingLanguage) {
+        box.hidden = !box.hidden
+        btn.textContent = box.hidden ? t('Translate') : t('Hide translation')
+        return
+      }
+      btn.disabled = true
+      btn.textContent = t('Translating…')
+      try {
+        const result = await api('/me/translate', {
+          method: 'POST',
+          body: { kind: btn.dataset.translateKind, id: btn.dataset.translateId, targetLang: readingLanguage }
+        })
+        const parts = [result.title, result.description, result.body, result.studyGuide].filter(Boolean)
+        box.innerHTML = `
+          <p class="muted" style="margin:0 0 6px; font-size:.75rem">${esc(t('{language} translation by AI. It may contain mistakes.', { language: languageLabel(readingLanguage) }))}</p>
+          <div data-translation-text>${parts
+            .map((text, i) => (i === 0 && result.title ? `<p style="margin:0"><strong>${esc(text)}</strong></p>` : `<p class="desc">${esc(text)}</p>`))
+            .join('')}</div>
+          ${result.truncated ? `<p class="field-note">${t('Only the first part was translated because it is very long.')}</p>` : ''}`
+        box.dataset.language = readingLanguage
+        box.hidden = false
+        btn.textContent = t('Hide translation')
+      } catch (err) {
+        btn.textContent = t('Translate')
+        box.hidden = false
+        box.innerHTML = `<p class="error" style="margin:0">${esc(err.message)}</p>`
+        box.dataset.language = ''
+      } finally {
+        btn.disabled = false
+      }
+    }
+  })
+}
+
 // ---- Profiles -----------------------------------------------------------------------------
 // One profile per linked student. Everything is optional. Private notes are visible only
 // here; the birthday is shared with the teacher (month and day only) only if ticked.
@@ -436,10 +520,10 @@ function markDismissed(studentId) {
 function profileCardHtml(p, studentName) {
   const id = esc(p.studentId)
   const photo = p.hasPhoto
-    ? `<img class="avatar" src="/api/me/profiles/${encodeURIComponent(p.studentId)}/photo?v=${encodeURIComponent(p.updatedAt || '')}" alt="Profile photo" />`
+    ? `<img class="avatar" src="/api/me/profiles/${encodeURIComponent(p.studentId)}/photo?v=${encodeURIComponent(p.updatedAt || '')}" alt="${t('Profile photo')}" />`
     : `<div class="avatar avatar-empty" aria-hidden="true">${esc((p.preferredName || studentName).slice(0, 1).toUpperCase())}</div>`
-  const langOptions = ['<option value="">Not set</option>']
-    .concat(LANGUAGES.map(([v, label]) => `<option value="${v}"${p.preferredLanguage === v ? ' selected' : ''}>${label}</option>`))
+  const langOptions = [`<option value="">${t('Not set')}</option>`]
+    .concat(LANGUAGES.map(([v]) => `<option value="${v}"${p.preferredLanguage === v ? ' selected' : ''}>${esc(languageLabel(v))}</option>`))
     .join('')
   const empty = profileIsEmpty(p)
   const open = empty && !wasDismissed(p.studentId)
@@ -449,39 +533,40 @@ function profileCardHtml(p, studentName) {
         ${photo}
         <div style="flex:1; min-width:0">
           <strong>${esc(p.preferredName || studentName)}</strong>${p.pronouns ? ` <span class="muted">(${esc(p.pronouns)})</span>` : ''}
-          <p class="muted" style="margin:2px 0 0">${p.bio ? esc(p.bio) : empty ? 'Set up your profile so your teacher gets to know you.' : ''}</p>
+          <p class="muted" style="margin:2px 0 0">${p.bio ? esc(p.bio) : empty ? t('Set up your profile so your teacher gets to know you.') : ''}</p>
         </div>
-        <button class="chip" data-profile-toggle="${id}">${empty ? 'Set up profile' : 'Edit profile'}</button>
+        <button class="chip" data-profile-toggle="${id}">${empty ? t('Set up profile') : t('Edit profile')}</button>
       </div>
       <form data-profile-form="${id}" style="display:${open ? 'block' : 'none'}; margin-top:14px">
-        <label>Photo <span class="muted">(.jpg, .png or .webp, up to 8 MB)</span></label>
+        <label>${t('Photo')} <span class="muted">${t('(.jpg, .png or .webp, up to 8 MB)')}</span></label>
         <div style="display:flex; gap:8px; align-items:center">
           <input type="file" data-photo accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
-          ${p.hasPhoto ? `<button type="button" class="chip" data-photo-remove>Remove</button>` : ''}
+          ${p.hasPhoto ? `<button type="button" class="chip" data-photo-remove>${t('Remove')}</button>` : ''}
         </div>
-        <p class="field-note">Photos are resized and cleaned (location data removed) before they're saved.</p>
-        <label>Preferred name</label>
+        <p class="field-note">${t("Photos are resized and cleaned (location data removed) before they're saved.")}</p>
+        <label>${t('Preferred name')}</label>
         <input name="preferredName" maxlength="60" value="${esc(p.preferredName || '')}" placeholder="${esc(studentName)}" />
-        <label>Pronouns</label>
-        <input name="pronouns" maxlength="30" value="${esc(p.pronouns || '')}" placeholder="e.g. she/her, he/him, they/them" />
-        <label>About me</label>
-        <textarea name="bio" maxlength="600" rows="3" placeholder="A few words about you">${esc(p.bio || '')}</textarea>
-        <label>Date of birth</label>
+        <label>${t('Pronouns')}</label>
+        <input name="pronouns" maxlength="30" value="${esc(p.pronouns || '')}" placeholder="${t('e.g. she/her, he/him, they/them')}" />
+        <label>${t('About me')}</label>
+        <textarea name="bio" maxlength="600" rows="3" placeholder="${t('A few words about you')}">${esc(p.bio || '')}</textarea>
+        <label>${t('Date of birth')}</label>
         ${dobPickerHtml('pdob-' + id, p.dateOfBirth)}
         <label style="display:flex; gap:8px; align-items:center; font-weight:400; margin-top:8px">
           <input type="checkbox" name="shareBirthday" style="width:auto" ${p.shareBirthday ? 'checked' : ''} />
-          Share my birthday (month and day, not year) with my teacher
+          ${t('Share my birthday (month and day, not year) with my teacher')}
         </label>
-        <label>My learning goals</label>
-        <textarea name="goals" maxlength="600" rows="2" placeholder="What do you want to get better at this term?">${esc(p.goals || '')}</textarea>
-        <label>Anything my teacher should know</label>
-        <textarea name="teacherNote" maxlength="600" rows="2" placeholder="e.g. how you learn best, accessibility needs">${esc(p.teacherNote || '')}</textarea>
-        <label>Preferred language</label>
+        <label>${t('My learning goals')}</label>
+        <textarea name="goals" maxlength="600" rows="2" placeholder="${t('What do you want to get better at this term?')}">${esc(p.goals || '')}</textarea>
+        <label>${t('Anything my teacher should know')}</label>
+        <textarea name="teacherNote" maxlength="600" rows="2" placeholder="${t('e.g. how you learn best, accessibility needs')}">${esc(p.teacherNote || '')}</textarea>
+        <label>${t('Preferred language')}</label>
         <select name="preferredLanguage">${langOptions}</select>
-        <label>Private notes <span class="muted">(only you can see these)</span></label>
-        <textarea name="privateNotes" maxlength="5000" rows="3" placeholder="Reminders, ideas, anything">${esc(p.privateNotes || '')}</textarea>
-        <p class="field-note">Your teacher sees everything here except your private notes and your date of birth.</p>
-        <button type="submit">Save profile</button>
+        <p class="field-note">${t('Translations go into this language.')}</p>
+        <label>${t('Private notes')} <span class="muted">${t('(only you can see these)')}</span></label>
+        <textarea name="privateNotes" maxlength="5000" rows="3" placeholder="${t('Reminders, ideas, anything')}">${esc(p.privateNotes || '')}</textarea>
+        <p class="field-note">${t('Your teacher sees everything here except your private notes and your date of birth.')}</p>
+        <button type="submit">${t('Save profile')}</button>
         <p class="error" data-profile-status></p>
       </form>
     </div>`
@@ -497,13 +582,14 @@ async function loadProfiles(me) {
     return
   }
   const names = Object.fromEntries(me.students.map((s) => [s.studentId, s.studentName.split(' ')[0]]))
-  box.innerHTML = profiles.map((p) => profileCardHtml(p, names[p.studentId] || 'Student')).join('')
+  box.innerHTML = profiles.map((p) => profileCardHtml(p, names[p.studentId] || t('Student'))).join('')
 
   const first = profiles[0]
   const greeting = document.getElementById('greeting')
-  if (greeting && first) greeting.textContent = `Welcome back, ${first.preferredName || names[first.studentId] || ''}`.trim()
-  const lang = document.getElementById('msg-lang')
-  if (lang && first?.preferredLanguage) lang.value = first.preferredLanguage
+  const firstName = first && (first.preferredName || names[first.studentId])
+  if (greeting && first) greeting.textContent = firstName ? t('Welcome back, {name}', { name: firstName }) : t('Welcome back')
+  // A preferred language set in the profile beats the interface language for translations.
+  if (first?.preferredLanguage) setReadingLanguage(first.preferredLanguage)
 
   // A gentle prompt on Home until each profile is started (or the student says not now).
   const nudge = document.getElementById('profile-nudge')
@@ -511,11 +597,11 @@ async function loadProfiles(me) {
   if (nudge) {
     nudge.innerHTML = pending
       ? `<div class="card" style="background:#eef2ff; border-color:#c7d2fe">
-           <strong>Set up your profile</strong>
-           <p class="muted" style="margin:4px 0 0">Add a photo and a few words so your teacher gets to know you. Everything is optional.</p>
+           <strong>${t('Set up your profile')}</strong>
+           <p class="muted" style="margin:4px 0 0">${t('Add a photo and a few words so your teacher gets to know you. Everything is optional.')}</p>
            <div class="chip-row">
-             <button class="chip" data-nudge-go>Set up profile</button>
-             <button class="chip" data-nudge-later>Not now</button>
+             <button class="chip" data-nudge-go>${t('Set up profile')}</button>
+             <button class="chip" data-nudge-later>${t('Not now')}</button>
            </div>
          </div>`
       : ''
@@ -560,7 +646,7 @@ async function loadProfiles(me) {
     }
     form.onsubmit = async (e) => {
       e.preventDefault()
-      status.textContent = 'Saving…'
+      status.textContent = t('Saving…')
       try {
         const file = form.querySelector('[data-photo]').files[0]
         if (file) {
@@ -612,7 +698,7 @@ function homeworkByTopicHtml(homework, studentId) {
   return entries
     .map(
       ([topic, items]) => `
-      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${esc(topic)}</p>
+      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${esc(topic === 'Other' ? t('Other') : topic)}</p>
       ${items.map((h) => homeworkCardHtml(h, studentId)).join('')}`
     )
     .join('')
@@ -625,7 +711,7 @@ function quickCheckHtml(h, studentId) {
     const correctCount = h.questions.filter((q) => q.wasCorrect).length
     return `
       <div class="card" style="margin-top:12px; background:#f8fafc">
-        <p class="muted" style="margin:0 0 8px">Quick check — ${correctCount}/${h.questions.length} correct</p>
+        <p class="muted" style="margin:0 0 8px">${t('Quick check — {correct}/{total} correct', { correct: correctCount, total: h.questions.length })}</p>
         ${h.questions
           .map(
             (q) => `
@@ -638,7 +724,7 @@ function quickCheckHtml(h, studentId) {
   }
   return `
     <form data-quiz="${esc(h.id)}" data-student="${esc(studentId)}" style="margin-top:12px" class="card">
-      <p class="muted" style="margin:0 0 8px">Quick check</p>
+      <p class="muted" style="margin:0 0 8px">${t('Quick check')}</p>
       ${h.questions
         .map(
           (q, i) => `
@@ -660,10 +746,12 @@ function quickCheckHtml(h, studentId) {
         </div>`
         )
         .join('')}
-      <button type="submit">Submit answers</button>
+      <button type="submit">${t('Submit answers')}</button>
       <p class="error"></p>
     </form>`
 }
+
+const STATUS_LABELS = { not_started: 'Not started', submitted: 'Submitted', done: 'Done' }
 
 function homeworkCardHtml(h, studentId) {
   const graded = h.status === 'done'
@@ -673,39 +761,40 @@ function homeworkCardHtml(h, studentId) {
       <div class="row" data-toggle="${detailId}" style="cursor:pointer">
         <strong>${esc(h.title)}</strong>
         <span class="pills">
-          ${h.timing === 'late' ? '<span class="pill late">Late</span>' : ''}
-          ${h.timing === 'missing' ? '<span class="pill missing">Missing</span>' : ''}
-          <span class="pill ${esc(h.status)}">${esc(h.status.replace('_', ' '))}</span>
+          ${h.timing === 'late' ? `<span class="pill late">${t('Late')}</span>` : ''}
+          ${h.timing === 'missing' ? `<span class="pill missing">${t('Missing')}</span>` : ''}
+          <span class="pill ${esc(h.status)}">${esc(t(STATUS_LABELS[h.status] || h.status))}</span>
         </span>
       </div>
-      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${esc(formatDue(h.dueDate))}</p>` : ''}
+      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">${esc(t('Due {when}', { when: formatDue(h.dueDate) }))}</p>` : ''}
       <div id="detail-${detailId}" style="display:none; margin-top:10px">
         ${h.description ? `<p class="desc">${esc(h.description)}</p>` : ''}
-        ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} (from your teacher)</a></p>` : ''}
+        ${translateControlHtml('homework', h.id)}
+        ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} ${t('(from your teacher)')}</a></p>` : ''}
         ${quickCheckHtml(h, studentId)}
         ${
           graded
             ? `
           <div class="card" style="margin-top:12px; background:#f8fafc">
-            <p class="muted" style="margin:0">Your submission</p>
+            <p class="muted" style="margin:0">${t('Your submission')}</p>
             ${h.textAnswer ? `<p class="desc">${esc(h.textAnswer)}</p>` : ''}
             ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/submission-file?studentId=${encodeURIComponent(studentId)}">\u{1F4CE} ${esc(h.submissionFileName)}</a></p>` : ''}
-            ${h.grade ? `<p style="margin-top:10px"><strong>Grade: ${esc(h.grade)}</strong></p>` : ''}
-            ${h.feedback ? `<p class="desc"><strong>Feedback:</strong> ${esc(h.feedback)}</p>` : ''}
+            ${h.grade ? `<p style="margin-top:10px"><strong>${esc(t('Grade: {grade}', { grade: h.grade }))}</strong></p>` : ''}
+            ${h.feedback ? `<p class="desc"><strong>${t('Feedback:')}</strong> ${esc(h.feedback)}</p>` : ''}
           </div>`
             : `
           <form data-submit="${esc(h.id)}" data-student="${esc(studentId)}" style="margin-top:10px">
             ${
               h.status === 'submitted'
-                ? `<p class="field-note">Already turned in${h.submissionFileName ? ` — attached ${esc(h.submissionFileName)}` : ''}. Submitting again replaces it.</p>`
+                ? `<p class="field-note">${esc(h.submissionFileName ? t('Already turned in with {file}. Submitting again replaces it.', { file: h.submissionFileName }) : t('Already turned in. Submitting again replaces it.'))}</p>`
                 : ''
             }
-            <label>Your answer</label>
+            <label>${t('Your answer')}</label>
             <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${esc(h.textAnswer || '')}</textarea>
-            <label>Attach a file</label>
+            <label>${t('Attach a file')}</label>
             <input data-file type="file" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.csv,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.png,.jpg,.jpeg,.gif,.webp,.heic,.mp3,.m4a,.wav,.mp4,.mov,.webm" />
-            <p class="field-note">Documents, images, audio or video, up to 20 MB. Programs and files with macros are refused.</p>
-            <button type="submit">${h.status === 'submitted' ? 'Update submission' : 'Turn in'}</button>
+            <p class="field-note">${t('Documents, images, audio or video, up to 20 MB. Programs and files with macros are refused.')}</p>
+            <button type="submit">${h.status === 'submitted' ? t('Update submission') : t('Turn in')}</button>
             <p class="error"></p>
           </form>`
         }
@@ -729,7 +818,7 @@ function renderMessages(messages) {
   const box = document.getElementById('messages')
   if (!box) return
   box.innerHTML = !messages.length
-    ? '<p class="muted">No messages yet — say hello below.</p>'
+    ? `<p class="muted">${t('No messages yet — say hello below.')}</p>`
     : messages
         .map(
           (m) => `
@@ -737,7 +826,7 @@ function renderMessages(messages) {
         <div class="msg-bubble" data-msg-body="${esc(m.id)}">${esc(m.translatedBody ?? m.body)}</div>
         <div class="muted" style="font-size:.72rem; margin-top:2px; display:flex; gap:8px; align-items:center">
           <span>${formatWhen(m.createdAt)}</span>
-          <a href="#" data-translate="${esc(m.id)}" style="font-size:.72rem">${m.translatedBody ? 'Show original' : 'Translate'}</a>
+          <a href="#" data-translate="${esc(m.id)}" style="font-size:.72rem">${m.translatedBody ? t('Show original') : t('Translate')}</a>
         </div>
       </div>`
         )
@@ -753,9 +842,9 @@ function renderMessages(messages) {
         renderMessages(lastLoadedMessages)
         return
       }
-      link.textContent = 'Translating…'
+      link.textContent = t('Translating…')
       try {
-        const targetLang = document.getElementById('msg-lang')?.value || 'English'
+        const targetLang = document.getElementById('msg-lang')?.value || readingLanguage
         const { translatedBody } = await api(`/me/messages/${id}/translate`, {
           method: 'POST',
           body: { targetLang }
@@ -763,8 +852,8 @@ function renderMessages(messages) {
         message.translatedBody = translatedBody
         renderMessages(lastLoadedMessages)
       } catch (err) {
-        link.textContent = 'Translate'
-        alert(err.message || 'Translation failed. Try again in a moment.')
+        link.textContent = t('Translate')
+        alert(err.message || t('Translation failed. Try again in a moment.'))
       }
     })
   })
@@ -785,7 +874,7 @@ async function loadPortfolio() {
     <div class="card">
       <div class="row"><strong>${esc(p.title)}</strong><span class="muted">${p.gradedAt ? formatWhen(p.gradedAt) : ''}</span></div>
       <p class="muted" style="margin:2px 0 6px">${esc(p.studentName)} · ${esc(p.className)}${p.topic ? ' · ' + esc(p.topic) : ''}</p>
-      ${p.grade ? `<p class="desc"><strong>Grade:</strong> ${esc(p.grade)}</p>` : ''}
+      ${p.grade ? `<p class="desc"><strong>${t('Grade:')}</strong> ${esc(p.grade)}</p>` : ''}
       ${p.feedback ? `<p class="desc">${esc(p.feedback)}</p>` : ''}
     </div>`
     )
@@ -798,7 +887,7 @@ async function loadPortfolio() {
 let currentUtterance = null
 function speak(text, buttonEl) {
   if (!('speechSynthesis' in window)) {
-    alert('Audio isn’t supported in this browser.')
+    alert(t('Audio isn’t supported in this browser.'))
     return
   }
   // Remember the button's own label so "Stop" can hand it back afterwards.
@@ -813,13 +902,16 @@ function speak(text, buttonEl) {
     return
   }
   const utter = new SpeechSynthesisUtterance(text)
+  // Pick a Chinese voice for Chinese text (e.g. a translated study guide); the browser's
+  // default voice would read it as nonsense or skip it.
+  if (/[\u4e00-\u9fff]/.test(text)) utter.lang = 'zh-CN'
   utter.rate = 0.95
   utter.onend = () => {
     currentUtterance = null
     restore()
   }
   currentUtterance = utter
-  if (buttonEl) buttonEl.textContent = 'Stop'
+  if (buttonEl) buttonEl.textContent = t('Stop')
   window.speechSynthesis.speak(utter)
 }
 
@@ -841,14 +933,14 @@ async function loadMaterials() {
       ${
         m.studyGuide || m.flashcards || m.practiceQuiz
           ? `<div class="chip-row">
-               ${m.studyGuide ? `<button class="chip" data-toggle="${guideId}">Study guide</button>` : ''}
-               ${m.studyGuide ? `<button class="chip" data-listen="${guideId}">Listen</button>` : ''}
-               ${m.flashcards ? `<button class="chip" data-practice-cards="${i}">Flashcards (${m.flashcards.length})</button>` : ''}
-               ${m.practiceQuiz ? `<button class="chip" data-practice-quiz="${i}">Practice quiz (${m.practiceQuiz.length})</button>` : ''}
+               ${m.studyGuide ? `<button class="chip" data-toggle="${guideId}">${t('Study guide')}</button>` : ''}
+               ${m.studyGuide ? `<button class="chip" data-listen="${guideId}">${t('Listen')}</button>` : ''}
+               ${m.flashcards ? `<button class="chip" data-practice-cards="${i}">${t('Flashcards ({n})', { n: m.flashcards.length })}</button>` : ''}
+               ${m.practiceQuiz ? `<button class="chip" data-practice-quiz="${i}">${t('Practice quiz ({n})', { n: m.practiceQuiz.length })}</button>` : ''}
              </div>`
-          : '<p class="muted" style="margin-top:6px">No study aids for this one yet.</p>'
+          : `<p class="muted" style="margin-top:6px">${t('No study aids for this one yet.')}</p>`
       }
-      ${m.studyGuide ? `<div id="detail-${guideId}" class="desc" style="display:none; margin-top:10px; white-space:pre-wrap">${esc(m.studyGuide)}</div>` : ''}
+      ${m.studyGuide ? `<div id="detail-${guideId}" style="display:none"><div class="desc" style="margin-top:10px; white-space:pre-wrap" data-guide-text>${esc(m.studyGuide)}</div>${translateControlHtml('material', m.id)}</div>` : ''}
       <div id="practice-${i}" style="margin-top:8px"></div>
     </div>`
     })
@@ -867,10 +959,13 @@ async function loadMaterials() {
       detail.style.display = detail.style.display === 'none' ? 'block' : 'none'
     }
   })
+  wireTranslateControls(box)
   box.querySelectorAll('[data-listen]').forEach((el) => {
     el.onclick = () => {
+      // Reads the translation instead when one is showing.
       const detail = document.getElementById('detail-' + el.dataset.listen)
-      speak(detail.textContent, el)
+      const translation = detail.querySelector('[data-translation]:not([hidden]) [data-translation-text]')
+      speak((translation || detail.querySelector('[data-guide-text]')).textContent, el)
     }
   })
 }
@@ -885,14 +980,14 @@ function renderFlashcards(container, cards) {
     const card = cards[order[pos]]
     container.innerHTML = `
       <div class="card" data-flip style="cursor:pointer; min-height:90px; background:${flipped ? '#f0fdf4' : '#f8fafc'}">
-        <p class="muted" style="margin:0 0 6px; font-size:.75rem">${flipped ? 'Answer' : 'Question'} · card ${pos + 1} of ${cards.length} · tap to flip</p>
+        <p class="muted" style="margin:0 0 6px; font-size:.75rem">${flipped ? t('Answer') : t('Question')} · ${t('card {n} of {total}', { n: pos + 1, total: cards.length })} · ${t('tap to flip')}</p>
         <p class="desc" style="margin:0; font-size:1rem">${esc(flipped ? card.back : card.front)}</p>
       </div>
       <div style="display:flex; gap:6px; margin-top:6px">
-        <button class="chip" data-prev ${pos === 0 ? 'disabled' : ''}>← Prev</button>
-        <button class="chip" data-next ${pos === cards.length - 1 ? 'disabled' : ''}>Next →</button>
-        <button class="chip" data-shuffle>Shuffle</button>
-        <button class="chip" data-close>Close</button>
+        <button class="chip" data-prev ${pos === 0 ? 'disabled' : ''}>${t('← Prev')}</button>
+        <button class="chip" data-next ${pos === cards.length - 1 ? 'disabled' : ''}>${t('Next →')}</button>
+        <button class="chip" data-shuffle>${t('Shuffle')}</button>
+        <button class="chip" data-close>${t('Close')}</button>
       </div>`
     container.querySelector('[data-flip]').onclick = () => { flipped = !flipped; draw() }
     container.querySelector('[data-prev]').onclick = () => { pos--; flipped = false; draw() }
@@ -930,8 +1025,8 @@ function renderPracticeQuiz(container, questions) {
         </div>`
         )
         .join('')}
-      <button type="submit">Check answers</button>
-      <div class="chip-row"><button type="button" class="chip" data-close>Close</button></div>
+      <button type="submit">${t('Check answers')}</button>
+      <div class="chip-row"><button type="button" class="chip" data-close>${t('Close')}</button></div>
       <p data-score style="font-weight:600"></p>
     </form>`
   const form = container.querySelector('[data-practice-form]')
@@ -945,15 +1040,15 @@ function renderPracticeQuiz(container, questions) {
       if (correct) right++
       const explain = form.querySelector(`[data-question="${qi}"] [data-explain]`)
       explain.style.display = 'block'
-      explain.textContent = `${correct ? '✅ Correct.' : `❌ Answer: ${q.options[q.answerIndex]}.`} ${q.explanation}`
+      explain.textContent = `${correct ? t('✅ Correct.') : t('❌ Answer: {answer}.', { answer: q.options[q.answerIndex] })} ${q.explanation}`
     })
-    form.querySelector('[data-score]').textContent = `You got ${right} of ${questions.length}.`
+    form.querySelector('[data-score]').textContent = t('You got {right} of {total}.', { right, total: questions.length })
   }
 }
 
 function formatWhen(iso) {
   const d = new Date(iso)
-  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return d.toLocaleString(uiLocale(), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 async function loadClassStory() {
@@ -961,17 +1056,19 @@ async function loadClassStory() {
   if (!box) return
   const posts = await api('/me/posts')
   box.innerHTML = !posts.length
-    ? '<p class="muted">No updates yet.</p>'
+    ? `<p class="muted">${t('No updates yet.')}</p>`
     : posts
         .map(
           (p) => `
       <div class="card">
         <div class="row"><strong>${esc(p.className)}</strong><span class="muted">${formatWhen(p.createdAt)}</span></div>
         <p class="desc">${esc(p.body)}</p>
+        ${translateControlHtml('post', p.id)}
         ${p.hasImage ? `<img src="/api/me/posts/${encodeURIComponent(p.id)}/image" style="width:100%; border-radius:10px; margin-top:8px" />` : ''}
       </div>`
         )
         .join('')
+  wireTranslateControls(box)
 }
 
 // ---- Tabs, dates, "due soon" --------------------------------------------------------------
@@ -987,14 +1084,14 @@ const TABS = [
 // The open tab lives in the URL hash (#classwork), so reloads and the back button keep
 // the student where they were.
 function showTab(id) {
-  if (!TABS.some(([t]) => t === id)) id = 'home'
+  if (!TABS.some(([tab]) => tab === id)) id = 'home'
   document.querySelectorAll('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== id))
-  document.querySelectorAll('[data-tab]').forEach((t) => {
-    const active = t.dataset.tab === id
-    t.classList.toggle('active', active)
-    t.setAttribute('aria-selected', String(active))
+  document.querySelectorAll('[data-tab]').forEach((tab) => {
+    const active = tab.dataset.tab === id
+    tab.classList.toggle('active', active)
+    tab.setAttribute('aria-selected', String(active))
     // Only the active tab is in the Tab order; arrow keys move between tabs.
-    t.tabIndex = active ? 0 : -1
+    tab.tabIndex = active ? 0 : -1
   })
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id)
   // Loading the thread marks the teacher's messages as read, so only do it when the
@@ -1003,11 +1100,11 @@ function showTab(id) {
 }
 
 function setupTabs() {
-  document.querySelectorAll('[data-tab]').forEach((t) => (t.onclick = () => showTab(t.dataset.tab)))
+  document.querySelectorAll('[data-tab]').forEach((tab) => (tab.onclick = () => showTab(tab.dataset.tab)))
   const nav = document.querySelector('.tabs')
   if (nav) {
     nav.onkeydown = (e) => {
-      const ids = TABS.map(([t]) => t)
+      const ids = TABS.map(([tab]) => tab)
       const current = ids.indexOf(location.hash.slice(1) || 'home')
       const next =
         e.key === 'ArrowRight' ? (current + 1) % ids.length
@@ -1041,10 +1138,14 @@ function daysFromToday(day) {
 function formatDue(dueDate) {
   const day = parseDay(dueDate)
   if (!day) return ''
-  const label = day.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
+  const label = day.toLocaleDateString(uiLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
   const n = daysFromToday(day)
   const rel =
-    n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n > 1 ? `in ${n} days` : `${-n} days ago`
+    n === 0 ? t('today')
+    : n === 1 ? t('tomorrow')
+    : n === -1 ? t('yesterday')
+    : n > 1 ? t('in {n} days', { n })
+    : t('{n} days ago', { n: -n })
   return `${label} · ${rel}`
 }
 
@@ -1069,15 +1170,15 @@ function dueSummary(all) {
   const missing = all.filter((h) => h.timing === 'missing').length
   const soon = dueSoonItems(all).length - missing
   const parts = []
-  if (missing) parts.push(`${missing} missing`)
-  if (soon) parts.push(`${soon} due this week`)
-  return parts.length ? parts.join(' · ') : "You're all caught up."
+  if (missing) parts.push(t('{n} missing', { n: missing }))
+  if (soon) parts.push(t('{n} due this week', { n: soon }))
+  return parts.length ? parts.join(' · ') : t("You're all caught up.")
 }
 
 function dueSoonHtml(all, multi) {
   const items = dueSoonItems(all)
   if (!items.length) {
-    return '<div class="card"><p class="muted" style="margin:0">Nothing due in the next 7 days, and nothing missing.</p></div>'
+    return `<div class="card"><p class="muted" style="margin:0">${t('Nothing due in the next 7 days, and nothing missing.')}</p></div>`
   }
   return `<div class="card list-card">${items
     .map(
@@ -1087,7 +1188,7 @@ function dueSoonHtml(all, multi) {
         <strong>${esc(h.title)}</strong>
         <span class="muted" style="display:block">${esc(h.className)}${multi ? ' · ' + esc(h.studentName) : ''} · ${esc(formatDue(h.dueDate))}</span>
       </span>
-      ${h.timing === 'missing' ? '<span class="pill missing">Missing</span>' : '<span class="pill not_started">To do</span>'}
+      ${h.timing === 'missing' ? `<span class="pill missing">${t('Missing')}</span>` : `<span class="pill not_started">${t('To do')}</span>`}
     </button>`
     )
     .join('')}</div>`
@@ -1101,33 +1202,35 @@ function dueSoonHtml(all, multi) {
 const TOUR_STEPS = [
   {
     tab: 'home',
-    title: (name) => `Welcome${name ? ', ' + name : ''}!`,
-    body: "This is your class Portal. Here's a quick look around. It takes about 30 seconds."
+    title: (name) => (name ? t('Welcome, {name}!', { name }) : t('Welcome!')),
+    body: () =>
+      `${t("This is your class Portal. Here's a quick look around. It takes about 30 seconds.")} ${t('Prefer Chinese? Tap 中文 at the top right.')}`
   },
   {
     tab: 'home',
-    title: () => 'Home',
-    body: 'Due soon lists anything missing first, then what’s due this week. Tap one to open it. Your teacher’s class updates appear below.'
+    title: () => t('Home'),
+    body: () => t('Due soon lists anything missing first, then what’s due this week. Tap one to open it. Your teacher’s class updates appear below.')
   },
   {
     tab: 'classwork',
-    title: () => 'Classwork',
-    body: 'Every assignment, grouped by unit. Open one to read the instructions, attach your work and turn it in. Quick checks are marked straight away.'
+    title: () => t('Classwork'),
+    body: () =>
+      `${t('Every assignment, grouped by unit. Open one to read the instructions, attach your work and turn it in. Quick checks are marked straight away.')} ${t('Anything your teacher wrote has a Translate button.')}`
   },
   {
     tab: 'study',
-    title: () => 'Study',
-    body: 'Materials your teacher shared, with study guides you can read or listen to, flashcards and practice quizzes. Stuck? Ask the Study Helper.'
+    title: () => t('Study'),
+    body: () => t('Materials your teacher shared, with study guides you can read or listen to, flashcards and practice quizzes. Stuck? Ask the Study Helper.')
   },
   {
     tab: 'grades',
-    title: () => 'Grades and messages',
-    body: 'Grades shows your marks and attendance for each class. Messages is a private chat with your teacher, with a translate button if you need it.'
+    title: () => t('Grades and messages'),
+    body: () => t('Grades shows your marks and attendance for each class. Messages is a private chat with your teacher, with a translate button if you need it.')
   },
   {
     tab: 'account',
-    title: () => 'Make it yours',
-    body: 'Add a photo and a few words to your profile, get weekly email updates, or change your password. You can replay this tour from here any time.'
+    title: () => t('Make it yours'),
+    body: () => t('Add a photo and a few words to your profile, get weekly email updates, or change your password. You can replay this tour from here any time.')
   }
 ]
 
@@ -1145,10 +1248,10 @@ function startTour({ name = '', record = true } = {}) {
       <h2 id="tour-title"></h2>
       <p id="tour-body"></p>
       <div class="tour-actions">
-        <button type="button" class="chip" data-tour-skip>Skip tour</button>
+        <button type="button" class="chip" data-tour-skip>${t('Skip tour')}</button>
         <span style="flex:1"></span>
-        <button type="button" class="chip" data-tour-back>Back</button>
-        <button type="button" class="tour-next" data-tour-next>Next</button>
+        <button type="button" class="chip" data-tour-back>${t('Back')}</button>
+        <button type="button" class="tour-next" data-tour-next>${t('Next')}</button>
       </div>
     </div>`
   document.body.appendChild(overlay)
@@ -1171,8 +1274,8 @@ function startTour({ name = '', record = true } = {}) {
     document.querySelectorAll('.tour-spot').forEach((el) => el.classList.remove('tour-spot'))
     // Point at the tab this step is about (step 5 covers Grades and Messages).
     const spots = step === 4 ? ['grades', 'messages'] : step === 0 ? [] : [s.tab]
-    spots.forEach((t) => {
-      const tabEl = document.querySelector(`[data-tab="${t}"]`)
+    spots.forEach((tab) => {
+      const tabEl = document.querySelector(`[data-tab="${tab}"]`)
       tabEl?.classList.add('tour-spot')
       // On a phone the later tabs are scrolled out of the tab bar; bring this one into view.
       tabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
@@ -1182,11 +1285,11 @@ function startTour({ name = '', record = true } = {}) {
     const nav = document.querySelector('.tabs')
     overlay.style.paddingTop =
       nav && window.innerWidth > 560 ? `${Math.round(nav.getBoundingClientRect().bottom + 16)}px` : ''
-    overlay.querySelector('.tour-progress').textContent = `${step + 1} of ${TOUR_STEPS.length}`
+    overlay.querySelector('.tour-progress').textContent = t('{step} of {total}', { step: step + 1, total: TOUR_STEPS.length })
     overlay.querySelector('#tour-title').textContent = s.title(name)
-    overlay.querySelector('#tour-body').textContent = s.body
+    overlay.querySelector('#tour-body').textContent = s.body()
     back.hidden = step === 0
-    next.textContent = step === 0 ? 'Show me around' : step === TOUR_STEPS.length - 1 ? 'Done' : 'Next'
+    next.textContent = step === 0 ? t('Show me around') : step === TOUR_STEPS.length - 1 ? t('Done') : t('Next')
     next.focus()
   }
 
@@ -1232,7 +1335,7 @@ function startTour({ name = '', record = true } = {}) {
 
 function renderDashboard(me) {
   if (!me.students.length) {
-    app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
+    app.innerHTML = `<h1>${t('Welcome')}</h1><p class="hint">${t('No student linked to this account yet.')}</p>`
     return
   }
   const multi = me.students.length > 1
@@ -1244,12 +1347,12 @@ function renderDashboard(me) {
   app.innerHTML =
     offlineBannerHtml() +
     `<div id="notif-badge"></div>
-     <h1 id="greeting">Welcome back</h1>
+     <h1 id="greeting">${t('Welcome back')}</h1>
      <p class="hint" style="margin-bottom:16px">${esc(dueSummary(allHomework))}</p>
-     <nav class="tabs" role="tablist" aria-label="Sections">
+     <nav class="tabs" role="tablist" aria-label="${t('Sections')}">
        ${TABS.map(
          ([id, label]) =>
-           `<button type="button" role="tab" class="tab" data-tab="${id}" aria-controls="panel-${id}">${label}${
+           `<button type="button" role="tab" class="tab" data-tab="${id}" aria-controls="panel-${id}">${t(label)}${
              id === 'classwork' && missingCount ? ` <span class="tab-count">${missingCount}</span>` : ''
            }${id === 'messages' ? ' <span class="tab-count" id="unread-count" hidden></span>' : ''}</button>`
        ).join('')}
@@ -1257,10 +1360,10 @@ function renderDashboard(me) {
 
      <section class="panel" id="panel-home" data-panel="home" role="tabpanel">
        <div id="profile-nudge"></div>
-       <div class="section-title">Due soon</div>
+       <div class="section-title">${t('Due soon')}</div>
        ${dueSoonHtml(allHomework, multi)}
-       <div class="section-title">Class Story</div>
-       <div id="story">Loading…</div>
+       <div class="section-title">${t('Class Story')}</div>
+       <div id="story">${t('Loading…')}</div>
      </section>
 
      <section class="panel" id="panel-classwork" data-panel="classwork" role="tabpanel" hidden>
@@ -1272,7 +1375,7 @@ function renderDashboard(me) {
            .map(
              (c) => `
            <div class="section-title">${esc(c.name)}</div>
-           ${c.homework && c.homework.length ? homeworkByTopicHtml(c.homework, s.studentId) : '<p class="muted">No homework yet.</p>'}`
+           ${c.homework && c.homework.length ? homeworkByTopicHtml(c.homework, s.studentId) : `<p class="muted">${t('No homework yet.')}</p>`}`
            )
            .join('')}`
          )
@@ -1281,19 +1384,19 @@ function renderDashboard(me) {
 
      <section class="panel" id="panel-study" data-panel="study" role="tabpanel" hidden>
        <div style="display:none">
-         <div class="section-title">Materials</div>
+         <div class="section-title">${t('Materials')}</div>
          <div id="materials"></div>
        </div>
        ${me.students
          .map(
            (s) => `
-         <div class="section-title">Study Helper${multi ? ` · ${esc(s.studentName)}` : ''}</div>
+         <div class="section-title">${t('Study Helper')}${multi ? ` · ${esc(s.studentName)}` : ''}</div>
          <div class="card">
-           <p class="muted" style="margin:0 0 8px">Ask about your homework or class materials. Answers cite your teacher's materials where they can.</p>
+           <p class="muted" style="margin:0 0 8px">${t("Ask about your homework or class materials. Answers cite your teacher's materials where they can.")}</p>
            <div id="ai-chat-${esc(s.studentId)}" class="ai-chat"></div>
            <form data-ai-chat="${esc(s.studentId)}" style="margin-top:10px">
-             <textarea rows="2" placeholder="Ask about your homework or a topic you're stuck on…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
-             <button type="submit">Ask</button>
+             <textarea rows="2" placeholder="${t("Ask about your homework or a topic you're stuck on…")}" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+             <button type="submit">${t('Ask')}</button>
              <p class="error"></p>
            </form>
          </div>`
@@ -1311,14 +1414,14 @@ function renderDashboard(me) {
              (c) => `
            <div class="card">
              <div class="row"><strong>${esc(c.name)}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
-             <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? 'Letter grade ' + esc(c.letter) : 'No grade yet'}</span><span class="muted">Attendance ${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
+             <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? esc(t('Letter grade {letter}', { letter: c.letter })) : t('No grade yet')}</span><span class="muted">${t('Attendance {rate}', { rate: c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—' })}</span></div>
            </div>`
            )
            .join('')}`
          )
          .join('')}
        <div style="display:none">
-         <div class="section-title">Portfolio</div>
+         <div class="section-title">${t('Portfolio')}</div>
          <div id="portfolio"></div>
        </div>
      </section>
@@ -1326,49 +1429,57 @@ function renderDashboard(me) {
      <section class="panel" id="panel-messages" data-panel="messages" role="tabpanel" hidden>
        <div class="card">
          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px">
-           <strong>Your teacher</strong>
-           <select id="msg-lang" aria-label="Translate messages into" style="font-size:.75rem; padding:4px 6px; width:auto; max-width:100%; min-width:0">
-             ${LANGUAGES.map(([v, label]) => `<option value="${v}">Translate into ${label}</option>`).join('')}
+           <strong>${t('Your teacher')}</strong>
+           <select id="msg-lang" aria-label="${t('Translate messages into')}" style="font-size:.75rem; padding:4px 6px; width:auto; max-width:100%; min-width:0">
+             ${LANGUAGES.map(([v]) => `<option value="${v}"${v === readingLanguage ? ' selected' : ''}>${esc(t('Translate into {language}', { language: languageLabel(v) }))}</option>`).join('')}
            </select>
          </div>
-         <div id="messages">Loading…</div>
+         <div id="messages">${t('Loading…')}</div>
          <form id="msg-form" style="margin-top:10px">
-           <textarea id="msg-body" rows="2" placeholder="Message the teacher…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
-           <button type="submit">Send</button>
+           <textarea id="msg-body" rows="2" placeholder="${t('Message the teacher…')}" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
+           <button type="submit">${t('Send')}</button>
          </form>
        </div>
      </section>
 
      <section class="panel" id="panel-account" data-panel="account" role="tabpanel" hidden>
-       <div class="section-title">Profile</div>
+       <div class="section-title">${t('Profile')}</div>
        <div id="profiles"></div>
-       <div class="section-title">Email updates</div>
+       <div class="section-title">${t('Language')} · Language</div>
        <div class="card">
-         <p class="muted" style="margin:0 0 8px">Get a weekly summary emailed to you — grades, attendance, what's due, and any class updates.</p>
+         <p class="muted" style="margin:0 0 8px">${t('Choose the language for buttons and menus. Anything your teacher writes can also be translated with its Translate button.')}</p>
+         <div class="chip-row" role="group" aria-label="${t('Language')}">
+           <button type="button" class="chip" data-ui-lang="en" aria-pressed="${UI_LANG === 'en'}">English</button>
+           <button type="button" class="chip" data-ui-lang="zh" aria-pressed="${UI_LANG === 'zh'}">中文</button>
+         </div>
+       </div>
+       <div class="section-title">${t('Email updates')}</div>
+       <div class="card">
+         <p class="muted" style="margin:0 0 8px">${t("Get a weekly summary emailed to you — grades, attendance, what's due, and any class updates.")}</p>
          <form id="email-form" style="display:flex; gap:8px">
            <input id="email-input" type="email" placeholder="you@example.com" style="flex:1; box-sizing:border-box; padding:10px; border:1px solid var(--border); border-radius:10px; font:inherit" />
-           <button type="submit" style="width:auto; margin-top:0">Save</button>
+           <button type="submit" style="width:auto; margin-top:0">${t('Save')}</button>
          </form>
          <p id="email-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
        </div>
-       <div class="section-title">Password</div>
+       <div class="section-title">${t('Password')}</div>
        <div class="card">
-         <p class="muted" style="margin:0 0 8px">Change your password. This signs you out on every other device and cancels any quick-login QR codes.</p>
+         <p class="muted" style="margin:0 0 8px">${t('Change your password. This signs you out on every other device and cancels any quick-login QR codes.')}</p>
          <form id="password-form">
-           <label for="pw-current">Current password</label>
+           <label for="pw-current">${t('Current password')}</label>
            ${passwordFieldHtml('pw-current', 'current-password')}
-           <label for="pw-new">New password (at least 8 characters)</label>
+           <label for="pw-new">${t('New password (at least 8 characters)')}</label>
            ${passwordFieldHtml('pw-new', 'new-password', 'minlength="8"')}
-           <button type="submit">Change password</button>
+           <button type="submit">${t('Change password')}</button>
          </form>
          <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
        </div>
-       <div class="section-title">This device</div>
+       <div class="section-title">${t('This device')}</div>
        <div class="card">
          <div style="display:flex; gap:8px; flex-wrap:wrap">
-           <button class="chip" id="qr">Get quick-login QR</button>
-           <button class="chip" id="replay-tour">Show the tour again</button>
-           <button class="chip" id="logout">Log out</button>
+           <button class="chip" id="qr">${t('Get quick-login QR')}</button>
+           <button class="chip" id="replay-tour">${t('Show the tour again')}</button>
+           <button class="chip" id="logout">${t('Log out')}</button>
          </div>
          <div id="qrbox"></div>
        </div>
@@ -1376,6 +1487,12 @@ function renderDashboard(me) {
 
   setupTabs()
   wirePasswordToggles()
+  document.querySelectorAll('[data-ui-lang]').forEach((btn) => {
+    btn.onclick = () => {
+      if (btn.dataset.uiLang !== UI_LANG) setUiLang(btn.dataset.uiLang)
+    }
+  })
+  wireTranslateControls(app)
   if (me.onboarded === false && !servedFromCache) startTour({ name: me.students[0]?.studentName.split(' ')[0] })
   document.querySelectorAll('[data-open-hw]').forEach((row) => {
     row.onclick = () => {
@@ -1459,20 +1576,20 @@ function renderDashboard(me) {
       textarea.value = ''
       const thinking = document.createElement('div')
       thinking.className = 'msg teacher'
-      thinking.innerHTML = '<div class="msg-bubble muted">Thinking…</div>'
+      thinking.innerHTML = `<div class="msg-bubble muted">${t('Thinking…')}</div>`
       box.appendChild(thinking)
       box.scrollTop = box.scrollHeight
       try {
         const { reply, citations } = await api('/me/ai/chat', {
           method: 'POST',
-          body: { studentId, message }
+          body: { studentId, message, language: readingLanguage }
         })
         const citeHtml = citations && citations.length
-          ? `<div class="muted" style="font-size:.76rem; margin-top:4px">Sources: ${citations
+          ? `<div class="muted" style="font-size:.76rem; margin-top:4px">${t('Sources:')} ${citations
               .map((c) => `[${c.number}] ${esc(c.title)}`)
               .join(' · ')}</div>`
           : ''
-        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="chip" style="margin-top:6px" data-listen-reply>Listen</button>`
+        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="chip" style="margin-top:6px" data-listen-reply>${t('Listen')}</button>`
         thinking.querySelector('[data-listen-reply]').onclick = (evt) => speak(reply, evt.target)
       } catch (ex) {
         thinking.remove()
@@ -1486,6 +1603,7 @@ function renderDashboard(me) {
   loadClassStory()
   loadPortfolio()
   loadMaterials()
+  document.getElementById('msg-lang').onchange = (e) => setReadingLanguage(e.target.value)
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()
     const input = document.getElementById('msg-body')
@@ -1501,7 +1619,7 @@ function renderDashboard(me) {
   document.getElementById('password-form').onsubmit = async (e) => {
     e.preventDefault()
     const status = document.getElementById('password-status')
-    status.textContent = 'Saving…'
+    status.textContent = t('Saving…')
     try {
       await api('/me/password', {
         method: 'POST',
@@ -1511,7 +1629,7 @@ function renderDashboard(me) {
         }
       })
       e.target.reset()
-      status.textContent = 'Password changed. Other devices have been signed out.'
+      status.textContent = t('Password changed. Other devices have been signed out.')
     } catch (ex) {
       status.textContent = ex.message
     }
@@ -1520,13 +1638,13 @@ function renderDashboard(me) {
   document.getElementById('email-form').onsubmit = async (e) => {
     e.preventDefault()
     const status = document.getElementById('email-status')
-    status.textContent = 'Saving…'
+    status.textContent = t('Saving…')
     try {
       await api('/me/account', {
         method: 'POST',
         body: { email: document.getElementById('email-input').value.trim() }
       })
-      status.textContent = 'Saved.'
+      status.textContent = t('Saved.')
     } catch (ex) {
       status.textContent = ex.message
     }
@@ -1536,8 +1654,8 @@ function renderDashboard(me) {
     const { qrDataUrl } = await api('/me/qr', { method: 'POST' })
     document.getElementById('qrbox').innerHTML = `
       <img class="qr" src="${qrDataUrl}" />
-      <p class="muted" style="text-align:center">Save this image — opening it logs you in with one tap, no typing.</p>
-      <a class="linklike" href="${qrDataUrl}" download="eduboard-login.png">Download</a>
+      <p class="muted" style="text-align:center">${t('Save this image — opening it logs you in with one tap, no typing.')}</p>
+      <a class="linklike" href="${qrDataUrl}" download="eduboard-login.png">${t('Download')}</a>
     `
   }
   document.getElementById('replay-tour').onclick = () =>

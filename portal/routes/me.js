@@ -14,6 +14,12 @@ const {
   issueSessionCookie
 } = require('../auth')
 const { complete, AiNotConfiguredError } = require('../services/ai')
+const {
+  isLanguage,
+  translateText,
+  buildTranslationPrompt,
+  cleanReply
+} = require('../services/translate')
 const { rateLimit, LIMITS } = require('../rateLimit')
 const { submissionTiming, DEFAULT_TIMEZONE } = require('../services/deadlines')
 const { checkUpload } = require('../services/fileSafety')
@@ -37,6 +43,16 @@ const aiLimits = [
     message: "You've reached today's AI limit for this account. It resets within 24 hours."
   })
 ]
+
+/** The same two budgets, spent only when an AI call is actually about to happen. For
+ * translation, where most requests are answered from the cache: a class opening the
+ * same homework shouldn't use up anyone's allowance. Returns an error message or null. */
+function spendAiBudget(req) {
+  for (const limit of aiLimits) {
+    if (!limit.limiter.consume(req.accountId).allowed) return limit.message
+  }
+  return null
+}
 
 // A submitted file travels base64-encoded inside the JSON body. Cap the decoded size
 // well under the 50mb body limit so one upload can't fill the VPS's small disk.
@@ -490,8 +506,9 @@ router.post('/messages', (req, res) => {
 // up if that's already configured; if it isn't, the family just sees the original text
 // with no translate option, rather than an error.
 router.post('/messages/:id/translate', aiLimits, async (req, res) => {
-  const targetLang = (req.body?.targetLang || '').trim()
-  if (!targetLang) return res.status(400).json({ error: 'targetLang is required' })
+  const targetLang = req.body?.targetLang
+  if (!isLanguage(targetLang))
+    return res.status(400).json({ error: 'Pick a language from the list' })
 
   const message = db
     .prepare('SELECT * FROM messages WHERE id = ? AND account_id = ?')
@@ -507,14 +524,10 @@ router.post('/messages/:id/translate', aiLimits, async (req, res) => {
 
   const teacherId = getTeacherIdForAccount(req.accountId)
   try {
-    const translated = await complete(
-      teacherId,
-      'You translate short parent-teacher messages. Reply with ONLY the translation, ' +
-        'no notes, no quotes, no original text — preserve tone and meaning exactly.',
-      `Translate this message into ${targetLang}:\n\n${message.body}`,
-      500
-    )
-    const translatedBody = translated.trim()
+    // Not translateText(): messages keep their own per-message cache
+    // (message_translations), shared with the teacher's translate button.
+    const { system, user } = buildTranslationPrompt(targetLang, message.body)
+    const translatedBody = cleanReply(await complete(teacherId, system, user, 1500))
     db.prepare(
       `INSERT INTO message_translations (message_id, translated_body, target_lang)
        VALUES (?, ?, ?)
@@ -522,6 +535,55 @@ router.post('/messages/:id/translate', aiLimits, async (req, res) => {
     ).run(message.id, translatedBody, targetLang)
     res.json({ translatedBody })
   } catch (err) {
+    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+  }
+})
+
+// Translates something the teacher wrote for the class: a homework's title and
+// instructions, a class post, or a material's study guide. Only content from a class
+// this account's student is actively enrolled in can be translated.
+class AiBudgetError extends Error {}
+
+const TRANSLATABLE = {
+  homework: {
+    sql: 'SELECT class_id, title, description FROM homework_assignments WHERE id = ?',
+    fields: ['title', 'description']
+  },
+  post: { sql: 'SELECT class_id, body FROM class_posts WHERE id = ?', fields: ['body'] },
+  material: {
+    sql: 'SELECT class_id, study_guide FROM materials WHERE id = ?',
+    fields: ['study_guide']
+  }
+}
+
+router.post('/translate', async (req, res) => {
+  const { kind, id, targetLang } = req.body || {}
+  const spec = Object.hasOwn(TRANSLATABLE, kind) ? TRANSLATABLE[kind] : null
+  if (!spec || typeof id !== 'string')
+    return res.status(400).json({ error: 'Nothing to translate' })
+  if (!isLanguage(targetLang))
+    return res.status(400).json({ error: 'Pick a language from the list' })
+
+  const row = db.prepare(spec.sql).get(id)
+  const classIds = getActiveClassIds(getLinkedStudentIds(req.accountId))
+  if (!row || !classIds.includes(row.class_id)) return res.status(404).json({ error: 'Not found' })
+
+  const teacher = db.prepare('SELECT teacher_id FROM classes WHERE id = ?').get(row.class_id)
+  try {
+    const out = {}
+    let truncated = false
+    for (const field of spec.fields) {
+      const result = await translateText(teacher?.teacher_id, row[field], targetLang, () => {
+        const problem = spendAiBudget(req)
+        if (problem) throw new AiBudgetError(problem)
+      })
+      out[field === 'study_guide' ? 'studyGuide' : field] = result.text
+      truncated = truncated || result.truncated
+    }
+    res.json({ ...out, truncated })
+  } catch (err) {
+    if (err instanceof AiBudgetError) return res.status(429).json({ error: err.message })
     if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
     res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
   }
@@ -612,7 +674,7 @@ function buildStudyContext(studentId) {
 }
 
 router.post('/ai/chat', aiLimits, async (req, res) => {
-  const { studentId, message } = req.body
+  const { studentId, message, language } = req.body
   const text = (message || '').trim()
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
     return res.status(403).json({ error: 'Not your student' })
@@ -629,6 +691,9 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
     "context below about the student's classes and homework only to make your answer " +
     'more relevant; do not mention this context block itself.\n\n' +
     buildStudyContext(studentId)
+  // The student's chosen reading language (from a fixed list, since it goes into the
+  // prompt). Otherwise the model answers in whatever language the question used.
+  if (isLanguage(language)) system += `\n\nAlways reply in ${language}.`
 
   let citations = []
   if (materialMatches.length) {

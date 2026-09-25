@@ -240,6 +240,15 @@ db.exec(`
     target_lang TEXT NOT NULL
   );
 
+  -- Translations of what students read (homework, posts, study guides), keyed by a hash
+  -- of language + text so identical text is translated once and edited text again.
+  CREATE TABLE IF NOT EXISTS content_translations (
+    key TEXT PRIMARY KEY,
+    target_lang TEXT NOT NULL,
+    translated TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
 `)
 
 // CREATE TABLE IF NOT EXISTS above does nothing once a table already exists on a live

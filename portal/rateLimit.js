@@ -73,6 +73,7 @@ function rateLimit({ windowMs, max, keyFn = (req) => req.ip, message }) {
     next()
   }
   middleware.limiter = limiter
+  middleware.message = message
   return middleware
 }
 

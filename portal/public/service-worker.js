@@ -1,12 +1,12 @@
-// Caches the app shell only (this file's own HTML/manifest/icon) so the page can load
+// Caches the app shell only (the page, its translations, manifest and icon) so the page can load
 // at all when offline — API data is deliberately NOT cached here. That happens in
 // index.html's own api() function instead, via the page's own Cache Storage access,
 // because only the page can tell the difference between "served fresh" and "served
 // from cache" and show an honest "last synced" banner; a service worker serving stale
 // JSON silently would hide that from the student.
 // Bump when the shell's behaviour changes; activate() deletes every other cache name.
-const SHELL_CACHE = 'eduboard-shell-v2'
-const SHELL_ASSETS = ['/', '/manifest.json', '/icon.svg']
+const SHELL_CACHE = 'eduboard-shell-v3'
+const SHELL_ASSETS = ['/', '/i18n.js', '/manifest.json', '/icon.svg']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
