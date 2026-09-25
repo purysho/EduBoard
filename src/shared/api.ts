@@ -1,6 +1,7 @@
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
+import type { SetupProgress } from './setupChecklist'
 import type {
   FeedbackDraft,
   PortalStudentProfile,
@@ -171,6 +172,8 @@ export interface EduBoardApi {
   }
   reports: {
     dashboardStats(): Promise<DashboardStats>
+    /** Facts behind the Dashboard's Getting started checklist. */
+    setupProgress(): Promise<SetupProgress>
     classRoster(classId: string): Promise<ClassRosterRow[]>
     classReport(classId: string): Promise<ClassReport | null>
     studentClassGrade(studentId: string, classId: string): Promise<StudentClassGrade | null>

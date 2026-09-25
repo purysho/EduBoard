@@ -75,6 +75,7 @@ export const IpcChannels = {
   },
   reports: {
     dashboardStats: 'reports:dashboardStats',
+    setupProgress: 'reports:setupProgress',
     classRoster: 'reports:classRoster',
     classReport: 'reports:classReport',
     studentClassGrade: 'reports:studentClassGrade',

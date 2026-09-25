@@ -599,6 +599,18 @@ export function useDeleteScheduleSlot() {
 
 // ---- Reports --------------------------------------------------------------------------
 
+/** Always refetched when the Dashboard opens, so steps the teacher just finished
+ * elsewhere in the app show as done straight away. */
+export function useSetupProgress(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['setupProgress'],
+    queryFn: () => api().reports.setupProgress(),
+    staleTime: 0,
+    refetchOnMount: 'always',
+    enabled: options?.enabled ?? true
+  })
+}
+
 export function useDashboardStats() {
   return useQuery({
     queryKey: queryKeys.dashboardStats,

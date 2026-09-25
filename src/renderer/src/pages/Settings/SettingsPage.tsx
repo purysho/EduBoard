@@ -46,7 +46,21 @@ export function SettingsPage(): React.JSX.Element {
 
   return (
     <div>
-      <PageHeader title="Settings" description="App-wide defaults, terms, import, and backups." />
+      <PageHeader
+        title="Settings"
+        description="App-wide defaults, terms, import, and backups."
+        actions={
+          settings?.onboardingDismissed ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => updateSettings.mutate({ onboardingDismissed: false })}
+            >
+              Show getting-started checklist
+            </Button>
+          ) : null
+        }
+      />
 
       <div className="space-y-6">
         <Card>

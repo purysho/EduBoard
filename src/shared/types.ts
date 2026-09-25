@@ -595,6 +595,8 @@ export interface AppSettings {
   digestSmtpPass: string
   digestFromEmail: string
   digestFromName: string
+  /** The teacher hid the Dashboard's Getting started checklist. */
+  onboardingDismissed: boolean
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -620,7 +622,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestSmtpUser: '',
   digestSmtpPass: '',
   digestFromEmail: '',
-  digestFromName: ''
+  digestFromName: '',
+  onboardingDismissed: false
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

@@ -70,6 +70,7 @@ import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
 import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
+import { getSetupProgress } from '../services/setupProgress'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
@@ -272,6 +273,7 @@ export function registerIpcHandlers(): void {
 
   // --- Reports ------------------------------------------------------------------------------
   handle(IpcChannels.reports.dashboardStats, () => reportsService.getDashboardStats())
+  handle(IpcChannels.reports.setupProgress, () => getSetupProgress())
   handle(IpcChannels.reports.classRoster, (_e, classId: string) =>
     reportsService.getClassRoster(classId)
   )
