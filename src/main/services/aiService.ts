@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getSettings } from '../repositories/settingsRepo'
 import type {
+  AiConnectionConfig,
+  AiConnectionTestResult,
   AiProvider,
   DraftedLessonPlan,
   DraftLessonPlanInput,
@@ -20,10 +22,10 @@ const OPENAI_COMPATIBLE_PRESETS: Record<
     baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
     model: 'qwen-plus'
   },
-  // GLM-4-Flash is Zhipu's genuinely-free tier (not just cheap) — the default for the
+  // GLM-4-Flash-250414 is Zhipu's genuinely-free tier (not just cheap) — the default for the
   // Portal's student-facing AI key, where "free enough to hand to a whole class" matters
   // more than raw quality.
-  zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' }
+  zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash-250414' }
 }
 
 export class AiNotConfiguredError extends Error {
@@ -92,27 +94,32 @@ async function completeOpenAiCompatible(
   return data.choices?.[0]?.message?.content ?? ''
 }
 
-async function complete(system: string, user: string, maxTokens: number): Promise<string> {
-  const settings = getSettings()
-  const provider: AiProvider = settings.aiProvider
+/** The model a config will actually call — shown in the test result so a teacher can
+ * see which model their key reached. */
+export function modelFor(config: AiConnectionConfig): string {
+  if (config.provider === 'anthropic') return ANTHROPIC_MODEL
+  if (config.provider === 'custom') return config.customModel.trim()
+  return OPENAI_COMPATIBLE_PRESETS[config.provider].model
+}
+
+async function completeWith(
+  config: AiConnectionConfig,
+  system: string,
+  user: string,
+  maxTokens: number
+): Promise<string> {
+  const provider = config.provider
+  const apiKey = config.apiKey.trim()
 
   if (provider === 'custom') {
-    const baseUrl = settings.aiCustomBaseUrl.trim()
-    const model = settings.aiCustomModel.trim()
+    const baseUrl = config.customBaseUrl.trim()
+    const model = config.customModel.trim()
     if (!baseUrl || !model) throw new AiNotConfiguredError()
     // A key isn't required for every custom endpoint (e.g. a local Ollama server) —
     // only Anthropic and the built-in presets below need one to even attempt a call.
-    return completeOpenAiCompatible(
-      baseUrl,
-      model,
-      settings.aiApiKey.trim(),
-      system,
-      user,
-      maxTokens
-    )
+    return completeOpenAiCompatible(baseUrl, model, apiKey, system, user, maxTokens)
   }
 
-  const apiKey = settings.aiApiKey.trim()
   if (!apiKey) throw new AiNotConfiguredError()
 
   if (provider === 'anthropic') {
@@ -120,6 +127,61 @@ async function complete(system: string, user: string, maxTokens: number): Promis
   }
   const preset = OPENAI_COMPATIBLE_PRESETS[provider]
   return completeOpenAiCompatible(preset.baseUrl, preset.model, apiKey, system, user, maxTokens)
+}
+
+async function complete(system: string, user: string, maxTokens: number): Promise<string> {
+  const settings = getSettings()
+  return completeWith(
+    {
+      provider: settings.aiProvider,
+      apiKey: settings.aiApiKey,
+      customBaseUrl: settings.aiCustomBaseUrl,
+      customModel: settings.aiCustomModel
+    },
+    system,
+    user,
+    maxTokens
+  )
+}
+
+/** Turns a provider failure into something a teacher can act on. The raw provider
+ * text stays at the end, because it is often the most specific part (e.g. Zhipu's
+ * "模型不存在" for a retired model name). */
+export function describeAiFailure(err: unknown): string {
+  if (err instanceof AiNotConfiguredError) return 'No key entered yet.'
+  const message = err instanceof Error ? err.message : String(err)
+  const status =
+    /AI provider error (\d{3})/.exec(message)?.[1] ?? /\b(401|403|404|429)\b/.exec(message)?.[1]
+  const detail = message.replace(/^AI provider error \d{3}: /, '').slice(0, 300)
+  switch (status) {
+    case '401':
+    case '403':
+      return `The provider rejected the key. Check it was copied in full. (${detail})`
+    case '404':
+      return `The provider doesn't recognise this model or address. (${detail})`
+    case '429':
+      return `The key works but is out of quota or rate-limited right now. (${detail})`
+  }
+  if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network/i.test(message)) {
+    return `Couldn't reach the provider. Check this computer's internet connection or VPN. (${detail})`
+  }
+  return detail
+}
+
+/** Sends one tiny request with the given settings (which may not be saved yet), so a
+ * teacher finds out a key or model name is wrong in Settings rather than in class. */
+export async function testConnection(config: AiConnectionConfig): Promise<AiConnectionTestResult> {
+  try {
+    const reply = await completeWith(
+      config,
+      'You are a connection check. Reply with just the word OK.',
+      'Reply with OK.',
+      16
+    )
+    return { ok: true, model: modelFor(config), reply: reply.trim().slice(0, 100) }
+  } catch (err) {
+    return { ok: false, error: describeAiFailure(err) }
+  }
 }
 
 /** A general-purpose escape hatch onto whichever provider/model is configured — used by

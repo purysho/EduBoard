@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
-import type { AppSettings } from '@shared/types'
+import type { AiConnectionConfig, AiConnectionTestResult, AppSettings } from '@shared/types'
 import { portalUrlProblem } from '@shared/portalUrl'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
@@ -19,6 +19,43 @@ const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
   zhipu: 'Zhipu (GLM)',
   anthropic: 'Anthropic',
   custom: 'API'
+}
+
+/** Sends one tiny request with what's in the form right now, saved or not. The result
+ * is cleared whenever the provider, key or model changes, so a stale "Works" never
+ * sits next to a different key. */
+function TestAiButton({ config }: { config: AiConnectionConfig }): React.JSX.Element {
+  const signature = JSON.stringify(config)
+  const [result, setResult] = useState<{ for: string; value: AiConnectionTestResult } | null>(null)
+  const [testing, setTesting] = useState(false)
+  const shown = result?.for === signature ? result.value : null
+
+  async function run(): Promise<void> {
+    setTesting(true)
+    try {
+      setResult({ for: signature, value: await window.api.ai.testConnection(config) })
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  return (
+    <div className="col-span-2 -mt-1 flex flex-wrap items-center gap-3">
+      <Button type="button" variant="secondary" onClick={run} disabled={testing}>
+        {testing ? 'Testing…' : 'Test connection'}
+      </Button>
+      {shown?.ok === true && (
+        <span role="status" className="text-xs text-[var(--color-success)]">
+          Works. {shown.model} replied.
+        </span>
+      )}
+      {shown?.ok === false && (
+        <span role="alert" className="text-xs text-[var(--color-danger)]">
+          {shown.error}
+        </span>
+      )}
+    </div>
+  )
 }
 
 export function SettingsPage(): React.JSX.Element {
@@ -156,6 +193,14 @@ export function SettingsPage(): React.JSX.Element {
                   placeholder={form.aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
                 />
               </FormRow>
+              <TestAiButton
+                config={{
+                  provider: form.aiProvider,
+                  apiKey: form.aiApiKey,
+                  customBaseUrl: form.aiCustomBaseUrl,
+                  customModel: form.aiCustomModel
+                }}
+              />
               <FormRow label="Portal URL" hint="Where your deployed Portal server lives">
                 <Input
                   value={form.portalUrl}
@@ -182,8 +227,9 @@ export function SettingsPage(): React.JSX.Element {
                 <p className="text-xs text-[var(--color-text-muted)]">
                   One shared key every student can use for AI features on the Portal — chatting
                   about their materials, study help. Never sent to students&apos; browsers; the
-                  Portal server calls the provider on their behalf. Zhipu&apos;s GLM-4-Flash is
-                  free, so it&apos;s the default.
+                  Portal server calls the provider on their behalf. Zhipu&apos;s GLM-4-Flash is free
+                  (sign up at open.bigmodel.cn), so it&apos;s the default. The test below runs from
+                  this computer; the Portal server makes the same call.
                 </p>
               </div>
               <FormRow label="Student AI provider">
@@ -216,7 +262,7 @@ export function SettingsPage(): React.JSX.Element {
                     <Input
                       value={form.portalAiCustomModel}
                       onChange={(e) => setForm({ ...form, portalAiCustomModel: e.target.value })}
-                      placeholder="e.g. glm-4-flash"
+                      placeholder="e.g. glm-4-flash-250414"
                     />
                   </FormRow>
                 </>
@@ -232,6 +278,14 @@ export function SettingsPage(): React.JSX.Element {
                   placeholder="sk-…"
                 />
               </FormRow>
+              <TestAiButton
+                config={{
+                  provider: form.portalAiProvider,
+                  apiKey: form.portalAiApiKey,
+                  customBaseUrl: form.portalAiCustomBaseUrl,
+                  customModel: form.portalAiCustomModel
+                }}
+              />
               <div className="col-span-2 mt-2 border-t border-[var(--color-border)] pt-4">
                 <h3 className="mb-1 text-sm font-semibold">Weekly parent digest email</h3>
                 <p className="text-xs text-[var(--color-text-muted)]">

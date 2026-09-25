@@ -1,7 +1,11 @@
 import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
-import type { DraftLessonPlanInput, DraftReportCommentInput } from '@shared/types'
+import type {
+  AiConnectionConfig,
+  DraftLessonPlanInput,
+  DraftReportCommentInput
+} from '@shared/types'
 
 import * as studentsRepo from '../repositories/students'
 import * as termsRepo from '../repositories/terms'
@@ -588,6 +592,9 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.ai.draftReportComment, (_e, input: DraftReportCommentInput) =>
     aiService.draftReportComment(input)
+  )
+  handle(IpcChannels.ai.testConnection, (_e, config: AiConnectionConfig) =>
+    aiService.testConnection(config)
   )
 
   // --- Homework assignments ------------------------------------------------------------------

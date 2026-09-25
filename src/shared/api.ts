@@ -20,6 +20,8 @@ import type {
   DraftedLessonPlan,
   DraftLessonPlanInput,
   DraftReportCommentInput,
+  AiConnectionConfig,
+  AiConnectionTestResult,
   HomeworkAssignment,
   HomeworkAssignmentWithClass,
   AuditLogEntry,
@@ -300,6 +302,7 @@ export interface EduBoardApi {
   ai: {
     draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan>
     draftReportComment(input: DraftReportCommentInput): Promise<string>
+    testConnection(config: AiConnectionConfig): Promise<AiConnectionTestResult>
   }
   homeworkAssignments: {
     listAll(): Promise<HomeworkAssignmentWithClass[]>

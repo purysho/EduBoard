@@ -192,7 +192,8 @@ export const IpcChannels = {
   },
   ai: {
     draftLessonPlan: 'ai:draftLessonPlan',
-    draftReportComment: 'ai:draftReportComment'
+    draftReportComment: 'ai:draftReportComment',
+    testConnection: 'ai:testConnection'
   },
   homeworkAssignments: {
     listAll: 'homeworkAssignments:listAll',

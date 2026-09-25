@@ -6,7 +6,8 @@ const db = require('../db')
 const PRESETS = {
   deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
   qwen: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
-  zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' }
+  // Must match aiService.ts. Bare "glm-4-flash" is no longer an accepted model name.
+  zhipu: { baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash-250414' }
 }
 
 class AiNotConfiguredError extends Error {

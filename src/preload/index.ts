@@ -224,7 +224,8 @@ const api: EduBoardApi = {
   },
   ai: {
     draftLessonPlan: (input) => invoke(IpcChannels.ai.draftLessonPlan, input),
-    draftReportComment: (input) => invoke(IpcChannels.ai.draftReportComment, input)
+    draftReportComment: (input) => invoke(IpcChannels.ai.draftReportComment, input),
+    testConnection: (config) => invoke(IpcChannels.ai.testConnection, config)
   },
   homeworkAssignments: {
     listAll: () => invoke(IpcChannels.homeworkAssignments.listAll),

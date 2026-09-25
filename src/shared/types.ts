@@ -542,6 +542,17 @@ export interface LessonPlan {
 export const AI_PROVIDERS = ['deepseek', 'qwen', 'zhipu', 'anthropic', 'custom'] as const
 export type AiProvider = (typeof AI_PROVIDERS)[number]
 
+/** One AI provider setup, as entered in Settings (possibly not saved yet). */
+export interface AiConnectionConfig {
+  provider: AiProvider
+  apiKey: string
+  customBaseUrl: string
+  customModel: string
+}
+
+export type AiConnectionTestResult =
+  { ok: true; model: string; reply: string } | { ok: false; error: string }
+
 export interface AppSettings {
   teacherName: string
   schoolName: string
