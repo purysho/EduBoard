@@ -167,3 +167,13 @@ test('profile photos: stored re-encoded, served to the owner and teacher only, r
   assert.equal(removed.json.hasPhoto, false)
   assert.equal(fs.readdirSync(dir).length, 0)
 })
+
+test('the first-login tour is recorded once per account, on the server', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const { ada } = await twoStudents(portal)
+  assert.equal((await portal.call('GET', '/api/me', { cookie: ada })).json.onboarded, false)
+  assert.equal((await portal.call('POST', '/api/me/onboarding', { cookie: ada })).status, 200)
+  assert.equal((await portal.call('GET', '/api/me', { cookie: ada })).json.onboarded, true)
+  assert.equal((await portal.call('POST', '/api/me/onboarding')).status, 401)
+})

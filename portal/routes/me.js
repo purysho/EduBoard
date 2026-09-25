@@ -87,7 +87,12 @@ function getActiveClassIds(studentIds) {
 
 router.get('/', (req, res) => {
   const studentIds = getLinkedStudentIds(req.accountId)
-  if (!studentIds.length) return res.json({ students: [] })
+  // Whether this account has finished (or skipped) the first-login tour. Stored on the
+  // server so it isn't shown again on the student's next device.
+  const onboarded = !!db
+    .prepare('SELECT onboarded_at FROM accounts WHERE id = ?')
+    .get(req.accountId)?.onboarded_at
+  if (!studentIds.length) return res.json({ students: [], onboarded })
 
   const now = new Date()
   const students = studentIds.map((studentId) => {
@@ -183,7 +188,7 @@ router.get('/', (req, res) => {
     }
   })
 
-  res.json({ students })
+  res.json({ students, onboarded })
 })
 
 // Gated on the requesting account actually having a linked student enrolled in this
@@ -720,6 +725,15 @@ router.get('/qr', (req, res) => {
 router.delete('/qr/:id', (req, res) => {
   db.prepare('UPDATE qr_tokens SET revoked = 1 WHERE id = ? AND account_id = ?').run(
     req.params.id,
+    req.accountId
+  )
+  res.json({ ok: true })
+})
+
+// The first-login tour was finished or skipped. Idempotent; the first time is kept.
+router.post('/onboarding', (req, res) => {
+  db.prepare('UPDATE accounts SET onboarded_at = COALESCE(onboarded_at, ?) WHERE id = ?').run(
+    new Date().toISOString(),
     req.accountId
   )
   res.json({ ok: true })

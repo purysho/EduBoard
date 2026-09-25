@@ -64,6 +64,16 @@
   .pw-wrap input { padding-right: 70px; }
   button.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: auto; margin: 0; padding: 6px 10px; background: transparent; color: var(--primary-dark); font-size: .8rem; }
   button.pw-toggle:hover:not(:disabled) { background: #eef2ff; }
+  .tour { position: fixed; inset: 0; z-index: 50; background: rgb(15 23 42 / .35); display: flex; align-items: flex-start; justify-content: center; padding: 150px 16px 16px; }
+  .tour-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 50px rgb(15 23 42 / .25); }
+  .tour-card h2 { margin: 2px 0 6px; font-size: 1.15rem; }
+  .tour-card p { margin: 0; color: #475569; line-height: 1.5; font-size: .92rem; }
+  .tour-progress { font-size: .75rem !important; font-weight: 600; color: var(--primary) !important; }
+  .tour-actions { display: flex; gap: 6px; align-items: center; margin-top: 16px; }
+  button.tour-next { width: auto; margin: 0; padding: 9px 16px; }
+  body.touring .tabs { z-index: 60; pointer-events: none; }
+  button.tab.tour-spot { background: #eef2ff; color: var(--primary-dark); box-shadow: 0 0 0 2px var(--primary); }
+  @media (max-width: 560px) { .tour { align-items: flex-end; padding: 16px; } }
   :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   input[type=radio], input[type=checkbox] { width: auto; flex-shrink: 0; margin: 0; }
   .pill { white-space: nowrap; flex-shrink: 0; display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
@@ -1083,6 +1093,143 @@ function dueSoonHtml(all, multi) {
     .join('')}</div>`
 }
 
+// ---- First-login tour ---------------------------------------------------------------------
+// A few short steps that walk a new student through the real tabs (each step opens the
+// tab it describes and highlights it) rather than screenshots of them. Shown once per
+// account; finishing or skipping records it on the server. "Show the tour again" in
+// Account replays it without touching that record.
+const TOUR_STEPS = [
+  {
+    tab: 'home',
+    title: (name) => `Welcome${name ? ', ' + name : ''}!`,
+    body: "This is your class Portal. Here's a quick look around. It takes about 30 seconds."
+  },
+  {
+    tab: 'home',
+    title: () => 'Home',
+    body: 'Due soon lists anything missing first, then what’s due this week. Tap one to open it. Your teacher’s class updates appear below.'
+  },
+  {
+    tab: 'classwork',
+    title: () => 'Classwork',
+    body: 'Every assignment, grouped by unit. Open one to read the instructions, attach your work and turn it in. Quick checks are marked straight away.'
+  },
+  {
+    tab: 'study',
+    title: () => 'Study',
+    body: 'Materials your teacher shared, with study guides you can read or listen to, flashcards and practice quizzes. Stuck? Ask the Study Helper.'
+  },
+  {
+    tab: 'grades',
+    title: () => 'Grades and messages',
+    body: 'Grades shows your marks and attendance for each class. Messages is a private chat with your teacher, with a translate button if you need it.'
+  },
+  {
+    tab: 'account',
+    title: () => 'Make it yours',
+    body: 'Add a photo and a few words to your profile, get weekly email updates, or change your password. You can replay this tour from here any time.'
+  }
+]
+
+function startTour({ name = '', record = true } = {}) {
+  document.getElementById('tour')?.remove()
+  const previousFocus = document.activeElement
+  let step = 0
+
+  const overlay = document.createElement('div')
+  overlay.id = 'tour'
+  overlay.className = 'tour'
+  overlay.innerHTML = `
+    <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-body">
+      <p class="tour-progress" aria-live="polite"></p>
+      <h2 id="tour-title"></h2>
+      <p id="tour-body"></p>
+      <div class="tour-actions">
+        <button type="button" class="chip" data-tour-skip>Skip tour</button>
+        <span style="flex:1"></span>
+        <button type="button" class="chip" data-tour-back>Back</button>
+        <button type="button" class="tour-next" data-tour-next>Next</button>
+      </div>
+    </div>`
+  document.body.appendChild(overlay)
+  document.body.classList.add('touring')
+  const next = overlay.querySelector('[data-tour-next]')
+  const back = overlay.querySelector('[data-tour-back]')
+
+  function finish() {
+    document.querySelectorAll('.tour-spot').forEach((el) => el.classList.remove('tour-spot'))
+    overlay.remove()
+    document.body.classList.remove('touring')
+    document.removeEventListener('keydown', onKey, true)
+    if (record) api('/me/onboarding', { method: 'POST' }).catch(() => {})
+    if (previousFocus && previousFocus.focus) previousFocus.focus()
+  }
+
+  function render() {
+    const s = TOUR_STEPS[step]
+    showTab(s.tab)
+    document.querySelectorAll('.tour-spot').forEach((el) => el.classList.remove('tour-spot'))
+    // Point at the tab this step is about (step 5 covers Grades and Messages).
+    const spots = step === 4 ? ['grades', 'messages'] : step === 0 ? [] : [s.tab]
+    spots.forEach((t) => {
+      const tabEl = document.querySelector(`[data-tab="${t}"]`)
+      tabEl?.classList.add('tour-spot')
+      // On a phone the later tabs are scrolled out of the tab bar; bring this one into view.
+      tabEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    })
+    // Sit just below the tab bar on wider screens, so the highlighted tab and the card
+    // never overlap. (On phones the card is a bottom sheet instead; see the CSS.)
+    const nav = document.querySelector('.tabs')
+    overlay.style.paddingTop =
+      nav && window.innerWidth > 560 ? `${Math.round(nav.getBoundingClientRect().bottom + 16)}px` : ''
+    overlay.querySelector('.tour-progress').textContent = `${step + 1} of ${TOUR_STEPS.length}`
+    overlay.querySelector('#tour-title').textContent = s.title(name)
+    overlay.querySelector('#tour-body').textContent = s.body
+    back.hidden = step === 0
+    next.textContent = step === 0 ? 'Show me around' : step === TOUR_STEPS.length - 1 ? 'Done' : 'Next'
+    next.focus()
+  }
+
+  // Keyboard: Escape skips, arrows move, and Tab stays inside the card.
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      finish()
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      next.click()
+    } else if (e.key === 'ArrowLeft' && step > 0) {
+      e.preventDefault()
+      back.click()
+    } else if (e.key === 'Tab') {
+      const focusable = [...overlay.querySelectorAll('button:not([hidden])')]
+      const i = focusable.indexOf(document.activeElement)
+      e.preventDefault()
+      focusable[(i + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length].focus()
+    }
+  }
+  document.addEventListener('keydown', onKey, true)
+
+  next.onclick = () => {
+    if (step === TOUR_STEPS.length - 1) {
+      finish()
+      showTab('account')
+    } else {
+      step++
+      render()
+    }
+  }
+  back.onclick = () => {
+    step--
+    render()
+  }
+  overlay.querySelector('[data-tour-skip]').onclick = () => {
+    finish()
+    showTab('home')
+  }
+  render()
+}
+
 function renderDashboard(me) {
   if (!me.students.length) {
     app.innerHTML = `<h1>Welcome</h1><p class="hint">No student linked to this account yet.</p>`
@@ -1220,6 +1367,7 @@ function renderDashboard(me) {
        <div class="card">
          <div style="display:flex; gap:8px; flex-wrap:wrap">
            <button class="chip" id="qr">Get quick-login QR</button>
+           <button class="chip" id="replay-tour">Show the tour again</button>
            <button class="chip" id="logout">Log out</button>
          </div>
          <div id="qrbox"></div>
@@ -1228,6 +1376,7 @@ function renderDashboard(me) {
 
   setupTabs()
   wirePasswordToggles()
+  if (me.onboarded === false && !servedFromCache) startTour({ name: me.students[0]?.studentName.split(' ')[0] })
   document.querySelectorAll('[data-open-hw]').forEach((row) => {
     row.onclick = () => {
       showTab('classwork')
@@ -1391,6 +1540,9 @@ function renderDashboard(me) {
       <a class="linklike" href="${qrDataUrl}" download="eduboard-login.png">Download</a>
     `
   }
+  document.getElementById('replay-tour').onclick = () =>
+    startTour({ name: me.students[0]?.studentName.split(' ')[0], record: false })
+
   document.getElementById('logout').onclick = async () => {
     await clearSavedData()
     await api('/auth/logout', { method: 'POST' }).catch(() => {})
