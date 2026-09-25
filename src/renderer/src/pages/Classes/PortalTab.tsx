@@ -16,6 +16,7 @@ import {
   useRevokePortalInvite
 } from '@renderer/lib/queries'
 import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { PublishSummary } from '@renderer/components/portal/PublishSummary'
 
 export function PortalTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -63,7 +64,7 @@ export function PortalTab(): React.JSX.Element {
               {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}
             </p>
           )}
-          {publish.isSuccess && <p className="text-xs text-[var(--color-success)]">Published.</p>}
+          {publish.isSuccess && <PublishSummary result={publish.data} />}
         </CardBody>
       </Card>
 

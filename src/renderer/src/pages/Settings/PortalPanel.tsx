@@ -10,6 +10,7 @@ import {
   useResetPortalPassword,
   useSendDigestNow
 } from '@renderer/lib/queries'
+import { PublishSummary } from '@renderer/components/portal/PublishSummary'
 
 // No 0/O/1/l/I, so a temporary password read aloud or copied off a screen can't be
 // mistyped. 10 characters from 56 symbols is about 58 bits: plenty for a password the
@@ -78,7 +79,7 @@ export function PortalPanel(): React.JSX.Element {
             {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}
           </p>
         )}
-        {publish.isSuccess && <p className="text-[var(--color-success)]">Published.</p>}
+        {publish.isSuccess && <PublishSummary result={publish.data} />}
         {pull.isError && (
           <p className="text-[var(--color-danger)]">
             {ipcErrorMessage(pull.error, 'Could not pull from the portal.')}

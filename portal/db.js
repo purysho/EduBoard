@@ -300,6 +300,11 @@ ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 ensureColumn('homework_submissions', 'ai_declared', 'ai_declared INTEGER NOT NULL DEFAULT 0')
 ensureColumn('homework_submissions', 'ai_help_count', 'ai_help_count INTEGER NOT NULL DEFAULT 0')
 ensureColumn('homework_submissions', 'ai_overlap', 'ai_overlap REAL')
+// Fingerprints (sha256) of what a publish described, so an unchanged attachment or
+// material text isn't sent again, and an upload can be checked against what the teacher
+// published (see routes/sync.js).
+ensureColumn('homework_assignments', 'file_hash', 'file_hash TEXT')
+ensureColumn('materials', 'chunks_hash', 'chunks_hash TEXT')
 
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite

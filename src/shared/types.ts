@@ -546,6 +546,16 @@ export interface LessonPlan {
 export const AI_PROVIDERS = ['deepseek', 'qwen', 'zhipu', 'anthropic', 'custom'] as const
 export type AiProvider = (typeof AI_PROVIDERS)[number]
 
+/** What a publish did, for the teacher. */
+export interface PublishResult {
+  attachmentsUploaded: number
+  materialsUploaded: number
+  /** Attachments that couldn't be sent, with why, e.g. "Worksheet.pdf (over 25 MB)". */
+  skipped: string[]
+  /** Set when the Portal server is too old to take attachments separately. */
+  outdatedServer: boolean
+}
+
 /** One AI provider setup, as entered in Settings (possibly not saved yet). */
 export interface AiConnectionConfig {
   provider: AiProvider

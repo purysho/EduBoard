@@ -105,15 +105,39 @@ router.post('/', (req, res) => {
   // attachment files would otherwise pile up on disk forever. The uploads folder is
   // shared by every teacher on this Portal, so only this teacher's own previous files
   // are candidates for removal — and only once the new push has committed.
-  const previousFiles = db
+  const previousHomework = db
     .prepare(
-      `SELECT h.file_path FROM homework_assignments h
+      `SELECT h.id, h.file_path, h.file_hash FROM homework_assignments h
        JOIN classes c ON c.id = h.class_id
-       WHERE c.teacher_id = ? AND h.file_path IS NOT NULL`
+       WHERE c.teacher_id = ?`
     )
     .all(teacherId)
-    .map((r) => r.file_path)
+  const previousFiles = previousHomework.map((r) => r.file_path).filter(Boolean)
+  const previousFileById = new Map(previousHomework.map((r) => [r.id, r]))
   const writtenFiles = new Set()
+  // Attachments and material text the publish described by fingerprint only, which the
+  // desktop then uploads one at a time (POST /homework/:id/file, /materials/:id/chunks).
+  // Sending them inside this one request made a publish with a few attachments too big
+  // for the server to accept.
+  const needFiles = []
+  const needChunks = []
+
+  // Material text whose fingerprint hasn't changed is carried over, not re-sent.
+  const previousChunks = new Map()
+  for (const m of db
+    .prepare(
+      `SELECT m.id, m.chunks_hash FROM materials m JOIN classes c ON c.id = m.class_id
+       WHERE c.teacher_id = ? AND m.chunks_hash IS NOT NULL`
+    )
+    .all(teacherId)) {
+    previousChunks.set(m.id, {
+      hash: m.chunks_hash,
+      texts: db
+        .prepare('SELECT text FROM material_chunks WHERE material_id = ? ORDER BY chunk_index')
+        .all(m.id)
+        .map((r) => r.text)
+    })
+  }
 
   const run = db.transaction(() => {
     // Every DELETE here is scoped to this teacher's own classIds/rows — critical in a
@@ -186,7 +210,7 @@ router.post('/', (req, res) => {
     }
 
     const insertHomework = db.prepare(
-      'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO homework_assignments (id, class_id, title, description, due_date, file_name, file_path, topic, file_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertQuestion = db.prepare(
       `INSERT INTO homework_questions
@@ -195,11 +219,24 @@ router.post('/', (req, res) => {
     )
     for (const h of homeworkAssignments.filter(inPushedClass)) {
       let filePath = null
+      let fileHash = null
       if (h.fileName && h.fileData) {
+        // An older desktop app still sends the file inline.
+        const bytes = Buffer.from(h.fileData, 'base64')
         const storedName = `${h.id}-${sanitizeFileName(h.fileName)}`
-        fs.writeFileSync(path.join(UPLOADS_DIR, storedName), Buffer.from(h.fileData, 'base64'))
+        fs.writeFileSync(path.join(UPLOADS_DIR, storedName), bytes)
         writtenFiles.add(storedName)
         filePath = storedName
+        fileHash = crypto.createHash('sha256').update(bytes).digest('hex')
+      } else if (h.fileName && isSha256(h.fileHash)) {
+        fileHash = h.fileHash
+        const previous = previousFileById.get(h.id)
+        if (previous?.file_path && previous.file_hash === h.fileHash) {
+          filePath = previous.file_path
+          writtenFiles.add(filePath)
+        } else {
+          needFiles.push(h.id)
+        }
       }
       insertHomework.run(
         h.id,
@@ -209,7 +246,8 @@ router.post('/', (req, res) => {
         h.dueDate,
         h.fileName,
         filePath,
-        h.topic || null
+        h.topic || null,
+        fileHash
       )
       ;(h.questions || []).forEach((q, i) => {
         insertQuestion.run(
@@ -226,7 +264,7 @@ router.post('/', (req, res) => {
     }
 
     const insertMaterial = db.prepare(
-      'INSERT INTO materials (id, class_id, title, study_guide, flashcards, practice_quiz) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO materials (id, class_id, title, study_guide, flashcards, practice_quiz, chunks_hash) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
     const insertChunk = db.prepare(
       'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
@@ -238,9 +276,22 @@ router.post('/', (req, res) => {
         m.title,
         m.studyGuide || null,
         validatedJson(validateFlashcards, m.flashcards),
-        validatedJson(validatePracticeQuiz, m.practiceQuiz)
+        validatedJson(validatePracticeQuiz, m.practiceQuiz),
+        isSha256(m.chunksHash) ? m.chunksHash : null
       )
-      ;(m.chunks || []).forEach((text, i) => insertChunk.run(m.id, i, text))
+      if (Array.isArray(m.chunks)) {
+        // An older desktop app sends the text inline.
+        m.chunks.forEach((text, i) => insertChunk.run(m.id, i, String(text)))
+      } else if (isSha256(m.chunksHash)) {
+        const previous = previousChunks.get(m.id)
+        // Only text that actually arrived counts: a material whose upload never
+        // happened (or failed) is asked for again.
+        if (previous?.hash === m.chunksHash && previous.texts.length > 0) {
+          previous.texts.forEach((text, i) => insertChunk.run(m.id, i, text))
+        } else {
+          needChunks.push(m.id)
+        }
+      }
     }
 
     // Invites are upserted, never deleted — a claimed invite's claimed_at must survive
@@ -261,6 +312,71 @@ router.post('/', (req, res) => {
     if (!writtenFiles.has(file)) fs.rmSync(path.join(UPLOADS_DIR, file), { force: true })
   }
 
+  res.json({ ok: true, needFiles, needChunks })
+})
+
+const isSha256 = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v)
+
+// One homework attachment, sent as raw bytes after a publish asked for it. Accepted only
+// for this teacher's own assignment, and only if it's exactly the file that publish
+// described (same sha256), so an upload can't swap in something the teacher didn't publish.
+const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
+router.post(
+  '/homework/:id/file',
+  express.raw({ type: 'application/octet-stream', limit: MAX_ATTACHMENT_BYTES }),
+  (req, res) => {
+    const hw = db
+      .prepare(
+        `SELECT h.id, h.file_name, h.file_hash, h.file_path FROM homework_assignments h
+         JOIN classes c ON c.id = h.class_id WHERE h.id = ? AND c.teacher_id = ?`
+      )
+      .get(req.params.id, req.teacherId)
+    if (!hw || !hw.file_name || !hw.file_hash) {
+      return res.status(404).json({ error: 'Assignment not found' })
+    }
+    const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0)
+    const hash = crypto.createHash('sha256').update(bytes).digest('hex')
+    if (hash !== hw.file_hash) {
+      return res
+        .status(409)
+        .json({ error: 'This isn’t the file that was published. Publish again.' })
+    }
+    const storedName = `${hw.id}-${sanitizeFileName(hw.file_name)}`
+    fs.writeFileSync(path.join(UPLOADS_DIR, storedName), bytes)
+    if (hw.file_path && hw.file_path !== storedName) {
+      fs.rmSync(path.join(UPLOADS_DIR, hw.file_path), { force: true })
+    }
+    db.prepare('UPDATE homework_assignments SET file_path = ? WHERE id = ?').run(storedName, hw.id)
+    res.json({ ok: true })
+  }
+)
+
+// One material's searchable text, after a publish asked for it; checked against the
+// fingerprint that publish described, like attachments above.
+router.post('/materials/:id/chunks', (req, res) => {
+  const material = db
+    .prepare(
+      `SELECT m.id, m.chunks_hash FROM materials m JOIN classes c ON c.id = m.class_id
+       WHERE m.id = ? AND c.teacher_id = ?`
+    )
+    .get(req.params.id, req.teacherId)
+  if (!material || !material.chunks_hash)
+    return res.status(404).json({ error: 'Material not found' })
+  const chunks = req.body?.chunks
+  if (!Array.isArray(chunks) || !chunks.every((c) => typeof c === 'string')) {
+    return res.status(400).json({ error: 'chunks must be a list of text' })
+  }
+  const hash = crypto.createHash('sha256').update(JSON.stringify(chunks)).digest('hex')
+  if (hash !== material.chunks_hash) {
+    return res.status(409).json({ error: 'This isn’t the text that was published. Publish again.' })
+  }
+  const insert = db.prepare(
+    'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
+  )
+  db.transaction(() => {
+    db.prepare('DELETE FROM material_chunks WHERE material_id = ?').run(material.id)
+    chunks.forEach((text, i) => insert.run(material.id, i, text))
+  })()
   res.json({ ok: true })
 })
 
