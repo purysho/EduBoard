@@ -3,7 +3,6 @@
 const { spawn } = require('node:child_process')
 const crypto = require('node:crypto')
 const fs = require('node:fs')
-const net = require('node:net')
 const os = require('node:os')
 const path = require('node:path')
 
@@ -11,25 +10,17 @@ const path = require('node:path')
 // leaked credential.
 const randomSecret = () => crypto.randomBytes(24).toString('hex')
 
-function freePort() {
-  return new Promise((resolve, reject) => {
-    const srv = net.createServer()
-    srv.once('error', reject)
-    srv.listen(0, '127.0.0.1', () => {
-      const { port } = srv.address()
-      srv.close(() => resolve(port))
-    })
-  })
-}
-
 async function startPortal(extraEnv = {}) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eduboard-portal-test-'))
-  const port = await freePort()
   const secrets = { session: randomSecret(), sync: randomSecret(), admin: randomSecret() }
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env: {
       ...process.env,
-      PORT: String(port),
+      // Port 0: the Portal takes a free port itself and prints it. Picking a "free" port
+      // here and passing it in raced with the other test files running in parallel: one
+      // could take the port first, and this test then talked to the wrong Portal.
+      PORT: '0',
+      HOST: '127.0.0.1',
       PORTAL_DATA_DIR: dataDir,
       SESSION_SECRET: secrets.session,
       SYNC_SECRET: secrets.sync,
@@ -42,19 +33,21 @@ async function startPortal(extraEnv = {}) {
   child.stdout.on('data', (d) => (output += d))
   child.stderr.on('data', (d) => (output += d))
 
-  const url = `http://127.0.0.1:${port}`
-  for (let i = 0; i < 100; i++) {
-    try {
-      if ((await fetch(`${url}/health`)).ok) break
-    } catch {
-      // not listening yet
-    }
-    if (child.exitCode !== null) {
+  let port = null
+  for (let i = 0; i < 200 && !port; i++) {
+    port = /listening on [^\n]*:(\d+)/.exec(output)?.[1] ?? null
+    if (!port && child.exitCode !== null) {
       fs.rmSync(dataDir, { recursive: true, force: true })
       throw new Error(`Portal exited early:\n${output}`)
     }
-    await new Promise((r) => setTimeout(r, 50))
+    if (!port) await new Promise((r) => setTimeout(r, 25))
   }
+  if (!port) {
+    child.kill()
+    fs.rmSync(dataDir, { recursive: true, force: true })
+    throw new Error(`Portal didn't start:\n${output}`)
+  }
+  const url = `http://127.0.0.1:${port}`
 
   const call = async (method, p, { body, headers = {}, cookie } = {}) => {
     const res = await fetch(url + p, {

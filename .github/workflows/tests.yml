@@ -1,0 +1,31 @@
+name: Tests
+
+# Lint, typecheck and both test suites on every push to a working branch (ci.yml only
+# covers main). Separate from the Windows installer build, which skips changes that
+# can't affect it; the tests never skip.
+on:
+  push:
+    branches: ['claude/**', 'v0.3-dev']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - name: Portal tests
+        working-directory: portal
+        run: |
+          npm ci
+          npm test

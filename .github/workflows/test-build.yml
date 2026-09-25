@@ -21,26 +21,6 @@ permissions:
   contents: read
 
 jobs:
-  # Tests run on Linux like ci.yml (which only covers main), so the same checks that
-  # gate a merge also run on these branches. The installer job doesn't wait for them.
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - name: Portal tests
-        working-directory: portal
-        run: |
-          npm ci
-          npm test
-
   windows:
     runs-on: windows-latest
     steps:

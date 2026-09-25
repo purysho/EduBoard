@@ -72,8 +72,10 @@ const port = process.env.PORT || 4790
 // HOST=127.0.0.1 keeps a local test Portal on this computer only (and spares Windows
 // users a firewall prompt). Unset, it listens on every interface as before.
 const host = process.env.HOST || undefined
-app.listen(port, host, () => {
-  console.log(`EduBoard Portal listening on ${host || ''}:${port}`)
+const server = app.listen(port, host, () => {
+  // The real port, which differs from PORT when PORT=0 asks the system for a free one
+  // (the tests do this so parallel test files can never collide on a port).
+  console.log(`EduBoard Portal listening on ${host || ''}:${server.address().port}`)
 })
 
 // Weekly parent digest email — checked hourly rather than scheduled to a precise
