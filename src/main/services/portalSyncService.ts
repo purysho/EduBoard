@@ -15,6 +15,7 @@ import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { getSettings } from '../repositories/settingsRepo'
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
+import { portalUrlProblem } from '@shared/portalUrl'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
@@ -50,6 +51,9 @@ function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } 
   const portalUrl = settings.portalUrl.trim().replace(/\/$/, '')
   const portalSyncSecret = settings.portalSyncSecret.trim()
   if (!portalUrl || !portalSyncSecret) throw new PortalNotConfiguredError()
+  // Never send the secret or student data over an unencrypted connection.
+  const problem = portalUrlProblem(portalUrl)
+  if (problem) throw new Error(problem)
   return { portalUrl, portalSyncSecret }
 }
 
