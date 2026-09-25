@@ -1,17 +1,39 @@
-import { Mail, UploadCloud, Wifi } from 'lucide-react'
+import { FormEvent, useState } from 'react'
+import { KeyRound, Mail, UploadCloud, Wifi } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
+import { Input } from '@renderer/components/ui/Field'
 import { ipcErrorMessage } from '@renderer/lib/format'
 import {
   usePublishToPortal,
   usePullSubmissionsFromPortal,
+  useResetPortalPassword,
   useSendDigestNow
 } from '@renderer/lib/queries'
+
+// No 0/O/1/l/I, so a temporary password read aloud or copied off a screen can't be
+// mistyped. 10 characters from 56 symbols is about 58 bits: plenty for a password the
+// student replaces on first login, and the Portal rate-limits guesses anyway.
+const TEMP_PASSWORD_ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+function generateTempPassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(10))
+  return Array.from(bytes, (b) => TEMP_PASSWORD_ALPHABET[b % TEMP_PASSWORD_ALPHABET.length]).join(
+    ''
+  )
+}
 
 export function PortalPanel(): React.JSX.Element {
   const publish = usePublishToPortal()
   const pull = usePullSubmissionsFromPortal()
   const sendDigest = useSendDigestNow()
+  const resetPassword = useResetPortalPassword()
+  const [resetUsername, setResetUsername] = useState('')
+  const [resetNewPassword, setResetNewPassword] = useState('')
+
+  function handleReset(e: FormEvent): void {
+    e.preventDefault()
+    resetPassword.mutate({ username: resetUsername.trim(), newPassword: resetNewPassword })
+  }
 
   return (
     <Card>
@@ -89,6 +111,59 @@ export function PortalPanel(): React.JSX.Element {
             </span>
           )}
         </div>
+        <form
+          onSubmit={handleReset}
+          className="space-y-2 border-t border-[var(--color-border)] pt-3"
+        >
+          <p className="flex items-center gap-1.5 font-medium text-[var(--color-text)]">
+            <KeyRound size={14} aria-hidden />
+            Reset a student&apos;s Portal password
+          </p>
+          <p>
+            For a student or family who is locked out. This signs them out everywhere and cancels
+            their quick-login QR codes. Give them the new password, and they can change it under
+            Account on the Portal.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              className="w-48"
+              placeholder="Portal username"
+              value={resetUsername}
+              onChange={(e) => setResetUsername(e.target.value)}
+              required
+            />
+            <Input
+              className="w-48"
+              placeholder="New password (8+ characters)"
+              value={resetNewPassword}
+              onChange={(e) => setResetNewPassword(e.target.value)}
+              minLength={8}
+              required
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setResetNewPassword(generateTempPassword())}
+            >
+              Generate
+            </Button>
+            <Button type="submit" size="sm" disabled={resetPassword.isPending}>
+              {resetPassword.isPending ? 'Resetting…' : 'Reset password'}
+            </Button>
+          </div>
+          {resetPassword.isError && (
+            <p className="text-[var(--color-danger)]">
+              {ipcErrorMessage(resetPassword.error, 'Could not reset the password.')}
+            </p>
+          )}
+          {resetPassword.isSuccess && (
+            <p className="text-[var(--color-success)]">
+              Password reset for {resetPassword.variables.username}. Their other sessions are signed
+              out.
+            </p>
+          )}
+        </form>
       </CardBody>
     </Card>
   )

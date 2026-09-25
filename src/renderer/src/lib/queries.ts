@@ -1414,6 +1414,13 @@ export function useDeleteClassPost() {
   })
 }
 
+export function useResetPortalPassword() {
+  return useMutation({
+    mutationFn: ({ username, newPassword }: { username: string; newPassword: string }) =>
+      api().portalAccounts.resetPassword(username, newPassword)
+  })
+}
+
 export function useSendDigestNow() {
   return useMutation({
     mutationFn: () => api().digest.sendNow()

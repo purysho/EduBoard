@@ -30,6 +30,6 @@ export function todayIso(): string {
  * wrapped in implementation detail. Strips it back down to the original message. */
 export function ipcErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback
-  const match = error.message.match(/Error invoking remote method '[^']*': (?:\w+Error: )?(.*)/s)
+  const match = error.message.match(/Error invoking remote method '[^']*': (?:\w*Error: )?(.*)/s)
   return match ? match[1] : error.message
 }

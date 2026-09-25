@@ -379,6 +379,25 @@ export async function deleteClassPost(id: string): Promise<void> {
 /** Triggers an immediate send of the weekly digest to every family with an email on
  * file — for testing the setup, or sending an out-of-cycle update, without waiting for
  * next Monday's automatic run. */
+/** Teacher-triggered password reset for a Portal account — the Portal's only recovery
+ * path, since it deliberately has no "forgot password" email. The Portal refuses
+ * accounts that aren't linked to one of this teacher's students. */
+export async function resetPortalPassword(username: string, newPassword: string): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+
+  const res = await fetch(`${portalUrl}/api/sync/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ username, newPassword })
+  })
+  if (!res.ok) {
+    // The Portal's own message ("No such account", "Password must be at least 8
+    // characters") is what the teacher needs to see, not the raw status line.
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new Error(body?.error || `Password reset failed: ${res.status}`)
+  }
+}
+
 export async function sendDigestNow(): Promise<{
   sent: number
   total: number

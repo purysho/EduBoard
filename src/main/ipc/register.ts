@@ -54,7 +54,8 @@ import {
   listClassPosts,
   createClassPost,
   deleteClassPost,
-  sendDigestNow
+  sendDigestNow,
+  resetPortalPassword
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -694,4 +695,7 @@ export function registerIpcHandlers(): void {
   })
 
   handle(IpcChannels.digest.sendNow, () => sendDigestNow())
+  handle(IpcChannels.portalAccounts.resetPassword, (_e, username: string, newPassword: string) =>
+    resetPortalPassword(username, newPassword)
+  )
 }

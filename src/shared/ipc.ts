@@ -230,5 +230,8 @@ export const IpcChannels = {
   },
   digest: {
     sendNow: 'digest:sendNow'
+  },
+  portalAccounts: {
+    resetPassword: 'portalAccounts:resetPassword'
   }
 } as const

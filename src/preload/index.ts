@@ -271,6 +271,10 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.classPosts.remove, id),
     pickImage: () => invoke(IpcChannels.classPosts.pickImage)
   },
+  portalAccounts: {
+    resetPassword: (username, newPassword) =>
+      invoke(IpcChannels.portalAccounts.resetPassword, username, newPassword)
+  },
   digest: {
     sendNow: () => invoke(IpcChannels.digest.sendNow)
   }

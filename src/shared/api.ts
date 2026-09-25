@@ -347,4 +347,9 @@ export interface EduBoardApi {
       errors: { username: string; error: string }[]
     }>
   }
+  portalAccounts: {
+    /** Sets a new password on a student/family Portal account and signs out all of its
+     * existing sessions. Only works for accounts linked to this teacher's students. */
+    resetPassword(username: string, newPassword: string): Promise<void>
+  }
 }
