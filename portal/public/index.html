@@ -83,26 +83,17 @@ async function api(path, opts) {
   const isGet = !opts?.method || opts.method === 'GET'
   const req = '/api' + path
 
+  let res
   try {
-    const res = await fetch(req, {
+    res = await fetch(req, {
       method: opts?.method || 'GET',
       headers: opts?.body ? { 'Content-Type': 'application/json' } : undefined,
       body: opts?.body ? JSON.stringify(opts.body) : undefined
     })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error || 'Something went wrong')
-    servedFromCache = false
-    if (isGet && 'caches' in window) {
-      caches.open(API_CACHE).then((cache) =>
-        cache.put(
-          req,
-          new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })
-        )
-      )
-      localStorage.setItem(LAST_SYNCED_KEY, new Date().toISOString())
-    }
-    return data
-  } catch (err) {
+  } catch (networkErr) {
+    // Only a genuinely unreachable server falls back to saved data. An HTTP error (above
+    // all 401 "not logged in") must never be papered over with a previous session's
+    // cached grades, e.g. on a shared lab computer after someone else logged out.
     if (isGet && 'caches' in window) {
       const cached = await caches.match(req)
       if (cached) {
@@ -110,12 +101,39 @@ async function api(path, opts) {
         return cached.json()
       }
     }
-    throw err
+    throw networkErr
+  }
+
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    if (res.status === 401) await clearSavedData()
+    throw new Error(data.error || 'Something went wrong')
+  }
+  servedFromCache = false
+  if (isGet && 'caches' in window) {
+    caches.open(API_CACHE).then((cache) =>
+      cache.put(
+        req,
+        new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })
+      )
+    )
+    localStorage.setItem(LAST_SYNCED_KEY, new Date().toISOString())
+  }
+  return data
+}
+
+/** Forgets every cached API response, so nothing from this account survives a logout. */
+async function clearSavedData() {
+  try {
+    if ('caches' in window) await caches.delete(API_CACHE)
+    localStorage.removeItem(LAST_SYNCED_KEY)
+  } catch {
+    // Storage can be unavailable (private mode); there's nothing cached to clear then.
   }
 }
 
 function esc(s) {
-  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }
 
 // Polls the cheap /me/notifications endpoint while the dashboard is open, so a family
@@ -252,22 +270,22 @@ async function renderRedeem(code) {
   try {
     info = await api('/invites/' + encodeURIComponent(code))
   } catch (e) {
-    app.innerHTML = `<h1>Can't join</h1><p class="error">${e.message}</p>`
+    app.innerHTML = `<h1>Can't join</h1><p class="error">${esc(e.message)}</p>`
     return
   }
   const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
   app.innerHTML = `
-    <h1>Join ${info.className}</h1>
+    <h1>Join ${esc(info.className)}</h1>
     <p class="hint">Pick your name, confirm your date of birth, and set a login.</p>
     <label>Student</label>
-    <select id="sid">${info.students.map((s) => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+    <select id="sid">${info.students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
     <label>Date of birth</label>
     ${dobPickerHtml()}
     <p class="field-note" id="dob-note"></p>
     <label>Username</label>
     <input id="u" autocomplete="username" />
     <label>Password</label>
-    <input id="p" type="password" autocomplete="new-password" />
+    <input id="p" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" />
     <button id="go">Create account</button>
     <p class="error" id="err"></p>
   `
@@ -320,7 +338,7 @@ function homeworkByTopicHtml(homework, studentId) {
   return entries
     .map(
       ([topic, items]) => `
-      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${topic}</p>
+      <p class="muted" style="margin:14px 0 4px; font-weight:600; text-transform:uppercase; font-size:.75rem; letter-spacing:.03em">${esc(topic)}</p>
       ${items.map((h) => homeworkCardHtml(h, studentId)).join('')}`
     )
     .join('')
@@ -338,32 +356,32 @@ function quickCheckHtml(h, studentId) {
           .map(
             (q) => `
           <p class="desc" style="margin:6px 0">
-            ${q.wasCorrect ? '✅' : '❌'} ${q.prompt}
+            ${q.wasCorrect ? '✅' : '❌'} ${esc(q.prompt)}
           </p>`
           )
           .join('')}
       </div>`
   }
   return `
-    <form data-quiz="${h.id}" data-student="${studentId}" style="margin-top:12px" class="card">
+    <form data-quiz="${esc(h.id)}" data-student="${esc(studentId)}" style="margin-top:12px" class="card">
       <p class="muted" style="margin:0 0 8px">Quick check</p>
       ${h.questions
         .map(
           (q, i) => `
         <div style="margin-bottom:12px">
-          <p style="margin:0 0 6px; font-weight:600">${i + 1}. ${q.prompt}</p>
+          <p style="margin:0 0 6px; font-weight:600">${i + 1}. ${esc(q.prompt)}</p>
           ${
             q.type === 'multiple_choice'
               ? (q.options || [])
                   .map(
                     (opt, oi) => `
               <label style="display:flex; align-items:center; gap:8px; margin:4px 0">
-                <input type="radio" name="q-${q.id}" value="${oi}" required />
-                ${opt}
+                <input type="radio" name="q-${esc(q.id)}" value="${oi}" required />
+                ${esc(opt)}
               </label>`
                   )
                   .join('')
-              : `<input type="text" name="q-${q.id}" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid var(--border); border-radius:8px; font:inherit;" required />`
+              : `<input type="text" name="q-${esc(q.id)}" style="width:100%; box-sizing:border-box; padding:9px; border:1px solid var(--border); border-radius:8px; font:inherit;" required />`
           }
         </div>`
         )
@@ -375,37 +393,37 @@ function quickCheckHtml(h, studentId) {
 
 function homeworkCardHtml(h, studentId) {
   const graded = h.status === 'done'
-  const detailId = `${h.id}-${studentId}`
+  const detailId = esc(`${h.id}-${studentId}`)
   return `
     <div class="card">
       <div class="row" data-toggle="${detailId}" style="cursor:pointer">
-        <strong>${h.title}</strong>
-        <span class="pill ${h.status}">${h.status.replace('_', ' ')}</span>
+        <strong>${esc(h.title)}</strong>
+        <span class="pill ${esc(h.status)}">${esc(h.status.replace('_', ' '))}</span>
       </div>
-      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${h.dueDate}</p>` : ''}
+      ${h.dueDate ? `<p class="muted" style="margin:4px 0 0">Due ${esc(h.dueDate)}</p>` : ''}
       <div id="detail-${detailId}" style="display:none; margin-top:10px">
-        ${h.description ? `<p class="desc">${h.description}</p>` : ''}
-        ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${h.id}/file">\u{1F4CE} ${h.fileName} (from your teacher)</a></p>` : ''}
+        ${h.description ? `<p class="desc">${esc(h.description)}</p>` : ''}
+        ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} (from your teacher)</a></p>` : ''}
         ${quickCheckHtml(h, studentId)}
         ${
           graded
             ? `
           <div class="card" style="margin-top:12px; background:#f8fafc">
             <p class="muted" style="margin:0">Your submission</p>
-            ${h.textAnswer ? `<p class="desc">${h.textAnswer}</p>` : ''}
-            ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${h.id}/submission-file?studentId=${studentId}">\u{1F4CE} ${h.submissionFileName}</a></p>` : ''}
-            ${h.grade ? `<p style="margin-top:10px"><strong>Grade: ${h.grade}</strong></p>` : ''}
-            ${h.feedback ? `<p class="desc"><strong>Feedback:</strong> ${h.feedback}</p>` : ''}
+            ${h.textAnswer ? `<p class="desc">${esc(h.textAnswer)}</p>` : ''}
+            ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/submission-file?studentId=${encodeURIComponent(studentId)}">\u{1F4CE} ${esc(h.submissionFileName)}</a></p>` : ''}
+            ${h.grade ? `<p style="margin-top:10px"><strong>Grade: ${esc(h.grade)}</strong></p>` : ''}
+            ${h.feedback ? `<p class="desc"><strong>Feedback:</strong> ${esc(h.feedback)}</p>` : ''}
           </div>`
             : `
-          <form data-submit="${h.id}" data-student="${studentId}" style="margin-top:10px">
+          <form data-submit="${esc(h.id)}" data-student="${esc(studentId)}" style="margin-top:10px">
             ${
               h.status === 'submitted'
-                ? `<p class="field-note">Already turned in${h.submissionFileName ? ` — attached ${h.submissionFileName}` : ''}. Submitting again replaces it.</p>`
+                ? `<p class="field-note">Already turned in${h.submissionFileName ? ` — attached ${esc(h.submissionFileName)}` : ''}. Submitting again replaces it.</p>`
                 : ''
             }
             <label>Your answer</label>
-            <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${h.textAnswer || ''}</textarea>
+            <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${esc(h.textAnswer || '')}</textarea>
             <label>Attach a file</label>
             <input data-file type="file" />
             <button type="submit">${h.status === 'submitted' ? 'Update submission' : 'Turn in'}</button>
@@ -436,11 +454,11 @@ function renderMessages(messages) {
     : messages
         .map(
           (m) => `
-      <div class="msg ${m.sender}">
-        <div class="msg-bubble" data-msg-body="${m.id}">${esc(m.translatedBody ?? m.body)}</div>
+      <div class="msg ${esc(m.sender)}">
+        <div class="msg-bubble" data-msg-body="${esc(m.id)}">${esc(m.translatedBody ?? m.body)}</div>
         <div class="muted" style="font-size:.72rem; margin-top:2px; display:flex; gap:8px; align-items:center">
           <span>${formatWhen(m.createdAt)}</span>
-          <a href="#" data-translate="${m.id}" style="font-size:.72rem">${m.translatedBody ? 'Show original' : 'Translate'}</a>
+          <a href="#" data-translate="${esc(m.id)}" style="font-size:.72rem">${m.translatedBody ? 'Show original' : 'Translate'}</a>
         </div>
       </div>`
         )
@@ -486,10 +504,10 @@ async function loadPortfolio() {
     .map(
       (p) => `
     <div class="card">
-      <div class="row"><strong>${p.title}</strong><span class="muted">${p.gradedAt ? formatWhen(p.gradedAt) : ''}</span></div>
-      <p class="muted" style="margin:2px 0 6px">${p.studentName} · ${p.className}${p.topic ? ' · ' + p.topic : ''}</p>
-      ${p.grade ? `<p class="desc"><strong>Grade:</strong> ${p.grade}</p>` : ''}
-      ${p.feedback ? `<p class="desc">${p.feedback}</p>` : ''}
+      <div class="row"><strong>${esc(p.title)}</strong><span class="muted">${p.gradedAt ? formatWhen(p.gradedAt) : ''}</span></div>
+      <p class="muted" style="margin:2px 0 6px">${esc(p.studentName)} · ${esc(p.className)}${p.topic ? ' · ' + esc(p.topic) : ''}</p>
+      ${p.grade ? `<p class="desc"><strong>Grade:</strong> ${esc(p.grade)}</p>` : ''}
+      ${p.feedback ? `<p class="desc">${esc(p.feedback)}</p>` : ''}
     </div>`
     )
     .join('')
@@ -535,13 +553,13 @@ async function loadMaterials() {
       const guideId = `guide-${i}`
       return `
     <div class="card">
-      <div class="row"><strong>${m.title}</strong><span class="muted">${m.className}</span></div>
+      <div class="row"><strong>${esc(m.title)}</strong><span class="muted">${esc(m.className)}</span></div>
       ${
         m.studyGuide
           ? `<div style="margin-top:8px">
                <button class="secondary" data-toggle="${guideId}">Show study guide</button>
                <button class="secondary" data-listen="${guideId}">🔊 Listen</button>
-               <div id="detail-${guideId}" class="desc" style="display:none; margin-top:8px; white-space:pre-wrap">${m.studyGuide}</div>
+               <div id="detail-${guideId}" class="desc" style="display:none; margin-top:8px; white-space:pre-wrap">${esc(m.studyGuide)}</div>
              </div>`
           : '<p class="muted" style="margin-top:6px">No study guide yet for this one.</p>'
       }
@@ -578,9 +596,9 @@ async function loadClassStory() {
         .map(
           (p) => `
       <div class="card">
-        <div class="row"><strong>${p.className}</strong><span class="muted">${formatWhen(p.createdAt)}</span></div>
-        <p class="desc">${p.body}</p>
-        ${p.hasImage ? `<img src="/api/me/posts/${p.id}/image" style="width:100%; border-radius:10px; margin-top:8px" />` : ''}
+        <div class="row"><strong>${esc(p.className)}</strong><span class="muted">${formatWhen(p.createdAt)}</span></div>
+        <p class="desc">${esc(p.body)}</p>
+        ${p.hasImage ? `<img src="/api/me/posts/${encodeURIComponent(p.id)}/image" style="width:100%; border-radius:10px; margin-top:8px" />` : ''}
       </div>`
         )
         .join('')
@@ -608,13 +626,13 @@ function renderDashboard(me) {
     me.students
       .map(
         (s) => `
-    <h1>${s.studentName}</h1>
+    <h1>${esc(s.studentName)}</h1>
     ${s.classes
       .map(
         (c) => `
-      <div class="section-title">${c.name}</div>
+      <div class="section-title">${esc(c.name)}</div>
       <div class="card">
-        <div class="row"><strong>Grade</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + (c.letter ?? '') + ')' : 'No grade yet'}</span></div>
+        <div class="row"><strong>Grade</strong><span class="muted">${c.percent != null ? Math.round(c.percent) + '% (' + esc(c.letter ?? '') + ')' : 'No grade yet'}</span></div>
         <div class="row" style="margin-top:6px"><strong>Attendance</strong><span class="muted">${c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—'}</span></div>
       </div>
         ${c.homework ? homeworkByTopicHtml(c.homework, s.studentId) : ''}`
@@ -623,8 +641,8 @@ function renderDashboard(me) {
   }
     <div class="section-title">Study Helper</div>
     <div class="card">
-      <div id="ai-chat-${s.studentId}" class="ai-chat"></div>
-      <form data-ai-chat="${s.studentId}" style="margin-top:10px">
+      <div id="ai-chat-${esc(s.studentId)}" class="ai-chat"></div>
+      <form data-ai-chat="${esc(s.studentId)}" style="margin-top:10px">
         <textarea rows="2" placeholder="Ask about your homework or a topic you're stuck on…" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;"></textarea>
         <button type="submit">Ask</button>
         <p class="error"></p>
@@ -656,6 +674,18 @@ function renderDashboard(me) {
          <button type="submit">Save</button>
        </form>
        <p id="email-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
+     </div>
+     <div class="section-title">Account</div>
+     <div class="card">
+       <p class="muted" style="margin:0 0 8px">Change your password. This signs you out on every other device and cancels any quick-login QR codes.</p>
+       <form id="password-form">
+         <label>Current password</label>
+         <input id="pw-current" type="password" autocomplete="current-password" required />
+         <label>New password (at least 8 characters)</label>
+         <input id="pw-new" type="password" autocomplete="new-password" minlength="8" required />
+         <button type="submit">Change password</button>
+       </form>
+       <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
      </div>
      <button class="secondary" id="qr">Get quick-login QR</button>
      <button class="secondary" id="logout">Log out</button>
@@ -725,7 +755,7 @@ function renderDashboard(me) {
       if (!message) return
       err.textContent = ''
       const box = document.getElementById('ai-chat-' + studentId)
-      box.insertAdjacentHTML('beforeend', `<div class="msg family"><div class="msg-bubble">${message}</div></div>`)
+      box.insertAdjacentHTML('beforeend', `<div class="msg family"><div class="msg-bubble">${esc(message)}</div></div>`)
       textarea.value = ''
       const thinking = document.createElement('div')
       thinking.className = 'msg teacher'
@@ -739,10 +769,10 @@ function renderDashboard(me) {
         })
         const citeHtml = citations && citations.length
           ? `<div class="muted" style="font-size:.76rem; margin-top:4px">Sources: ${citations
-              .map((c) => `[${c.number}] ${c.title}`)
+              .map((c) => `[${c.number}] ${esc(c.title)}`)
               .join(' · ')}</div>`
           : ''
-        thinking.innerHTML = `<div class="msg-bubble">${reply}</div>${citeHtml}<button class="secondary" style="margin-top:4px; padding:2px 8px; font-size:.76rem" data-listen-reply>🔊</button>`
+        thinking.innerHTML = `<div class="msg-bubble" style="white-space:pre-wrap">${esc(reply)}</div>${citeHtml}<button class="secondary" style="margin-top:4px; padding:2px 8px; font-size:.76rem" data-listen-reply>🔊</button>`
         thinking.querySelector('[data-listen-reply]').onclick = (evt) => speak(reply, evt.target)
       } catch (ex) {
         thinking.remove()
@@ -768,6 +798,25 @@ function renderDashboard(me) {
   api('/me/account').then((acc) => {
     document.getElementById('email-input').value = acc.email || ''
   })
+  document.getElementById('password-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const status = document.getElementById('password-status')
+    status.textContent = 'Saving…'
+    try {
+      await api('/me/password', {
+        method: 'POST',
+        body: {
+          currentPassword: document.getElementById('pw-current').value,
+          newPassword: document.getElementById('pw-new').value
+        }
+      })
+      e.target.reset()
+      status.textContent = 'Password changed. Other devices have been signed out.'
+    } catch (ex) {
+      status.textContent = ex.message
+    }
+  }
+
   document.getElementById('email-form').onsubmit = async (e) => {
     e.preventDefault()
     const status = document.getElementById('email-status')
@@ -792,7 +841,8 @@ function renderDashboard(me) {
     `
   }
   document.getElementById('logout').onclick = async () => {
-    await api('/auth/logout', { method: 'POST' })
+    await clearSavedData()
+    await api('/auth/logout', { method: 'POST' }).catch(() => {})
     location.reload()
   }
 }
