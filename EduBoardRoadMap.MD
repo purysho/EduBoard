@@ -141,6 +141,19 @@ and pushed to `v0.3-dev` as of this file's creation — update as phases progres
       disguised programs, macro-enabled Office files and RTF embedded objects refused;
       Windows downloads get Mark of the Web (Office Protected View)
 
+## Onboarding and audit fixes
+
+- [x] Student first-login tour on the Portal (six steps over the real tabs, recorded
+      per account, replayable from Account, keyboard and screen-reader friendly)
+- [x] Teacher "Getting started" checklist on the desktop Dashboard, ticked from real
+      data, hideable and restorable from Settings
+- [x] Audit fixes: no Google Fonts (blocked in mainland China); network-first service
+      worker (no stale UI after deploys); request bodies read only after auth, with
+      per-route limits; removing a teacher deletes all their data and files; Portal JS
+      now linted in CI; login/signup are real forms (Enter works) with a show-password
+      toggle and forgot-password help; tab bar keyboard support; desktop refuses to
+      send the sync secret to a plain-http Portal
+
 ## Post-roadmap additions (this pass)
 
 - [x] Inline translation on parent↔teacher messaging — either side can translate a

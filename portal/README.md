@@ -118,6 +118,11 @@ can:
 - **Remove a teacher.** Their sync secret stops working at once, and their classes and
   students are deleted from the Portal. Their desktop app keeps all its own data.
 
+Removing a teacher deletes everything of theirs on the Portal: classes, grades,
+homework and submitted files, materials, class posts, and their students' profiles,
+photos and accounts (an account also linked to another teacher's student is kept).
+It can't be undone; their desktop app keeps all of its own data.
+
 The admin secret is remembered only in that browser tab and is never put in a URL.
 Wrong guesses are rate limited like every other secret. The same actions are available
 as an API (`GET/POST /api/admin/teachers`, `DELETE /api/admin/teachers/:id`, with an
@@ -144,6 +149,15 @@ guardian contact info, no detailed score history, no teacher notes — deliberat
 narrow slice, not a mirror of the full desktop database.
 
 Plus what students add themselves: homework submissions, messages, and their profile.
+
+**First login.** A new student gets a short tour (about 30 seconds) that walks through
+the real tabs: Home and what's due, Classwork, Study, Grades and Messages, and Account.
+It's recorded against their account, so it isn't repeated on their next device, and
+"Show the tour again" under Account replays it.
+
+**Works without a VPN in mainland China.** The page loads nothing from other servers
+(no Google Fonts, CDNs or analytics); it uses the device's own fonts. If you add
+anything to `public/`, keep it that way.
 
 **Student profiles.** After signing up, a student can fill in (all optional) a photo,
 preferred name, pronouns, an "about me", date of birth, learning goals, "anything my

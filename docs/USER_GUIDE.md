@@ -57,7 +57,9 @@ chmod +x EduBoard.AppImage
 
 ## First launch
 
-EduBoard opens on the **Dashboard**, empty. Start in **Settings**:
+EduBoard opens on the **Dashboard** with a **Getting started** checklist at the top: create a class, add students, publish an assignment, connect the student Portal, and print invites (plus two optional extras: sharing study material and adding an AI key). Each step has a button that takes you where it's done, and ticks itself once it really is done. Click **I'll do this later** to hide it; **Settings → Show getting-started checklist** brings it back.
+
+A good first stop is **Settings**:
 
 - **Your name** / **School / organization** — shown on printed report cards.
 - **Theme** — light, dark, or match your system.
