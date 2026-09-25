@@ -24,21 +24,24 @@ classes. To be safe anyway, first use **Settings → Backups → Back up now**.
 
 ### On your live Portal (portal.edu-board.com)
 
-Students see the new features (English/中文 switch, Translate buttons, onboarding)
-only once the Portal server is running the new code. Updating it means, on the
-server: get the new `portal/` folder, install its parts, and restart the service. With
-the setup in `portal/README.md`, that's these three commands. Most VPS providers
-also offer a **web console** in their dashboard, so you don't need PowerShell:
+Students see the new features (English/中文, Translate buttons, AI help, the app layout)
+only once the Portal server runs the new code. One command updates it. It backs up the
+students' data first, leaves the data and `.env` settings alone, restarts the Portal and
+checks it's working.
 
-```bash
-cd /path/to/EduBoard && git pull
-cd portal && npm install
-sudo systemctl restart eduboard-portal
-```
+1. Log in at [my.vps.do](https://my.vps.do), open your server, and open its **console**
+   (VNC / web console). Log in as `root`.
+2. Paste this and press Enter:
 
-Your students' accounts and data live in the Portal's data folder
-(`PORTAL_DATA_DIR`) and are kept. New tables are added automatically on start.
-Back up that folder first anyway.
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh | bash
+   ```
+
+3. It ends with **Done. The Portal is running the new version.** and the backup's name.
+
+If the console can't paste, type the address carefully, or connect with an SSH app
+instead. If it stops with an error, nothing after that step was changed and the backup
+in `/root/` has the data as it was.
 
 ### On your own computer, before it goes live (Start-Test-Portal.cmd)
 
