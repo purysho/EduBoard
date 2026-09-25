@@ -30,18 +30,23 @@ app.use((_req, res, next) => {
   }
   next()
 })
-// Default express.json() caps request bodies at 100kb — far below what a single sync
-// payload needs once it carries a base64-encoded homework attachment (up to ~8MB raw,
-// see MAX_HOMEWORK_FILE_BYTES) or several shared materials' worth of chunk text. 50mb
-// covers that comfortably without leaving the limit effectively unbounded.
-app.use(express.json({ limit: '50mb' }))
+const { requireSyncSecret, requireAuth } = require('./auth')
+
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/api/sync', require('./routes/sync'))
+// Request bodies are only read after the caller has proven who they are, and only as
+// large as that route needs. Both checks use headers alone (the sync secret, the
+// session cookie), so they can run before any body is parsed. Otherwise anyone could
+// make the server read 50 MB through the login form without an account.
+// - A teacher's sync can carry base64 homework attachments and material text: 50 MB.
+// - A student's routes carry at most one 20 MB submission (~27 MB as base64): 30 MB.
+// - Everything else (login, signup, admin) is small JSON: the 100 KB default.
+app.use('/api/sync', requireSyncSecret, express.json({ limit: '50mb' }), require('./routes/sync'))
+app.use('/api/me', requireAuth, express.json({ limit: '30mb' }), require('./routes/me'))
+app.use(express.json({ limit: '100kb' }))
 app.use('/api/invites', require('./routes/invites'))
 app.use('/api/auth', require('./routes/auth'))
-app.use('/api/me', require('./routes/me'))
 app.use('/api/admin', require('./routes/admin'))
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
@@ -51,7 +56,7 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }))
 // Express's default handler answers with an HTML page that includes the stack trace
 // outside production. Never show internals to a browser. Log them server-side and
 // return a plain JSON error the Portal page already knows how to display.
-// eslint-disable-next-line no-unused-vars -- Express identifies error handlers by arity
+// Express recognises an error handler by its four parameters, so _next must stay.
 app.use((err, _req, res, _next) => {
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ error: 'That upload is too large.' })

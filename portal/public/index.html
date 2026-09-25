@@ -7,9 +7,9 @@
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/icon.svg" />
 <meta name="theme-color" content="#6366f1" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- No web fonts: Google Fonts is blocked in mainland China, and a render-blocking
+     stylesheet that never loads leaves students staring at a blank page. System fonts
+     look native on every device and cost nothing to load. -->
 <style>
   :root {
     color-scheme: light;
@@ -21,7 +21,7 @@
     --bg: #f4f5fb;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans', sans-serif; margin: 0; background: var(--bg); color: var(--ink); }
   .topbar { display: flex; align-items: center; gap: 10px; padding: 16px 20px; background: #fff; border-bottom: 1px solid var(--border); }
   .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
   .brand { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
@@ -60,6 +60,11 @@
   .muted { color: var(--muted); font-size: .85rem; }
   .desc { color: #475569; font-size: .87rem; line-height: 1.5; margin: 8px 0 0; }
   .tab-count[hidden] { display: none; }
+  .pw-wrap { position: relative; }
+  .pw-wrap input { padding-right: 70px; }
+  button.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: auto; margin: 0; padding: 6px 10px; background: transparent; color: var(--primary-dark); font-size: .8rem; }
+  button.pw-toggle:hover:not(:disabled) { background: #eef2ff; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   input[type=radio], input[type=checkbox] { width: auto; flex-shrink: 0; margin: 0; }
   .pill { white-space: nowrap; flex-shrink: 0; display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
   .pill.not_started { background: #f1f5f9; color: #64748b; }
@@ -244,23 +249,61 @@ async function main() {
   }
 }
 
+// A password box with a Show/Hide toggle, so students can check what they typed on a
+// phone keyboard (and password managers still recognise the field).
+function passwordFieldHtml(id, autocomplete, extra = '') {
+  return `
+    <div class="pw-wrap">
+      <input id="${id}" type="password" autocomplete="${autocomplete}" required ${extra} />
+      <button type="button" class="pw-toggle" data-pw-toggle="${id}" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>`
+}
+
+function wirePasswordToggles(root = document) {
+  root.querySelectorAll('[data-pw-toggle]').forEach((btn) => {
+    btn.onclick = () => {
+      const input = document.getElementById(btn.dataset.pwToggle)
+      const show = input.type === 'password'
+      input.type = show ? 'text' : 'password'
+      btn.textContent = show ? 'Hide' : 'Show'
+      btn.setAttribute('aria-pressed', String(show))
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password')
+    }
+  })
+}
+
 function renderLogin() {
   app.innerHTML = `
     <h1>Welcome back</h1>
-    <p class="hint">Sign in to see grades, attendance, and homework.</p>
-    <label>Username</label>
-    <input id="u" autocomplete="username" />
-    <label>Password</label>
-    <input id="p" type="password" autocomplete="current-password" />
-    <button id="go">Log in</button>
-    <p class="error" id="err"></p>
+    <p class="hint">Sign in to see your homework, grades and class materials.</p>
+    <form id="login-form">
+      <label for="u">Username</label>
+      <input id="u" autocomplete="username" autocapitalize="none" required />
+      <label for="p">Password</label>
+      ${passwordFieldHtml('p', 'current-password')}
+      <button type="submit" id="go">Log in</button>
+      <p class="error" id="err" role="alert"></p>
+    </form>
+    <p class="field-note" style="margin-top:18px">
+      <strong>Forgot your password?</strong> Ask your teacher to reset it. They'll give you a
+      temporary one to log in with, and you can change it under Account.<br />
+      <strong>New here?</strong> Use the invite link or QR code your teacher gave you.
+    </p>
   `
-  document.getElementById('go').onclick = async () => {
+  wirePasswordToggles()
+  document.getElementById('login-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const button = document.getElementById('go')
+    button.disabled = true
     try {
-      await api('/auth/login', { method: 'POST', body: { username: document.getElementById('u').value, password: document.getElementById('p').value } })
+      await api('/auth/login', {
+        method: 'POST',
+        body: { username: document.getElementById('u').value.trim(), password: document.getElementById('p').value }
+      })
       location.reload()
-    } catch (e) {
-      document.getElementById('err').textContent = e.message
+    } catch (err) {
+      document.getElementById('err').textContent = err.message
+      button.disabled = false
     }
   }
 }
@@ -311,19 +354,23 @@ async function renderRedeem(code) {
   const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
   app.innerHTML = `
     <h1>Join ${esc(info.className)}</h1>
-    <p class="hint">Pick your name, confirm your date of birth, and set a login.</p>
-    <label>Student</label>
-    <select id="sid">${info.students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
-    <label>Date of birth</label>
-    ${dobPickerHtml()}
-    <p class="field-note" id="dob-note"></p>
-    <label>Username</label>
-    <input id="u" autocomplete="username" />
-    <label>Password</label>
-    <input id="p" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" />
-    <button id="go">Create account</button>
-    <p class="error" id="err"></p>
+    <p class="hint">Pick your name, confirm your date of birth, and choose a username and password.</p>
+    <form id="join-form">
+      <label for="sid">Student</label>
+      <select id="sid">${info.students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
+      <label>Date of birth</label>
+      ${dobPickerHtml()}
+      <p class="field-note" id="dob-note"></p>
+      <label for="u">Username</label>
+      <input id="u" autocomplete="username" autocapitalize="none" minlength="3" maxlength="40" required />
+      <p class="field-note">3–40 characters. You'll use it to log in.</p>
+      <label for="p">Password</label>
+      ${passwordFieldHtml('p', 'new-password', 'minlength="8" placeholder="At least 8 characters"')}
+      <button type="submit" id="go">Create account</button>
+      <p class="error" id="err" role="alert"></p>
+    </form>
   `
+  wirePasswordToggles()
   function updateDobNote() {
     const selected = studentsById[document.getElementById('sid').value]
     document.getElementById('dob-note').textContent = selected?.hasDob
@@ -333,20 +380,21 @@ async function renderRedeem(code) {
   document.getElementById('sid').onchange = updateDobNote
   updateDobNote()
 
-  document.getElementById('go').onclick = async () => {
+  document.getElementById('join-form').onsubmit = async (e) => {
+    e.preventDefault()
     try {
       await api('/invites/' + encodeURIComponent(code) + '/redeem', {
         method: 'POST',
         body: {
           studentId: document.getElementById('sid').value,
           dateOfBirth: readDob(),
-          username: document.getElementById('u').value,
+          username: document.getElementById('u').value.trim(),
           password: document.getElementById('p').value
         }
       })
       location.href = '/'
-    } catch (e) {
-      document.getElementById('err').textContent = e.message
+    } catch (err) {
+      document.getElementById('err').textContent = err.message
     }
   }
 }
@@ -935,6 +983,8 @@ function showTab(id) {
     const active = t.dataset.tab === id
     t.classList.toggle('active', active)
     t.setAttribute('aria-selected', String(active))
+    // Only the active tab is in the Tab order; arrow keys move between tabs.
+    t.tabIndex = active ? 0 : -1
   })
   if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id)
   // Loading the thread marks the teacher's messages as read, so only do it when the
@@ -944,6 +994,23 @@ function showTab(id) {
 
 function setupTabs() {
   document.querySelectorAll('[data-tab]').forEach((t) => (t.onclick = () => showTab(t.dataset.tab)))
+  const nav = document.querySelector('.tabs')
+  if (nav) {
+    nav.onkeydown = (e) => {
+      const ids = TABS.map(([t]) => t)
+      const current = ids.indexOf(location.hash.slice(1) || 'home')
+      const next =
+        e.key === 'ArrowRight' ? (current + 1) % ids.length
+        : e.key === 'ArrowLeft' ? (current - 1 + ids.length) % ids.length
+        : e.key === 'Home' ? 0
+        : e.key === 'End' ? ids.length - 1
+        : -1
+      if (next < 0) return
+      e.preventDefault()
+      showTab(ids[next])
+      document.querySelector(`[data-tab="${ids[next]}"]`).focus()
+    }
+  }
   window.onhashchange = () => showTab(location.hash.slice(1))
   showTab(location.hash.slice(1) || 'home')
 }
@@ -1141,10 +1208,10 @@ function renderDashboard(me) {
        <div class="card">
          <p class="muted" style="margin:0 0 8px">Change your password. This signs you out on every other device and cancels any quick-login QR codes.</p>
          <form id="password-form">
-           <label>Current password</label>
-           <input id="pw-current" type="password" autocomplete="current-password" required />
-           <label>New password (at least 8 characters)</label>
-           <input id="pw-new" type="password" autocomplete="new-password" minlength="8" required />
+           <label for="pw-current">Current password</label>
+           ${passwordFieldHtml('pw-current', 'current-password')}
+           <label for="pw-new">New password (at least 8 characters)</label>
+           ${passwordFieldHtml('pw-new', 'new-password', 'minlength="8"')}
            <button type="submit">Change password</button>
          </form>
          <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
@@ -1160,6 +1227,7 @@ function renderDashboard(me) {
      </section>`
 
   setupTabs()
+  wirePasswordToggles()
   document.querySelectorAll('[data-open-hw]').forEach((row) => {
     row.onclick = () => {
       showTab('classwork')

@@ -4,13 +4,37 @@ import eslintConfigPrettier from '@electron-toolkit/eslint-config-prettier'
 import eslintPluginReact from 'eslint-plugin-react'
 import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
+import js from '@eslint/js'
+import globals from 'globals'
 
 export default defineConfig(
-  // portal/ is a separate, standalone Node service (plain CommonJS, no build step, no
-  // relation to this app's TS/React source) — see portal/README.md. Its own lint
-  // conventions don't belong here.
-  { ignores: ['**/node_modules', '**/dist', '**/out', 'portal/**'] },
-  tseslint.configs.recommended,
+  { ignores: ['**/node_modules', '**/dist', '**/out'] },
+  // portal/ is a separate, standalone Node service: plain CommonJS JavaScript, no build
+  // step and no TypeScript. It gets plain-JS rules of its own rather than the app's
+  // TS/React ones, but it is linted: it's the internet-facing half of the product.
+  {
+    files: ['portal/**/*.js'],
+    ...js.configs.recommended,
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node } }
+  },
+  {
+    files: ['portal/public/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: { ...globals.serviceworker, ...globals.browser }
+    }
+  },
+  {
+    files: ['portal/**/*.js'],
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrors: 'none' }]
+    }
+  },
+  {
+    ...tseslint.configs.recommended[0],
+    ignores: ['portal/**']
+  },
+  ...tseslint.configs.recommended.slice(1).map((c) => ({ ...c, ignores: ['portal/**'] })),
   eslintPluginReact.configs.flat.recommended,
   eslintPluginReact.configs.flat['jsx-runtime'],
   {

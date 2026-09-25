@@ -4,7 +4,8 @@
 // because only the page can tell the difference between "served fresh" and "served
 // from cache" and show an honest "last synced" banner; a service worker serving stale
 // JSON silently would hide that from the student.
-const SHELL_CACHE = 'eduboard-shell-v1'
+// Bump when the shell's behaviour changes; activate() deletes every other cache name.
+const SHELL_CACHE = 'eduboard-shell-v2'
 const SHELL_ASSETS = ['/', '/manifest.json', '/icon.svg']
 
 self.addEventListener('install', (event) => {
@@ -21,7 +22,13 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== SHELL_CACHE).map((k) => caches.delete(k)))
+        Promise.all(
+          keys
+            // Old shell versions only. The page's own API cache (eduboard-api-*) holds
+            // the student's offline data and is the page's to manage.
+            .filter((k) => k.startsWith('eduboard-shell-') && k !== SHELL_CACHE)
+            .map((k) => caches.delete(k))
+        )
       )
       .then(() => self.clients.claim())
   )
@@ -29,22 +36,23 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
-  // Never intercept API calls or anything cross-origin (Google Fonts, etc.) — only the
+  // Never intercept API calls or anything cross-origin — only the
   // handful of same-origin shell files this service worker owns.
   if (event.request.method !== 'GET' || url.origin !== location.origin) return
   if (url.pathname.startsWith('/api/')) return
 
+  // Network first, cache only as the offline fallback. Cache-first would hand returning
+  // students the previous version of the page after every update (and old page code
+  // talking to a newer server) until a second reload.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((res) => {
-          if (res.ok) {
-            caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, res.clone()))
-          }
-          return res
-        })
-        .catch(() => cached)
-      return cached || network
-    })
+    fetch(event.request)
+      .then((res) => {
+        if (res.ok) {
+          const copy = res.clone()
+          caches.open(SHELL_CACHE).then((cache) => cache.put(event.request, copy))
+        }
+        return res
+      })
+      .catch(() => caches.match(event.request).then((cached) => cached || Response.error()))
   )
 })

@@ -1,12 +1,15 @@
 // Lightweight teacher management for a multi-teacher Portal deployment — gated by
 // ADMIN_SECRET (see portal/README.md), held by whoever administers the Portal for the
-// school. No login UI: a teacher never signs into the Portal itself, only their desktop
-// app does (with the sync secret minted here). This is intentionally minimal — enough
-// to onboard a school's staff and see who's using the Portal, not a full admin console.
+// school, and used by public/admin.html. A teacher never signs into the Portal itself,
+// only their desktop app does (with the sync secret minted here). Intentionally minimal:
+// enough to onboard a school's staff and see who's using the Portal.
 const express = require('express')
 const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
 const db = require('../db')
 const { requireAdminSecret, newRandomToken, hashToken } = require('../auth')
+const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR, PROFILE_PHOTOS_DIR } = require('../paths')
 
 const router = express.Router()
 router.use(requireAdminSecret)
@@ -55,13 +58,77 @@ router.get('/teachers', (_req, res) => {
   )
 })
 
-// Cascades to that teacher's classes and students (FK ON DELETE CASCADE), but NOT
-// further to enrollments/grades/homework_assignments/etc — those aren't declared as
-// foreign keys, matching the rest of this schema. Their rows are orphaned, not deleted;
-// acceptable for removing a departed teacher (a rare admin action), but worth knowing
-// before relying on this to fully scrub someone's data.
+// Removing a teacher removes everything their students' data hangs off: grades,
+// enrollments, homework (with questions, answers and submissions), materials, invites,
+// class posts, student profiles, and any family/student account that was linked only to
+// this teacher's students (with its messages and QR logins). Uploaded files go too,
+// deleted only after the database change commits. A school removing a departed teacher
+// shouldn't leave that teacher's students' work and photos behind on the server.
 router.delete('/teachers/:id', (req, res) => {
-  db.prepare('DELETE FROM teachers WHERE id = ?').run(req.params.id)
+  const teacherId = req.params.id
+  const OWN_CLASSES = 'SELECT id FROM classes WHERE teacher_id = @teacherId'
+  const OWN_STUDENTS = 'SELECT id FROM students WHERE teacher_id = @teacherId'
+  const OWN_HOMEWORK = `SELECT id FROM homework_assignments WHERE class_id IN (${OWN_CLASSES})`
+  const p = { teacherId }
+
+  const files = []
+  const collect = (dir, sql) => {
+    for (const row of db.prepare(sql).all(p)) if (row.f) files.push(path.join(dir, row.f))
+  }
+
+  const run = db.transaction(() => {
+    collect(
+      UPLOADS_DIR,
+      `SELECT file_path AS f FROM homework_assignments WHERE id IN (${OWN_HOMEWORK})`
+    )
+    collect(
+      SUBMISSIONS_DIR,
+      `SELECT file_path AS f FROM homework_submissions WHERE homework_assignment_id IN (${OWN_HOMEWORK})`
+    )
+    collect(POSTS_DIR, `SELECT image_path AS f FROM class_posts WHERE class_id IN (${OWN_CLASSES})`)
+    collect(
+      PROFILE_PHOTOS_DIR,
+      `SELECT photo_file AS f FROM student_profiles WHERE student_id IN (${OWN_STUDENTS})`
+    )
+
+    const accountIds = db
+      .prepare(
+        `SELECT DISTINCT account_id FROM account_students WHERE student_id IN (${OWN_STUDENTS})`
+      )
+      .all(p)
+      .map((r) => r.account_id)
+
+    const statements = [
+      `DELETE FROM homework_question_answers WHERE homework_question_id IN
+         (SELECT id FROM homework_questions WHERE homework_assignment_id IN (${OWN_HOMEWORK}))`,
+      `DELETE FROM homework_questions WHERE homework_assignment_id IN (${OWN_HOMEWORK})`,
+      `DELETE FROM homework_submissions WHERE homework_assignment_id IN (${OWN_HOMEWORK})`,
+      `DELETE FROM homework_assignments WHERE id IN (${OWN_HOMEWORK})`,
+      `DELETE FROM material_chunks WHERE material_id IN (SELECT id FROM materials WHERE class_id IN (${OWN_CLASSES}))`,
+      `DELETE FROM materials WHERE class_id IN (${OWN_CLASSES})`,
+      `DELETE FROM class_posts WHERE class_id IN (${OWN_CLASSES})`,
+      `DELETE FROM invites WHERE class_id IN (${OWN_CLASSES})`,
+      `DELETE FROM grades WHERE class_id IN (${OWN_CLASSES}) OR student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM enrollments WHERE class_id IN (${OWN_CLASSES}) OR student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM student_profiles WHERE student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM account_students WHERE student_id IN (${OWN_STUDENTS})`
+    ]
+    for (const sql of statements) db.prepare(sql).run(p)
+
+    // Accounts left with no linked student belonged only to this teacher's classes.
+    // Deleting them cascades to their messages, translations and QR logins.
+    const orphaned = db.prepare(
+      'DELETE FROM accounts WHERE id = ? AND NOT EXISTS (SELECT 1 FROM account_students WHERE account_id = ?)'
+    )
+    for (const id of accountIds) orphaned.run(id, id)
+
+    // Classes, students, and the teacher's AI/digest settings cascade from here.
+    return db.prepare('DELETE FROM teachers WHERE id = @teacherId').run(p).changes
+  })
+
+  const removed = run()
+  if (!removed) return res.status(404).json({ error: 'No such teacher' })
+  for (const file of files) fs.rmSync(file, { force: true })
   res.json({ ok: true })
 })
 

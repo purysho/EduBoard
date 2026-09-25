@@ -202,3 +202,22 @@ test('X-Forwarded-For is ignored unless the request comes from a trusted proxy',
   })
   assert.equal(res.status, 429)
 })
+
+test('request bodies are size-limited per route and only read after authentication', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const big = (mb) =>
+    JSON.stringify({ username: 'x', password: 'y', pad: 'z'.repeat(mb * 1024 * 1024) })
+
+  const login = await portal.call('POST', '/api/auth/login', { body: big(1) })
+  assert.equal(login.status, 413, 'login accepts only small bodies')
+  const anonMe = await portal.call('POST', '/api/me/messages', { body: big(5) })
+  assert.equal(anonMe.status, 401, 'a large body to a student route is refused before it is read')
+  const anonSync = await portal.call('POST', '/api/sync', {
+    body: big(5),
+    headers: { 'X-Sync-Secret': randomSecret() }
+  })
+  assert.equal(anonSync.status, 401)
+  const realSync = await portal.sync('', { classes: [], pad: 'z'.repeat(5 * 1024 * 1024) })
+  assert.equal(realSync.status, 200, 'a real teacher can still send a large sync')
+})

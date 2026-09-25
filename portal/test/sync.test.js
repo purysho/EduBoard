@@ -214,3 +214,115 @@ test('submissions are checked by content: disguised programs and macro files are
   const pulled = await portal.sync('/submissions')
   assert.equal(pulled.json[0].fileName, 'essay.pdf', 'no path survives in the stored name')
 })
+
+test("removing a teacher deletes all of their students' data and files, and nobody else's", async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const fsx = require('node:fs')
+  const pathx = require('node:path')
+  const sharp = require('sharp')
+  const Database = require('better-sqlite3')
+
+  // Teacher A (the default) keeps a class with a student account.
+  const { cookie: aCookie } = await makeStudentAccount(portal)
+
+  // Teacher B gets the full set: homework with a file, a submission file, a post image,
+  // a material, a student account with a profile photo and messages.
+  const created = await portal.call('POST', '/api/admin/teachers', {
+    headers: { 'X-Admin-Secret': portal.secrets.admin },
+    body: { name: 'Teacher B' }
+  })
+  const secretB = created.json.syncSecret
+  const png = await sharp({ create: { width: 64, height: 64, channels: 3, background: '#123456' } })
+    .png()
+    .toBuffer()
+  await portal.sync(
+    '',
+    {
+      classes: [{ id: 'cB', name: 'B class', levelType: 'university' }],
+      students: [{ id: 'sB', firstName: 'Bea', lastName: 'Bee', dateOfBirth: null }],
+      enrollments: [{ studentId: 'sB', classId: 'cB', status: 'active' }],
+      grades: [{ studentId: 'sB', classId: 'cB', percent: 80 }],
+      invites: [{ code: 'INVB', classId: 'cB', revoked: false }],
+      homeworkAssignments: [
+        {
+          id: 'hB',
+          classId: 'cB',
+          title: 'B hw',
+          fileName: 'b.txt',
+          fileData: b64('b'),
+          questions: [{ type: 'short_answer', prompt: 'q', correctAnswer: 'a', points: 1 }]
+        }
+      ],
+      materials: [{ id: 'mB', classId: 'cB', title: 'B mat', chunks: ['text'] }]
+    },
+    secretB
+  )
+  await portal.sync(
+    '/posts',
+    { classId: 'cB', body: 'hi', imageName: 'p.png', imageData: png.toString('base64') },
+    secretB
+  )
+  const bea = await portal.call('POST', '/api/invites/INVB/redeem', {
+    body: { studentId: 'sB', username: 'bea', password: 'bea-password-1' }
+  })
+  await portal.call('POST', '/api/me/homework/hB/submit', {
+    cookie: bea.cookie,
+    body: { studentId: 'sB', fileName: 'w.pdf', fileData: b64('%PDF-1.7 x') }
+  })
+  await portal.call('POST', '/api/me/profiles/sB/photo', {
+    cookie: bea.cookie,
+    body: { fileName: 'me.png', fileData: png.toString('base64') }
+  })
+  await portal.call('POST', '/api/me/messages', { cookie: bea.cookie, body: { body: 'hello' } })
+
+  const dirs = ['homework-uploads', 'submission-uploads', 'post-images', 'profile-photos']
+  const count = (d) => fsx.readdirSync(pathx.join(portal.dataDir, d)).length
+  assert.deepEqual(dirs.map(count), [1, 1, 1, 1], 'one file of B’s in each folder')
+
+  const del = await portal.call('DELETE', `/api/admin/teachers/${created.json.id}`, {
+    headers: { 'X-Admin-Secret': portal.secrets.admin }
+  })
+  assert.equal(del.status, 200)
+  assert.deepEqual(dirs.map(count), [0, 0, 0, 0], 'all of B’s files are gone')
+
+  const db = new Database(pathx.join(portal.dataDir, 'portal.db'), { readonly: true })
+  const left = (sql) => db.prepare(sql).get().n
+  for (const [table, where] of [
+    ['homework_assignments', "id = 'hB'"],
+    ['homework_questions', "homework_assignment_id = 'hB'"],
+    ['homework_submissions', "homework_assignment_id = 'hB'"],
+    ['materials', "id = 'mB'"],
+    ['material_chunks', "material_id = 'mB'"],
+    ['class_posts', "class_id = 'cB'"],
+    ['invites', "class_id = 'cB'"],
+    ['grades', "student_id = 'sB'"],
+    ['enrollments', "student_id = 'sB'"],
+    ['student_profiles', "student_id = 'sB'"],
+    ['accounts', "username = 'bea'"],
+    ['students', "id = 'sB'"],
+    ['classes', "id = 'cB'"]
+  ]) {
+    assert.equal(
+      left(`SELECT COUNT(*) AS n FROM ${table} WHERE ${where}`),
+      0,
+      `${table} still has B's rows`
+    )
+  }
+  assert.equal(left("SELECT COUNT(*) AS n FROM messages WHERE body = 'hello'"), 0)
+  db.close()
+
+  // Teacher A and their student are untouched.
+  assert.equal(
+    (await portal.call('GET', '/api/me', { cookie: aCookie })).json.students[0].classes[0].name,
+    'Biology 101'
+  )
+  assert.equal(
+    (
+      await portal.call('DELETE', `/api/admin/teachers/${created.json.id}`, {
+        headers: { 'X-Admin-Secret': portal.secrets.admin }
+      })
+    ).status,
+    404
+  )
+})

@@ -31,7 +31,7 @@ fs.mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
   return String(name)
-    .replace(/[^\w.\-]+/g, '_')
+    .replace(/[^\w.-]+/g, '_')
     .slice(-120)
 }
 

@@ -173,7 +173,7 @@ async function renderDashboard(newTeacher) {
   app.querySelectorAll('[data-remove]').forEach((btn) => {
     btn.onclick = async () => {
       const ok = confirm(
-        `Remove ${btn.dataset.name}? Their sync secret stops working immediately, and their classes and students are deleted from this Portal. Their desktop app keeps all its own data.`
+        `Remove ${btn.dataset.name}? Their sync secret stops working immediately, and everything of theirs on this Portal is deleted: classes, grades, homework and submitted files, materials, and their students' profiles and accounts. This can't be undone. Their desktop app keeps all its own data.`
       )
       if (!ok) return
       await adminApi('DELETE', '/teachers/' + encodeURIComponent(btn.dataset.remove))

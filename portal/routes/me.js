@@ -48,7 +48,7 @@ require('fs').mkdirSync(SUBMISSIONS_DIR, { recursive: true })
 
 function sanitizeFileName(name) {
   return String(name)
-    .replace(/[^\w.\-]+/g, '_')
+    .replace(/[^\w.-]+/g, '_')
     .slice(-120)
 }
 
@@ -249,6 +249,8 @@ router.post('/homework/:id/submit', (req, res) => {
       String(fileName)
         .split(/[\\/]/)
         .pop()
+        // Control characters are exactly what's being stripped here.
+        // eslint-disable-next-line no-control-regex
         .replace(/[\u0000-\u001f]/g, '')
         .slice(-150) || 'file'
     const storedName = `${req.params.id}-${studentId}-${sanitizeFileName(fileName)}`
