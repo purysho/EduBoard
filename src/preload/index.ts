@@ -123,6 +123,8 @@ const api: EduBoardApi = {
       invoke(IpcChannels.importExport.importRoster, filePath, classId),
     exportGradebook: (classId, filePath) =>
       invoke(IpcChannels.importExport.exportGradebook, classId, filePath),
+    exportCourseGradeSheet: (courseGroupId, filePath) =>
+      invoke(IpcChannels.importExport.exportCourseGradeSheet, courseGroupId, filePath),
     exportAttendance: (classId, filePath) =>
       invoke(IpcChannels.importExport.exportAttendance, classId, filePath),
     exportHomeworkSubmissions: (homeworkAssignmentId, classId, filePath) =>

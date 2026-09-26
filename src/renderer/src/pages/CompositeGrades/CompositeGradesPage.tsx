@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { Layers } from 'lucide-react'
+import { FileSpreadsheet, Layers } from 'lucide-react'
+import { Button } from '@renderer/components/ui/Button'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Select } from '@renderer/components/ui/Field'
 import { Badge } from '@renderer/components/ui/Badge'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { letterTone } from '@renderer/lib/grade'
-import { formatPercent } from '@renderer/lib/format'
+import { formatPercent, ipcErrorMessage } from '@renderer/lib/format'
 import { useCourseGroupComposite, useCourseGroups } from '@renderer/lib/queries'
 
 export function CompositeGradesPage(): React.JSX.Element {
@@ -17,6 +18,25 @@ export function CompositeGradesPage(): React.JSX.Element {
   )
 
   const selectedGroup = (courseGroups ?? []).find((g) => g.id === selectedGroupId)
+  const [exportState, setExportState] = useState<{ busy: boolean; message: string | null }>({
+    busy: false,
+    message: null
+  })
+
+  async function handleExport(): Promise<void> {
+    if (!selectedGroup) return
+    const path = await window.api.importExport.pickExportPath(
+      `${selectedGroup.name} - final grades.xlsx`
+    )
+    if (!path) return
+    setExportState({ busy: true, message: null })
+    try {
+      await window.api.importExport.exportCourseGradeSheet(selectedGroup.id, path)
+      setExportState({ busy: false, message: 'Saved.' })
+    } catch (err) {
+      setExportState({ busy: false, message: ipcErrorMessage(err, 'Couldn’t save the file.') })
+    }
+  }
 
   return (
     <div>
@@ -35,15 +55,31 @@ export function CompositeGradesPage(): React.JSX.Element {
         />
       ) : (
         <>
-          <div className="mb-4 max-w-xs">
-            <Select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}>
-              <option value="">Select a course…</option>
-              {courseGroups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </Select>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="w-full max-w-xs">
+              <Select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}>
+                <option value="">Select a course…</option>
+                {courseGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            {selectedGroup && (
+              <Button
+                variant="secondary"
+                onClick={handleExport}
+                disabled={exportState.busy}
+                title="An Excel file with every term's grade, the final grade and attendance, plus each term's gradebook"
+              >
+                <FileSpreadsheet size={14} className="mr-1 inline" aria-hidden />
+                {exportState.busy ? 'Saving…' : 'Export grade sheet'}
+              </Button>
+            )}
+            {exportState.message && (
+              <span className="text-sm text-[var(--color-text-muted)]">{exportState.message}</span>
+            )}
           </div>
 
           {!selectedGroupId ? null : loadingComposites ? (

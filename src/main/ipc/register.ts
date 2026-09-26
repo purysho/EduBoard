@@ -371,6 +371,11 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.importExport.importRoster, (_e, filePath: string, classId?: string) =>
     importExportService.importRoster(filePath, classId)
   )
+  handle(
+    IpcChannels.importExport.exportCourseGradeSheet,
+    (_e, courseGroupId: string, filePath: string) =>
+      importExportService.exportCourseGradeSheetXlsx(courseGroupId, filePath)
+  )
   handle(IpcChannels.importExport.exportGradebook, (_e, classId: string, filePath: string) =>
     importExportService.exportGradebookXlsx(classId, filePath)
   )

@@ -216,6 +216,8 @@ export interface EduBoardApi {
     pickExportPath(defaultFileName: string): Promise<string | null>
     importRoster(filePath: string, classId?: string): Promise<RosterImportResult>
     exportGradebook(classId: string, filePath: string): Promise<void>
+    /** A course's Final grades sheet (every term + combined) and each term's gradebook. */
+    exportCourseGradeSheet(courseGroupId: string, filePath: string): Promise<void>
     exportAttendance(classId: string, filePath: string): Promise<void>
     exportHomeworkSubmissions(
       homeworkAssignmentId: string,

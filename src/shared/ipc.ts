@@ -106,6 +106,7 @@ export const IpcChannels = {
   importExport: {
     importRoster: 'importExport:importRoster',
     exportGradebook: 'importExport:exportGradebook',
+    exportCourseGradeSheet: 'importExport:exportCourseGradeSheet',
     exportAttendance: 'importExport:exportAttendance',
     exportHomeworkSubmissions: 'importExport:exportHomeworkSubmissions',
     pickImportFile: 'importExport:pickImportFile',

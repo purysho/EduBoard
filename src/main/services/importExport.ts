@@ -1,8 +1,10 @@
 import { writeFile } from 'fs/promises'
 import ExcelJS from 'exceljs'
 import { createStudent } from '../repositories/students'
-import { enrollStudent } from '../repositories/enrollments'
-import { getClass } from '../repositories/classes'
+import { enrollStudent, getRosterForClass } from '../repositories/enrollments'
+import { getClass, listClassesByCourseGroup } from '../repositories/classes'
+import { getTerm } from '../repositories/terms'
+import { getCourseGroupComposite } from './compositeGrades'
 import { listAssessmentsByClass } from '../repositories/assessments'
 import { listScoresByClass } from '../repositories/scores'
 import { listAttendanceByClass } from '../repositories/attendanceRecords'
@@ -111,6 +113,13 @@ export async function importRoster(
 
 /** Exports a class's full gradebook (every assessment column + computed grade) to .xlsx. */
 export async function exportGradebookXlsx(classId: string, filePath: string): Promise<void> {
+  const workbook = new ExcelJS.Workbook()
+  addGradebookSheet(workbook, classId)
+  await workbook.xlsx.writeFile(filePath)
+}
+
+/** One class's gradebook (every assessment score, percent and letter) as a worksheet. */
+function addGradebookSheet(workbook: ExcelJS.Workbook, classId: string, sheetName?: string): void {
   const cls = getClass(classId)
   if (!cls) throw new Error('Class not found')
 
@@ -120,8 +129,7 @@ export async function exportGradebookXlsx(classId: string, filePath: string): Pr
   )
   const roster = getClassRoster(classId)
 
-  const workbook = new ExcelJS.Workbook()
-  const sheet = workbook.addWorksheet(cls.name.slice(0, 31) || 'Gradebook')
+  const sheet = workbook.addWorksheet(uniqueSheetName(workbook, sheetName ?? cls.name))
 
   sheet.addRow([
     'Last Name',
@@ -149,7 +157,101 @@ export async function exportGradebookXlsx(classId: string, filePath: string): Pr
   sheet.columns.forEach((col) => {
     col.width = 16
   })
+}
 
+/** Excel sheet names: at most 31 characters, none of \ / ? * [ ] :, and unique. */
+function uniqueSheetName(workbook: ExcelJS.Workbook, wanted: string): string {
+  const base =
+    wanted
+      .replace(/[\\/?*[\]:]/g, ' ')
+      .trim()
+      .slice(0, 28) || 'Sheet'
+  let name = base
+  for (let n = 2; workbook.getWorksheet(name); n++) name = `${base} ${n}`
+  return name
+}
+
+const pct = (v: number | null | undefined): number | string =>
+  v === null || v === undefined ? '' : Math.round(v * 10) / 10
+
+/**
+ * The end-of-term sheet for a course taught over several terms: a Final grades sheet
+ * (each student's grade in every term, their combined grade, and attendance), then each
+ * term's full gradebook on its own sheet. Ready to hand to a registrar.
+ */
+export async function exportCourseGradeSheetXlsx(
+  courseGroupId: string,
+  filePath: string
+): Promise<void> {
+  const composite = getCourseGroupComposite(courseGroupId)
+  const classesInGroup = listClassesByCourseGroup(courseGroupId)
+  if (!classesInGroup.length) throw new Error('This course has no classes yet.')
+  // Same term order the Composite Grades page uses.
+  const order = new Map<string, number>()
+  for (const entry of composite.flatMap((c) => c.classes)) {
+    if (!order.has(entry.classId)) order.set(entry.classId, order.size)
+  }
+  const classes = [...classesInGroup].sort(
+    (a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999)
+  )
+  const label = (c: (typeof classes)[number]): string => {
+    const term = c.termId ? getTerm(c.termId)?.name : null
+    return term ? `${term}` : c.name
+  }
+  const students = new Map(
+    classes.flatMap((c) => getRosterForClass(c.id).map((r) => [r.student.id, r.student] as const))
+  )
+  const attendanceByClass = new Map(
+    classes.map((c) => [
+      c.id,
+      new Map(getClassRoster(c.id).map((r) => [r.student.id, r.attendanceRate]))
+    ])
+  )
+
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet('Final grades')
+  sheet.addRow([
+    'Last Name',
+    'First Name',
+    'Student #',
+    ...classes.flatMap((c) => [`${label(c)} %`, `${label(c)} letter`]),
+    'Final %',
+    'Final letter',
+    'Attendance %'
+  ])
+  sheet.getRow(1).font = { bold: true }
+
+  const rows = [...composite].sort((a, b) => {
+    const sa = students.get(a.studentId)
+    const sb = students.get(b.studentId)
+    return `${sa?.lastName} ${sa?.firstName}`.localeCompare(`${sb?.lastName} ${sb?.firstName}`)
+  })
+  for (const row of rows) {
+    const student = students.get(row.studentId)
+    const byClass = new Map(row.classes.map((e) => [e.classId, e]))
+    // Attendance: the average of each term's rate.
+    const rates = classes
+      .map((c) => attendanceByClass.get(c.id)?.get(row.studentId))
+      .filter((r): r is number => typeof r === 'number')
+    sheet.addRow([
+      student?.lastName ?? '',
+      student?.firstName ?? row.studentName,
+      student?.studentNumber ?? '',
+      ...classes.flatMap((c) => {
+        const e = byClass.get(c.id)
+        return [pct(e?.percent), e?.letter ?? '']
+      }),
+      pct(row.compositePercent),
+      row.compositeLetter ?? '',
+      rates.length ? pct((rates.reduce((a, b) => a + b, 0) / rates.length) * 100) : ''
+    ])
+  }
+  sheet.columns.forEach((col, i) => {
+    col.width = i < 2 ? 18 : 14
+  })
+  sheet.views = [{ state: 'frozen', xSplit: 2, ySplit: 1 }]
+
+  for (const c of classes) addGradebookSheet(workbook, c.id, label(c))
   await workbook.xlsx.writeFile(filePath)
 }
 

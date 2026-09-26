@@ -179,6 +179,8 @@ If a course runs across multiple terms (Fall and Spring sections of the same cla
 
 The composite is renormalized across whichever terms actually have graded work — a term that hasn't started yet doesn't drag the composite down, the same way an ungraded category doesn't drag down a single class's grade.
 
+At the end of the year, **Export grade sheet** (next to the course picker) saves one Excel file for the course: a **Final grades** sheet with each student's grade and letter for every term, the final combined grade, and attendance, followed by each term's full gradebook on its own sheet.
+
 ---
 
 ## Taking attendance
