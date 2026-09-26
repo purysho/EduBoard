@@ -12,6 +12,7 @@ import { TermsPanel } from './TermsPanel'
 import { ImportPanel } from './ImportPanel'
 import { BackupPanel } from './BackupPanel'
 import { PortalPanel } from './PortalPanel'
+import { AboutPanel } from './AboutPanel'
 
 const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
   deepseek: 'DeepSeek',
@@ -383,6 +384,7 @@ export function SettingsPage(): React.JSX.Element {
         <ImportPanel />
         <BackupPanel />
         <PortalPanel />
+        <AboutPanel />
       </div>
     </div>
   )

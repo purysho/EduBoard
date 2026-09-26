@@ -99,7 +99,8 @@ const api: EduBoardApi = {
   },
   settings: {
     get: () => invoke(IpcChannels.settings.get),
-    update: (patch) => invoke(IpcChannels.settings.update, patch)
+    update: (patch) => invoke(IpcChannels.settings.update, patch),
+    checkForUpdate: () => invoke(IpcChannels.settings.checkForUpdate)
   },
   backup: {
     create: () => invoke(IpcChannels.backup.create),

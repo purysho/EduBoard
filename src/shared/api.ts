@@ -16,6 +16,7 @@ import type {
   GradeTrendPoint,
   BackupInfo,
   ExtraBackupStatus,
+  UpdateCheck,
   BackupPreview,
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
@@ -193,6 +194,7 @@ export interface EduBoardApi {
   settings: {
     get(): Promise<AppSettings>
     update(patch: Partial<AppSettings>): Promise<AppSettings>
+    checkForUpdate(): Promise<UpdateCheck>
   }
   backup: {
     create(): Promise<BackupInfo>

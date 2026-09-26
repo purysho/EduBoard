@@ -651,6 +651,15 @@ export interface AppSettings {
   extraBackupFolder: string
 }
 
+/** Whether a newer EduBoard is out, as announced by the teacher's Portal. */
+export interface UpdateCheck {
+  current: string
+  /** Null when there's no Portal set up or it couldn't be reached. */
+  latest: string | null
+  updateAvailable: boolean
+  downloadUrl: string
+}
+
 /** Where the second backup copy stands, for Settings and the Dashboard reminder. */
 export interface ExtraBackupStatus {
   folder: string

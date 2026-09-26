@@ -87,7 +87,8 @@ export const IpcChannels = {
   },
   settings: {
     get: 'settings:get',
-    update: 'settings:update'
+    update: 'settings:update',
+    checkForUpdate: 'settings:checkForUpdate'
   },
   backup: {
     create: 'backup:create',

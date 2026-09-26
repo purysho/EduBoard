@@ -51,6 +51,19 @@ app.use('/api/admin', require('./routes/admin'))
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
+// The newest EduBoard desktop version, so the app can tell the teacher an update is out
+// (GitHub can't be asked directly: the repository is private). Kept in step with the
+// desktop's package.json by `npm version` and checked by a test.
+app.get('/api/app-version', (_req, res) => {
+  const { version } = JSON.parse(
+    require('fs').readFileSync(path.join(__dirname, 'desktop-version.json'), 'utf8')
+  )
+  res.set('Cache-Control', 'no-cache').json({
+    version,
+    downloadUrl: 'https://github.com/purysho/EduBoard/releases/latest'
+  })
+})
+
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }))
 
 // Express's default handler answers with an HTML page that includes the stack trace

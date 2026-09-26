@@ -719,6 +719,15 @@ export function useCreateBackup() {
   })
 }
 
+/** Checked once per session (and on demand from Settings); a day-old answer is fine. */
+export function useUpdateCheck() {
+  return useQuery({
+    queryKey: ['updateCheck'],
+    queryFn: () => api().settings.checkForUpdate(),
+    staleTime: 6 * 60 * 60 * 1000
+  })
+}
+
 export function useExtraBackupStatus() {
   return useQuery({ queryKey: queryKeys.extraBackup, queryFn: () => api().backup.extraStatus() })
 }
