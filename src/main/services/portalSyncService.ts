@@ -4,7 +4,13 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import type { PortalAiInteraction } from '@shared/aiUsage'
 import { listClasses } from '../repositories/classes'
-import { getRosterForClass } from '../repositories/enrollments'
+import {
+  enrollStudent,
+  getRosterForClass,
+  listEnrollmentsByStudent
+} from '../repositories/enrollments'
+import { listAllJoinLinks } from '../repositories/portalJoinLinks'
+import { importStudentFromPortal } from '../repositories/students'
 import {
   listHomeworkAssignmentsByClass,
   upsertSubmissionFromPortal
@@ -69,7 +75,17 @@ function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } 
 /** Gathers this device's full current state and pushes it to the Portal, replacing
  * everything there in one shot — see portal/routes/sync.js. One-way: nothing the
  * Portal has is ever written back into the local database from here. */
+/** Publishes, then brings in any students who joined through a class link (and
+ * publishes once more, so the Portal knows the desktop now has them). */
 export async function publishToPortal(): Promise<PublishResult> {
+  const result = await publishOnce()
+  if (result.outdatedServer) return { ...result, studentsJoined: 0 }
+  const studentsJoined = await importNewStudentsFromPortal()
+  if (studentsJoined > 0) await publishOnce()
+  return { ...result, studentsJoined }
+}
+
+async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
   const classes = listClasses(false)
@@ -99,7 +115,13 @@ export async function publishToPortal(): Promise<PublishResult> {
       points: number
     }[]
   }[] = []
-  const invites: { code: string; classId: string; revoked: boolean }[] = []
+  const invites: {
+    code: string
+    classId: string
+    revoked: boolean
+    kind?: 'class_link' | 'student'
+    studentId?: string | null
+  }[] = []
   const materials: {
     id: string
     classId: string
@@ -194,6 +216,19 @@ export async function publishToPortal(): Promise<PublishResult> {
     }
   }
 
+  // Join links, revoked ones included so turning a link off reaches the Portal.
+  const publishedClassIds = new Set(classes.map((c) => c.id))
+  for (const link of listAllJoinLinks()) {
+    if (!publishedClassIds.has(link.classId)) continue
+    invites.push({
+      code: link.code,
+      classId: link.classId,
+      revoked: link.revoked,
+      kind: link.kind,
+      studentId: link.studentId
+    })
+  }
+
   const settings = getSettings()
   const res = await fetch(`${portalUrl}/api/sync`, {
     method: 'POST',
@@ -276,6 +311,54 @@ export async function publishToPortal(): Promise<PublishResult> {
   return { attachmentsUploaded, materialsUploaded, skipped, outdatedServer: false }
 }
 
+/** Adds students who joined through a Portal class link to this computer's roster, under
+ * the Portal's ids. Returns how many were new here. Safe to call repeatedly. */
+export async function importNewStudentsFromPortal(): Promise<number> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await fetch(`${portalUrl}/api/sync/new-students`, {
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (res.status === 404) return 0 // a Portal from before join links
+  if (!res.ok) throw await portalFailure('Checking for new students failed', res)
+  const rows = (await res.json()) as {
+    id: string
+    firstName: string
+    lastName: string
+    dateOfBirth: string | null
+    joinedAt: string | null
+    classIds: string[]
+  }[]
+  const localClassIds = new Set(listClasses(true).map((c) => c.id))
+  let added = 0
+  for (const row of rows) {
+    if (importStudentFromPortal(row)) added++
+    const enrolledIn = new Set(listEnrollmentsByStudent(row.id).map((e) => e.classId))
+    for (const classId of row.classIds) {
+      if (!localClassIds.has(classId) || enrolledIn.has(classId)) continue
+      enrollStudent({
+        studentId: row.id,
+        classId,
+        enrolledOn: (row.joinedAt ?? new Date().toISOString()).slice(0, 10)
+      })
+    }
+  }
+  return added
+}
+
+/** Ids of this teacher's students who have a Portal account, or null if the Portal
+ * couldn't be asked (not set up, offline, or too old to say). */
+export async function getStudentsWithPortalAccounts(): Promise<string[] | null> {
+  try {
+    const { portalUrl, portalSyncSecret } = requirePortalConfig()
+    const res = await fetch(`${portalUrl}/api/sync/accounts`, {
+      headers: { 'X-Sync-Secret': portalSyncSecret }
+    })
+    return res.ok ? ((await res.json()) as string[]) : null
+  } catch {
+    return null
+  }
+}
+
 /** Pulls homework submission statuses students have set for themselves on the Portal
  * and mirrors them into local tracking — the one place data flows back in, and only on
  * explicit request (see PortalTab's "Pull from portal" button), never automatically. */
@@ -300,10 +383,21 @@ export async function pullSubmissionsFromPortal(): Promise<number> {
     aiHelpCount?: number
     aiOverlap?: number | null
   }[]
+  // Students who joined through a class link may have turned work in already, so
+  // they're brought in first: a submission can't be saved for a student not here.
+  await importNewStudentsFromPortal().catch(() => 0)
+  let saved = 0
   for (const row of rows) {
-    upsertSubmissionFromPortal(row)
+    // One row for a student or assignment no longer on this computer shouldn't stop
+    // everyone else's work coming through.
+    try {
+      upsertSubmissionFromPortal(row)
+      saved++
+    } catch {
+      // skipped
+    }
   }
-  return rows.length
+  return saved
 }
 
 // pushSubmissionPortfolio is the only path that writes `portfolio` — this pull never

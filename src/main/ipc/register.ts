@@ -2,12 +2,15 @@ import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from '
 import { writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
 import type {
+  PortalJoinLink,
   AiConnectionConfig,
   DraftLessonPlanInput,
   DraftReportCommentInput
 } from '@shared/types'
 
 import * as studentsRepo from '../repositories/students'
+import * as portalJoinLinksRepo from '../repositories/portalJoinLinks'
+import { normalizePortalUrl } from '@shared/portalUrl'
 import * as termsRepo from '../repositories/terms'
 import * as classesRepo from '../repositories/classes'
 import * as gradeCategoriesRepo from '../repositories/gradeCategories'
@@ -54,6 +57,7 @@ import * as portalInvitesRepo from '../repositories/portalInvites'
 import {
   publishToPortal,
   pullSubmissionsFromPortal,
+  getStudentsWithPortalAccounts,
   getStudentAiActivity,
   pushSubmissionGrade,
   pushSubmissionPortfolio,
@@ -671,6 +675,27 @@ export function registerIpcHandlers(): void {
     IpcChannels.portalInvites.createBatch,
     (_e, input: portalInvitesRepo.CreatePortalInviteBatchInput) =>
       portalInvitesRepo.createInviteBatch(input)
+  )
+  handle(IpcChannels.portalJoinLinks.overview, async (_e, classId: string) => {
+    const links = portalJoinLinksRepo.listActiveJoinLinks(String(classId))
+    const studentLinks: Record<string, PortalJoinLink> = {}
+    for (const link of links)
+      if (link.kind === 'student' && link.studentId) studentLinks[link.studentId] = link
+    return {
+      portalUrl: normalizePortalUrl(settingsRepo.getSettings().portalUrl),
+      classLink: links.find((l) => l.kind === 'class_link') ?? null,
+      studentLinks,
+      studentsWithAccounts: await getStudentsWithPortalAccounts()
+    }
+  })
+  handle(IpcChannels.portalJoinLinks.createClassLink, (_e, classId: string) =>
+    portalJoinLinksRepo.createClassLink(String(classId))
+  )
+  handle(IpcChannels.portalJoinLinks.turnOffClassLink, (_e, classId: string) =>
+    portalJoinLinksRepo.turnOffClassLink(String(classId))
+  )
+  handle(IpcChannels.portalJoinLinks.createStudentLink, (_e, classId: string, studentId: string) =>
+    portalJoinLinksRepo.getOrCreateStudentLink(String(classId), String(studentId))
   )
   handle(IpcChannels.portalInvites.listBatchesByClass, (_e, classId: string) =>
     portalInvitesRepo.listInviteBatchesByClass(classId)

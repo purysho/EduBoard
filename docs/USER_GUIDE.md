@@ -58,7 +58,7 @@ chmod +x EduBoard.AppImage
 
 ## First launch
 
-EduBoard opens on the **Dashboard** with a **Getting started** checklist at the top: create a class, add students, publish an assignment, connect the student Portal, and print invites (plus two optional extras: sharing study material and adding an AI key). Each step has a button that takes you where it's done, and ticks itself once it really is done. Click **I'll do this later** to hide it; **Settings → Show getting-started checklist** brings it back.
+EduBoard opens on the **Dashboard** with a **Getting started** checklist at the top: create a class, add students, publish an assignment, connect the student Portal, and invite your students (plus two optional extras: sharing study material and adding an AI key). Each step has a button that takes you where it's done, and ticks itself once it really is done. Click **I'll do this later** to hide it; **Settings → Show getting-started checklist** brings it back.
 
 A good first stop is **Settings**:
 
@@ -222,6 +222,25 @@ Because everything happens over your local WiFi rather than the internet, this w
 - **Study tools (needs an AI key in Settings):** **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. They work on PDFs, Word (.docx), PowerPoint (.pptx, including speaker notes), OpenDocument, .txt and .md files, links and notes, and index the resource themselves the first time. Older .doc/.ppt files need saving as .docx/.pptx first; scanned PDFs (pictures of pages) have no text to read. Flashcards and quizzes open in a review window where you can read every card and question (the correct answer is ticked) and **Regenerate** or **Remove** them. If the resource is shared with a class, students get them on the Portal to practise with; the practice quiz is self-checked and never counts toward a grade.
 
 ![Resources library](screenshots/resources.png)
+
+---
+
+## Inviting students to the Portal
+
+A class's **Portal** tab has two ways in. Neither shows anyone who else is in the class.
+
+- **Class join link:** one link (and QR code) for the whole class. Students open it, type
+  their name and date of birth, and choose a username and password. If the name matches a
+  student already on your roster who has no account yet, they're matched to that student
+  (if you recorded that student's date of birth, it must match). Otherwise they're added to
+  the class, and appear in your roster the next time EduBoard publishes. **New link**
+  replaces the link (the old one stops working), and **Turn off** closes it.
+- **Personal invite links:** a link for one student on your roster. It greets them by name
+  ("Hi MaiMai!") and works once. Students who already have an account are marked **Has an
+  account**.
+
+Invite strips printed before this change still work once each, and now show the same
+fill-in form instead of a list of names.
 
 ---
 

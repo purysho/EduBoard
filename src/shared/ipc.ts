@@ -210,6 +210,12 @@ export const IpcChannels = {
     openSubmissionFile: 'homeworkAssignments:openSubmissionFile',
     draftFeedback: 'homeworkAssignments:draftFeedback'
   },
+  portalJoinLinks: {
+    overview: 'portalJoinLinks:overview',
+    createClassLink: 'portalJoinLinks:createClassLink',
+    turnOffClassLink: 'portalJoinLinks:turnOffClassLink',
+    createStudentLink: 'portalJoinLinks:createStudentLink'
+  },
   portalInvites: {
     createBatch: 'portalInvites:createBatch',
     listBatchesByClass: 'portalInvites:listBatchesByClass',

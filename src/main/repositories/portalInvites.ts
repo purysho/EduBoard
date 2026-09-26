@@ -16,7 +16,7 @@ const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 /** A random, non-guessable invite code, grouped for readability (e.g. "K7M2-PR9X").
  * 12 characters from a 32-symbol alphabet is ~60 bits of entropy — not brute-forceable,
  * and irrelevant to memorize since the QR/bookmark is the intended everyday path. */
-function generateCode(): string {
+export function generateCode(): string {
   const bytes = randomBytes(12)
   let raw = ''
   for (const byte of bytes) raw += CODE_ALPHABET[byte % CODE_ALPHABET.length]

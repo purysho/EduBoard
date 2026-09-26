@@ -274,6 +274,26 @@ export const portalInvites = sqliteTable(
   })
 )
 
+/** Portal join links: one reusable link per class ('class_link'), and personal
+ * single-use links for one student ('student'). Published to the Portal as invites. */
+export const portalJoinLinks = sqliteTable(
+  'portal_join_links',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: text('student_id').references(() => students.id, { onDelete: 'cascade' }),
+    kind: text('kind').notNull(),
+    code: text('code').notNull().unique(),
+    revoked: integer('revoked', { mode: 'boolean' }).notNull().default(false),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    classIdx: index('portal_join_links_class_idx').on(t.classId)
+  })
+)
+
 export const scores = sqliteTable(
   'scores',
   {

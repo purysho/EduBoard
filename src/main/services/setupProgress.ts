@@ -33,7 +33,10 @@ export function getSetupProgress(): SetupProgress {
       settings.portalSyncSecret.trim() &&
       !portalUrlProblem(settings.portalUrl)
     ),
-    inviteBatchCount: count('SELECT COUNT(*) AS n FROM portal_invite_batches'),
+    // Printed strips (older) or any join link counts as having invited students.
+    inviteBatchCount:
+      count('SELECT COUNT(*) AS n FROM portal_invite_batches') +
+      count('SELECT COUNT(*) AS n FROM portal_join_links'),
     sharedResourceCount: count(
       'SELECT COUNT(*) AS n FROM lesson_resources WHERE share_with_students = 1 AND class_id IS NOT NULL'
     ),

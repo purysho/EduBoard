@@ -69,11 +69,12 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
     {
       id: 'invites',
       title: 'Invite your students',
-      description: 'Print invite strips with a QR code each. Students sign up in a minute.',
+      description:
+        'Share a class join link (or QR code), or give a student their own link. Students sign up in a minute.',
       done: p.inviteBatchCount > 0,
       optional: false,
       to: cls ? `${cls}/portal` : '/classes',
-      actionLabel: 'Make invites'
+      actionLabel: 'Get a join link'
     },
     {
       id: 'materials',

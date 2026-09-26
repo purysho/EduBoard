@@ -658,6 +658,27 @@ const migrations: Migration[] = [
         ALTER TABLE homework_submissions ADD COLUMN ai_overlap REAL;
       `)
     }
+  },
+  {
+    id: 27,
+    name: 'portal_join_links',
+    up: (db) => {
+      // Replaces printed batches of anonymous codes, whose join page listed the whole
+      // class: a reusable link per class where students type their own details, and
+      // personal links that greet one student by name.
+      db.exec(`
+        CREATE TABLE portal_join_links (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          student_id TEXT REFERENCES students(id) ON DELETE CASCADE,
+          kind TEXT NOT NULL,
+          code TEXT NOT NULL UNIQUE,
+          revoked INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX portal_join_links_class_idx ON portal_join_links(class_id);
+      `)
+    }
   }
 ]
 

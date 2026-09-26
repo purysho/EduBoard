@@ -36,6 +36,44 @@ export function createStudent(input: CreateStudentInput): Student {
   return row
 }
 
+/** Adds a student who joined through a Portal class link, keeping the Portal's id so
+ * their Portal account stays attached. Returns false if they're already here. */
+export function importStudentFromPortal(input: {
+  id: string
+  firstName: string
+  lastName: string
+  dateOfBirth: string | null
+  joinedAt: string | null
+}): boolean {
+  if (getStudent(input.id)) return false
+  const now = nowIso()
+  const row: Student = {
+    id: input.id,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    preferredName: null,
+    studentNumber: null,
+    dateOfBirth: input.dateOfBirth,
+    gradeLevel: null,
+    guardianName: null,
+    guardianContact: null,
+    email: null,
+    notes: `Joined through the Portal class link${input.joinedAt ? ` on ${input.joinedAt.slice(0, 10)}` : ''}.`,
+    archived: false,
+    createdAt: now,
+    updatedAt: now
+  }
+  getDb().insert(students).values(row).run()
+  recordAudit({
+    entityType: 'student',
+    entityId: row.id,
+    action: 'create',
+    summary: `${row.firstName} ${row.lastName} joined through the Portal class link`,
+    studentId: row.id
+  })
+  return true
+}
+
 export function updateStudent(id: string, patch: UpdateStudentInput): Student {
   getDb()
     .update(students)

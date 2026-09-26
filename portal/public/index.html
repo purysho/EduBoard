@@ -188,6 +188,7 @@
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; background: #fff; padding: 6px; }
   a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
   a.linklike:hover { text-decoration: underline; }
+  .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .dob-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; }
   .field-note { color: var(--muted); font-size: .8rem; margin: 6px 0 0; line-height: 1.4; }
   .section-title { font-size: 1.05rem; font-weight: 700; margin: 28px 0 12px; letter-spacing: -.01em; }
@@ -494,16 +495,32 @@ async function renderRedeem(code) {
     app.innerHTML = `<h1>${t("Can't join")}</h1><p class="error">${esc(e.message)}</p>`
     return
   }
-  const studentsById = Object.fromEntries(info.students.map((s) => [s.id, s]))
+  // A personal link knows who this is; a class link asks. Neither shows the class list.
+  const personal = info.kind === 'student'
   app.innerHTML = `
-    <h1>${esc(t('Join {className}', { className: info.className }))}</h1>
-    <p class="hint">${t('Pick your name, confirm your date of birth, and choose a username and password.')}</p>
+    <h1>${esc(personal ? t('Hi {name}!', { name: info.firstName }) : t('Join {className}', { className: info.className }))}</h1>
+    <p class="hint">${esc(
+      personal
+        ? t('Create your account for {className}.', { className: info.className })
+        : t('Enter your name and date of birth, then choose a username and password.')
+    )}</p>
     <form id="join-form">
-      <label for="sid">${t('Student')}</label>
-      <select id="sid">${info.students.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
+      ${
+        personal
+          ? ''
+          : `<div class="name-row">
+               <div><label for="fn">${t('First name')}</label><input id="fn" autocomplete="given-name" maxlength="60" required /></div>
+               <div><label for="ln">${t('Last name')}</label><input id="ln" autocomplete="family-name" maxlength="60" required /></div>
+             </div>
+             <p class="field-note">${t('Use the same name your teacher knows you by.')}</p>`
+      }
       <label>${t('Date of birth')}</label>
       ${dobPickerHtml()}
-      <p class="field-note" id="dob-note"></p>
+      <p class="field-note">${
+        personal && info.hasDob
+          ? t("This confirms it's really you — must match what your teacher has on file.")
+          : t('This helps your teacher confirm who you are.')
+      }</p>
       <label for="u">${t('Username')}</label>
       <input id="u" autocomplete="username" autocapitalize="none" minlength="3" maxlength="40" required />
       <p class="field-note">${t("3–40 characters. You'll use it to log in.")}</p>
@@ -514,30 +531,32 @@ async function renderRedeem(code) {
     </form>
   `
   wirePasswordToggles()
-  function updateDobNote() {
-    const selected = studentsById[document.getElementById('sid').value]
-    document.getElementById('dob-note').textContent = selected?.hasDob
-      ? t("This confirms it's really you — must match what your teacher has on file.")
-      : t('Your teacher hasn’t recorded this yet — enter it now so it’s on file for next time.')
-  }
-  document.getElementById('sid').onchange = updateDobNote
-  updateDobNote()
 
   document.getElementById('join-form').onsubmit = async (e) => {
     e.preventDefault()
+    const err = document.getElementById('err')
+    const dateOfBirth = readDob()
+    if (!dateOfBirth && !(personal && !info.hasDob)) {
+      err.textContent = t('Please enter your date of birth')
+      return
+    }
+    const button = document.getElementById('go')
+    button.disabled = true
     try {
       await api('/invites/' + encodeURIComponent(code) + '/redeem', {
         method: 'POST',
         body: {
-          studentId: document.getElementById('sid').value,
-          dateOfBirth: readDob(),
+          firstName: personal ? undefined : document.getElementById('fn').value.trim(),
+          lastName: personal ? undefined : document.getElementById('ln').value.trim(),
+          dateOfBirth,
           username: document.getElementById('u').value.trim(),
           password: document.getElementById('p').value
         }
       })
       location.href = '/'
-    } catch (err) {
-      document.getElementById('err').textContent = err.message
+    } catch (ex) {
+      err.textContent = ex.message
+      button.disabled = false
     }
   }
 }

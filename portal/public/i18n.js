@@ -108,6 +108,17 @@ const ZH = {
   'Your teacher hasn’t recorded this yet — enter it now so it’s on file for next time.':
     '老师还没有记录你的出生日期，现在填写后会保存下来。',
 
+  'Hi {name}!': '你好，{name}！',
+  'Create your account for {className}.': '创建你在 {className} 的账户。',
+  'Enter your name and date of birth, then choose a username and password.':
+    '填写你的姓名和出生日期，然后设置用户名和密码。',
+  'First name': '名',
+  'Last name': '姓',
+  'Use the same name your teacher knows you by.': '请填写老师知道的名字。',
+  'This helps your teacher confirm who you are.': '这有助于老师确认你的身份。',
+  'Please enter your date of birth': '请填写出生日期',
+  'Please enter your first and last name': '请填写你的姓和名',
+
   // Profile
   'Profile photo': '头像',
   'Not set': '未设置',

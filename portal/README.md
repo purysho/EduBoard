@@ -16,8 +16,10 @@ then on (Settings → Portal URL / Portal sync secret).
 - **Pull homework status** (Settings) brings back only the homework status students set
   for themselves — the one thing that flows back into the desktop app, and only when you
   click it.
-- **Invite strips** (a class's Portal tab, in the desktop app) are what a family redeems
-  here to create an account, pre-scoped to that one class.
+- **Join links** (a class's Portal tab, in the desktop app) are how students create an
+  account: one reusable class link where they type their own details, or a personal
+  single-use link per student. Neither shows the class list (see `routes/invites.js`).
+  Students who join through a class link are kept here until the desktop imports them.
 
 ## Why Hong Kong
 
@@ -200,9 +202,9 @@ mail deliverability from a fresh VPS is its own headache. Instead:
   that works once the pause ends.
 - **Lost the saved QR image** → the family just logs in with username/password and
   downloads a fresh one; no teacher involvement needed at all.
-- **Lost/revoked invite strip** → generate and print a new batch from the class's
-  Portal tab in the desktop app; the old, unclaimed strips can be revoked from the same
-  tab.
+- **Class link shared too widely** → **New link** in the class's Portal tab (the old
+  one stops working) or **Turn off**. A student who lost their personal link can use the
+  class link instead.
 
 ## Local testing
 

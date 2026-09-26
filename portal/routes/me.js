@@ -78,9 +78,16 @@ function sanitizeFileName(name) {
 // A family account covers one student today (redemption links exactly one), but the
 // schema allows more than one row per account so a future "second child" invite could
 // link into the same login without a schema change.
+// Only students that still exist: a teacher removing a student from their roster
+// deletes the student row on the next publish, but the account link stays (so the
+// account works again if they're re-added). Without this, that account's home page
+// crashed on the missing student.
 function getLinkedStudentIds(accountId) {
   return db
-    .prepare('SELECT student_id FROM account_students WHERE account_id = ?')
+    .prepare(
+      `SELECT a.student_id FROM account_students a JOIN students s ON s.id = a.student_id
+       WHERE a.account_id = ?`
+    )
     .all(accountId)
     .map((r) => r.student_id)
 }

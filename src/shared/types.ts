@@ -554,6 +554,30 @@ export interface PublishResult {
   skipped: string[]
   /** Set when the Portal server is too old to take attachments separately. */
   outdatedServer: boolean
+  /** Students who joined through a class link and were added to this roster. */
+  studentsJoined: number
+}
+
+/** A Portal join link (see src/main/repositories/portalJoinLinks.ts). */
+export interface PortalJoinLink {
+  id: string
+  classId: string
+  studentId: string | null
+  kind: 'class_link' | 'student'
+  code: string
+  revoked: boolean
+  createdAt: string
+}
+
+/** What the Portal tab shows about a class's join links. */
+export interface PortalJoinLinksOverview {
+  /** The address links start with, e.g. https://portal.edu-board.com, or '' if unset. */
+  portalUrl: string
+  classLink: PortalJoinLink | null
+  /** Personal links by student id. */
+  studentLinks: Record<string, PortalJoinLink>
+  /** Students who already have a Portal account, or null if the Portal couldn't be asked. */
+  studentsWithAccounts: string[] | null
 }
 
 /** One AI provider setup, as entered in Settings (possibly not saved yet). */

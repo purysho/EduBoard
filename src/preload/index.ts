@@ -253,6 +253,13 @@ const api: EduBoardApi = {
     draftFeedback: (homeworkAssignmentId, studentId) =>
       invoke(IpcChannels.homeworkAssignments.draftFeedback, homeworkAssignmentId, studentId)
   },
+  portalJoinLinks: {
+    overview: (classId) => invoke(IpcChannels.portalJoinLinks.overview, classId),
+    createClassLink: (classId) => invoke(IpcChannels.portalJoinLinks.createClassLink, classId),
+    turnOffClassLink: (classId) => invoke(IpcChannels.portalJoinLinks.turnOffClassLink, classId),
+    createStudentLink: (classId, studentId) =>
+      invoke(IpcChannels.portalJoinLinks.createStudentLink, classId, studentId)
+  },
   portalInvites: {
     createBatch: (input) => invoke(IpcChannels.portalInvites.createBatch, input),
     listBatchesByClass: (classId) => invoke(IpcChannels.portalInvites.listBatchesByClass, classId),

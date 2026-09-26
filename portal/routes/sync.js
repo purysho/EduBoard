@@ -150,11 +150,13 @@ router.post('/', (req, res) => {
     const classIdPlaceholders = ownClassIds.map(() => '?').join(',') || 'NULL'
 
     db.prepare('DELETE FROM classes WHERE teacher_id = ?').run(teacherId)
-    db.prepare('DELETE FROM students WHERE teacher_id = ?').run(teacherId)
+    // Students who joined through a class link and haven't reached the desktop app yet
+    // are kept (origin 'portal'); everything else is replaced by this push.
+    db.prepare("DELETE FROM students WHERE teacher_id = ? AND origin != 'portal'").run(teacherId)
     if (ownClassIds.length) {
-      db.prepare(`DELETE FROM enrollments WHERE class_id IN (${classIdPlaceholders})`).run(
-        ...ownClassIds
-      )
+      db.prepare(
+        `DELETE FROM enrollments WHERE class_id IN (${classIdPlaceholders}) AND origin != 'portal'`
+      ).run(...ownClassIds)
       db.prepare(`DELETE FROM grades WHERE class_id IN (${classIdPlaceholders})`).run(
         ...ownClassIds
       )
@@ -188,15 +190,22 @@ router.post('/', (req, res) => {
     )
     for (const c of classes) insertClass.run(c.id, teacherId, c.name, c.levelType)
 
+    // A student the desktop now sends (including one that joined through a link and has
+    // since been imported) becomes an ordinary desktop-owned student. Only this teacher's
+    // own rows can be updated this way.
     const insertStudent = db.prepare(
-      'INSERT INTO students (id, teacher_id, first_name, last_name, date_of_birth, student_number) VALUES (?, ?, ?, ?, ?, ?)'
+      `INSERT INTO students (id, teacher_id, first_name, last_name, date_of_birth, student_number, origin)
+       VALUES (?, ?, ?, ?, ?, ?, 'desktop')
+       ON CONFLICT(id) DO UPDATE SET first_name = excluded.first_name, last_name = excluded.last_name,
+         date_of_birth = excluded.date_of_birth, student_number = excluded.student_number, origin = 'desktop'
+       WHERE students.teacher_id = excluded.teacher_id`
     )
     for (const s of students) {
       insertStudent.run(s.id, teacherId, s.firstName, s.lastName, s.dateOfBirth, s.studentNumber)
     }
 
     const insertEnrollment = db.prepare(
-      'INSERT OR REPLACE INTO enrollments (student_id, class_id, status) VALUES (?, ?, ?)'
+      "INSERT OR REPLACE INTO enrollments (student_id, class_id, status, origin) VALUES (?, ?, ?, 'desktop')"
     )
     for (const e of enrollments.filter(inPushedRoster)) {
       insertEnrollment.run(e.studentId, e.classId, e.status)
@@ -298,12 +307,24 @@ router.post('/', (req, res) => {
     // being left out of a later push (the desktop only knows about the codes it
     // generated locally; it doesn't track claim state, since claiming happens here).
     const upsertInvite = db.prepare(`
-      INSERT INTO invites (code, class_id, revoked, claimed_at)
-      VALUES (@code, @classId, @revoked, NULL)
-      ON CONFLICT(code) DO UPDATE SET revoked = @revoked WHERE invites.class_id = @classId
+      INSERT INTO invites (code, class_id, revoked, claimed_at, kind, student_id)
+      VALUES (@code, @classId, @revoked, NULL, @kind, @studentId)
+      ON CONFLICT(code) DO UPDATE SET revoked = @revoked, kind = @kind, student_id = @studentId
+        WHERE invites.class_id = @classId
     `)
     for (const i of invites.filter(inPushedClass)) {
-      upsertInvite.run({ code: i.code, classId: i.classId, revoked: i.revoked ? 1 : 0 })
+      const kind = i.kind === 'class_link' || i.kind === 'student' ? i.kind : null
+      // A personal invite must name a student in this push's roster for that class.
+      if (kind === 'student' && !inPushedRoster({ classId: i.classId, studentId: i.studentId })) {
+        continue
+      }
+      upsertInvite.run({
+        code: i.code,
+        classId: i.classId,
+        revoked: i.revoked ? 1 : 0,
+        kind,
+        studentId: kind === 'student' ? i.studentId : null
+      })
     }
   })
   run()
@@ -378,6 +399,42 @@ router.post('/materials/:id/chunks', (req, res) => {
     chunks.forEach((text, i) => insert.run(material.id, i, text))
   })()
   res.json({ ok: true })
+})
+
+// Students who joined through a class link and aren't in the desktop app yet, with the
+// classes they joined. The desktop imports them under these same ids, so their Portal
+// accounts stay attached.
+router.get('/new-students', (req, res) => {
+  const rows = db
+    .prepare(`SELECT * FROM students WHERE teacher_id = ? AND origin = 'portal' ORDER BY joined_at`)
+    .all(req.teacherId)
+  res.json(
+    rows.map((s) => ({
+      id: s.id,
+      firstName: s.first_name,
+      lastName: s.last_name,
+      dateOfBirth: s.date_of_birth,
+      joinedAt: s.joined_at,
+      classIds: db
+        .prepare("SELECT class_id FROM enrollments WHERE student_id = ? AND origin = 'portal'")
+        .all(s.id)
+        .map((e) => e.class_id)
+    }))
+  )
+})
+
+// Which of this teacher's students have a Portal account, for the desktop's "Joined"
+// labels next to personal invite links.
+router.get('/accounts', (req, res) => {
+  res.json(
+    db
+      .prepare(
+        `SELECT DISTINCT a.student_id FROM account_students a
+         JOIN students s ON s.id = a.student_id WHERE s.teacher_id = ?`
+      )
+      .all(req.teacherId)
+      .map((r) => r.student_id)
+  )
 })
 
 // True for a homework assignment that belongs to one of this teacher's own classes —

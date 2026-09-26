@@ -20,6 +20,12 @@ export function PublishSummary({ result }: { result: PublishResult }): React.JSX
           and publish again.
         </p>
       )}
+      {result.studentsJoined > 0 && (
+        <p className="text-[var(--color-success)]">
+          {result.studentsJoined} new student{result.studentsJoined === 1 ? '' : 's'} joined through
+          a class link and {result.studentsJoined === 1 ? 'was' : 'were'} added to your roster.
+        </p>
+      )}
       {result.skipped.length > 0 && (
         <p className="text-[var(--color-warning)]">Not sent: {result.skipped.join(', ')}.</p>
       )}

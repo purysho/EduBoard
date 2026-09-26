@@ -3,7 +3,7 @@
 // checked against the same interface instead of preload's object literal being trusted.
 import type { SetupProgress } from './setupChecklist'
 import type { PortalAiInteraction } from './aiUsage'
-import type { PublishResult } from './types'
+import type { PortalJoinLink, PortalJoinLinksOverview, PublishResult } from './types'
 import type {
   FeedbackDraft,
   PortalStudentProfile,
@@ -328,6 +328,12 @@ export interface EduBoardApi {
     ): Promise<string>
     /** AI-proposed feedback for one submission. Saves nothing. */
     draftFeedback(homeworkAssignmentId: string, studentId: string): Promise<FeedbackDraft>
+  }
+  portalJoinLinks: {
+    overview(classId: string): Promise<PortalJoinLinksOverview>
+    createClassLink(classId: string): Promise<PortalJoinLink>
+    turnOffClassLink(classId: string): Promise<void>
+    createStudentLink(classId: string, studentId: string): Promise<PortalJoinLink>
   }
   portalInvites: {
     createBatch(input: CreatePortalInviteBatchInput): Promise<PortalInviteBatchWithInvites>

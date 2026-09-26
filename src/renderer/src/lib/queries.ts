@@ -73,6 +73,7 @@ export const queryKeys = {
   homeworkSubmissions: (homeworkAssignmentId: string) =>
     ['homework', homeworkAssignmentId, 'submissions'] as const,
   portalInviteBatches: (classId: string) => ['classes', classId, 'inviteBatches'] as const,
+  portalJoinLinks: (classId: string) => ['classes', classId, 'joinLinks'] as const,
   portalMessageThreads: ['portal', 'messageThreads'] as const,
   classPosts: ['portal', 'classPosts'] as const,
   classRoster: (classId: string) => ['classes', classId, 'roster'] as const,
@@ -1377,7 +1378,42 @@ export function useRevokePortalInvite(classId: string) {
 }
 
 export function usePublishToPortal() {
-  return useMutation({ mutationFn: () => api().portalSync.publish() })
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api().portalSync.publish(),
+    onSuccess: (result) => {
+      // Students who joined through a class link are now on rosters everywhere.
+      if (result.studentsJoined > 0) qc.invalidateQueries()
+    }
+  })
+}
+
+export function usePortalJoinLinks(classId: string) {
+  return useQuery({
+    queryKey: queryKeys.portalJoinLinks(classId),
+    queryFn: () => api().portalJoinLinks.overview(classId)
+  })
+}
+
+/** Changes a join link, then publishes so the change is live on the Portal. */
+export function useChangeJoinLink(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (
+      change:
+        | { type: 'createClassLink' }
+        | { type: 'turnOffClassLink' }
+        | { type: 'studentLink'; studentId: string }
+    ) => {
+      if (change.type === 'createClassLink') await api().portalJoinLinks.createClassLink(classId)
+      else if (change.type === 'turnOffClassLink')
+        await api().portalJoinLinks.turnOffClassLink(classId)
+      else await api().portalJoinLinks.createStudentLink(classId, change.studentId)
+      qc.invalidateQueries({ queryKey: queryKeys.portalJoinLinks(classId) })
+      return api().portalSync.publish()
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.portalJoinLinks(classId) })
+  })
 }
 
 // Debounced so a burst of edits (entering a whole column of grades, marking a class's

@@ -305,6 +305,14 @@ ensureColumn('homework_submissions', 'ai_overlap', 'ai_overlap REAL')
 // published (see routes/sync.js).
 ensureColumn('homework_assignments', 'file_hash', 'file_hash TEXT')
 ensureColumn('materials', 'chunks_hash', 'chunks_hash TEXT')
+// Join links (see routes/invites.js). A student who joins through a class link is created
+// here with origin 'portal' and kept across publishes until the teacher's desktop app has
+// imported them (after which the desktop sends them like any other student).
+ensureColumn('students', 'origin', "origin TEXT NOT NULL DEFAULT 'desktop'")
+ensureColumn('students', 'joined_at', 'joined_at TEXT')
+ensureColumn('enrollments', 'origin', "origin TEXT NOT NULL DEFAULT 'desktop'")
+ensureColumn('invites', 'kind', 'kind TEXT')
+ensureColumn('invites', 'student_id', 'student_id TEXT')
 
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
