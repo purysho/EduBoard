@@ -105,6 +105,9 @@ function getTeacherIdForAccount(accountId) {
   return row ? row.teacher_id : null
 }
 
+const isFinishedClass = (classId) =>
+  !!db.prepare('SELECT finished FROM classes WHERE id = ?').get(classId)?.finished
+
 function getActiveClassIds(studentIds) {
   const classIds = new Set()
   for (const studentId of studentIds) {
@@ -135,11 +138,12 @@ router.get('/', (req, res) => {
         .get(studentId)?.timezone || DEFAULT_TIMEZONE
     const classes = db
       .prepare(
-        `SELECT c.id, c.name, c.level_type, g.percent, g.letter, g.attendance_rate
+        `SELECT c.id, c.name, c.level_type, c.finished, g.percent, g.letter, g.attendance_rate
          FROM enrollments e
          JOIN classes c ON c.id = e.class_id
          LEFT JOIN grades g ON g.student_id = e.student_id AND g.class_id = e.class_id
-         WHERE e.student_id = ? AND e.status = 'active'`
+         WHERE e.student_id = ? AND e.status = 'active'
+         ORDER BY c.finished, c.name`
       )
       .all(studentId)
       .map((c) => {
@@ -213,6 +217,8 @@ router.get('/', (req, res) => {
           id: c.id,
           name: c.name,
           levelType: c.level_type,
+          // Finished (archived at the end of term): read-only, nothing more to hand in.
+          finished: !!c.finished,
           percent: c.percent,
           letter: c.letter,
           attendanceRate: c.attendance_rate,
@@ -275,6 +281,11 @@ router.post('/homework/:id/submit', (req, res) => {
     )
     .get(studentId, hw.class_id)
   if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+  if (isFinishedClass(hw.class_id)) {
+    return res
+      .status(403)
+      .json({ error: "This class has finished, so work can't be handed in any more." })
+  }
 
   let storedFileName = null
   let storedFilePath = null
@@ -365,6 +376,11 @@ router.post('/homework/:id/answers', (req, res) => {
     )
     .get(studentId, hw.class_id)
   if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+  if (isFinishedClass(hw.class_id)) {
+    return res
+      .status(403)
+      .json({ error: "This class has finished, so work can't be handed in any more." })
+  }
 
   const questions = db
     .prepare('SELECT * FROM homework_questions WHERE homework_assignment_id = ?')

@@ -1006,6 +1006,7 @@ function homeworkByTopicHtml(homework, studentId) {
 function quickCheckHtml(h, studentId) {
   if (!h.questions || !h.questions.length) return ''
   const answered = h.questions.every((q) => q.yourAnswer !== null)
+  if (!answered && h.classFinished) return ''
   if (answered) {
     const correctCount = h.questions.filter((q) => q.wasCorrect).length
     return `
@@ -1086,9 +1087,16 @@ function homeworkCardHtml(h, studentId) {
         ${translateControlHtml('homework', h.id)}
         ${h.fileName ? `<p style="margin-top:8px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/file">\u{1F4CE} ${esc(h.fileName)} ${t('(from your teacher)')}</a></p>` : ''}
         ${quickCheckHtml(h, studentId)}
-        ${graded ? '' : aiHelpHtml(h, studentId)}
+        ${graded || h.classFinished ? '' : aiHelpHtml(h, studentId)}
         ${
-          graded
+          h.classFinished && !graded
+            ? `
+          <div class="card inset">
+            <p class="muted" style="margin:0">${t("This class has finished, so work can't be handed in any more.")}</p>
+            ${h.textAnswer ? `<p class="desc">${esc(h.textAnswer)}</p>` : ''}
+            ${h.submissionFileName ? `<p style="margin-top:6px"><a class="linklike" href="/api/me/homework/${encodeURIComponent(h.id)}/submission-file?studentId=${encodeURIComponent(studentId)}">\u{1F4CE} ${esc(h.submissionFileName)}</a></p>` : ''}
+          </div>`
+            : graded
             ? `
           <div class="card inset">
             <p class="muted" style="margin:0">${t('Your submission')}</p>
@@ -1713,8 +1721,14 @@ function renderDashboard(me) {
     return
   }
   const multi = me.students.length > 1
+  // Homework in a finished class is read-only, and never "due" or "missing" any more.
+  for (const s of me.students) {
+    for (const c of s.classes) for (const h of c.homework || []) h.classFinished = !!c.finished
+  }
   const allHomework = me.students.flatMap((s) =>
-    s.classes.flatMap((c) => (c.homework || []).map((h) => ({ ...h, className: c.name, studentId: s.studentId, studentName: s.studentName })))
+    s.classes
+      .filter((c) => !c.finished)
+      .flatMap((c) => (c.homework || []).map((h) => ({ ...h, className: c.name, studentId: s.studentId, studentName: s.studentName })))
   )
   const missingCount = allHomework.filter((h) => h.timing === 'missing').length
 
@@ -1766,8 +1780,9 @@ function renderDashboard(me) {
          ${multi ? `<h2 class="student-heading">${esc(s.studentName)}</h2>` : ''}
          ${s.classes
            .map(
-             (c) => `
-           <div class="section-title">${esc(c.name)}</div>
+             (c, i) => `
+           ${c.finished && !(s.classes[i - 1] || {}).finished ? `<h2 class="student-heading">${t('Finished classes')}</h2>` : ''}
+           <div class="section-title">${esc(c.name)}${c.finished ? ` <span class="pill done">${t('Finished')}</span>` : ''}</div>
            ${c.homework && c.homework.length ? homeworkByTopicHtml(c.homework, s.studentId) : `<p class="muted">${t('No homework yet.')}</p>`}`
            )
            .join('')}`
@@ -1804,7 +1819,7 @@ function renderDashboard(me) {
            .map(
              (c) => `
            <div class="card">
-             <div class="row"><strong>${esc(c.name)}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
+             <div class="row"><strong>${esc(c.name)}${c.finished ? ` <span class="pill done">${t('Finished')}</span>` : ''}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
              <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? esc(t('Letter grade {letter}', { letter: c.letter })) : t('No grade yet')}</span><span class="muted">${t('Attendance {rate}', { rate: c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—' })}</span></div>
            </div>`
            )

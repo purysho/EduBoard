@@ -26,6 +26,10 @@ function getValidInvite(code) {
   if (!invite || invite.revoked) return null
   // A class link is reusable; every other kind works once.
   if (invite.kind !== 'class_link' && invite.claimed_at) return null
+  // Nobody joins a class that has finished.
+  if (db.prepare('SELECT finished FROM classes WHERE id = ?').get(invite.class_id)?.finished) {
+    return null
+  }
   return invite
 }
 

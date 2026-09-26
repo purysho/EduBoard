@@ -273,6 +273,9 @@ const ZH = {
   'Due soon': '即将到期',
   'Class Story': '班级动态',
   'No homework yet.': '暂无作业。',
+  Finished: '已结课',
+  'Finished classes': '已结课的课程',
+  "This class has finished, so work can't be handed in any more.": '这门课已结课，不能再提交作业。',
 
   // Grades
   'Letter grade {letter}': '等级 {letter}',

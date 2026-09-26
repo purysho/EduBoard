@@ -294,8 +294,8 @@ export function ClassSettingsTab(): React.JSX.Element {
             </p>
             <p className="text-sm text-[var(--color-text-muted)]">
               {classSection.archived
-                ? 'Hidden from the active classes list. All its data is kept, and it can be unarchived any time.'
-                : 'Hides it from the active classes list at the end of a term, without deleting anything — roster, gradebook, attendance, and lesson plans are all kept.'}
+                ? 'Hidden from the active classes list. All its data is kept, and it can be unarchived any time. On the Portal, students still see it as finished: grades, feedback and materials, read-only.'
+                : 'Hides it from the active classes list at the end of a term, without deleting anything — roster, gradebook, attendance, and lesson plans are all kept. On the Portal it shows as finished: students keep their grades, feedback and materials, but can’t hand in more work or join.'}
             </p>
           </div>
           <Button

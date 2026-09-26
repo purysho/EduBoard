@@ -290,6 +290,9 @@ ensureColumn('accounts', 'email', 'email TEXT')
 ensureColumn('accounts', 'onboarded_at', 'onboarded_at TEXT')
 ensureColumn('accounts', 'session_version', 'session_version INTEGER NOT NULL DEFAULT 0')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
+// A class the teacher has archived at the end of term: students still see its grades,
+// feedback and materials, but can't hand anything in.
+ensureColumn('classes', 'finished', 'finished INTEGER NOT NULL DEFAULT 0')
 ensureColumn('teachers', 'timezone', 'timezone TEXT')
 ensureColumn('materials', 'flashcards', 'flashcards TEXT')
 ensureColumn('materials', 'practice_quiz', 'practice_quiz TEXT')

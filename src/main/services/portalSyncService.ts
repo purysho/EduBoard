@@ -88,7 +88,9 @@ export async function publishToPortal(): Promise<PublishResult> {
 async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const classes = listClasses(false)
+  // Archived classes go too, marked finished: students keep seeing their grades,
+  // feedback and materials read-only, and can't hand anything more in.
+  const classes = listClasses(true)
   const studentsById = new Map<string, Student>()
   const enrollments: { studentId: string; classId: string; status: string }[] = []
   const grades: {
@@ -211,19 +213,25 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
 
     for (const batch of listInviteBatchesByClass(cls.id)) {
       for (const invite of batch.invites) {
-        invites.push({ code: invite.code, classId: cls.id, revoked: invite.revoked })
+        invites.push({
+          code: invite.code,
+          classId: cls.id,
+          revoked: invite.revoked || cls.archived
+        })
       }
     }
   }
 
   // Join links, revoked ones included so turning a link off reaches the Portal.
   const publishedClassIds = new Set(classes.map((c) => c.id))
+  const finishedClassIds = new Set(classes.filter((c) => c.archived).map((c) => c.id))
   for (const link of listAllJoinLinks()) {
     if (!publishedClassIds.has(link.classId)) continue
     invites.push({
       code: link.code,
       classId: link.classId,
-      revoked: link.revoked,
+      // Nobody joins a finished class, whatever the link's own state.
+      revoked: link.revoked || finishedClassIds.has(link.classId),
       kind: link.kind,
       studentId: link.studentId
     })
@@ -234,7 +242,12 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({
-      classes: classes.map((c) => ({ id: c.id, name: c.name, levelType: c.levelType })),
+      classes: classes.map((c) => ({
+        id: c.id,
+        name: c.name,
+        levelType: c.levelType,
+        finished: c.archived
+      })),
       students: [...studentsById.values()].map((s) => ({
         id: s.id,
         firstName: s.firstName,

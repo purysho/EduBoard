@@ -159,6 +159,8 @@ When a class carries on into a new term, open the class's **Settings** tab and c
 
 Leave **Bring the students across** ticked to enrol the same students in the new class. They're the same students, not copies, so anyone who already has a Portal account doesn't sign up again: the new class appears in their Portal after your next **Publish**. Students who dropped the old class stay behind. Grades, attendance and homework stay with the old class.
 
+When the old term is over, **Archive** it (class Settings → Archive). It leaves your class list, and on the Portal students see it under **Finished classes**: their grades, feedback, work and materials stay readable, but nothing more can be handed in and its join links stop working.
+
 ## Composite grading across terms
 
 If a course runs across multiple terms (Fall and Spring sections of the same class, say), you can see one student's grade across the whole thing instead of just one term at a time. **Start next term** keeps the course group, so the two terms are linked already.

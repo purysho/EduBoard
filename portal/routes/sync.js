@@ -186,9 +186,11 @@ router.post('/', (req, res) => {
     db.prepare('DELETE FROM materials WHERE class_id NOT IN (SELECT id FROM classes)').run()
 
     const insertClass = db.prepare(
-      'INSERT INTO classes (id, teacher_id, name, level_type) VALUES (?, ?, ?, ?)'
+      'INSERT INTO classes (id, teacher_id, name, level_type, finished) VALUES (?, ?, ?, ?, ?)'
     )
-    for (const c of classes) insertClass.run(c.id, teacherId, c.name, c.levelType)
+    for (const c of classes) {
+      insertClass.run(c.id, teacherId, c.name, c.levelType, c.finished ? 1 : 0)
+    }
 
     // A student the desktop now sends (including one that joined through a link and has
     // since been imported) becomes an ordinary desktop-owned student. Only this teacher's
