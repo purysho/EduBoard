@@ -11,8 +11,9 @@ check() {
   if [ ! -d "$app" ]; then echo "missing"; fail=1; return; fi
   codesign --verify --deep --strict --verbose=2 "$app" || { echo "::error::$arch: bad signature"; fail=1; }
 
-  local exe="$app/Contents/MacOS/EduBoard" res="$app/Contents/Resources"
-  file "$res/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+  local exe="$PWD/$app/Contents/MacOS/EduBoard" res="$PWD/$app/Contents/Resources"
+  # Every native module shipped, and which chip it's built for.
+  find "$res/app.asar.unpacked" -name '*.node' -exec file {} \;
   ELECTRON_RUN_AS_NODE=1 "${run[@]}" "$exe" -e "
     const D = require('$res/app.asar.unpacked/node_modules/better-sqlite3');
     const db = new D(':memory:');
