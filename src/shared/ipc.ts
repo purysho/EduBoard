@@ -7,7 +7,8 @@ export const IpcChannels = {
     list: 'students:list',
     create: 'students:create',
     update: 'students:update',
-    remove: 'students:remove'
+    remove: 'students:remove',
+    merge: 'students:merge'
   },
   terms: {
     list: 'terms:list',

@@ -139,6 +139,16 @@ export function useUpdateStudent() {
   })
 }
 
+export function useMergeStudents() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ keepId, duplicateId }: { keepId: string; duplicateId: string }) =>
+      api().students.merge(keepId, duplicateId),
+    // Classes, rosters, grades and attendance can all change hands.
+    onSuccess: () => qc.invalidateQueries()
+  })
+}
+
 export function useDeleteStudent() {
   const qc = useQueryClient()
   return useMutation({

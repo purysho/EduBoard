@@ -40,6 +40,20 @@ const normalizeName = (s) =>
     .replace(/\s+/g, ' ')
     .toLowerCase()
 
+const CJK = /[\u3400-\u9fff\uf900-\ufaff]/
+
+/** Ways of writing the same name that should count as the same person: the same parts
+ * in either order (Chinese students often put the family name first, so "Chen Mai" is
+ * the roster's "Mai Chen"), and for Chinese characters, with or without spaces
+ * ("陈 麦" is "陈麦"). */
+function nameKeys(first, last) {
+  const parts = normalizeName(`${first} ${last}`).split(' ').filter(Boolean)
+  const keys = [[...parts].sort().join(' ')]
+  const joined = parts.join('')
+  if (CJK.test(joined)) keys.push(`cjk:${joined}`, `cjk:${[...parts].reverse().join('')}`)
+  return keys
+}
+
 const hasAccount = (studentId) =>
   !!db.prepare('SELECT 1 FROM account_students WHERE student_id = ?').get(studentId)
 
@@ -131,14 +145,14 @@ function joinClass(invite, body) {
   if (!firstName || !lastName) return { error: 'Please enter your first and last name' }
   if (!isRealDate(body.dateOfBirth)) return { error: 'Please enter your date of birth' }
 
-  const wanted = normalizeName(`${firstName} ${lastName}`)
+  const wanted = nameKeys(firstName, lastName)
   const sameName = db
     .prepare(
       `SELECT s.* FROM students s JOIN enrollments e ON e.student_id = s.id
        WHERE e.class_id = ? AND e.status = 'active'`
     )
     .all(invite.class_id)
-    .filter((s) => normalizeName(`${s.first_name} ${s.last_name}`) === wanted)
+    .filter((s) => nameKeys(s.first_name, s.last_name).some((k) => wanted.includes(k)))
     .filter((s) => !hasAccount(s.id))
   if (sameName.length === 1) {
     const problem = checkDob(sameName[0], body.dateOfBirth)

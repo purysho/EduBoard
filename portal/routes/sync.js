@@ -439,6 +439,52 @@ router.get('/accounts', (req, res) => {
   )
 })
 
+// The teacher merged a duplicate student into another in the desktop app (typically
+// someone who joined through a class link under a different spelling). Everything the
+// duplicate had here — their login, handed-in work, answers, Study Helper history,
+// profile — moves to the kept student, so they carry on with the same username and
+// password. Where both have the same thing, the kept student's own entry stays.
+router.post('/merge-students', (req, res) => {
+  const { from, into } = req.body || {}
+  if (typeof from !== 'string' || typeof into !== 'string' || !from || !into || from === into) {
+    return res.status(400).json({ error: 'from and into are required' })
+  }
+  const owner = (id) => db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(id)
+  // Only this teacher's own students; the kept one may not have been published yet.
+  const fromRow = owner(from)
+  const intoRow = owner(into)
+  if (
+    (fromRow && fromRow.teacher_id !== req.teacherId) ||
+    (intoRow && intoRow.teacher_id !== req.teacherId)
+  ) {
+    return res.status(403).json({ error: 'Not your student' })
+  }
+  if (!fromRow) return res.json({ ok: true, moved: false })
+
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    .all()
+    .map((t) => t.name)
+    .filter((name) => name !== 'students')
+    .filter((name) =>
+      db
+        .prepare(`PRAGMA table_info("${name}")`)
+        .all()
+        .some((c) => c.name === 'student_id')
+    )
+  db.transaction(() => {
+    for (const table of tables) {
+      db.prepare(`UPDATE OR IGNORE "${table}" SET student_id = ? WHERE student_id = ?`).run(
+        into,
+        from
+      )
+      db.prepare(`DELETE FROM "${table}" WHERE student_id = ?`).run(from)
+    }
+    db.prepare('DELETE FROM students WHERE id = ? AND teacher_id = ?').run(from, req.teacherId)
+  })()
+  res.json({ ok: true, moved: true })
+})
+
 // True for a homework assignment that belongs to one of this teacher's own classes —
 // checked before any submission-grading action touches it, so a valid sync secret for
 // teacher A can never read or grade teacher B's students' work.

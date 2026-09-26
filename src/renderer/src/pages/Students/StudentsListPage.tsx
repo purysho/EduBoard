@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Search, Users } from 'lucide-react'
+import { Copy, Plus, Search, Users } from 'lucide-react'
+import type { Student } from '@shared/types'
+import { findPossibleDuplicates } from '@shared/studentNames'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
@@ -9,11 +11,14 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useStudents } from '@renderer/lib/queries'
 import { studentFullName } from '@renderer/lib/format'
 import { StudentFormModal } from './StudentFormModal'
+import { MergeStudentsModal } from './MergeStudentsModal'
 
 export function StudentsListPage(): React.JSX.Element {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const { data: students, isLoading } = useStudents()
+  const [merging, setMerging] = useState<[Student, Student] | null>(null)
+  const duplicates = useMemo(() => findPossibleDuplicates(students ?? []), [students])
 
   const filtered = useMemo(() => {
     if (!students) return []
@@ -38,6 +43,31 @@ export function StudentsListPage(): React.JSX.Element {
           </Button>
         }
       />
+
+      {duplicates.length > 0 && (
+        <div className="mb-4 rounded-lg border border-[var(--color-warning)] px-4 py-3 text-sm">
+          <p className="flex items-center gap-1.5 font-medium">
+            <Copy size={14} aria-hidden /> Possible duplicates
+          </p>
+          <p className="mb-2 text-[var(--color-text-muted)]">
+            These have the same name (allowing for family-name-first). If one person is listed
+            twice, merge them so their work and Portal login are in one place.
+          </p>
+          <ul className="space-y-1">
+            {duplicates.map(([a, b]) => (
+              <li key={`${a.id}-${b.id}`} className="flex flex-wrap items-center gap-2">
+                <span>
+                  {studentFullName(a)} <span className="text-[var(--color-text-muted)]">and</span>{' '}
+                  {studentFullName(b)}
+                </span>
+                <Button size="sm" variant="secondary" onClick={() => setMerging([a, b])}>
+                  Review and merge
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="relative mb-4 max-w-sm">
         <Search
@@ -116,6 +146,13 @@ export function StudentsListPage(): React.JSX.Element {
       )}
 
       <StudentFormModal open={showAddModal} onClose={() => setShowAddModal(false)} />
+      {merging && (
+        <MergeStudentsModal
+          keep={merging[0]}
+          duplicate={merging[1]}
+          onClose={() => setMerging(null)}
+        />
+      )}
     </div>
   )
 }

@@ -72,7 +72,8 @@ import {
   deleteClassPost,
   sendDigestNow,
   resetPortalPassword,
-  getPortalProfile
+  getPortalProfile,
+  mergeStudentsEverywhere
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -118,6 +119,11 @@ export function registerIpcHandlers(): void {
     // this backup (plus the audit trail's 12-month soft-delete window) is the way back.
     backupService.createBackup()
     studentsRepo.deleteStudent(id)
+  })
+  handle(IpcChannels.students.merge, (_e, keepId: string, duplicateId: string) => {
+    // Merging removes a student record too, so it gets the same recovery point.
+    backupService.createBackup()
+    return mergeStudentsEverywhere(keepId, duplicateId)
   })
 
   // --- Terms ------------------------------------------------------------------------

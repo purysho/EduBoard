@@ -111,6 +111,8 @@ export interface EduBoardApi {
     create(input: CreateStudentInput): Promise<Student>
     update(id: string, patch: UpdateStudentInput): Promise<Student>
     remove(id: string): Promise<void>
+    /** Folds duplicateId into keepId here and on the Portal (login included). */
+    merge(keepId: string, duplicateId: string): Promise<Student>
   }
   terms: {
     list(): Promise<Term[]>

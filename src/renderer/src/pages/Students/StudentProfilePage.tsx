@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Pencil, Trash2, Users } from 'lucide-react'
+import { Merge, Pencil, Trash2, Users } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Avatar } from '@renderer/components/ui/Avatar'
@@ -19,6 +19,7 @@ import { formatDate, studentFullName } from '@renderer/lib/format'
 import { StudentFormModal } from './StudentFormModal'
 import { StudentClassRow } from './StudentClassRow'
 import { StudentLogPanel } from './StudentLogPanel'
+import { MergeStudentsModal } from './MergeStudentsModal'
 
 export function StudentProfilePage(): React.JSX.Element {
   const { studentId } = useParams<{ studentId: string }>()
@@ -30,6 +31,7 @@ export function StudentProfilePage(): React.JSX.Element {
 
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [mergeOpen, setMergeOpen] = useState(false)
 
   const student = students?.find((s) => s.id === studentId)
 
@@ -49,6 +51,14 @@ export function StudentProfilePage(): React.JSX.Element {
             <Button variant="secondary" onClick={() => setEditOpen(true)}>
               <Pencil size={14} className="mr-1 inline" aria-hidden />
               Edit
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setMergeOpen(true)}
+              title="This student is on your list twice? Merge the two into one"
+            >
+              <Merge size={14} className="mr-1 inline" aria-hidden />
+              Merge
             </Button>
             <Button variant="danger" onClick={() => setConfirmDelete(true)}>
               <Trash2 size={14} className="mr-1 inline" aria-hidden />
@@ -127,6 +137,13 @@ export function StudentProfilePage(): React.JSX.Element {
       </div>
 
       <StudentFormModal open={editOpen} onClose={() => setEditOpen(false)} student={student} />
+      {mergeOpen && (
+        <MergeStudentsModal
+          keep={student}
+          onClose={() => setMergeOpen(false)}
+          onMerged={(kept) => navigate(`/students/${kept.id}`)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmDelete}

@@ -153,6 +153,12 @@ Editing a rubric later preserves a student's existing scores wherever the criter
 
 ---
 
+## Duplicate students
+
+If the same person ends up on your list twice (for example they joined through a class link as "Chen Mai" when you already had "Mai Chen"), the **Students** page shows them under **Possible duplicates**. Click **Review and merge**, check which record to keep (the arrows swap them), and **Merge**. Everything moves to the kept record: classes, scores, attendance, work, notes and their Portal login, so they carry on signing in as before. A backup is taken first. You can also merge from any student's page with **Merge**.
+
+Class join links now match names in either order, so this should rarely happen.
+
 ## Starting the next term
 
 When a class carries on into a new term, open the class's **Settings** tab and click **Start next term**. It makes a new class with the same grading scale, categories and course group, under the term you pick (the one after the current class's term is chosen for you).

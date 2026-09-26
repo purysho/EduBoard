@@ -4,6 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import type { PortalAiInteraction } from '@shared/aiUsage'
 import { listClasses } from '../repositories/classes'
+import { mergeStudents } from '../repositories/studentMerge'
 import {
   enrollStudent,
   getRosterForClass,
@@ -433,6 +434,41 @@ export async function pushSubmissionGrade(input: {
     body: JSON.stringify({ grades: [input] })
   })
   if (!res.ok) throw await portalFailure('Portal grade push failed', res)
+}
+
+/**
+ * Merges a duplicate student into the one being kept, everywhere: first on the Portal
+ * (so their login and handed-in work move to the kept student), then here, then a
+ * publish so the Portal has the kept student's classes. If the Portal can't be reached,
+ * nothing is changed anywhere and the teacher can simply try again. Without a Portal,
+ * it's just the local merge.
+ */
+export async function mergeStudentsEverywhere(
+  keepId: string,
+  duplicateId: string
+): Promise<Student> {
+  let portalConfigured = true
+  try {
+    requirePortalConfig()
+  } catch (err) {
+    if (!(err instanceof PortalNotConfiguredError)) throw err
+    portalConfigured = false
+  }
+  if (portalConfigured) {
+    const { portalUrl, portalSyncSecret } = requirePortalConfig()
+    const res = await fetch(`${portalUrl}/api/sync/merge-students`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+      body: JSON.stringify({ from: duplicateId, into: keepId })
+    })
+    if (!res.ok) throw await portalFailure('Merging on the Portal failed', res)
+  }
+  const merged = mergeStudents(keepId, duplicateId)
+  if (portalConfigured) {
+    // The login already points at the kept student; publishing gives it their classes.
+    await publishToPortal().catch((err) => console.error('Publish after merge failed:', err))
+  }
+  return merged
 }
 
 /** Pushes whether a submission is starred for the student's Portfolio, immediately —
