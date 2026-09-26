@@ -18,6 +18,7 @@ import type {
   ExtraBackupStatus,
   UpdateCheck,
   PortalResetRequest,
+  PublishStatus,
   BackupPreview,
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
@@ -363,6 +364,8 @@ export interface EduBoardApi {
     publish(): Promise<PublishResult>
     pullSubmissions(): Promise<number>
     aiActivity(studentId: string, homeworkId: string | null): Promise<PortalAiInteraction[]>
+    /** Whether anything has changed here since the last publish. */
+    status(): Promise<PublishStatus>
   }
   portalProfiles: {
     /** The student's Portal profile as shared with the teacher, or null if they haven't made one. */

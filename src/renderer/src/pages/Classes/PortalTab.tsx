@@ -10,6 +10,7 @@ import { Spinner } from '@renderer/components/ui/EmptyState'
 import {
   queryKeys,
   usePortalInviteBatches,
+  usePublishStatus,
   usePublishToPortal,
   useRevokePortalInvite
 } from '@renderer/lib/queries'
@@ -22,6 +23,7 @@ export function PortalTab(): React.JSX.Element {
   const { data: batches, isLoading } = usePortalInviteBatches(classSection.id)
   const revokeInvite = useRevokePortalInvite(classSection.id)
   const publish = usePublishToPortal()
+  const { data: publishStatus } = usePublishStatus()
   const qc = useQueryClient()
   const [printing, setPrinting] = useState<string | null>(null)
 
@@ -56,6 +58,13 @@ export function PortalTab(): React.JSX.Element {
           <Button variant="primary" onClick={() => publish.mutate()} disabled={publish.isPending}>
             {publish.isPending ? 'Publishing…' : 'Publish to portal'}
           </Button>
+          {publishStatus?.configured && !publish.isPending && (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {publishStatus.upToDate
+                ? 'Students see everything.'
+                : 'You have changes students can’t see yet.'}
+            </span>
+          )}
           {publish.isError && (
             <p className="text-xs text-[var(--color-danger)]">
               {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}

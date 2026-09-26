@@ -26,6 +26,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Some desktop tests publish to a real test Portal, which needs its own packages.
+      - name: Install Portal dependencies
+        working-directory: portal
+        run: npm ci
+
       - name: Unit & integration tests
         run: npm test
 

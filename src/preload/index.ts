@@ -280,7 +280,8 @@ const api: EduBoardApi = {
     publish: () => invoke(IpcChannels.portalSync.publish),
     pullSubmissions: () => invoke(IpcChannels.portalSync.pullSubmissions),
     aiActivity: (studentId, homeworkId) =>
-      invoke(IpcChannels.portalSync.aiActivity, studentId, homeworkId)
+      invoke(IpcChannels.portalSync.aiActivity, studentId, homeworkId),
+    status: () => invoke(IpcChannels.portalSync.status)
   },
   portalProfiles: {
     get: (studentId) => invoke(IpcChannels.portalProfiles.get, studentId)

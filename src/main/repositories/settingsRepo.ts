@@ -16,6 +16,29 @@ export function getSettings(): AppSettings {
   }
 }
 
+/** Small bits of app state that aren't settings (the teacher never edits them), kept in
+ * the same key/value table under their own keys. */
+export function getStoredValue<T>(key: string): T | null {
+  const row = getDb().select().from(settings).where(eq(settings.key, key)).get() as
+    { key: string; value: string } | undefined
+  if (!row) return null
+  try {
+    return JSON.parse(row.value) as T
+  } catch {
+    return null
+  }
+}
+
+export function setStoredValue(key: string, value: unknown): void {
+  const db = getDb()
+  const json = JSON.stringify(value)
+  if (db.select().from(settings).where(eq(settings.key, key)).get()) {
+    db.update(settings).set({ value: json }).where(eq(settings.key, key)).run()
+  } else {
+    db.insert(settings).values({ key, value: json }).run()
+  }
+}
+
 export function updateSettings(patch: Partial<AppSettings>): AppSettings {
   const next = { ...getSettings(), ...patch }
   const db = getDb()

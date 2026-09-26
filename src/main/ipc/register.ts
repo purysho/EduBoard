@@ -76,7 +76,8 @@ import {
   getPortalProfile,
   mergeStudentsEverywhere,
   listPortalResetRequests,
-  answerPortalResetRequest
+  answerPortalResetRequest,
+  getPublishStatus
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -767,6 +768,7 @@ export function registerIpcHandlers(): void {
 
   // --- Portal sync ---------------------------------------------------------------------------
   handle(IpcChannels.portalSync.publish, () => publishToPortal())
+  handle(IpcChannels.portalSync.status, () => getPublishStatus())
   handle(IpcChannels.portalSync.pullSubmissions, () => pullSubmissionsFromPortal())
   handle(IpcChannels.portalSync.aiActivity, (_e, studentId: string, homeworkId: string | null) =>
     getStudentAiActivity(String(studentId), homeworkId ? String(homeworkId) : null)

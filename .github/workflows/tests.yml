@@ -23,9 +23,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      # Before the desktop tests: some of them publish to a real test Portal.
+      - name: Install Portal dependencies
+        working-directory: portal
+        run: npm ci
       - run: npm test
       - name: Portal tests
         working-directory: portal
-        run: |
-          npm ci
-          npm test
+        run: npm test

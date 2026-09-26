@@ -19,6 +19,7 @@ import { GettingStarted } from './GettingStarted'
 import { BackupReminder } from './BackupReminder'
 import { UpdateNotice } from './UpdateNotice'
 import { ResetRequests } from './ResetRequests'
+import { UnpublishedNotice } from './UnpublishedNotice'
 
 export function DashboardPage(): React.JSX.Element {
   const { data: stats, isLoading } = useDashboardStats()
@@ -31,6 +32,7 @@ export function DashboardPage(): React.JSX.Element {
       <PageHeader title="Dashboard" description="Everything you're teaching, at a glance." />
 
       <ResetRequests />
+      <UnpublishedNotice />
       <UpdateNotice />
       <GettingStarted />
       <BackupReminder hasData={stats.classCount > 0} />

@@ -233,7 +233,8 @@ export const IpcChannels = {
   portalSync: {
     publish: 'portalSync:publish',
     pullSubmissions: 'portalSync:pullSubmissions',
-    aiActivity: 'portalSync:aiActivity'
+    aiActivity: 'portalSync:aiActivity',
+    status: 'portalSync:status'
   },
   portalProfiles: {
     get: 'portalProfiles:get'

@@ -651,6 +651,14 @@ export interface AppSettings {
   extraBackupFolder: string
 }
 
+/** Whether the Portal shows everything the teacher has here. */
+export interface PublishStatus {
+  configured: boolean
+  /** False when something has changed since the last publish (or there hasn't been one). */
+  upToDate: boolean
+  lastPublishedAt: string | null
+}
+
 /** A student who forgot their Portal password and is waiting for the teacher's OK. */
 export interface PortalResetRequest {
   id: string

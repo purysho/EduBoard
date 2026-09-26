@@ -1434,7 +1434,18 @@ export function usePublishToPortal() {
     onSuccess: (result) => {
       // Students who joined through a class link are now on rosters everywhere.
       if (result.studentsJoined > 0) qc.invalidateQueries()
+      else qc.invalidateQueries({ queryKey: ['publishStatus'] })
     }
+  })
+}
+
+/** Rechecked every half minute and whenever the window regains focus, so the reminder
+ * appears soon after an edit and clears right after a publish. */
+export function usePublishStatus() {
+  return useQuery({
+    queryKey: ['publishStatus'],
+    queryFn: () => api().portalSync.status(),
+    refetchInterval: 30_000
   })
 }
 

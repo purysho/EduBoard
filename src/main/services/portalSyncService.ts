@@ -21,7 +21,7 @@ import { listLessonResources } from '../repositories/lessonResources'
 import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
-import { getSettings } from '../repositories/settingsRepo'
+import { getSettings, getStoredValue, setStoredValue } from '../repositories/settingsRepo'
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
@@ -32,6 +32,7 @@ import type {
   ClassPost,
   Student,
   PortalResetRequest,
+  PublishStatus,
   HomeworkSubmissionStatus,
   PortalMessageThread,
   PortalStudentProfile
@@ -53,11 +54,22 @@ const sha256 = (data: Buffer | string): string => createHash('sha256').update(da
 type AttachmentCheck =
   { ok: true; hash: string; path: string } | { ok: false; reason: 'missing' | 'too_large' }
 
+// Hashing a big attachment is slow, and the unpublished-changes check builds the
+// payload often, so each file's hash is kept until its size or modified time changes.
+const fileHashCache = new Map<string, { size: number; mtimeMs: number; hash: string }>()
+
 function checkHomeworkFile(filePath: string | null): AttachmentCheck | null {
   if (!filePath) return null
   try {
-    if (statSync(filePath).size > MAX_HOMEWORK_FILE_BYTES) return { ok: false, reason: 'too_large' }
-    return { ok: true, hash: sha256(readFileSync(filePath)), path: filePath }
+    const stats = statSync(filePath)
+    if (stats.size > MAX_HOMEWORK_FILE_BYTES) return { ok: false, reason: 'too_large' }
+    const cached = fileHashCache.get(filePath)
+    if (cached && cached.size === stats.size && cached.mtimeMs === stats.mtimeMs) {
+      return { ok: true, hash: cached.hash, path: filePath }
+    }
+    const hash = sha256(readFileSync(filePath))
+    fileHashCache.set(filePath, { size: stats.size, mtimeMs: stats.mtimeMs, hash })
+    return { ok: true, hash, path: filePath }
   } catch {
     return { ok: false, reason: 'missing' }
   }
@@ -87,9 +99,15 @@ export async function publishToPortal(): Promise<PublishResult> {
   return { ...result, studentsJoined }
 }
 
-async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
-  const { portalUrl, portalSyncSecret } = requirePortalConfig()
-
+/** Everything a publish sends: the payload, plus the attachments and material text the
+ * Portal may ask for afterwards. Building it changes nothing, so it's also how the app
+ * tells whether there are changes the Portal doesn't have yet. */
+function buildPublishPayload(): {
+  body: Record<string, unknown>
+  attachmentPaths: Map<string, string>
+  materialChunks: Map<string, string[]>
+  skipped: string[]
+} {
   // Archived classes go too, marked finished: students keep seeing their grades,
   // feedback and materials read-only, and can't hand anything more in.
   const classes = listClasses(true)
@@ -240,45 +258,76 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   }
 
   const settings = getSettings()
+  const body = {
+    classes: classes.map((c) => ({
+      id: c.id,
+      name: c.name,
+      levelType: c.levelType,
+      finished: c.archived
+    })),
+    students: [...studentsById.values()].map((s) => ({
+      id: s.id,
+      firstName: s.firstName,
+      lastName: s.lastName,
+      dateOfBirth: s.dateOfBirth,
+      studentNumber: s.studentNumber
+    })),
+    enrollments,
+    grades,
+    homeworkAssignments,
+    invites,
+    materials,
+    // The one shared AI key every student can use — see AppSettings.portalAiApiKey.
+    // Sent on every publish so a key change (or clearing it) takes effect right away.
+    aiProvider: settings.portalAiProvider,
+    aiApiKey: settings.portalAiApiKey,
+    aiCustomBaseUrl: settings.portalAiCustomBaseUrl,
+    aiCustomModel: settings.portalAiCustomModel,
+    digestEnabled: settings.digestEnabled,
+    digestSmtpHost: settings.digestSmtpHost,
+    digestSmtpPort: settings.digestSmtpPort,
+    digestSmtpUser: settings.digestSmtpUser,
+    digestSmtpPass: settings.digestSmtpPass,
+    digestFromEmail: settings.digestFromEmail,
+    digestFromName: settings.digestFromName,
+    // Due dates end at midnight in this zone (see src/shared/deadlines.ts), so the
+    // Portal's Late/Missing labels match what the teacher sees here.
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  }
+  return { body, attachmentPaths, materialChunks, skipped }
+}
+
+/** A fingerprint of what a publish would send right now. */
+function payloadFingerprint(body: Record<string, unknown>): string {
+  return sha256(JSON.stringify(body))
+}
+
+const LAST_PUBLISH_KEY = 'portal_last_publish'
+
+/** Whether students are seeing everything: compares what a publish would send now with
+ * what was last sent. Never throws; no Portal means nothing to report. */
+export function getPublishStatus(): PublishStatus {
+  try {
+    requirePortalConfig()
+  } catch {
+    return { configured: false, upToDate: true, lastPublishedAt: null }
+  }
+  const last = getStoredValue<{ at: string; fingerprint: string }>(LAST_PUBLISH_KEY)
+  const { body } = buildPublishPayload()
+  return {
+    configured: true,
+    lastPublishedAt: last?.at ?? null,
+    upToDate: !!last && last.fingerprint === payloadFingerprint(body)
+  }
+}
+
+async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const { body, attachmentPaths, materialChunks, skipped } = buildPublishPayload()
   const res = await fetch(`${portalUrl}/api/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
-    body: JSON.stringify({
-      classes: classes.map((c) => ({
-        id: c.id,
-        name: c.name,
-        levelType: c.levelType,
-        finished: c.archived
-      })),
-      students: [...studentsById.values()].map((s) => ({
-        id: s.id,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        dateOfBirth: s.dateOfBirth,
-        studentNumber: s.studentNumber
-      })),
-      enrollments,
-      grades,
-      homeworkAssignments,
-      invites,
-      materials,
-      // The one shared AI key every student can use — see AppSettings.portalAiApiKey.
-      // Sent on every publish so a key change (or clearing it) takes effect right away.
-      aiProvider: settings.portalAiProvider,
-      aiApiKey: settings.portalAiApiKey,
-      aiCustomBaseUrl: settings.portalAiCustomBaseUrl,
-      aiCustomModel: settings.portalAiCustomModel,
-      digestEnabled: settings.digestEnabled,
-      digestSmtpHost: settings.digestSmtpHost,
-      digestSmtpPort: settings.digestSmtpPort,
-      digestSmtpUser: settings.digestSmtpUser,
-      digestSmtpPass: settings.digestSmtpPass,
-      digestFromEmail: settings.digestFromEmail,
-      digestFromName: settings.digestFromName,
-      // Due dates end at midnight in this zone (see src/shared/deadlines.ts), so the
-      // Portal's Late/Missing labels match what the teacher sees here.
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    })
+    body: JSON.stringify(body)
   })
   if (!res.ok) throw await portalFailure('Portal sync failed', res)
   const reply = (await res.json().catch(() => ({}))) as {
@@ -323,6 +372,11 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
     if (!upload.ok) throw await portalFailure('Uploading study material text failed', upload)
     materialsUploaded++
   }
+  // Everything arrived: remember what students now see, for the "unpublished changes" check.
+  setStoredValue(LAST_PUBLISH_KEY, {
+    at: new Date().toISOString(),
+    fingerprint: payloadFingerprint(body)
+  })
   return { attachmentsUploaded, materialsUploaded, skipped, outdatedServer: false }
 }
 
