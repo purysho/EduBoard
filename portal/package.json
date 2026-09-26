@@ -2,12 +2,13 @@
   "name": "eduboard-portal",
   "version": "1.0.0",
   "private": true,
-  "description": "EduBoard's remote student/parent Portal — a small standalone service, deployed separately from the desktop app.",
+  "description": "EduBoard's remote student/parent Portal \u2014 a small standalone service, deployed separately from the desktop app.",
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "backup": "node scripts/backup-data.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -187,6 +187,30 @@ Windows marks it as downloaded from the internet, so Office opens it in Protecte
 fetches as a prebuilt binary for Linux, macOS and Windows. Nothing else to install on
 the server.
 
+## Backups
+
+Student accounts and handed-in work exist only on the server, so they're backed up every
+night at 03:30 (server time) into `/root/eduboard-backups`, keeping the last 14. Running
+the updater (`Update-EduBoard.cmd`, or `scripts/update-server.sh` on the server) sets
+this up, and takes one backup straight away. Each backup is one `.tar.gz` holding the
+database (copied safely while the Portal runs), every uploaded file, and `.env`.
+
+To take one by hand: `cd /opt/eduboard/portal && npm run backup`.
+
+To restore one (replace the file name with the backup you want):
+
+```
+systemctl stop eduboard-portal
+mkdir /tmp/restore && tar -xzf /root/eduboard-backups/eduboard-portal-<date>.tar.gz -C /tmp/restore
+cp -a /opt/eduboard/portal/data /root/data-before-restore
+rm -rf /opt/eduboard/portal/data && cp -a /tmp/restore/data /opt/eduboard/portal/data
+systemctl start eduboard-portal
+```
+
+(If your service has another name, or the data folder is elsewhere via
+`PORTAL_DATA_DIR`, use those instead.) To keep a copy off the server too, download a
+backup now and then, e.g. `scp root@portal.edu-board.com:/root/eduboard-backups/*.tar.gz .`
+
 ## Recovery, not self-service email resets
 
 There's no "forgot password" email flow by design — this app has no mail service, and

@@ -99,6 +99,55 @@ say "Installing dependencies (this can take a minute)"
 OWNER="$(stat -c %U "$PORTAL_DIR")"
 if [ "$OWNER" != "root" ]; then chown -R --from=root "$OWNER" "$PORTAL_DIR" 2>/dev/null || true; fi
 
+# ---- 4b. Nightly backups --------------------------------------------------------------------
+# Student accounts and handed-in work live only on this server, so back them up every night
+# (03:30 server time) into /root/eduboard-backups, keeping the last 14. The backup script is
+# safe to run while the Portal is serving. Set up once; later updates just refresh it.
+say "Scheduling nightly backups"
+NODE_PATH_ABS="$(command -v node)"
+BACKUP_CMD="cd $PORTAL_DIR && PORTAL_DATA_DIR=$DATA_DIR $NODE_PATH_ABS scripts/backup-data.js /root/eduboard-backups"
+if command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then
+  cat > /etc/systemd/system/eduboard-portal-backup.service <<UNIT
+[Unit]
+Description=Nightly backup of the EduBoard Portal's data
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/eduboard-portal.env
+Environment=PORTAL_DATA_DIR=$DATA_DIR
+WorkingDirectory=$PORTAL_DIR
+ExecStart=$NODE_PATH_ABS scripts/backup-data.js /root/eduboard-backups
+UNIT
+  cat > /etc/systemd/system/eduboard-portal-backup.timer <<UNIT
+[Unit]
+Description=Back up the EduBoard Portal every night
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+  systemctl daemon-reload
+  systemctl enable --now eduboard-portal-backup.timer >/dev/null 2>&1 &&
+    echo "    every night at 03:30 into /root/eduboard-backups (systemd timer)" ||
+    echo "    couldn't enable the backup timer; see: systemctl status eduboard-portal-backup.timer"
+elif [ -d /etc/cron.d ]; then
+  printf '30 3 * * * root %s >> /var/log/eduboard-portal-backup.log 2>&1\n' "$BACKUP_CMD" \
+    > /etc/cron.d/eduboard-portal-backup
+  chmod 644 /etc/cron.d/eduboard-portal-backup
+  echo "    every night at 03:30 into /root/eduboard-backups (cron)"
+else
+  echo "    no systemd or cron found; run this yourself now and then: $BACKUP_CMD"
+fi
+# One now, which also proves it works on this server.
+if (cd "$PORTAL_DIR" && PORTAL_DATA_DIR="$DATA_DIR" "$NODE_PATH_ABS" scripts/backup-data.js /root/eduboard-backups); then
+  :
+else
+  echo "    (the first nightly backup didn't work; the update carries on)"
+fi
+
 # ---- 5. Restart -----------------------------------------------------------------------------
 # Find the running Portal itself (a node process in, or started from, the Portal folder),
 # then ask the system what started it, rather than guessing service names.
@@ -190,7 +239,7 @@ say "Checking it's up on port $PORT"
 for _ in $(seq 1 30); do
   if curl -fsS "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
     if curl -fsS "http://127.0.0.1:$PORT/i18n.js" >/dev/null 2>&1; then
-      printf '\nDone. The Portal is running the new version.\nBackup: %s\n' "$BACKUP"
+      printf '\nDone. The Portal is running the new version.\nBackup: %s\nNightly backups: /root/eduboard-backups\n' "$BACKUP"
       exit 0
     fi
     fail "The Portal answers but is still the old version. Check the service's folder is $PORTAL_DIR."
