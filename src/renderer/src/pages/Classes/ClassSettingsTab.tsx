@@ -17,7 +17,6 @@ import { FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
   useCourseGroups,
-  useCreateClass,
   useCreateCourseGroup,
   useDeleteClass,
   useDeleteGradeCategory,
@@ -26,6 +25,7 @@ import {
 } from '@renderer/lib/queries'
 import { ClassFormModal } from './ClassFormModal'
 import { CategoryFormModal } from './CategoryFormModal'
+import { NewTermClassModal } from './NewTermClassModal'
 
 const NEW_COURSE_GROUP_VALUE = '__new__'
 
@@ -37,9 +37,8 @@ export function ClassSettingsTab(): React.JSX.Element {
   const updateClass = useUpdateClass()
   const deleteClass = useDeleteClass()
   const deleteCategory = useDeleteGradeCategory(classSection.id)
-  const createClass = useCreateClass()
   const createCourseGroup = useCreateCourseGroup()
-  const [duplicating, setDuplicating] = useState(false)
+  const [showNewTerm, setShowNewTerm] = useState(false)
   const [termWeight, setTermWeight] = useState(classSection.termWeight)
 
   async function handleCourseGroupChange(value: string): Promise<void> {
@@ -54,38 +53,6 @@ export function ClassSettingsTab(): React.JSX.Element {
       id: classSection.id,
       patch: { courseGroupId: value || null }
     })
-  }
-
-  async function handleDuplicateForNewTerm(): Promise<void> {
-    setDuplicating(true)
-    try {
-      const newClass = await createClass.mutateAsync({
-        name: classSection.name,
-        subject: classSection.subject,
-        levelType: classSection.levelType,
-        gradeLevel: classSection.gradeLevel,
-        termId: null,
-        courseGroupId: classSection.courseGroupId,
-        termWeight: classSection.termWeight,
-        schedule: classSection.schedule,
-        room: classSection.room,
-        color: classSection.color,
-        passMark: classSection.passMark,
-        maxScore: classSection.maxScore,
-        gradeThresholds: classSection.gradeThresholds
-      })
-      for (const cat of categories ?? []) {
-        await window.api.gradeCategories.create({
-          classId: newClass.id,
-          name: cat.name,
-          weightPercent: cat.weightPercent,
-          sortOrder: cat.sortOrder
-        })
-      }
-      navigate(`/classes/${newClass.id}`)
-    } finally {
-      setDuplicating(false)
-    }
   }
 
   const [passMark, setPassMark] = useState(classSection.passMark)
@@ -128,12 +95,11 @@ export function ClassSettingsTab(): React.JSX.Element {
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleDuplicateForNewTerm}
-              disabled={duplicating}
-              title="Copy this class's setup (grading scale, categories) into a new class for the next term — roster, grades, and attendance are not carried over"
+              onClick={() => setShowNewTerm(true)}
+              title="A new class for the next term with this class's setup and, if you like, its students (who keep their Portal logins)"
             >
               <CopyPlus size={13} className="mr-1 inline" aria-hidden />
-              {duplicating ? 'Duplicating…' : 'Duplicate for new term'}
+              Start next term
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setShowEditClass(true)}>
               <Pencil size={13} className="mr-1 inline" aria-hidden />
@@ -382,6 +348,9 @@ export function ClassSettingsTab(): React.JSX.Element {
         onClose={() => setShowEditClass(false)}
         classSection={classSection}
       />
+      {showNewTerm && (
+        <NewTermClassModal open onClose={() => setShowNewTerm(false)} classSection={classSection} />
+      )}
       <CategoryFormModal
         open={showAddCategory}
         onClose={() => setShowAddCategory(false)}

@@ -73,6 +73,7 @@ import type {
   MarkAttendanceInput,
   UpdateAssessmentInput,
   UpdateClassInput,
+  DuplicateClassForNewTermInput,
   UpdateGradeCategoryInput,
   UpdateLessonPlanInput,
   UpdateStudentInput,
@@ -121,6 +122,7 @@ export interface EduBoardApi {
     create(input: CreateClassInput): Promise<ClassSection>
     update(id: string, patch: UpdateClassInput): Promise<ClassSection>
     remove(id: string): Promise<void>
+    duplicateForNewTerm(id: string, input: DuplicateClassForNewTermInput): Promise<ClassSection>
   }
   gradeCategories: {
     listByClass(classId: string): Promise<GradeCategory[]>

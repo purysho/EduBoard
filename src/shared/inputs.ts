@@ -50,6 +50,12 @@ export type CreateClassInput = Omit<
   termWeight?: number
 }
 export type UpdateClassInput = Partial<Omit<ClassSection, 'id' | 'createdAt'>>
+export type DuplicateClassForNewTermInput = {
+  name: string
+  termId: string | null
+  /** Enrol the class's active students in the new class too (same student records). */
+  copyStudents: boolean
+}
 
 export type CreateGradeCategoryInput = Omit<GradeCategory, 'id' | 'createdAt'>
 export type UpdateGradeCategoryInput = Partial<Omit<GradeCategory, 'id' | 'classId' | 'createdAt'>>

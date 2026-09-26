@@ -11,6 +11,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Setting up grading](#setting-up-grading)
 - [Using the gradebook](#using-the-gradebook)
 - [Grading with rubrics](#grading-with-rubrics)
+- [Starting the next term](#starting-the-next-term)
 - [Composite grading across terms](#composite-grading-across-terms)
 - [Taking attendance](#taking-attendance)
 - [Planning lessons](#planning-lessons)
@@ -65,7 +66,7 @@ A good first stop is **Settings**:
 - **Your name** / **School / organization** — shown on printed report cards.
 - **Theme** — light, dark, or match your system.
 - **Default pass mark** — pre-fills new classes; you can still override it per class.
-- **Terms** (further down the Settings page) — optional. Add a term (e.g. "Term 1", school year "2026-2027") if you want to tag classes by term. Skip this if you don't need it — a class works fine with no term set.
+- **Terms** (further down the Settings page) — optional. Add a term (e.g. "Term 1", school year "2026-2027") if you want to tag classes by term. Dates are optional too, and **Edit** changes a term's name or dates any time, so you can add Term 2 before its dates are fixed and fill them in later. Skip this if you don't need it — a class works fine with no term set.
 
 ![Settings](screenshots/settings.png)
 
@@ -152,9 +153,15 @@ Editing a rubric later preserves a student's existing scores wherever the criter
 
 ---
 
+## Starting the next term
+
+When a class carries on into a new term, open the class's **Settings** tab and click **Start next term**. It makes a new class with the same grading scale, categories and course group, under the term you pick (the one after the current class's term is chosen for you).
+
+Leave **Bring the students across** ticked to enrol the same students in the new class. They're the same students, not copies, so anyone who already has a Portal account doesn't sign up again: the new class appears in their Portal after your next **Publish**. Students who dropped the old class stay behind. Grades, attendance and homework stay with the old class.
+
 ## Composite grading across terms
 
-If a course runs across multiple terms (Fall and Spring sections of the same class, say), you can see one student's grade across the whole thing instead of just one term at a time.
+If a course runs across multiple terms (Fall and Spring sections of the same class, say), you can see one student's grade across the whole thing instead of just one term at a time. **Start next term** keeps the course group, so the two terms are linked already.
 
 1. On each term's class, go to **Settings → Course group** and either pick an existing course group or type a name to create a new one — this is what ties "Algebra I (Fall)" and "Algebra I (Spring)" together as the same course.
 2. Optionally set that class's **weight in composite** — how much this term counts relative to the group's others. Leave it at 1 to weight every linked term equally.

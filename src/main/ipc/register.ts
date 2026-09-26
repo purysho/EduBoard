@@ -13,6 +13,7 @@ import * as portalJoinLinksRepo from '../repositories/portalJoinLinks'
 import { normalizePortalUrl } from '@shared/portalUrl'
 import * as termsRepo from '../repositories/terms'
 import * as classesRepo from '../repositories/classes'
+import * as newTermClassRepo from '../repositories/newTermClass'
 import * as gradeCategoriesRepo from '../repositories/gradeCategories'
 import * as enrollmentsRepo from '../repositories/enrollments'
 import * as assessmentsRepo from '../repositories/assessments'
@@ -147,6 +148,11 @@ export function registerIpcHandlers(): void {
     return updated
   })
   handle(IpcChannels.classes.remove, (_e, id: string) => classesRepo.deleteClass(id))
+  handle(
+    IpcChannels.classes.duplicateForNewTerm,
+    (_e, id: string, input: newTermClassRepo.DuplicateClassForNewTermInput) =>
+      newTermClassRepo.duplicateClassForNewTerm(id, input)
+  )
 
   // --- Grade categories --------------------------------------------------------------
   handle(IpcChannels.gradeCategories.listByClass, (_e, classId: string) =>

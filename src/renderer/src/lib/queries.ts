@@ -16,6 +16,7 @@ import type {
   MarkAttendanceInput,
   UpdateAssessmentInput,
   UpdateClassInput,
+  DuplicateClassForNewTermInput,
   UpdateGradeCategoryInput,
   UpdateLessonPlanInput,
   UpdateStudentInput,
@@ -201,6 +202,18 @@ export function useCreateClass() {
   return useMutation({
     mutationFn: (input: CreateClassInput) => api().classes.create(input),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classes })
+  })
+}
+
+export function useDuplicateClassForNewTerm() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: DuplicateClassForNewTermInput }) =>
+      api().classes.duplicateForNewTerm(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.classes })
+      qc.invalidateQueries({ queryKey: ['students'] })
+    }
   })
 }
 

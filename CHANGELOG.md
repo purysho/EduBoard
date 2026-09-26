@@ -2,6 +2,13 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Start next term** (class Settings): a new class for the next term with the same setup and, if you like, the same students. They keep their Portal logins, so nobody signs up again; the new class appears for them after the next publish.
+- **Edit terms** in Settings → Terms: change a term's name, school year or dates any time. Deleting a term now asks first.
+
 ## [0.3.2] — 2026-09-26
 
 ### Fixed

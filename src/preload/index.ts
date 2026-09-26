@@ -24,7 +24,8 @@ const api: EduBoardApi = {
     list: (includeArchived) => invoke(IpcChannels.classes.list, includeArchived),
     create: (input) => invoke(IpcChannels.classes.create, input),
     update: (id, patch) => invoke(IpcChannels.classes.update, id, patch),
-    remove: (id) => invoke(IpcChannels.classes.remove, id)
+    remove: (id) => invoke(IpcChannels.classes.remove, id),
+    duplicateForNewTerm: (id, input) => invoke(IpcChannels.classes.duplicateForNewTerm, id, input)
   },
   gradeCategories: {
     listByClass: (classId) => invoke(IpcChannels.gradeCategories.listByClass, classId),
