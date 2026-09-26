@@ -1,10 +1,11 @@
 import { app } from 'electron'
 import { copyFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'fs'
-import { join } from 'path'
+import { basename, join } from 'path'
 import Database from 'better-sqlite3'
 import { resolveBackupsDir, resolveDbPath } from '../db/path'
 import { closeDb, getSqlite } from '../db/client'
-import type { BackupInfo, BackupPreview } from '@shared/types'
+import { getSettings } from '../repositories/settingsRepo'
+import type { BackupInfo, BackupPreview, ExtraBackupStatus } from '@shared/types'
 
 /** Kept indefinitely by manual "Back up now" and pruning alike; only auto-backups
  * beyond this count are ever deleted, so a manual backup a teacher wants to keep
@@ -16,8 +17,15 @@ function timestampForFileName(): string {
   return new Date().toISOString().replace(/[:.]/g, '-')
 }
 
-/** Flushes WAL to the main db file, then copies it into the backups folder. */
+/** Flushes WAL to the main db file, then copies it into the backups folder and, when
+ * one is set, the second backup folder. */
 export function createBackup(): BackupInfo {
+  const info = createBackupWithoutExtraCopy()
+  copyToExtraFolder(info.filePath)
+  return info
+}
+
+function createBackupWithoutExtraCopy(): BackupInfo {
   getSqlite().pragma('wal_checkpoint(TRUNCATE)')
 
   const dbPath = resolveDbPath()
@@ -53,9 +61,75 @@ export function createAutoBackupOnLaunch(): void {
     copyFileSync(dbPath, join(backupsDir, fileName))
 
     pruneAutoBackups(backupsDir)
+    copyToExtraFolder(join(backupsDir, fileName))
   } catch (err) {
     console.error('Auto-backup on launch failed:', err)
   }
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** EduBoard can stay open for days, so launch backups alone may be rare: check a few
+ * times a day and take another automatic backup once the newest is a day old. */
+export function startDailyAutoBackups(): void {
+  setInterval(
+    () => {
+      const newestAuto = listBackups().find((b) => b.automatic)
+      if (!newestAuto || Date.now() - Date.parse(newestAuto.createdAt) > DAY_MS) {
+        createAutoBackupOnLaunch()
+      }
+    },
+    3 * 60 * 60 * 1000
+  ).unref()
+}
+
+/** A backup file's copy in the teacher's second folder (cloud-synced or a USB stick).
+ * Never throws: an unplugged stick just means no copy this time, which the status
+ * below then reports. */
+export function copyToExtraFolder(
+  backupFilePath: string,
+  folder = getSettings().extraBackupFolder
+): boolean {
+  if (!folder) return false
+  try {
+    if (!existsSync(folder)) return false
+    copyFileSync(backupFilePath, join(folder, basename(backupFilePath)))
+    pruneAutoBackups(folder)
+    return true
+  } catch (err) {
+    console.error('Copying the backup to the second folder failed:', err)
+    return false
+  }
+}
+
+const STALE_EXTRA_BACKUP_MS = 7 * DAY_MS
+
+export function getExtraBackupStatus(folder = getSettings().extraBackupFolder): ExtraBackupStatus {
+  if (!folder) return { folder, reachable: false, lastCopiedAt: null, needsAttention: true }
+  let reachable = false
+  let lastCopiedAt: string | null = null
+  try {
+    reachable = existsSync(folder)
+    if (reachable) {
+      const newest = readdirSync(folder)
+        .filter((f) => f.startsWith('eduboard-') && f.endsWith('.db'))
+        .map((f) => statSync(join(folder, f)).mtimeMs)
+        .sort((a, b) => b - a)[0]
+      if (newest) lastCopiedAt = new Date(newest).toISOString()
+    }
+  } catch {
+    reachable = false
+  }
+  const needsAttention =
+    !lastCopiedAt || Date.now() - Date.parse(lastCopiedAt) > STALE_EXTRA_BACKUP_MS
+  return { folder, reachable, lastCopiedAt, needsAttention }
+}
+
+/** After choosing a folder: put a fresh backup there straight away. */
+export function backUpToExtraFolderNow(folder: string): ExtraBackupStatus {
+  const backup = createBackupWithoutExtraCopy()
+  copyToExtraFolder(backup.filePath, folder)
+  return getExtraBackupStatus(folder)
 }
 
 export function pruneAutoBackups(backupsDir: string): void {

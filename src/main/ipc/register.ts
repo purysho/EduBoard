@@ -320,6 +320,20 @@ export function registerIpcHandlers(): void {
     backupService.restoreBackup(filePath)
   )
   handle(IpcChannels.backup.revealFolder, () => shell.openPath(resolveBackupsDir()))
+  handle(IpcChannels.backup.extraStatus, () => backupService.getExtraBackupStatus())
+  handle(IpcChannels.backup.chooseExtraFolder, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Choose a second place for backups',
+      properties: ['openDirectory', 'createDirectory']
+    })
+    if (canceled || !filePaths[0]) return null
+    settingsRepo.updateSettings({ extraBackupFolder: filePaths[0] })
+    return backupService.backUpToExtraFolderNow(filePaths[0])
+  })
+  handle(IpcChannels.backup.clearExtraFolder, () => {
+    settingsRepo.updateSettings({ extraBackupFolder: '' })
+    return backupService.getExtraBackupStatus('')
+  })
 
   // --- Device sync ----------------------------------------------------------------------
   handle(IpcChannels.deviceSync.check, () => getDeviceSyncStatus())

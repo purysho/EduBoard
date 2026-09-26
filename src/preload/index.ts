@@ -105,7 +105,10 @@ const api: EduBoardApi = {
     list: () => invoke(IpcChannels.backup.list),
     preview: (filePath) => invoke(IpcChannels.backup.preview, filePath),
     restore: (filePath) => invoke(IpcChannels.backup.restore, filePath),
-    revealFolder: () => invoke(IpcChannels.backup.revealFolder)
+    revealFolder: () => invoke(IpcChannels.backup.revealFolder),
+    extraStatus: () => invoke(IpcChannels.backup.extraStatus),
+    chooseExtraFolder: () => invoke(IpcChannels.backup.chooseExtraFolder),
+    clearExtraFolder: () => invoke(IpcChannels.backup.clearExtraFolder)
   },
   deviceSync: {
     check: () => invoke(IpcChannels.deviceSync.check)

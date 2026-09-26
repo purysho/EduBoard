@@ -83,6 +83,7 @@ export const queryKeys = {
     ['students', studentId, 'classes', classId, 'grade'] as const,
   settings: ['settings'] as const,
   backups: ['backups'] as const,
+  extraBackup: ['backups', 'extra'] as const,
   standards: ['standards'] as const,
   rubrics: ['rubrics'] as const,
   rubric: (id: string) => ['rubrics', id] as const,
@@ -705,6 +706,23 @@ export function useCreateBackup() {
   return useMutation({
     mutationFn: () => api().backup.create(),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.backups })
+  })
+}
+
+export function useExtraBackupStatus() {
+  return useQuery({ queryKey: queryKeys.extraBackup, queryFn: () => api().backup.extraStatus() })
+}
+
+export function useChangeExtraBackupFolder() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (action: 'choose' | 'clear') =>
+      action === 'choose' ? api().backup.chooseExtraFolder() : api().backup.clearExtraFolder(),
+    onSuccess: () => {
+      // Includes the extra-folder status, which lives under the same key.
+      qc.invalidateQueries({ queryKey: queryKeys.backups })
+      qc.invalidateQueries({ queryKey: queryKeys.settings })
+    }
   })
 }
 

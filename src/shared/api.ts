@@ -15,6 +15,7 @@ import type {
   AttendanceSummary,
   GradeTrendPoint,
   BackupInfo,
+  ExtraBackupStatus,
   BackupPreview,
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
@@ -197,6 +198,10 @@ export interface EduBoardApi {
     preview(filePath: string): Promise<BackupPreview>
     restore(filePath: string): Promise<void>
     revealFolder(): Promise<void>
+    extraStatus(): Promise<ExtraBackupStatus>
+    /** Opens a folder picker; null when cancelled. Backs up there straight away. */
+    chooseExtraFolder(): Promise<ExtraBackupStatus | null>
+    clearExtraFolder(): Promise<ExtraBackupStatus>
   }
   deviceSync: {
     check(): Promise<DeviceSyncStatus>

@@ -93,7 +93,10 @@ export const IpcChannels = {
     list: 'backup:list',
     preview: 'backup:preview',
     restore: 'backup:restore',
-    revealFolder: 'backup:revealFolder'
+    revealFolder: 'backup:revealFolder',
+    extraStatus: 'backup:extraStatus',
+    chooseExtraFolder: 'backup:chooseExtraFolder',
+    clearExtraFolder: 'backup:clearExtraFolder'
   },
   deviceSync: {
     check: 'deviceSync:check'

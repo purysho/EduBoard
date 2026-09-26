@@ -1,8 +1,8 @@
-import { mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { pruneAutoBackups } from '../backup'
+import { copyToExtraFolder, getExtraBackupStatus, pruneAutoBackups } from '../backup'
 
 let dir: string
 
@@ -51,5 +51,35 @@ describe('pruneAutoBackups', () => {
     }
     pruneAutoBackups(dir)
     expect(readdirSync(dir).length).toBe(5)
+  })
+})
+
+describe('second backup folder', () => {
+  it('copies a backup there, keeping its name', () => {
+    const extra = mkdtempSync(join(tmpdir(), 'eduboard-extra-'))
+    try {
+      writeBackup('eduboard-backup-2026.db', new Date())
+      expect(copyToExtraFolder(join(dir, 'eduboard-backup-2026.db'), extra)).toBe(true)
+      expect(existsSync(join(extra, 'eduboard-backup-2026.db'))).toBe(true)
+      const status = getExtraBackupStatus(extra)
+      expect(status.reachable).toBe(true)
+      expect(status.lastCopiedAt).not.toBeNull()
+      expect(status.needsAttention).toBe(false)
+    } finally {
+      rmSync(extra, { recursive: true, force: true })
+    }
+  })
+
+  it('skips quietly when the folder is gone (an unplugged USB stick)', () => {
+    writeBackup('eduboard-backup-2026.db', new Date())
+    const missing = join(dir, 'no-such-stick')
+    expect(copyToExtraFolder(join(dir, 'eduboard-backup-2026.db'), missing)).toBe(false)
+    expect(getExtraBackupStatus(missing)).toMatchObject({ reachable: false, needsAttention: true })
+  })
+
+  it('asks for attention when there is no second folder, or its copy is over a week old', () => {
+    expect(getExtraBackupStatus('').needsAttention).toBe(true)
+    writeBackup('eduboard-autobackup-old.db', new Date(Date.now() - 8 * 86_400_000))
+    expect(getExtraBackupStatus(dir).needsAttention).toBe(true)
   })
 })

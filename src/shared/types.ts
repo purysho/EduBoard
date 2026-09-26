@@ -646,6 +646,20 @@ export interface AppSettings {
   digestFromName: string
   /** The teacher hid the Dashboard's Getting started checklist. */
   onboardingDismissed: boolean
+  /** A second place backups are copied to (a cloud-synced folder or USB stick), so a
+   * lost or broken computer doesn't take the backups with it. Empty means none. */
+  extraBackupFolder: string
+}
+
+/** Where the second backup copy stands, for Settings and the Dashboard reminder. */
+export interface ExtraBackupStatus {
+  folder: string
+  /** False when a folder is set but can't be reached (e.g. the USB stick is out). */
+  reachable: boolean
+  /** Newest EduBoard backup in that folder, if any. */
+  lastCopiedAt: string | null
+  /** True when there's no second copy, or the newest is older than a week. */
+  needsAttention: boolean
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -672,7 +686,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestSmtpPass: '',
   digestFromEmail: '',
   digestFromName: '',
-  onboardingDismissed: false
+  onboardingDismissed: false,
+  extraBackupFolder: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

@@ -1,9 +1,14 @@
 import { useState } from 'react'
-import { FolderOpen, HardDriveDownload, ShieldCheck } from 'lucide-react'
+import { CloudUpload, FolderOpen, HardDriveDownload, ShieldCheck } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { RestoreDialog } from './RestoreDialog'
-import { useBackups, useCreateBackup } from '@renderer/lib/queries'
+import {
+  useBackups,
+  useChangeExtraBackupFolder,
+  useCreateBackup,
+  useExtraBackupStatus
+} from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 
 const AUTO_BACKUP_RETENTION_HINT = '10'
@@ -11,6 +16,64 @@ const AUTO_BACKUP_RETENTION_HINT = '10'
 function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+/** The second copy of every backup, somewhere that survives this computer. */
+function ExtraBackupFolder(): React.JSX.Element {
+  const { data: status } = useExtraBackupStatus()
+  const change = useChangeExtraBackupFolder()
+  if (!status) return <></>
+
+  return (
+    <div className="mb-4 rounded-lg border border-[var(--color-border)] p-3 text-sm">
+      <p className="flex items-center gap-1.5 font-medium">
+        <CloudUpload size={14} aria-hidden /> Second copy
+      </p>
+      {!status.folder ? (
+        <p className="mt-1 text-[var(--color-text-muted)]">
+          Backups are only on this computer. Choose a second place, such as a OneDrive or Baidu
+          Netdisk folder, or a USB stick, and every backup is copied there too.
+        </p>
+      ) : (
+        <p className="mt-1 text-[var(--color-text-muted)]">
+          Copying to <span className="break-all font-mono text-xs">{status.folder}</span>
+          {status.reachable ? (
+            status.lastCopiedAt ? (
+              <> · last copy {formatDate(status.lastCopiedAt, 'MMM d, yyyy p')}</>
+            ) : (
+              <> · no copies yet</>
+            )
+          ) : (
+            <span className="text-[var(--color-warning)]">
+              {' '}
+              · can&apos;t reach it (is the USB stick plugged in?). Backups carry on here and are
+              copied again once it&apos;s back.
+            </span>
+          )}
+        </p>
+      )}
+      <div className="mt-2 flex gap-2">
+        <Button
+          variant={status.folder ? 'secondary' : 'primary'}
+          size="sm"
+          onClick={() => change.mutate('choose')}
+          disabled={change.isPending}
+        >
+          {status.folder ? 'Change folder' : 'Choose folder'}
+        </Button>
+        {status.folder && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => change.mutate('clear')}
+            disabled={change.isPending}
+          >
+            Stop copying
+          </Button>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function BackupPanel(): React.JSX.Element {
@@ -42,10 +105,11 @@ export function BackupPanel(): React.JSX.Element {
         </div>
       </CardHeader>
       <CardBody>
+        <ExtraBackupFolder />
         <p className="mb-3 text-sm text-[var(--color-text-muted)]">
           EduBoard automatically backs up your database every time it starts (the last{' '}
-          {AUTO_BACKUP_RETENTION_HINT} are kept), on top of anything you back up manually here. Keep
-          a recent one on a USB stick in case this laptop is lost or damaged.
+          {AUTO_BACKUP_RETENTION_HINT} are kept) and once a day while it stays open, on top of
+          anything you back up manually here.
         </p>
         {!backups?.length ? (
           <p className="text-sm text-[var(--color-text-muted)]">No backups yet.</p>
