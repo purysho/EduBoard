@@ -22,7 +22,7 @@ import * as attendanceRepo from '../repositories/attendanceRecords'
 import * as lessonPlansRepo from '../repositories/lessonPlans'
 import * as scheduleSlotsRepo from '../repositories/classScheduleSlots'
 import * as settingsRepo from '../repositories/settingsRepo'
-import { checkForUpdate } from '../services/updateCheck'
+import { getAppUpdateInfo, getAppUpdateProgress, installAppUpdate } from '../services/selfUpdate'
 import * as standardsRepo from '../repositories/standards'
 import * as rubricsRepo from '../repositories/rubrics'
 import * as rubricScoresRepo from '../repositories/rubricScores'
@@ -320,7 +320,9 @@ export function registerIpcHandlers(): void {
   // --- Settings -----------------------------------------------------------------------------
   handle(IpcChannels.settings.get, () => settingsRepo.getSettings())
   handle(IpcChannels.settings.update, (_e, patch) => settingsRepo.updateSettings(patch))
-  handle(IpcChannels.settings.checkForUpdate, () => checkForUpdate())
+  handle(IpcChannels.settings.appUpdateInfo, () => getAppUpdateInfo())
+  handle(IpcChannels.settings.installAppUpdate, () => installAppUpdate())
+  handle(IpcChannels.settings.appUpdateProgress, () => getAppUpdateProgress())
 
   // --- Backup -------------------------------------------------------------------------------
   handle(IpcChannels.backup.create, () => backupService.createBackup())

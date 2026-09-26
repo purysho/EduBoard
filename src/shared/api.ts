@@ -16,7 +16,8 @@ import type {
   GradeTrendPoint,
   BackupInfo,
   ExtraBackupStatus,
-  UpdateCheck,
+  AppUpdateInfo,
+  AppUpdateProgress,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -198,7 +199,11 @@ export interface EduBoardApi {
   settings: {
     get(): Promise<AppSettings>
     update(patch: Partial<AppSettings>): Promise<AppSettings>
-    checkForUpdate(): Promise<UpdateCheck>
+    /** Asks (through the Portal when set up, else GitHub) whether a newer release exists. */
+    appUpdateInfo(): Promise<AppUpdateInfo>
+    /** Backs up, downloads and installs the newest release, then EduBoard restarts. */
+    installAppUpdate(): Promise<void>
+    appUpdateProgress(): Promise<AppUpdateProgress>
   }
   backup: {
     create(): Promise<BackupInfo>

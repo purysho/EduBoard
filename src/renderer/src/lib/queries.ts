@@ -721,11 +721,12 @@ export function useCreateBackup() {
   })
 }
 
-/** Checked once per session (and on demand from Settings); a day-old answer is fine. */
-export function useUpdateCheck() {
+/** Checked once per session (and on demand from Settings): is there a newer EduBoard,
+ * and can this copy install it itself? */
+export function useAppUpdateInfo() {
   return useQuery({
-    queryKey: ['updateCheck'],
-    queryFn: () => api().settings.checkForUpdate(),
+    queryKey: ['appUpdateInfo'],
+    queryFn: () => api().settings.appUpdateInfo(),
     staleTime: 6 * 60 * 60 * 1000
   })
 }

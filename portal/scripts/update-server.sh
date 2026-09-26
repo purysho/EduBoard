@@ -72,14 +72,14 @@ else
   elif [ -r "$TOKEN_FILE" ]; then
     TOKEN="$(cat "$TOKEN_FILE")"
   fi
-  if [ -n "$TOKEN" ]; then
-    # The API's tarball works for private repositories (the plain archive link doesn't).
-    curl -fsSL -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/repos/$REPO/tarball/$BRANCH" -o "$WORK/src.tar.gz" ||
-      fail "Download failed. The GitHub token may have expired or lack access to $REPO; nothing was changed."
+  # The repository is public, so no token is needed; a saved one is tried first (for a
+  # private copy) and the public download is used if it doesn't work.
+  if [ -n "$TOKEN" ] && curl -fsSL -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/$REPO/tarball/$BRANCH" -o "$WORK/src.tar.gz"; then
+    :
   else
     curl -fsSL "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" -o "$WORK/src.tar.gz" ||
-      fail "Download failed. If the repository is private, run again with a token: GITHUB_TOKEN=... bash $0. Nothing was changed."
+      fail "Download failed. Check the server can reach github.com; nothing was changed."
   fi
 fi
 tar -xzf "$WORK/src.tar.gz" -C "$WORK"

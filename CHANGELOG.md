@@ -2,10 +2,11 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.3.3] — 2026-09-26
 
 ### Added
 
+- **Update from inside EduBoard** (Settings → Check for updates → Update now), on Windows, Mac and Linux. It warns you to save your work, takes a backup, downloads the new version, closes, installs it and reopens. With a Portal set up, the download comes through your Portal server, which is much faster from mainland China than GitHub.
 - **Start next term** (class Settings): a new class for the next term with the same setup and, if you like, the same students. They keep their Portal logins, so nobody signs up again; the new class appears for them after the next publish.
 - **Edit terms** in Settings → Terms: change a term's name, school year or dates any time. Deleting a term now asks first.
 - **Second backup folder** (Settings → Backups): every backup is also copied to a folder you choose (OneDrive, Baidu Netdisk, a USB stick), plus a daily backup while EduBoard stays open and a Dashboard reminder when the copy is missing or old.

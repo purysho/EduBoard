@@ -45,7 +45,7 @@ Your data lives in a single database file next to the app, so the whole thing �
   <a href="https://github.com/purysho/EduBoard/releases/latest/download/EduBoard.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"></a>
 </p>
 
-Each button always grabs the newest release, no version numbers to track. New here? Start with the **[User Guide](docs/USER_GUIDE.md)** for a full walkthrough after installing.
+Each button always grabs the newest release, no version numbers to track. Once installed, EduBoard updates itself: **Settings → Check for updates → Update now**. New here? Start with the **[User Guide](docs/USER_GUIDE.md)** for a full walkthrough after installing.
 
 - **Windows** — the button above downloads `EduBoard-Portable.exe`: no install, no admin rights, copy it to a USB stick and double-click it anywhere. EduBoard keeps its database in an `EduBoard-data` folder next to the exe, so the whole thing travels together. Prefer a normal install instead? Grab `EduBoard-Setup.exe` from the [Releases page](https://github.com/purysho/EduBoard/releases/latest) — in that case your data lives in your Windows user profile instead.
 - **macOS** — pick the button for your Mac's chip (Apple menu → **About This Mac**: "Apple M1/M2/M3…" is Apple Silicon, "Intel" is Intel). Each downloads a `.dmg`; `.zip` versions are on the [Releases page](https://github.com/purysho/EduBoard/releases/latest) if you'd rather not mount a disk image.

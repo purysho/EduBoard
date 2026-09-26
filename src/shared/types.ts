@@ -683,13 +683,24 @@ export interface PortalResetRequest {
   requestedAt: string
 }
 
-/** Whether a newer EduBoard is out, as announced by the teacher's Portal. */
-export interface UpdateCheck {
+/** What Settings shows for updating EduBoard from inside the app. */
+export interface AppUpdateInfo {
   current: string
-  /** Null when there's no Portal set up or it couldn't be reached. */
+  /** Newest release; null when it couldn't be checked. */
   latest: string | null
   updateAvailable: boolean
-  downloadUrl: string
+  /** Whether this copy can replace itself (an installed or portable app, not source). */
+  canInstall: boolean
+  cannotInstallReason: string | null
+  /** Why the check failed (offline…), in plain words. */
+  problem: string | null
+}
+
+export interface AppUpdateProgress {
+  phase: 'idle' | 'downloading' | 'installing' | 'failed'
+  /** 0–1 while downloading. */
+  fraction: number
+  error: string | null
 }
 
 /** Where the second backup copy stands, for Settings and the Dashboard reminder. */

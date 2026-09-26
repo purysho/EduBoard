@@ -13,10 +13,10 @@ double-click **Update-EduBoard.cmd**. It does two things in one window:
    installs the update quietly and reopens it. Your classes and data are kept. If you
    already have the newest build it says so and does nothing.
 
-The first time, step 2 asks for a GitHub token, because the repository is private. You
-can paste the same token you made for the server (Contents: Read-only on EduBoard). It
-is remembered for this Windows user; if it expires, the updater says so and asks again
-next time.
+No GitHub token is needed: the repository is public.
+
+Once you have EduBoard 0.3.3 or later, you can also update from inside the app:
+**Settings → Check for updates → Update now** (on Windows, Mac and Linux).
 
 The newest build appears about 10 minutes after each desktop change, under the
 repository's **Releases** as "Test build". Running Update-EduBoard.cmd before then
@@ -84,7 +84,8 @@ once:
    ```
 
 The server keeps the token (readable by root only), so later updates are just
-**Update-Live-Portal.cmd**. When the token expires, repeat these two steps. If it stops with an error, nothing after that step was changed and the backup
+**Update-Live-Portal.cmd**. If the token expires, the updater quietly uses the public
+download instead. If it stops with an error, nothing after that step was changed and the backup
 in `/root/` has the data as it was.
 
 ### On your own computer, before it goes live (Start-Test-Portal.cmd)

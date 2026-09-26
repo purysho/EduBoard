@@ -70,7 +70,6 @@ jobs:
       # Proves the updater can find and download what was just published, on real Windows
       # PowerShell, the way the teacher's computer will.
       - name: Check Update-EduBoard can download it
+        # No token, as on the teacher's computer: the repository is public.
         shell: powershell
-        env:
-          EDUBOARD_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .\tools\windows\update-desktop.ps1 -Repo "${{ github.repository }}" -DownloadOnly

@@ -51,13 +51,21 @@ app.use('/api/admin', require('./routes/admin'))
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
-// The newest EduBoard desktop version, so the app can tell the teacher an update is out
-// (GitHub can't be asked directly: the repository is private). Kept in step with the
-// desktop's package.json by `npm version` and checked by a test.
-app.get('/api/app-version', (_req, res) => {
-  const { version } = JSON.parse(
-    require('fs').readFileSync(path.join(__dirname, 'desktop-version.json'), 'utf8')
-  )
+// The newest EduBoard desktop release, relayed from GitHub (routes/appRelease.js), so
+// the desktop app can check for and download updates through this server.
+const appRelease = require('./routes/appRelease')
+app.use('/api/app-release', appRelease.router)
+// The Dashboard's "new version" notice: the newest release, or failing that the version
+// this server's code was built with (portal/desktop-version.json).
+app.get('/api/app-version', async (_req, res) => {
+  let version
+  try {
+    version = (await appRelease.latestRelease()).version
+  } catch {
+    version = JSON.parse(
+      require('fs').readFileSync(path.join(__dirname, 'desktop-version.json'), 'utf8')
+    ).version
+  }
   res.set('Cache-Control', 'no-cache').json({
     version,
     downloadUrl: 'https://github.com/purysho/EduBoard/releases/latest'
