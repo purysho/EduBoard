@@ -92,7 +92,14 @@ jobs:
           # their secrets aren't configured, so the child process never sees the key.
           if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; fi
           if [ -z "$APPLE_ID" ]; then unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; fi
-          npm run ${{ matrix.script }} -- --publish always
+          # No Mac certificate: sign ad hoc, because Apple Silicon Macs refuse to run an
+          # app with no signature at all ("damaged"). See the mac section of
+          # electron-builder.yml.
+          extra=()
+          if [ "$RUNNER_OS" = macOS ] && [ -z "${CSC_LINK:-}" ]; then
+            extra=(-c.mac.identity=- -c.mac.hardenedRuntime=false)
+          fi
+          npm run ${{ matrix.script }} -- --publish always "${extra[@]}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Code signing / notarization — all optional. With none of these repo secrets
@@ -103,6 +110,10 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Check the Mac apps start (Apple Silicon, and Intel via Rosetta)
+        if: runner.os == 'macOS'
+        run: bash tools/mac/smoke-test.sh
 
       - name: Generate SHA256 checksums for this platform's installers
         shell: bash

@@ -1,0 +1,44 @@
+name: Mac check (build and start, no release)
+
+# Builds both Mac apps the way the Release workflow does, without publishing, and
+# checks they start. Run from Actions → Mac check → Run workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Add both Mac native packages for pdf-parse's canvas
+        shell: bash
+        run: |
+          version=$(node -p "require('@napi-rs/canvas/package.json').version")
+          for arch in arm64 x64; do
+            dir="node_modules/@napi-rs/canvas-darwin-$arch"
+            [ -d "$dir" ] && continue
+            mkdir -p "$dir"
+            tarball=$(npm pack "@napi-rs/canvas-darwin-$arch@$version" --silent)
+            tar xzf "$tarball" --strip-components=1 -C "$dir"
+            rm "$tarball"
+          done
+
+      - name: Build (ad hoc signed, not published)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run build:mac -- --publish never -c.mac.identity=- -c.mac.hardenedRuntime=false
+
+      - name: Check the Mac apps start (Apple Silicon, and Intel via Rosetta)
+        run: bash tools/mac/smoke-test.sh

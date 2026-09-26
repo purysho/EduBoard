@@ -30,31 +30,26 @@ nsis:
 portable:
   artifactName: ${productName}-Portable.${ext}
 mac:
+  # One download per chip rather than a single "universal" app: each gets the native
+  # modules (better-sqlite3, pdf-parse's canvas) built for its own chip, which the
+  # universal merge can't do. build:mac rebuilds them per arch (npmRebuild).
   target:
     - target: dmg
-      arch: [universal]
+      arch: [arm64, x64]
     - target: zip
-      arch: [universal]
-  artifactName: ${productName}.${ext}
-  # better-sqlite3 ships prebuilt native binaries for every platform as plain
-  # package content (unrelated to the one @electron/rebuild actually compiles
-  # for this Electron ABI). Those extra files are byte-identical between the
-  # x64 and arm64 halves of a universal build, which @electron/universal
-  # otherwise refuses to merge — this tells it that's expected. The same goes for
-  # pdf-parse's @napi-rs/canvas: the release workflow installs both its Intel and
-  # Apple Silicon packages, so each half carries both and each Mac loads its own.
-  x64ArchFiles: 'Contents/Resources/app.asar.unpacked/node_modules/{better-sqlite3,@napi-rs/canvas-darwin-*}/**'
+      arch: [arm64, x64]
+  artifactName: ${productName}-${arch}.${ext}
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: EduBoard stores your class data in a local database file.
     - NSDownloadsFolderUsageDescription: EduBoard can export reports and backups to your Downloads folder.
   # Hardened runtime is required for notarization. Actual signing/notarization only
-  # happens when the relevant env vars are present (see docs/CODE_SIGNING.md) — with
-  # none set, electron-builder falls back to an unsigned, non-notarized build exactly
-  # as before, so this is a no-op for anyone who hasn't set up a certificate.
+  # happens when the relevant env vars are present (see docs/CODE_SIGNING.md). Without
+  # a certificate the release workflow signs ad hoc instead (identity "-", no hardened
+  # runtime): Apple Silicon Macs won't run an app with no signature at all.
   hardenedRuntime: true
 dmg:
-  artifactName: ${productName}.${ext}
+  artifactName: ${productName}-${arch}.${ext}
 linux:
   target:
     - AppImage
