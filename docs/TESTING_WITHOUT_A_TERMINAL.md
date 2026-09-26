@@ -2,6 +2,26 @@
 
 Four things to check. Nothing below needs typed commands on your own PC.
 
+## Update everything at once: Update-EduBoard.cmd
+
+Download the branch as a ZIP (green **Code** button → **Download ZIP**), unzip it and
+double-click **Update-EduBoard.cmd**. It does two things in one window:
+
+1. **The Portal server:** it asks for the server's root password (nothing shows while
+   you type), then updates portal.edu-board.com the same way Update-Live-Portal.cmd does.
+2. **EduBoard on this computer:** it downloads the newest test build, closes EduBoard,
+   installs the update quietly and reopens it. Your classes and data are kept. If you
+   already have the newest build it says so and does nothing.
+
+The first time, step 2 asks for a GitHub token, because the repository is private. You
+can paste the same token you made for the server (Contents: Read-only on EduBoard). It
+is remembered for this Windows user; if it expires, the updater says so and asks again
+next time.
+
+The newest build appears about 10 minutes after each desktop change, under the
+repository's **Releases** as "Test build". Running Update-EduBoard.cmd before then
+leaves the app as it is.
+
 ## 1. The desktop app: download a ready-made installer
 
 Every push to a `claude/...` branch (or `v0.3-dev`) builds a Windows installer on

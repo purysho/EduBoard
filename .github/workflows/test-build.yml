@@ -17,8 +17,15 @@ on:
       - '*.cmd'
   workflow_dispatch:
 
+# Write: each build replaces the "test-latest" pre-release that Update-EduBoard.cmd
+# installs from.
 permissions:
-  contents: read
+  contents: write
+
+# One build at a time, so two pushes can't race to replace test-latest.
+concurrency:
+  group: test-build
+  cancel-in-progress: false
 
 jobs:
   windows:
@@ -48,3 +55,22 @@ jobs:
             dist/EduBoard-Portable.exe
           retention-days: 14
           if-no-files-found: error
+
+      - name: Publish as the "test-latest" pre-release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete test-latest --yes --cleanup-tag || true
+          gh release create test-latest dist/EduBoard-Setup.exe dist/EduBoard-Portable.exe \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "Test build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))" \
+            --notes "Built from $GITHUB_REF_NAME at $GITHUB_SHA. Installed by Update-EduBoard.cmd."
+
+      # Proves the updater can find and download what was just published, on real Windows
+      # PowerShell, the way the teacher's computer will.
+      - name: Check Update-EduBoard can download it
+        shell: powershell
+        env:
+          EDUBOARD_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .\tools\windows\update-desktop.ps1 -Repo "${{ github.repository }}" -DownloadOnly
