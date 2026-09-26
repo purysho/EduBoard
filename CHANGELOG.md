@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.1] — 2026-09-26
+
+### Fixed
+
+- The macOS download is built again: the universal (Intel and Apple Silicon) app now includes the PDF reader's native files for both chips.
+
 ## [0.3.0] — 2026-09-26
 
 EduBoard gains a student Portal: a website where students see homework, hand in work, study and message you, synced from the desktop app.

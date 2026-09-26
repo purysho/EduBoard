@@ -62,6 +62,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # npm only installs @napi-rs/canvas's native package for the runner's own chip,
+      # but the universal Mac app needs both (see x64ArchFiles in electron-builder.yml).
+      - name: Add both Mac native packages for the universal build
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          version=$(node -p "require('@napi-rs/canvas/package.json').version")
+          for arch in arm64 x64; do
+            dir="node_modules/@napi-rs/canvas-darwin-$arch"
+            [ -d "$dir" ] && continue
+            mkdir -p "$dir"
+            tarball=$(npm pack "@napi-rs/canvas-darwin-$arch@$version" --silent)
+            tar xzf "$tarball" --strip-components=1 -C "$dir"
+            rm "$tarball"
+          done
+          ls node_modules/@napi-rs
+
       - name: Build & publish
         shell: bash
         run: |
