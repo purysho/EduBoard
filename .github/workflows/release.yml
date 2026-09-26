@@ -115,6 +115,18 @@ jobs:
         if: runner.os == 'macOS'
         run: bash tools/mac/smoke-test.sh
 
+      # Older copies of the README link to EduBoard.dmg (from when there was one
+      # universal Mac app); keep that link working with the Apple Silicon build.
+      - name: Keep the old EduBoard.dmg link working
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp dist/EduBoard-arm64.dmg dist/EduBoard.dmg
+          gh release upload "${{ needs.tag.outputs.name }}" dist/EduBoard.dmg --clobber
+          rm dist/EduBoard.dmg
+
       - name: Generate SHA256 checksums for this platform's installers
         shell: bash
         run: |

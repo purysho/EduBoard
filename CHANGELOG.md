@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.2] — 2026-09-26
+
+### Fixed
+
+- **macOS:** the Mac app now opens. There are two downloads, one for Apple Silicon and one for Intel Macs, each with its database and PDF components built for that chip, and both are signed (ad hoc) so Apple Silicon Macs no longer call the app "damaged". Each release now checks on a Mac that both apps start.
+
 ## [0.3.1] — 2026-09-26
 
 ### Fixed
