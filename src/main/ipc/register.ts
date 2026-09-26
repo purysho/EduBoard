@@ -74,7 +74,9 @@ import {
   sendDigestNow,
   resetPortalPassword,
   getPortalProfile,
-  mergeStudentsEverywhere
+  mergeStudentsEverywhere,
+  listPortalResetRequests,
+  answerPortalResetRequest
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -791,6 +793,10 @@ export function registerIpcHandlers(): void {
   })
 
   handle(IpcChannels.digest.sendNow, () => sendDigestNow())
+  handle(IpcChannels.portalAccounts.listResetRequests, () => listPortalResetRequests())
+  handle(IpcChannels.portalAccounts.answerResetRequest, (_e, id: string, approve: boolean) =>
+    answerPortalResetRequest(id, approve)
+  )
   handle(IpcChannels.portalAccounts.resetPassword, (_e, username: string, newPassword: string) =>
     resetPortalPassword(username, newPassword)
   )

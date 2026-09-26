@@ -17,6 +17,7 @@ import type {
   BackupInfo,
   ExtraBackupStatus,
   UpdateCheck,
+  PortalResetRequest,
   BackupPreview,
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
@@ -388,5 +389,9 @@ export interface EduBoardApi {
     /** Sets a new password on a student/family Portal account and signs out all of its
      * existing sessions. Only works for accounts linked to this teacher's students. */
     resetPassword(username: string, newPassword: string): Promise<void>
+    /** Students who asked for a reset from the login page. Empty without a Portal. */
+    listResetRequests(): Promise<PortalResetRequest[]>
+    /** Approve lets that student choose a new password on the device they asked from. */
+    answerResetRequest(id: string, approve: boolean): Promise<void>
   }
 }

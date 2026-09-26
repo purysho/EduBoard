@@ -18,6 +18,7 @@ import { ClassCard } from '@renderer/pages/Classes/ClassCard'
 import { GettingStarted } from './GettingStarted'
 import { BackupReminder } from './BackupReminder'
 import { UpdateNotice } from './UpdateNotice'
+import { ResetRequests } from './ResetRequests'
 
 export function DashboardPage(): React.JSX.Element {
   const { data: stats, isLoading } = useDashboardStats()
@@ -29,6 +30,7 @@ export function DashboardPage(): React.JSX.Element {
     <div>
       <PageHeader title="Dashboard" description="Everything you're teaching, at a glance." />
 
+      <ResetRequests />
       <UpdateNotice />
       <GettingStarted />
       <BackupReminder hasData={stats.classCount > 0} />

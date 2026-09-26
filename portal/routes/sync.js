@@ -726,6 +726,49 @@ function ownsAccount(teacherId, accountId) {
     .get(accountId, teacherId)
 }
 
+// Students who said they forgot their password, waiting for this teacher's OK. Only
+// requests for accounts linked to this teacher's own students are shown.
+router.get('/reset-requests', (req, res) => {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const rows = db
+    .prepare(
+      `SELECT r.id, r.account_id, r.requested_at, a.username
+       FROM password_reset_requests r JOIN accounts a ON a.id = r.account_id
+       WHERE r.status = 'pending' AND r.requested_at > ? ORDER BY r.requested_at`
+    )
+    .all(cutoff)
+    .filter((r) => ownsAccount(req.teacherId, r.account_id))
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      username: r.username,
+      requestedAt: r.requested_at,
+      studentNames: db
+        .prepare(
+          `SELECT s.first_name, s.last_name FROM account_students acs
+           JOIN students s ON s.id = acs.student_id
+           WHERE acs.account_id = ? AND s.teacher_id = ?`
+        )
+        .all(r.account_id, req.teacherId)
+        .map((s) => `${s.first_name} ${s.last_name}`)
+    }))
+  )
+})
+
+router.post('/reset-requests/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM password_reset_requests WHERE id = ?').get(req.params.id)
+  if (!row || row.status !== 'pending' || !ownsAccount(req.teacherId, row.account_id)) {
+    return res.status(404).json({ error: 'That request is no longer waiting' })
+  }
+  const status = req.body?.approve ? 'approved' : 'declined'
+  db.prepare('UPDATE password_reset_requests SET status = ?, decided_at = ? WHERE id = ?').run(
+    status,
+    new Date().toISOString(),
+    row.id
+  )
+  res.json({ ok: true, status })
+})
+
 router.post('/messages', (req, res) => {
   const { accountId, body } = req.body
   const text = (body || '').trim()

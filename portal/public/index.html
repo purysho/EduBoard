@@ -394,6 +394,124 @@ async function main() {
   }
 }
 
+// ---- Forgot password -----------------------------------------------------------------------
+// The request's secret stays in this browser, so only the device that asked can set the
+// new password once the teacher approves.
+const RESET_KEY = 'eduboard.resetRequest'
+const readReset = () => {
+  try {
+    return JSON.parse(localStorage.getItem(RESET_KEY) || 'null')
+  } catch {
+    return null
+  }
+}
+const saveReset = (r) => {
+  try {
+    if (r) localStorage.setItem(RESET_KEY, JSON.stringify(r))
+    else localStorage.removeItem(RESET_KEY)
+  } catch {
+    // Private browsing: the request just can't be picked up again after closing the page.
+  }
+}
+
+function renderForgotPassword() {
+  app.innerHTML = `
+    <h1>${t('Forgot your password?')}</h1>
+    <p class="hint">${t('Ask your teacher for a reset. Once they approve it, you choose a new password here, on this device.')}</p>
+    <form id="reset-form">
+      <label for="ru">${t('Username')}</label>
+      <input id="ru" autocomplete="username" autocapitalize="none" required />
+      <button type="submit" id="rgo">${t('Ask my teacher')}</button>
+      <p class="error" id="rerr" role="alert"></p>
+    </form>
+    <p class="field-note" style="margin-top:18px"><a href="#" class="linklike" id="back-login">${t('Back to log in')}</a></p>
+  `
+  document.getElementById('back-login').onclick = (e) => {
+    e.preventDefault()
+    renderLogin()
+  }
+  document.getElementById('reset-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const button = document.getElementById('rgo')
+    button.disabled = true
+    const username = document.getElementById('ru').value.trim()
+    try {
+      const r = await api('/auth/reset-request', { method: 'POST', body: { username } })
+      saveReset({ id: r.id, secret: r.secret, username })
+      renderResetWaiting()
+    } catch (err) {
+      document.getElementById('rerr').textContent = err.message
+      button.disabled = false
+    }
+  }
+}
+
+let resetPoll = null
+async function renderResetWaiting() {
+  clearTimeout(resetPoll)
+  const r = readReset()
+  if (!r) return renderLogin()
+  let status = 'pending'
+  try {
+    status = (await api(`/auth/reset-request/${encodeURIComponent(r.id)}/status`, { method: 'POST', body: { secret: r.secret } })).status
+  } catch {
+    status = 'expired'
+  }
+  if (status === 'approved') return renderNewPassword(r)
+  if (status !== 'pending') {
+    saveReset(null)
+    app.innerHTML = `
+      <h1>${t('Password reset')}</h1>
+      <p class="hint">${status === 'declined' ? t('Your teacher didn’t approve this reset. Talk to them, then try again.') : t('This reset request has run out. Ask again if you still need one.')}</p>
+      <button id="again">${t('Back to log in')}</button>`
+    document.getElementById('again').onclick = renderLogin
+    return
+  }
+  app.innerHTML = `
+    <h1>${t('Waiting for your teacher')}</h1>
+    <p class="hint">${esc(t('Your request to reset the password for {user} has been sent. Tell your teacher you asked. When they approve it, you can choose a new password here. You can close this page and come back on this device.', { user: r.username }))}</p>
+    <button id="check">${t('Check again')}</button>
+    <p class="field-note" style="margin-top:18px"><a href="#" class="linklike" id="cancel-reset">${t('Cancel and go back to log in')}</a></p>`
+  document.getElementById('check').onclick = renderResetWaiting
+  document.getElementById('cancel-reset').onclick = (e) => {
+    e.preventDefault()
+    saveReset(null)
+    renderLogin()
+  }
+  resetPoll = setTimeout(() => {
+    if (document.getElementById('check')) renderResetWaiting()
+  }, 20000)
+}
+
+function renderNewPassword(r) {
+  app.innerHTML = `
+    <h1>${t('Choose a new password')}</h1>
+    <p class="hint">${esc(t('Your teacher approved the reset for {user}.', { user: r.username }))}</p>
+    <form id="newpw-form">
+      <label for="np">${t('New password')}</label>
+      ${passwordFieldHtml('np', 'new-password')}
+      <button type="submit" id="npgo">${t('Save and log in')}</button>
+      <p class="error" id="nperr" role="alert"></p>
+    </form>`
+  wirePasswordToggles()
+  document.getElementById('newpw-form').onsubmit = async (e) => {
+    e.preventDefault()
+    const button = document.getElementById('npgo')
+    button.disabled = true
+    try {
+      await api(`/auth/reset-request/${encodeURIComponent(r.id)}/complete`, {
+        method: 'POST',
+        body: { secret: r.secret, newPassword: document.getElementById('np').value }
+      })
+      saveReset(null)
+      location.reload()
+    } catch (err) {
+      document.getElementById('nperr').textContent = err.message
+      button.disabled = false
+    }
+  }
+}
+
 // A password box with a Show/Hide toggle, so students can check what they typed on a
 // phone keyboard (and password managers still recognise the field).
 function passwordFieldHtml(id, autocomplete, extra = '') {
@@ -418,6 +536,8 @@ function wirePasswordToggles(root = document) {
 }
 
 function renderLogin() {
+  // A reset asked for on this device picks up where it left off.
+  if (readReset()) return renderResetWaiting()
   app.innerHTML = `
     <h1>${t('Welcome back')}</h1>
     <p class="hint">${t('Sign in to see your homework, grades and class materials.')}</p>
@@ -430,11 +550,15 @@ function renderLogin() {
       <p class="error" id="err" role="alert"></p>
     </form>
     <p class="field-note" style="margin-top:18px">
-      <strong>${t('Forgot your password?')}</strong> ${t("Ask your teacher to reset it. They'll give you a temporary one to log in with, and you can change it under Account.")}<br />
+      <strong>${t('Forgot your password?')}</strong> <a href="#" class="linklike" id="forgot">${t('Ask your teacher for a reset')}</a><br />
       <strong>${t('New here?')}</strong> ${t('Use the invite link or QR code your teacher gave you.')}
     </p>
   `
   wirePasswordToggles()
+  document.getElementById('forgot').onclick = (e) => {
+    e.preventDefault()
+    renderForgotPassword()
+  }
   document.getElementById('login-form').onsubmit = async (e) => {
     e.preventDefault()
     const button = document.getElementById('go')

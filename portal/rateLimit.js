@@ -101,7 +101,9 @@ const LIMITS = {
   aiPerAccountBurst: { windowMs: MINUTE, max: envInt('RATE_AI_PER_MINUTE', 6) },
   aiPerAccountDaily: { windowMs: 24 * 60 * MINUTE, max: envInt('RATE_AI_PER_DAY', 100) },
   // Password changes (needs the current password, so it's another guessing oracle).
-  passwordChangePerAccount: { windowMs: 15 * MINUTE, max: envInt('RATE_PASSWORD_CHANGE', 5) }
+  passwordChangePerAccount: { windowMs: 15 * MINUTE, max: envInt('RATE_PASSWORD_CHANGE', 5) },
+  // "Forgot password" requests per IP: each one lands in a teacher's list.
+  resetRequestPerIp: { windowMs: 60 * MINUTE, max: envInt('RATE_RESET_REQUEST_PER_IP', 10) }
 }
 
 module.exports = { RateLimiter, rateLimit, tooMany, LIMITS }

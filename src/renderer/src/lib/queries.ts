@@ -1562,6 +1562,26 @@ export function useDeleteClassPost() {
   })
 }
 
+/** Checked every minute while the Dashboard is open, so a student waiting at the
+ * login page isn't kept waiting long. */
+export function usePortalResetRequests() {
+  return useQuery({
+    queryKey: ['portalResetRequests'],
+    queryFn: () => api().portalAccounts.listResetRequests(),
+    refetchInterval: 60_000,
+    retry: false
+  })
+}
+
+export function useAnswerResetRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, approve }: { id: string; approve: boolean }) =>
+      api().portalAccounts.answerResetRequest(id, approve),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portalResetRequests'] })
+  })
+}
+
 export function useResetPortalPassword() {
   return useMutation({
     mutationFn: ({ username, newPassword }: { username: string; newPassword: string }) =>

@@ -31,6 +31,7 @@ import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
   Student,
+  PortalResetRequest,
   HomeworkSubmissionStatus,
   PortalMessageThread,
   PortalStudentProfile
@@ -674,6 +675,30 @@ export async function deleteClassPost(id: string): Promise<void> {
 /** Teacher-triggered password reset for a Portal account — the Portal's only recovery
  * path, since it deliberately has no "forgot password" email. The Portal refuses
  * accounts that aren't linked to one of this teacher's students. */
+export async function listPortalResetRequests(): Promise<PortalResetRequest[]> {
+  let config: { portalUrl: string; portalSyncSecret: string }
+  try {
+    config = requirePortalConfig()
+  } catch {
+    return []
+  }
+  const res = await fetch(`${config.portalUrl}/api/sync/reset-requests`, {
+    headers: { 'X-Sync-Secret': config.portalSyncSecret }
+  })
+  if (!res.ok) throw await portalFailure('Checking password reset requests failed', res)
+  return (await res.json()) as PortalResetRequest[]
+}
+
+export async function answerPortalResetRequest(id: string, approve: boolean): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await fetch(`${portalUrl}/api/sync/reset-requests/${encodeURIComponent(id)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ approve })
+  })
+  if (!res.ok) throw await portalFailure('Answering the reset request failed', res)
+}
+
 export async function resetPortalPassword(username: string, newPassword: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 

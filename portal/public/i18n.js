@@ -273,6 +273,27 @@ const ZH = {
   'Due soon': '即将到期',
   'Class Story': '班级动态',
   'No homework yet.': '暂无作业。',
+  'Ask your teacher for a reset': '请老师帮你重置',
+  'Ask your teacher for a reset. Once they approve it, you choose a new password here, on this device.':
+    '向老师申请重置密码。老师批准后，你就可以在这台设备上设置新密码。',
+  'Ask my teacher': '向老师申请',
+  'Back to log in': '返回登录',
+  'Password reset': '重置密码',
+  'Your teacher didn’t approve this reset. Talk to them, then try again.':
+    '老师没有批准这次重置。请先和老师沟通，然后再试一次。',
+  'This reset request has run out. Ask again if you still need one.':
+    '这个重置申请已过期。如果仍需要，请重新申请。',
+  'Waiting for your teacher': '等待老师批准',
+  'Your request to reset the password for {user} has been sent. Tell your teacher you asked. When they approve it, you can choose a new password here. You can close this page and come back on this device.':
+    '已发送 {user} 的密码重置申请。请告诉老师你申请了。老师批准后，你可以在这里设置新密码。你可以先关闭这个页面，之后在这台设备上回来继续。',
+  'Check again': '再次查看',
+  'Cancel and go back to log in': '取消并返回登录',
+  'Choose a new password': '设置新密码',
+  'Your teacher approved the reset for {user}.': '老师已批准 {user} 的密码重置。',
+  'New password': '新密码',
+  'Save and log in': '保存并登录',
+  'Enter your username': '请输入用户名',
+  'This reset hasn’t been approved by your teacher.': '老师还没有批准这次重置。',
   Finished: '已结课',
   'Finished classes': '已结课的课程',
   "This class has finished, so work can't be handed in any more.": '这门课已结课，不能再提交作业。',

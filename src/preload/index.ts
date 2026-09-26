@@ -299,7 +299,10 @@ const api: EduBoardApi = {
   },
   portalAccounts: {
     resetPassword: (username, newPassword) =>
-      invoke(IpcChannels.portalAccounts.resetPassword, username, newPassword)
+      invoke(IpcChannels.portalAccounts.resetPassword, username, newPassword),
+    listResetRequests: () => invoke(IpcChannels.portalAccounts.listResetRequests),
+    answerResetRequest: (id, approve) =>
+      invoke(IpcChannels.portalAccounts.answerResetRequest, id, approve)
   },
   digest: {
     sendNow: () => invoke(IpcChannels.digest.sendNow)

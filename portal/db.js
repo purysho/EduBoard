@@ -290,6 +290,18 @@ ensureColumn('accounts', 'email', 'email TEXT')
 ensureColumn('accounts', 'onboarded_at', 'onboarded_at TEXT')
 ensureColumn('accounts', 'session_version', 'session_version INTEGER NOT NULL DEFAULT 0')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
+// A student who forgot their password asks here; their teacher approves in the desktop
+// app; then the same browser (holding secret_hash's secret) sets a new password.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id TEXT PRIMARY KEY,
+    account_id TEXT REFERENCES accounts(id) ON DELETE CASCADE,
+    secret_hash TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    requested_at TEXT NOT NULL,
+    decided_at TEXT
+  )
+`)
 // A class the teacher has archived at the end of term: students still see its grades,
 // feedback and materials, but can't hand anything in.
 ensureColumn('classes', 'finished', 'finished INTEGER NOT NULL DEFAULT 0')

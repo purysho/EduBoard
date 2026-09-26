@@ -651,6 +651,14 @@ export interface AppSettings {
   extraBackupFolder: string
 }
 
+/** A student who forgot their Portal password and is waiting for the teacher's OK. */
+export interface PortalResetRequest {
+  id: string
+  username: string
+  studentNames: string[]
+  requestedAt: string
+}
+
 /** Whether a newer EduBoard is out, as announced by the teacher's Portal. */
 export interface UpdateCheck {
   current: string

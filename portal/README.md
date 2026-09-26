@@ -216,7 +216,13 @@ backup now and then, e.g. `scp root@portal.edu-board.com:/root/eduboard-backups/
 There's no "forgot password" email flow by design — this app has no mail service, and
 mail deliverability from a fresh VPS is its own headache. Instead:
 
-- **Forgot password, or locked out** → in the desktop app, Settings → Portal sync →
+- **Forgot password (usual way)** → on the login page the student taps "Ask your teacher
+  for a reset" and enters their username. The request appears on the teacher's
+  Dashboard with the student's name; **Approve** lets that same device (and only it)
+  choose a new password, which signs the account out everywhere else. Requests expire
+  after a day, and asking about a username that doesn't exist looks exactly the same,
+  so nobody can find out who has an account.
+- **Or, set a temporary password yourself** → in the desktop app, Settings → Portal sync →
   "Reset a student's Portal password". Enter their username, click Generate (or type a
   temporary password), and give it to them. The reset signs that account out on every
   device. It only works for accounts linked to your own students. Students can then
