@@ -29,6 +29,7 @@ export function createClass(input: CreateClassInput): ClassSection {
     seatingCols: 6,
     courseGroupId: null,
     termWeight: 1,
+    minAttendance: null,
     ...input
   }
   getDb().insert(classes).values(row).run()

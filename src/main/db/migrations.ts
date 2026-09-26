@@ -679,6 +679,15 @@ const migrations: Migration[] = [
         CREATE INDEX portal_join_links_class_idx ON portal_join_links(class_id);
       `)
     }
+  },
+  {
+    id: 28,
+    name: 'class_min_attendance',
+    up: (db) => {
+      // A class's attendance requirement (percent, e.g. 80). Null means none: students
+      // below it are flagged on the Dashboard.
+      db.exec(`ALTER TABLE classes ADD COLUMN min_attendance REAL;`)
+    }
   }
 ]
 

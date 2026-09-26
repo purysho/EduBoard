@@ -20,6 +20,7 @@ import { BackupReminder } from './BackupReminder'
 import { UpdateNotice } from './UpdateNotice'
 import { ResetRequests } from './ResetRequests'
 import { UnpublishedNotice } from './UnpublishedNotice'
+import { AttendanceWarnings } from './AttendanceWarnings'
 
 export function DashboardPage(): React.JSX.Element {
   const { data: stats, isLoading } = useDashboardStats()
@@ -36,6 +37,7 @@ export function DashboardPage(): React.JSX.Element {
       <UpdateNotice />
       <GettingStarted />
       <BackupReminder hasData={stats.classCount > 0} />
+      <AttendanceWarnings />
 
       <div className="mb-6 grid grid-cols-3 gap-4 md:grid-cols-6">
         <StatCard label="Classes" value={String(stats.classCount)} icon={GraduationCap} />

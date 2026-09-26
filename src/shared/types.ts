@@ -66,6 +66,8 @@ export interface ClassSection {
   /** How much this class's grade counts toward the course group's composite, relative
    * to the group's other classes (default 1 — every term counts equally). */
   termWeight: number
+  /** Attendance requirement in percent (e.g. 80); null means none. */
+  minAttendance: number | null
   schedule: string | null
   room: string | null
   color: string | null
@@ -649,6 +651,20 @@ export interface AppSettings {
   /** A second place backups are copied to (a cloud-synced folder or USB stick), so a
    * lost or broken computer doesn't take the backups with it. Empty means none. */
   extraBackupFolder: string
+}
+
+/** A student whose attendance in a class is under that class's minimum. */
+export interface AttendanceWarning {
+  studentId: string
+  studentName: string
+  classId: string
+  className: string
+  /** 0–1, as in AttendanceSummary. */
+  rate: number
+  minAttendance: number
+  absent: number
+  /** Sessions that counted (present, late or absent; excused ones don't). */
+  sessions: number
 }
 
 /** Whether the Portal shows everything the teacher has here. */

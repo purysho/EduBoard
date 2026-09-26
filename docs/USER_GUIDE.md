@@ -153,6 +153,10 @@ Editing a rubric later preserves a student's existing scores wherever the criter
 
 ---
 
+## Attendance requirements
+
+If a course needs a minimum attendance (say 80%), set it in the class's **Settings → Attendance requirement**. Students below it appear on the Dashboard under **Below the attendance requirement**, with their rate and how many sessions it's based on. They're only listed once they've had three sessions, and excused absences don't count against them. **Start next term** carries the requirement over.
+
 ## Duplicate students
 
 If the same person ends up on your list twice (for example they joined through a class link as "Chen Mai" when you already had "Mai Chen"), the **Students** page shows them under **Possible duplicates**. Click **Review and merge**, check which record to keep (the arrows swap them), and **Merge**. Everything moves to the kept record: classes, scores, attendance, work, notes and their Portal login, so they carry on signing in as before. A backup is taken first. You can also merge from any student's page with **Merge**.

@@ -29,6 +29,7 @@ export function duplicateClassForNewTerm(
       termId: input.termId,
       courseGroupId: source.courseGroupId,
       termWeight: source.termWeight,
+      minAttendance: source.minAttendance,
       schedule: source.schedule,
       room: source.room,
       color: source.color,

@@ -56,6 +56,7 @@ export const classes = sqliteTable('classes', {
     onDelete: 'set null'
   }),
   termWeight: real('term_weight').notNull().default(1),
+  minAttendance: real('min_attendance'),
   schedule: text('schedule'),
   room: text('room'),
   color: text('color'),

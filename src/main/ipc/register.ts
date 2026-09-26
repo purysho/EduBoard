@@ -298,6 +298,7 @@ export function registerIpcHandlers(): void {
 
   // --- Reports ------------------------------------------------------------------------------
   handle(IpcChannels.reports.dashboardStats, () => reportsService.getDashboardStats())
+  handle(IpcChannels.reports.attendanceWarnings, () => reportsService.getAttendanceWarnings())
   handle(IpcChannels.reports.setupProgress, () => getSetupProgress())
   handle(IpcChannels.reports.classRoster, (_e, classId: string) =>
     reportsService.getClassRoster(classId)

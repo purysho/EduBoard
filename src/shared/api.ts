@@ -19,6 +19,7 @@ import type {
   UpdateCheck,
   PortalResetRequest,
   PublishStatus,
+  AttendanceWarning,
   BackupPreview,
   ClassScheduleSlot,
   ClassScheduleSlotWithClass,
@@ -184,6 +185,7 @@ export interface EduBoardApi {
   }
   reports: {
     dashboardStats(): Promise<DashboardStats>
+    attendanceWarnings(): Promise<AttendanceWarning[]>
     /** Facts behind the Dashboard's Getting started checklist. */
     setupProgress(): Promise<SetupProgress>
     classRoster(classId: string): Promise<ClassRosterRow[]>

@@ -8,7 +8,8 @@ import {
   Layers,
   Pencil,
   Plus,
-  Tags
+  Tags,
+  UserCheck
 } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
@@ -40,6 +41,14 @@ export function ClassSettingsTab(): React.JSX.Element {
   const createCourseGroup = useCreateCourseGroup()
   const [showNewTerm, setShowNewTerm] = useState(false)
   const [termWeight, setTermWeight] = useState(classSection.termWeight)
+  // Blank means no requirement.
+  const [minAttendance, setMinAttendance] = useState(
+    classSection.minAttendance === null ? '' : String(classSection.minAttendance)
+  )
+  const minAttendanceValue = minAttendance.trim() === '' ? null : Number(minAttendance)
+  const minAttendanceInvalid =
+    minAttendanceValue !== null &&
+    (Number.isNaN(minAttendanceValue) || minAttendanceValue <= 0 || minAttendanceValue > 100)
 
   async function handleCourseGroupChange(value: string): Promise<void> {
     if (value === NEW_COURSE_GROUP_VALUE) {
@@ -227,6 +236,55 @@ export function ClassSettingsTab(): React.JSX.Element {
                 </Button>
               </div>
             </FormRow>
+          )}
+        </CardBody>
+      </Card>
+
+      <Card className="h-fit">
+        <CardHeader>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <UserCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            Attendance requirement
+          </h2>
+        </CardHeader>
+        <CardBody className="space-y-3">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            If this course requires a minimum attendance, students below it are listed on the
+            Dashboard once they&apos;ve had three sessions. Excused absences don&apos;t count
+            against them.
+          </p>
+          <FormRow label="Minimum attendance (%)" hint="Leave blank for no requirement">
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                placeholder="e.g. 80"
+                value={minAttendance}
+                onChange={(e) => setMinAttendance(e.target.value)}
+                className="w-24"
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  updateClass.mutate({
+                    id: classSection.id,
+                    patch: { minAttendance: minAttendanceValue }
+                  })
+                }
+                disabled={
+                  updateClass.isPending ||
+                  minAttendanceInvalid ||
+                  minAttendanceValue === classSection.minAttendance
+                }
+              >
+                Save
+              </Button>
+            </div>
+          </FormRow>
+          {minAttendanceInvalid && (
+            <p className="text-xs text-[var(--color-danger)]">Enter a number from 1 to 100.</p>
           )}
         </CardBody>
       </Card>

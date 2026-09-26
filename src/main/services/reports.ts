@@ -11,6 +11,7 @@ import { computeAttendanceCounts } from './attendance'
 import type {
   AnalyticsOverview,
   AttendanceSummary,
+  AttendanceWarning,
   CategoryComparisonEntry,
   ClassComparisonEntry,
   ClassReport,
@@ -320,4 +321,36 @@ export function getAnalyticsOverview(): AnalyticsOverview {
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return { classComparison, categoryComparison, attendanceTrend }
+}
+
+/** Too few sessions say nothing yet: one absence in week one isn't "40% attendance". */
+export const MIN_SESSIONS_FOR_ATTENDANCE_WARNING = 3
+
+/** Students under their class's attendance minimum, across every active class that has
+ * one set, lowest first. Only active enrollments count, and excused absences don't. */
+export function getAttendanceWarnings(): AttendanceWarning[] {
+  const warnings: AttendanceWarning[] = []
+  for (const cls of listClasses(false)) {
+    if (cls.minAttendance === null || cls.minAttendance === undefined) continue
+    const summary = attendanceSummaryByStudent(cls.id)
+    for (const { student, enrollment } of getRosterForClass(cls.id)) {
+      if (enrollment.status !== 'active') continue
+      const s = summary.get(student.id)
+      if (!s || s.rate === null) continue
+      const sessions = s.present + s.late + s.absent
+      if (sessions < MIN_SESSIONS_FOR_ATTENDANCE_WARNING) continue
+      if (s.rate * 100 >= cls.minAttendance) continue
+      warnings.push({
+        studentId: student.id,
+        studentName: `${student.firstName} ${student.lastName}`,
+        classId: cls.id,
+        className: cls.name,
+        rate: s.rate,
+        minAttendance: cls.minAttendance,
+        absent: s.absent,
+        sessions
+      })
+    }
+  }
+  return warnings.sort((a, b) => a.rate - b.rate)
 }

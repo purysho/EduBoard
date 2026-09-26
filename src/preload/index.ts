@@ -86,6 +86,7 @@ const api: EduBoardApi = {
   },
   reports: {
     dashboardStats: () => invoke(IpcChannels.reports.dashboardStats),
+    attendanceWarnings: () => invoke(IpcChannels.reports.attendanceWarnings),
     setupProgress: () => invoke(IpcChannels.reports.setupProgress),
     classRoster: (classId) => invoke(IpcChannels.reports.classRoster, classId),
     classReport: (classId) => invoke(IpcChannels.reports.classReport, classId),

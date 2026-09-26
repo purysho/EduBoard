@@ -42,12 +42,14 @@ export type CreateClassInput = Omit<
   | 'seatingCols'
   | 'courseGroupId'
   | 'termWeight'
+  | 'minAttendance'
 > & {
   archived?: boolean
   seatingRows?: number
   seatingCols?: number
   courseGroupId?: string | null
   termWeight?: number
+  minAttendance?: number | null
 }
 export type UpdateClassInput = Partial<Omit<ClassSection, 'id' | 'createdAt'>>
 export type DuplicateClassForNewTermInput = {

@@ -236,6 +236,8 @@ export function useUpdateClass() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.classes })
       qc.invalidateQueries({ queryKey: queryKeys.classById(vars.id) })
+      // Includes the attendance warnings, which depend on each class's minimum.
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
       scheduleAutoPublishToPortal()
     }
   })
@@ -725,6 +727,15 @@ export function useUpdateCheck() {
     queryKey: ['updateCheck'],
     queryFn: () => api().settings.checkForUpdate(),
     staleTime: 6 * 60 * 60 * 1000
+  })
+}
+
+/** Keyed under dashboardStats, so everything that refreshes the Dashboard numbers
+ * (marking attendance, enrolling…) refreshes these too. */
+export function useAttendanceWarnings() {
+  return useQuery({
+    queryKey: [...queryKeys.dashboardStats, 'attendanceWarnings'],
+    queryFn: () => api().reports.attendanceWarnings()
   })
 }
 

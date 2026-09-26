@@ -8,6 +8,15 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 - **Start next term** (class Settings): a new class for the next term with the same setup and, if you like, the same students. They keep their Portal logins, so nobody signs up again; the new class appears for them after the next publish.
 - **Edit terms** in Settings → Terms: change a term's name, school year or dates any time. Deleting a term now asks first.
+- **Second backup folder** (Settings → Backups): every backup is also copied to a folder you choose (OneDrive, Baidu Netdisk, a USB stick), plus a daily backup while EduBoard stays open and a Dashboard reminder when the copy is missing or old.
+- **Nightly Portal backups** on the server, kept for 14 days, set up by the updater.
+- **Finished classes**: archived classes stay on the Portal read-only, so students keep their grades, feedback and materials.
+- **Duplicate students**: join links match names in either order ("Chen Mai" is "Mai Chen"), and a Merge tool combines two records, Portal login included.
+- **Update notice**: the Dashboard says when a newer EduBoard is out.
+- **Password reset requests**: students ask from the login page; you approve on the Dashboard; they choose a new password.
+- **End-of-term grade sheet**: one Excel file per course with every term, the final grade and attendance.
+- **Unpublished changes reminder** on the Dashboard, with Publish now.
+- **Attendance requirement** per class, with students below it listed on the Dashboard.
 
 ## [0.3.2] — 2026-09-26
 
