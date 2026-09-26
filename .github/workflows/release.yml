@@ -10,7 +10,36 @@ permissions:
   contents: write
 
 jobs:
+  # Pushing a v* tag names the release. Run by hand (Actions → Release → Run workflow),
+  # the tag is made here from package.json's version, at the commit being built.
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.tag.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            echo "name=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          name="v$(node -p "require('./package.json').version")"
+          existing=$(git ls-remote --tags origin "refs/tags/$name^{}" "refs/tags/$name" | head -1 | cut -f1)
+          if [ -n "$existing" ]; then
+            if [ "$(git ls-remote --tags origin "refs/tags/$name^{}" | cut -f1)" != "$GITHUB_SHA" ] && [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "::error::$name already exists at another commit. Bump the version in package.json first."
+              exit 1
+            fi
+          else
+            git tag "$name" "$GITHUB_SHA"
+            git push origin "$name"
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: tag
     strategy:
       fail-fast: false
       matrix:
@@ -79,6 +108,6 @@ jobs:
 
       - name: Upload checksums to the release
         shell: bash
-        run: gh release upload "${GITHUB_REF_NAME}" "dist/SHA256SUMS-${{ matrix.os }}.txt" --clobber
+        run: gh release upload "${{ needs.tag.outputs.name }}" "dist/SHA256SUMS-${{ matrix.os }}.txt" --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
