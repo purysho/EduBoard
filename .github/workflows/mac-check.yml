@@ -1,9 +1,15 @@
 name: Mac check (build and start, no release)
 
 # Builds both Mac apps the way the Release workflow does, without publishing, and
-# checks they start. Run from Actions → Mac check → Run workflow.
+# checks they start. Runs when the Mac build setup changes, or from Actions → Mac
+# check → Run workflow.
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/mac-check.yml
+      - tools/mac/**
+      - electron-builder.yml
 
 permissions:
   contents: read
