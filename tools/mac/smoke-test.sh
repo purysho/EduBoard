@@ -5,8 +5,10 @@
 set -o pipefail
 fail=0
 check() {
-  local app=$1 arch=$2 run=()
-  [ "$arch" = x64 ] && run=(arch -x86_64)
+  local app=$1 arch=$2 run=() wait=30
+  # Intel runs under Rosetta here, which is slow the first time: give it longer
+  # to load its window before judging it.
+  [ "$arch" = x64 ] && run=(arch -x86_64) && wait=90
   echo "== $app ($arch)"
   if [ ! -d "$app" ]; then echo "missing"; fail=1; return; fi
   codesign --verify --deep --strict --verbose=2 "$app" || { echo "::error::$arch: bad signature"; fail=1; }
@@ -25,14 +27,14 @@ check() {
   local log; log=$(mktemp)
   "${run[@]}" "$exe" >"$log" 2>&1 &
   local pid=$!
-  sleep 25
+  sleep "$wait"
   if kill -0 "$pid" 2>/dev/null; then
-    echo "started and still running after 25s"
+    echo "started and still running after ${wait}s"
     kill "$pid"; sleep 2; kill -9 "$pid" 2>/dev/null
   else
     echo "::error::$arch: the app quit or crashed on start"; fail=1
   fi
-  if grep -Eiq "uncaught|was compiled against|incompatible architecture|cannot find module" "$log"; then
+  if grep -Eiq "uncaught|was compiled against|incompatible architecture|cannot find module|failed to load the app window" "$log"; then
     echo "::error::$arch: errors while starting"; fail=1
   fi
   tail -20 "$log"
