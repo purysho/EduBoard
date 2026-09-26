@@ -2,6 +2,29 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.3.0] — 2026-09-26
+
+EduBoard gains a student Portal: a website where students see homework, hand in work, study and message you, synced from the desktop app.
+
+### Added
+
+- **Student Portal** — homework, submissions, grades, messages and study material online, in English or Chinese (with AI translation of your content and read-aloud). It installs on phones like an app and works offline.
+- **Joining the Portal** — one class join link (with QR code) where students type their own details, plus personal invite links per student. Nobody sees the class list.
+- **AI for students** — study guides, flashcards, quizzes and a study helper. When a student uses AI on homework, you see it marked "Used AI".
+- **AI for teachers** — first-pass feedback on submissions, report card comment drafts, and material generation that works on real Word/PowerPoint files. Uses Zhipu's free model, with a Test connection button.
+- **Classroom** — late and missing status, auto-graded Quick Checks, bulk attendance and publishing, CSV export of submissions, student profiles with photos, and an audit log.
+- **Getting started** — a self-ticking checklist on the Dashboard and a first-login tour for students.
+- **Updating without a terminal** — Update-EduBoard.cmd updates the live Portal and this computer's app in one go.
+
+### Changed
+
+- Large classes publish reliably: attachments and study material upload separately.
+- Friendlier due dates, tidier navigation and automatic fetching of submissions.
+
+### Fixed
+
+- Many Portal security and multi-teacher sync issues, and Windows dev-server connection errors.
+
 ## [0.2.0] — 2026-09-20
 
 EduBoard grows from a grade tracker into a fuller classroom operating system: communication, submissions, seating, multi-term grading, exit tickets, and a resource library.
