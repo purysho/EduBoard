@@ -6,6 +6,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **Start next term for every class at once** (Classes → Start next term): pick the ending and next term, untick any class that doesn't carry on, and each gets a next-term class with the same setup and, if you like, the same students and timetable; the old classes can be archived in the same step. Running it twice makes no doubles.
 - **Today** on the Dashboard: today's lessons from the timetable, each showing whether attendance is taken and which lesson plan it has, plus parent follow-ups due.
 - **Students to check on** (Dashboard): students below their class's pass mark, dropping 8 or more points over their last few scores, or with three or more concerns logged in 30 days, each with the reason.
 - **Copy last week** (Lesson plans): copies last week's plans to the same days this week as Planned, skipping any already there.

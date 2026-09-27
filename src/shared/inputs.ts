@@ -57,6 +57,24 @@ export type DuplicateClassForNewTermInput = {
   termId: string | null
   /** Enrol the class's active students in the new class too (same student records). */
   copyStudents: boolean
+  /** Give the new class the same timetable slots. */
+  copyTimetable?: boolean
+}
+
+/** Starts the next term for several classes at once (Classes → Start next term). */
+export type StartNextTermForClassesInput = {
+  classIds: string[]
+  termId: string | null
+  copyStudents: boolean
+  copyTimetable: boolean
+  /** Archive each old class once its next-term class exists. */
+  archiveOld: boolean
+}
+
+export type StartNextTermForClassesResult = {
+  created: number
+  /** Names of classes skipped because the chosen term already has a class of that name. */
+  skipped: string[]
 }
 
 export type CreateGradeCategoryInput = Omit<GradeCategory, 'id' | 'createdAt'>

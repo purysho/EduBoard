@@ -23,7 +23,8 @@ export const IpcChannels = {
     create: 'classes:create',
     update: 'classes:update',
     remove: 'classes:remove',
-    duplicateForNewTerm: 'classes:duplicateForNewTerm'
+    duplicateForNewTerm: 'classes:duplicateForNewTerm',
+    startNextTerm: 'classes:startNextTerm'
   },
   gradeCategories: {
     listByClass: 'gradeCategories:listByClass',

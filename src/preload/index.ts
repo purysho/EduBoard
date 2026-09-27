@@ -28,7 +28,8 @@ const api: EduBoardApi = {
     create: (input) => invoke(IpcChannels.classes.create, input),
     update: (id, patch) => invoke(IpcChannels.classes.update, id, patch),
     remove: (id) => invoke(IpcChannels.classes.remove, id),
-    duplicateForNewTerm: (id, input) => invoke(IpcChannels.classes.duplicateForNewTerm, id, input)
+    duplicateForNewTerm: (id, input) => invoke(IpcChannels.classes.duplicateForNewTerm, id, input),
+    startNextTerm: (input) => invoke(IpcChannels.classes.startNextTerm, input)
   },
   gradeCategories: {
     listByClass: (classId) => invoke(IpcChannels.gradeCategories.listByClass, classId),

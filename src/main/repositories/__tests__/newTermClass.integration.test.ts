@@ -4,12 +4,13 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { closeDb, initDb, setDbPathForTesting } from '../../db/client'
-import { createClass, getClass } from '../classes'
+import { createClass, getClass, listClasses } from '../classes'
 import { createStudent } from '../students'
 import { enrollStudent, getRosterForClass, updateEnrollmentStatus } from '../enrollments'
 import { createGradeCategory, listGradeCategories } from '../gradeCategories'
 import { createTerm, updateTerm } from '../terms'
-import { duplicateClassForNewTerm } from '../newTermClass'
+import { duplicateClassForNewTerm, startNextTermForClasses } from '../newTermClass'
+import { createScheduleSlot, listScheduleSlotsByClass } from '../classScheduleSlots'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let tempDir: string
@@ -143,5 +144,74 @@ describe('editing a term', () => {
     expect(updated.startDate).toBe('2027-02-20')
     expect(updated.endDate).toBe('2027-06-30')
     expect(getClass(classId)?.termId).toBe(termId)
+  })
+})
+
+describe('starting the next term for several classes at once', () => {
+  const classIn = (name: string, termId: string): string =>
+    createClass({
+      name,
+      subject: null,
+      levelType: 'k12',
+      gradeLevel: null,
+      termId,
+      schedule: null,
+      room: null,
+      color: null,
+      passMark: 60,
+      maxScore: 100,
+      gradeThresholds: DEFAULT_GRADE_THRESHOLDS
+    }).id
+
+  it('makes a next-term class for each, with students and timetable, and archives the old', () => {
+    const t1 = makeTerm('Term 1')
+    const t2 = makeTerm('Term 2')
+    const a = classIn('4A English', t1)
+    const b = classIn('4B English', t1)
+    const mai = makeStudent('Mai')
+    enrollStudent({ studentId: mai, classId: a, enrolledOn: '2026-09-01' })
+    createScheduleSlot({
+      classId: a,
+      dayOfWeek: 1,
+      startTime: '08:30',
+      endTime: '09:10',
+      room: '204'
+    })
+
+    const result = startNextTermForClasses({
+      classIds: [a, b],
+      termId: t2,
+      copyStudents: true,
+      copyTimetable: true,
+      archiveOld: true
+    })
+    expect(result).toEqual({ created: 2, skipped: [] })
+
+    const next = listClasses().filter((c) => c.termId === t2)
+    expect(next.map((c) => c.name).sort()).toEqual(['4A English', '4B English'])
+    const nextA = next.find((c) => c.name === '4A English')!
+    expect(getRosterForClass(nextA.id).map((r) => r.student.id)).toEqual([mai])
+    expect(listScheduleSlotsByClass(nextA.id)).toMatchObject([
+      { dayOfWeek: 1, startTime: '08:30', room: '204' }
+    ])
+    expect(getClass(a)?.archived).toBe(true)
+    expect(getClass(b)?.archived).toBe(true)
+  })
+
+  it('skips a class the next term already has, so running it twice makes no doubles', () => {
+    const t1 = makeTerm('Term 1')
+    const t2 = makeTerm('Term 2')
+    const a = classIn('4A English', t1)
+    const input = {
+      classIds: [a],
+      termId: t2,
+      copyStudents: false,
+      copyTimetable: false,
+      archiveOld: false
+    }
+    expect(startNextTermForClasses(input).created).toBe(1)
+    expect(startNextTermForClasses(input)).toEqual({ created: 0, skipped: ['4A English'] })
+    expect(listClasses().filter((c) => c.termId === t2)).toHaveLength(1)
+    expect(getClass(a)?.archived).toBe(false)
   })
 })

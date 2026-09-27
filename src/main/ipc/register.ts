@@ -223,6 +223,20 @@ export function registerIpcHandlers(): void {
     (_e, id: string, input: newTermClassRepo.DuplicateClassForNewTermInput) =>
       newTermClassRepo.duplicateClassForNewTerm(id, input)
   )
+  handle(
+    IpcChannels.classes.startNextTerm,
+    (_e, input: newTermClassRepo.StartNextTermForClassesInput) => {
+      if (
+        !Array.isArray(input?.classIds) ||
+        !input.classIds.every((id) => typeof id === 'string')
+      ) {
+        throw new Error('Choose the classes to carry on.')
+      }
+      // Makes many classes at once, so the same recovery point as other big changes.
+      backupService.createBackup()
+      return newTermClassRepo.startNextTermForClasses(input)
+    }
+  )
 
   // --- Grade categories --------------------------------------------------------------
   handle(IpcChannels.gradeCategories.listByClass, (_e, classId: string) =>

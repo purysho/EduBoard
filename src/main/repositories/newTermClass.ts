@@ -2,10 +2,16 @@ import { getDb } from '../db/client'
 import { getClass, createClass } from './classes'
 import { createGradeCategory, listGradeCategories } from './gradeCategories'
 import { enrollStudent, getRosterForClass } from './enrollments'
+import { createScheduleSlot, listScheduleSlotsByClass } from './classScheduleSlots'
+import { listClasses, updateClass } from './classes'
 import type { ClassSection } from '@shared/types'
-import type { DuplicateClassForNewTermInput } from '@shared/inputs'
+import type {
+  DuplicateClassForNewTermInput,
+  StartNextTermForClassesInput,
+  StartNextTermForClassesResult
+} from '@shared/inputs'
 
-export type { DuplicateClassForNewTermInput }
+export type { DuplicateClassForNewTermInput, StartNextTermForClassesInput }
 
 /**
  * Starts the next term of a class: a new class with the same setup (grading scale,
@@ -54,6 +60,56 @@ export function duplicateClassForNewTerm(
         enrollStudent({ studentId: student.id, classId: created.id, enrolledOn: today })
       }
     }
+    if (input.copyTimetable) {
+      for (const slot of listScheduleSlotsByClass(classId)) {
+        createScheduleSlot({
+          classId: created.id,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          room: slot.room
+        })
+      }
+    }
     return created
   })
+}
+
+/**
+ * The end-of-term step for every class at once: a next-term class for each chosen one,
+ * all or nothing. A class whose name the chosen term already has is skipped, so running
+ * it twice doesn't make doubles. The old classes can be archived in the same step; the
+ * Portal keeps archived classes read-only for students.
+ */
+export function startNextTermForClasses(
+  input: StartNextTermForClassesInput
+): StartNextTermForClassesResult {
+  const key = (name: string): string => name.trim().toLowerCase()
+  const taken = new Set(
+    listClasses(true)
+      .filter((c) => c.termId === input.termId && !c.archived)
+      .map((c) => key(c.name))
+  )
+  const skipped: string[] = []
+  let created = 0
+  getDb().transaction(() => {
+    for (const classId of input.classIds) {
+      const source = getClass(classId)
+      if (!source) continue
+      if (source.termId === input.termId || taken.has(key(source.name))) {
+        skipped.push(source.name)
+        continue
+      }
+      duplicateClassForNewTerm(classId, {
+        name: source.name,
+        termId: input.termId,
+        copyStudents: input.copyStudents,
+        copyTimetable: input.copyTimetable
+      })
+      taken.add(key(source.name))
+      created++
+      if (input.archiveOld) updateClass(classId, { archived: true })
+    }
+  })
+  return { created, skipped }
 }

@@ -178,6 +178,8 @@ When a class carries on into a new term, open the class's **Settings** tab and c
 
 Leave **Bring the students across** ticked to enrol the same students in the new class. They're the same students, not copies, so anyone who already has a Portal account doesn't sign up again: the new class appears in their Portal after your next **Publish**. Students who dropped the old class stay behind. Grades, attendance and homework stay with the old class.
 
+**All your classes at once:** on the **Classes** page, **Start next term** lists the classes in the term that's ending (picked for you: the term most of your classes are in) and makes a next-term class for each one you leave ticked, under the next term. It can bring the students across, keep the same timetable (so the Dashboard's **Today** card carries on), and archive the old classes in the same step. A class the next term already has is left alone, so running it twice doesn't make doubles. A backup is taken first.
+
 When the old term is over, **Archive** it (class Settings → Archive). It leaves your class list, and on the Portal students see it under **Finished classes**: their grades, feedback, work and materials stay readable, but nothing more can be handed in and its join links stop working.
 
 ## Composite grading across terms

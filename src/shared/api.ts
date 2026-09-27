@@ -88,6 +88,8 @@ import type {
   UpdateAssessmentInput,
   UpdateClassInput,
   DuplicateClassForNewTermInput,
+  StartNextTermForClassesInput,
+  StartNextTermForClassesResult,
   UpdateGradeCategoryInput,
   UpdateLessonPlanInput,
   UpdateStudentInput,
@@ -147,6 +149,8 @@ export interface EduBoardApi {
     update(id: string, patch: UpdateClassInput): Promise<ClassSection>
     remove(id: string): Promise<void>
     duplicateForNewTerm(id: string, input: DuplicateClassForNewTermInput): Promise<ClassSection>
+    /** Next-term classes for several classes at once. */
+    startNextTerm(input: StartNextTermForClassesInput): Promise<StartNextTermForClassesResult>
   }
   gradeCategories: {
     listByClass(classId: string): Promise<GradeCategory[]>

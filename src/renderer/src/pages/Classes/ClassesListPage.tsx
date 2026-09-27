@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { GraduationCap, Plus } from 'lucide-react'
+import { CopyPlus, GraduationCap, Plus } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useClasses } from '@renderer/lib/queries'
 import { ClassCard } from './ClassCard'
 import { ClassFormModal } from './ClassFormModal'
+import { NextTermAllModal } from './NextTermAllModal'
 
 export function ClassesListPage(): React.JSX.Element {
   const [showArchived, setShowArchived] = useState(false)
   const { data: classes, isLoading } = useClasses(showArchived)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showNextTerm, setShowNextTerm] = useState(false)
 
   const visibleClasses = showArchived ? classes : classes?.filter((c) => !c.archived)
 
@@ -29,6 +31,16 @@ export function ClassesListPage(): React.JSX.Element {
               />
               Show archived
             </label>
+            {!!classes?.some((c) => !c.archived) && (
+              <Button
+                variant="secondary"
+                onClick={() => setShowNextTerm(true)}
+                title="Next-term classes for all your classes at once"
+              >
+                <CopyPlus size={15} className="mr-1 inline" aria-hidden />
+                Start next term
+              </Button>
+            )}
             <Button variant="primary" onClick={() => setShowAddModal(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
               New class
@@ -66,6 +78,9 @@ export function ClassesListPage(): React.JSX.Element {
       )}
 
       <ClassFormModal open={showAddModal} onClose={() => setShowAddModal(false)} />
+      {showNextTerm && classes && (
+        <NextTermAllModal open onClose={() => setShowNextTerm(false)} classes={classes} />
+      )}
     </div>
   )
 }

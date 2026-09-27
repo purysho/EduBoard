@@ -17,6 +17,7 @@ import type {
   UpdateAssessmentInput,
   UpdateClassInput,
   DuplicateClassForNewTermInput,
+  StartNextTermForClassesInput,
   UpdateGradeCategoryInput,
   UpdateLessonPlanInput,
   UpdateStudentInput,
@@ -224,6 +225,17 @@ export function useDuplicateClassForNewTerm() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.classes })
       qc.invalidateQueries({ queryKey: ['students'] })
+    }
+  })
+}
+
+export function useStartNextTerm() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: StartNextTermForClassesInput) => api().classes.startNextTerm(input),
+    onSuccess: () => {
+      // New classes, rosters and timetable slots everywhere.
+      qc.invalidateQueries()
     }
   })
 }
