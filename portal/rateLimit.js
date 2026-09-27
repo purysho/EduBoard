@@ -103,7 +103,10 @@ const LIMITS = {
   // Password changes (needs the current password, so it's another guessing oracle).
   passwordChangePerAccount: { windowMs: 15 * MINUTE, max: envInt('RATE_PASSWORD_CHANGE', 5) },
   // "Forgot password" requests per IP: each one lands in a teacher's list.
-  resetRequestPerIp: { windowMs: 60 * MINUTE, max: envInt('RATE_RESET_REQUEST_PER_IP', 10) }
+  resetRequestPerIp: { windowMs: 60 * MINUTE, max: envInt('RATE_RESET_REQUEST_PER_IP', 10) },
+  // Anonymous usage pings (routes/usage.js): an app sends at most one a week, so a few
+  // an hour per address covers a school where many teachers share one connection.
+  usagePingPerIp: { windowMs: 60 * MINUTE, max: envInt('RATE_USAGE_PING_PER_IP', 30) }
 }
 
 module.exports = { RateLimiter, rateLimit, tooMany, LIMITS }

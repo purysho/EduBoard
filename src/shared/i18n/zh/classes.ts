@@ -508,5 +508,27 @@ export const CLASSES: Record<string, string> = {
   'Every point category needs a name.': '每个积分类别都需要名称。',
   'A point category’s name can be at most 40 characters.': '积分类别名称最多 40 个字符。',
   'Two point categories have the same name.': '有两个积分类别同名。',
-  'What class points are for: {list}': '课堂积分类别：{list}'
+  'What class points are for: {list}': '课堂积分类别：{list}',
+  'Also sent to {name}.': '已同时发送到 {name}。',
+  'Posted, but not sent to {name}: {reason}': '已发布，但未能发送到 {name}：{reason}',
+  'Also send to': '同时发送到',
+  'No group chat': '不发送到群',
+  '(text only; the photo stays on the Portal)': '（只发送文字，照片仍在门户上）',
+  'Seen by {seen} of {total} families': '{total} 个家庭中已有 {seen} 个查看',
+  'Not seen yet: {names}': '尚未查看：{names}',
+  'A family has seen a post once they open the Portal after it went up.':
+    '动态发布后，家庭打开学生门户即算已查看。',
+  '{n} students have no Portal login yet, so their families can’t see posts.':
+    '{n} 名学生还没有门户账号，其家庭看不到动态。',
+  'Seating chart mode': '座位表模式',
+  'Arrange seats': '安排座位',
+  'Give points': '加分',
+  'Tap a seat for +1, or its − for −1. The number is this week’s points, the same as in the Classroom tab.':
+    '点座位加 1 分，点座位上的 − 减 1 分。数字是本周积分，与课堂页相同。',
+  'Something is recorded in {fields}. Point to the icon to see it.':
+    '{fields} 中有记录。将鼠标移到图标上即可查看。',
+  'Group chat': '群聊',
+  'Needs internet. Everyone in the group sees it.': '需要联网。群里的所有人都能看到。',
+  'Sent to {name}.': '已发送到 {name}。',
+  'Send to group chat': '发送到群聊'
 }

@@ -36,6 +36,13 @@ router.post('/teachers', (req, res) => {
   res.json({ id, name, syncSecret })
 })
 
+// Anonymous desktop usage (routes/usage.js): weekly active installs and how many are
+// still active 4 and 12 weeks after they started.
+router.get('/usage', (req, res) => {
+  const weeks = Math.min(104, Math.max(1, Number.parseInt(req.query.weeks, 10) || 26))
+  res.json(require('./usage').usageSummary(weeks))
+})
+
 // A basic roster of who's using this Portal and how much they've published — the seed
 // of a school-level admin view (see EduBoardRoadMap.MD Phase 6), not a full dashboard.
 router.get('/teachers', (_req, res) => {

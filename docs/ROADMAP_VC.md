@@ -86,7 +86,7 @@ Effort: S = days, M = 1–3 weeks, L = a month or more, for one developer.
 9. **Word lists by unit** with Portal practice and in-class checks. M–L.
 10. **Message translation for families** (AI, needs internet). S–M.
 
-Items 1–4 fit in one release. 5–8 make the Portal something a school would pay to have
+Items 1–4 are **built** (September 2026, after 0.4.0), along with the opt-in usage ping from section 5. Items 5–8 make the Portal something a school would pay to have
 hosted.
 
 ## 4. Connecting to other apps and logins
@@ -159,7 +159,7 @@ nothing outside the teacher's computer, so most of this applies only to the host
 
 ### What an investor will ask for (collect before pitching)
 
-- **Active teachers per week** and how many are still active after 4 and 12 weeks. The app needs an opt-in, anonymous "I'm still using it" ping to measure this _(to build, off by default)_.
+- **Active teachers per week** and how many are still active after 4 and 12 weeks. EduBoard now has an opt-in, anonymous weekly ping (off by default); the Portal admin page shows these numbers once the live Portal is updated.
 - **Schools with 3 or more teachers** using it, a sign of the paid school plan.
 - **Portal adoption:** share of teachers who publish, and families who log in.
 - **Two or three pilot schools** (ideally one in China, one international school) with a quote each.

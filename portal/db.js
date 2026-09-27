@@ -340,6 +340,37 @@ ensureColumn('invites', 'student_id', 'student_id TEXT')
 // teacher includes points in the family digest.
 ensureColumn('grades', 'points', 'points TEXT')
 
+// Anonymous usage pings (routes/usage.js): one row per install per week, and each
+// install's first week. No names, schools or addresses.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS usage_installs (
+    install_id TEXT PRIMARY KEY,
+    first_week TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS usage_pings (
+    install_id TEXT NOT NULL,
+    week TEXT NOT NULL,
+    version TEXT NOT NULL,
+    os TEXT NOT NULL,
+    language TEXT NOT NULL,
+    classes TEXT NOT NULL,
+    students TEXT NOT NULL,
+    portal INTEGER NOT NULL,
+    PRIMARY KEY (install_id, week)
+  );
+`)
+
+// Read receipts for Class Story: an account "has seen" a post once its Class Story feed
+// has shown it. Only the first time is kept.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS post_reads (
+    post_id TEXT NOT NULL REFERENCES class_posts(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    read_at TEXT NOT NULL,
+    PRIMARY KEY (post_id, account_id)
+  );
+`)
+
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
 // can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and

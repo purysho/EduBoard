@@ -17,8 +17,8 @@ import type { ClassSection } from '@shared/types'
 import { makeGroups, pickNext, startOfWeekIso } from '@shared/classroomTools'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { useAttendanceByClass, useClassRoster, useSettings } from '@renderer/lib/queries'
-import { resolvePointCategories } from '@shared/pointCategories'
+import { useAttendanceByClass, useClassRoster } from '@renderer/lib/queries'
+import { PointCategoryChips } from '@renderer/components/PointCategoryChips'
 import { todayIso } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { tr } from '@shared/i18n'
@@ -353,8 +353,6 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
     queryKey: key,
     queryFn: () => window.api.behaviourPoints.totals(classId, week)
   })
-  const { data: settings } = useSettings()
-  const categories = resolvePointCategories(settings?.pointCategories).filter((c) => !c.hidden)
   const [category, setCategory] = useState<string | null>(null)
   const byId = new Map((totals ?? []).map((t) => [t.studentId, t]))
   const refresh = (): void => void qc.invalidateQueries({ queryKey: key })
@@ -384,24 +382,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
         </Button>
       </CardHeader>
       <CardBody className="space-y-3">
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-[var(--color-text-muted)]">{tr('For:')}</span>
-          {[null, ...categories].map((c) => (
-            <button
-              key={c?.id ?? 'none'}
-              aria-pressed={category === (c?.id ?? null)}
-              className={cn(
-                'rounded-full border px-2 py-0.5',
-                category === (c?.id ?? null)
-                  ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
-                  : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
-              )}
-              onClick={() => setCategory(c?.id ?? null)}
-            >
-              {c?.name ?? tr('No reason')}
-            </button>
-          ))}
-        </div>
+        <PointCategoryChips value={category} onChange={setCategory} />
         <div className="grid grid-cols-3 gap-2 lg:grid-cols-4 xl:grid-cols-6">
           {kids.map((k) => {
             const t = byId.get(k.id)

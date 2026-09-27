@@ -368,6 +368,13 @@ const api: EduBoardApi = {
     word: (what) => invoke(IpcChannels.office.word, what),
     slides: (planId) => invoke(IpcChannels.office.slides, planId)
   },
+  usagePing: {
+    preview: () => invoke(IpcChannels.usagePing.preview)
+  },
+  groupChats: {
+    send: (groupId, text, title) => invoke(IpcChannels.groupChats.send, groupId, text, title),
+    test: (group) => invoke(IpcChannels.groupChats.test, group)
+  },
   newsletter: {
     facts: (choice) => invoke(IpcChannels.newsletter.facts, choice),
     draft: (input) => invoke(IpcChannels.newsletter.draft, input)

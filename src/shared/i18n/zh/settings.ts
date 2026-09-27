@@ -374,5 +374,46 @@ export const SETTINGS: Record<string, string> = {
   'Add your first student, or import a roster from Settings.':
     '添加第一名学生，或在“设置”中导入名单。',
   'Grade / cohort': '年级 / 届',
-  'General settings': '常规设置'
+  'General settings': '常规设置',
+  'EduBoard is connected to this group. Posts from the teacher will appear here.':
+    'EduBoard 已连接到本群。老师发布的动态将显示在这里。',
+  'That isn’t a DingTalk or WeCom robot address.': '这不是钉钉或企业微信的机器人地址。',
+  'There’s nothing to send.': '没有可发送的内容。',
+  'Couldn’t reach the group chat. Check the internet connection.':
+    '无法连接到群聊，请检查网络连接。',
+  'That group chat is no longer set up.': '该群聊已不在设置中。',
+  DingTalk: '钉钉',
+  WeCom: '企业微信',
+  'Class group chats': '班级群聊',
+  'Post Class Story updates and newsletters into a class’s DingTalk (钉钉) or WeCom (企业微信) group. In the group’s settings, add a custom robot (DingTalk: 群设置 → 机器人 → 自定义; WeCom: 添加群机器人) and paste its webhook address here. Everyone in the group sees what you send, so never send anything about a single student.':
+    '把班级动态和简报发送到班级的钉钉或企业微信群。在群设置中添加自定义机器人（钉钉：群设置 → 机器人 → 自定义；企业微信：添加群机器人），然后把它的 Webhook 地址粘贴到这里。群里的所有人都能看到你发送的内容，所以不要发送任何关于某一位学生的信息。',
+  'Remove {name}': '删除 {name}',
+  'e.g. 4B parents': '例如：四（2）班家长群',
+  'Robot webhook address': '机器人 Webhook 地址',
+  '{service} group robot': '{service}群机器人',
+  'Signing secret (加签), if the robot uses one': '加签密钥（如果机器人使用加签）',
+  'Not for one class': '不属于某个班级',
+  'Sent. Check the group for the message.': '已发送，请到群里查看消息。',
+  'Send a test message': '发送测试消息',
+  'Save group': '保存群聊',
+  'Add a group chat': '添加群聊',
+  'Show on the seating chart': '在座位表上显示',
+  'Help improve EduBoard': '帮助改进 EduBoard',
+  'Tell the EduBoard project, once a week, that this copy is still in use':
+    '每周告诉 EduBoard 项目一次：这份软件仍在使用',
+  'Off unless you turn it on. It sends only what’s below: a random number made up on this computer, the version, the system and language, and roughly how many classes and students (as a range). Never names, your school, grades or anything a student wrote. Turning it off forgets the random number. Needs internet; nothing happens without it.':
+    '除非你开启，否则不会发送。只发送下面显示的内容：本机随机生成的编号、版本、系统和语言，以及大致的班级和学生数量（范围）。绝不发送姓名、学校、成绩或学生写的任何内容。关闭后会删除这个随机编号。需要联网；没有网络时什么也不会发送。',
+  'What is sent each week': '每周发送的内容',
+  'What would be sent': '将会发送的内容',
+  '(made when you turn this on)': '（开启时生成）',
+  'Give the group a name.': '请给群聊起个名字。',
+  'That isn’t a DingTalk or WeCom robot address. Copy the whole webhook address from the robot’s settings.':
+    '这不是钉钉或企业微信的机器人地址。请从机器人设置中复制完整的 Webhook 地址。',
+  'A DingTalk signing secret starts with SEC.': '钉钉的加签密钥以 SEC 开头。',
+  'DingTalk refused the message because of the robot’s security setting. Use signing (加签) and paste the secret here, or add a keyword that the message contains.':
+    '因机器人的安全设置，钉钉拒绝了这条消息。请使用加签并在此粘贴密钥，或添加一个消息中包含的关键词。',
+  'The group’s robot address is no longer valid. Copy it again from the group.':
+    '群机器人地址已失效，请从群里重新复制。',
+  'The group chat didn’t accept the message ({reason}).': '群聊没有接受这条消息（{reason}）。',
+  'no reply': '无回复'
 }

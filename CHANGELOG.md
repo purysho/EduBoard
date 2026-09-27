@@ -4,6 +4,16 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+**If you run a Portal, update it** (Update-Live-Portal): read receipts, class points in the digest and the usage count need the updated Portal.
+
+### Added
+
+- **What class points are for** (Settings → Your lists): rename EduBoard's five categories, add your own, or use a ready-made set (德智体美劳, or Respect / Effort / Teamwork…). The Classroom tab and seating chart give points by category; report cards (printed and Word) show each student's points per category (a switch in Settings → Report cards); the family digest can show the past week's (off unless you turn it on). School packs carry the categories. Points given before this keep their category.
+- **Seating chart: Give points.** Tap a seat for +1, or its − for −1, with this week's points on each seat. Student fields marked *Show on the seating chart* (allergies, support plan…) put a small icon on the seat when something is recorded; hidden while presenting.
+- **Class Story read receipts**: "Seen by 24 of 30 families" under each post, with who hasn't seen it yet and how many students have no Portal login.
+- **DingTalk (钉钉) and WeCom (企业微信) group chats** (Settings → Class group chats): paste a group robot's webhook address (with DingTalk signing if used), send a test message, then send each Class Story post and newsletters to the group. Needs internet; only those two services' addresses are accepted.
+- **Help improve EduBoard** (Settings): an anonymous "still using it" ping, at most once a week, off unless the teacher turns it on. It sends only a random id, the version, system, language and rough class and student counts, and Settings shows exactly what it sends. The Portal's admin page shows weekly active copies and how many are still in use 4 and 12 weeks later.
+
 ## [0.4.0] — 2026-09-27
 
 **If you run a Portal, update it too** (Update-Live-Portal) after installing 0.4.0: the digest preview and settings, newsletters in the digest, emailing your week to yourself, and removing deleted students from the Portal all need the updated Portal. Everything else works with the Portal you have.

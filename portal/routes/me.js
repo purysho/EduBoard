@@ -495,6 +495,15 @@ router.get('/posts', (req, res) => {
     )
     .all(...classIds)
 
+  // Showing the feed is what counts as seeing a post (for the teacher's read receipts).
+  const markRead = db.prepare(
+    'INSERT OR IGNORE INTO post_reads (post_id, account_id, read_at) VALUES (?, ?, ?)'
+  )
+  const now = new Date().toISOString()
+  db.transaction(() => {
+    for (const r of rows) markRead.run(r.id, req.accountId, now)
+  })()
+
   res.json(
     rows.map((r) => ({
       id: r.id,

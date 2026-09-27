@@ -23,7 +23,7 @@ built since the last release).
 - Electron 39 + electron-vite + React 19 + Tailwind v4 (colours are CSS variables in
   `src/renderer/src/styles.css`) + drizzle-orm + better-sqlite3 (aliased to
   `better-sqlite3-multiple-ciphers` for encryption).
-- Migrations: `src/main/db/migrations.ts` (latest id 32). Add a new numbered one.
+- Migrations: `src/main/db/migrations.ts` (latest id 33). Add a new numbered one.
 - A new IPC call goes in four places: `src/shared/ipc.ts`, `src/shared/api.ts`,
   `src/preload/index.ts`, and a `handle()` in `src/main/ipc/register.ts` (which
   refuses non-`security:` channels while the app is locked).
@@ -71,21 +71,31 @@ built since the last release).
    newsletterService.ts, shared/newsletter.ts, pages/Newsletter). The user's rule
    still applies: AI suggests, never writes the whole thing unchecked; "needs
    internet" next to AI.
-7. **Competitor website**: https://www.educationtek.com/en-US/en-solution/smart-school-system.html
-   (HappyClass Smart School System: homework guide videos, flipped classroom,
-   IoT smart classroom, vocabulary system, SPOC live/on-demand courses). Fold
-   into the competitor research doc.
+7. ~~Competitor website~~ and 9. ~~Competitor list~~ **done**: `docs/ROADMAP_VC.md`
+   (HappyClass, 20-odd competitors, logins plan, VC case). Its "top ten" list is the
+   feature backlog.
 8. ~~Connect to other apps~~ **Word/PowerPoint done** (`src/main/services/officeExport.ts`,
    `docx` + `pptxgenjs`; IPC `office:word` / `office:slides`). Excel already existed
    (gradebook, course grade sheet, export everything, roster import). WeChat, Alipay,
    Google, Apple ID and SSO logins: planned in `docs/ROADMAP_VC.md` with what each
    needs; none built yet.
-9. **Competitor list**: research ClassDojo, Seesaw, Google Classroom, PowerSchool,
-   Toddle, ManageBac, Veracross, Class Charts, Bloomz, Remind, ParentSquare,
-   SchoolCues, 钉钉/DingTalk, 企业微信/WeCom, 班级优化大师, 晓黑板 and similar.
-   List features we could adapt to EduBoard (offline-first, teacher-owned
-   data, China-friendly), with effort and value, and put it in a doc for the
-   VC pitch.
+10. ~~Top four from the roadmap, plus the usage ping~~ **done** (after 0.4.0, unreleased):
+    - Point categories: `src/shared/pointCategories.ts` (built-in five and ready-made
+      sets are saved with a blank name = usual name in the UI language),
+      `behaviour_points.category` (migration 33), `pointSummaries()`, report card
+      `showPoints`, digest part `points` (off unless chosen; Portal `grades.points`).
+    - Seating chart "Give points" mode and `StudentField.onSeatingChart` icons.
+    - Read receipts: Portal `post_reads`, marked when a family's `/api/me/posts` feed
+      loads; `/api/sync/posts` returns `seenCount/audience/notSeen/noLogin`.
+    - Group chats: `src/shared/groupChats.ts` + `src/main/services/groupChat.ts`. Only
+      `oapi.dingtalk.com/robot/send` and `qyapi.weixin.qq.com/cgi-bin/webhook/send`
+      are accepted. Real replies checked: DingTalk unknown robot = 300005, WeCom = 93000.
+    - Usage ping: `src/shared/usagePing.ts`, `src/main/services/usagePing.ts`, sent to
+      `https://portal.edu-board.com/api/usage/ping` (Portal `routes/usage.js`); admin
+      page shows weekly active copies and 4/12-week retention. **The live Portal needs
+      updating (Update-Live-Portal) before pings are counted.**
+    Next from the roadmap: conference booking, forms / permission slips, homework
+    help clips with question-level scores, flipped-lesson preview.
 
 ## Still unverified from last session
 

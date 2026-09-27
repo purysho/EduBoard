@@ -14,6 +14,7 @@ import {
 import { uiLanguage, type Terminology } from './i18n'
 import type { AttendanceCode } from './attendanceCodes'
 import type { PointCategory } from './pointCategories'
+import type { GroupChat } from './groupChats'
 import type { ReportCardLayout, SavedTemplate } from './templates'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
@@ -552,6 +553,13 @@ export interface ClassPost {
   body: string
   hasImage: boolean
   createdAt: string
+  /** Read receipts (missing from older Portals): how many students' families
+   * have seen the post, out of those with a Portal login, who hasn't, and how many
+   * students have no login at all. */
+  seenCount?: number
+  audience?: number
+  notSeen?: string[]
+  noLogin?: number
 }
 
 /** A QR check-in session's live state for one class — open/closed, which date it's
@@ -711,6 +719,11 @@ export interface AppSettings {
   accentColor: string
   /** The school's own attendance codes, plus any renaming of the built-in four. */
   attendanceCodes: AttendanceCode[]
+  /** Send an anonymous weekly "still using it" ping (shared/usagePing.ts). Off unless
+   * the teacher turns it on. */
+  usagePing: boolean
+  /** DingTalk / WeCom class groups the teacher can post to (robot webhooks). */
+  groupChats: GroupChat[]
   /** What class points are for; empty means EduBoard's five. */
   pointCategories: PointCategory[]
   /** What the family weekly digest includes. */
@@ -751,6 +764,9 @@ export interface LogQuickAdd {
 export interface StudentField {
   id: string
   label: string
+  /** Show an icon on the seating chart for students with something recorded here
+   * (allergies, a support plan…). Hidden while presenting. */
+  onSeatingChart?: boolean
 }
 
 export const DEFAULT_LOG_QUICK_ADDS: LogQuickAdd[] = [
@@ -899,6 +915,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     points: false
   },
   pointCategories: [],
+  groupChats: [],
+  usagePing: false,
   teacherEmail: '',
   savedTemplates: [],
   reportCard: {},

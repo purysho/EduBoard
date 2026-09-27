@@ -48,6 +48,7 @@ app.use(express.json({ limit: '100kb' }))
 app.use('/api/invites', require('./routes/invites'))
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/admin', require('./routes/admin'))
+app.use('/api/usage', require('./routes/usage').router)
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 

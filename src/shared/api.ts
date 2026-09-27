@@ -1,5 +1,7 @@
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
+import type { GroupChat } from './groupChats'
+import type { UsagePing } from './usagePing'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -495,6 +497,16 @@ export interface EduBoardApi {
     print(): Promise<{ saved: boolean; filePath?: string }>
     /** Emails it to the teacher's own address; returns that address. */
     email(): Promise<string>
+  }
+  usagePing: {
+    /** Exactly what the anonymous weekly ping sends (the id is blank while it's off). */
+    preview(): Promise<UsagePing>
+  }
+  groupChats: {
+    /** Posts text into a saved DingTalk / WeCom group (needs internet). */
+    send(groupId: string, text: string, title: string): Promise<void>
+    /** Sends a short "connected" message to a group being set up, before it's saved. */
+    test(group: Pick<GroupChat, 'webhook' | 'secret'>): Promise<void>
   }
   office: {
     /** Saves a Word document (asks where). Letters and report cards are for a class,

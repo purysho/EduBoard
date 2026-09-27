@@ -306,6 +306,13 @@ export const IpcChannels = {
     word: 'office:word',
     slides: 'office:slides'
   },
+  usagePing: {
+    preview: 'usagePing:preview'
+  },
+  groupChats: {
+    send: 'groupChats:send',
+    test: 'groupChats:test'
+  },
   newsletter: {
     facts: 'newsletter:facts',
     draft: 'newsletter:draft'

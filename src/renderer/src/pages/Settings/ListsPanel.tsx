@@ -23,13 +23,12 @@ import {
 } from '@shared/attendanceCodes'
 import type { AttendanceStatus } from '@shared/types'
 import {
-  BUILT_IN_POINT_CATEGORY_IDS,
   applyPointCategorySet,
   editablePointCategories,
   newPointCategoryId,
   pointCategoryProblem,
   pointCategorySets,
-  resolvePointCategories,
+  usualPointCategoryName,
   type PointCategory
 } from '@shared/pointCategories'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
@@ -194,6 +193,18 @@ export function ListsPanel(): React.JSX.Element | null {
                     setFields(f.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
                   }
                 />
+                <label className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                  <input
+                    type="checkbox"
+                    checked={field.onSeatingChart === true}
+                    onChange={(e) =>
+                      setFields(
+                        f.map((x, j) => (j === i ? { ...x, onSeatingChart: e.target.checked } : x))
+                      )
+                    }
+                  />
+                  {tr('Show on the seating chart')}
+                </label>
                 <button
                   aria-label={`Remove ${field.label || 'field'}`}
                   className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
@@ -422,9 +433,7 @@ export function ListsPanel(): React.JSX.Element | null {
           </p>
           <div className="space-y-1.5">
             {pc.map((cat, i) => {
-              const usual = BUILT_IN_POINT_CATEGORY_IDS.includes(cat.id)
-                ? resolvePointCategories([{ id: cat.id, name: '' }])[0].name
-                : tr('e.g. Effort')
+              const usual = usualPointCategoryName(cat.id) ?? tr('e.g. Effort')
               const set = (patch: Partial<PointCategory>): void =>
                 setCats(pc.map((x, j) => (j === i ? { ...x, ...patch } : x)))
               return (

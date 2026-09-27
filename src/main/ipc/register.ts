@@ -107,6 +107,8 @@ import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr } from '@shared/i18n'
 import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
+import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
+import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
 import type { NewsletterFact, NewsletterStructure } from '@shared/newsletter'
 import type { NewsletterSourceChoice } from '@shared/summaries'
 import {
@@ -434,7 +436,9 @@ export function registerIpcHandlers(): void {
       })
     }
     if (patch && 'terminology' in patch) saveUiPrefs({ terminology: patch.terminology ?? {} })
-    return settingsRepo.updateSettings(patch)
+    const saved = settingsRepo.updateSettings(patch)
+    if (patch && 'usagePing' in patch) usagePingSettingChanged(saved.usagePing === true)
+    return saved
   })
   handle(IpcChannels.settings.appUpdateInfo, () => getAppUpdateInfo())
   handle(IpcChannels.settings.installAppUpdate, () => installAppUpdate())
@@ -1112,6 +1116,20 @@ export function registerIpcHandlers(): void {
   })
   handle(IpcChannels.office.slides, async (_e, planId: string) =>
     saveOffice(await lessonPlanPptx(String(planId)), tr('Lesson plan'), 'pptx')
+  )
+  handle(IpcChannels.usagePing.preview, () => usagePingPreview())
+  handle(IpcChannels.groupChats.send, (_e, groupId: string, text: string, title: string) =>
+    sendToSavedGroupChat(String(groupId), String(text ?? ''), String(title ?? ''))
+  )
+  handle(IpcChannels.groupChats.test, (_e, group: { webhook?: unknown; secret?: unknown }) =>
+    sendToGroupChat(
+      {
+        webhook: String(group?.webhook ?? ''),
+        secret: typeof group?.secret === 'string' ? group.secret : ''
+      },
+      tr('EduBoard is connected to this group. Posts from the teacher will appear here.'),
+      'EduBoard'
+    )
   )
   handle(IpcChannels.newsletter.facts, (_e, choice: NewsletterSourceChoice) =>
     gatherNewsletterFacts(choice)

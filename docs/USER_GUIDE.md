@@ -232,6 +232,10 @@ Today's date is there by default — add more with the date picker and **+ Add d
 
 The layout is saved per class automatically — no separate save step.
 
+**Give points** (top right) turns the chart into a way to give class points: pick what the point is for, then tap a seat for +1 or its **−** for −1. Each seat shows the student's points this week, the same as the Classroom tab. **Arrange seats** switches back.
+
+If a student field is marked **Show on the seating chart** (in **Settings → Your lists**, next to the field's name), a seat shows a small ⓘ when something is recorded in it for that student, such as an allergy or a support plan. Point to it to read it. The icons are hidden while presenting.
+
 ---
 
 ## The Classroom tab
@@ -241,7 +245,7 @@ Each class has a **Classroom** tab for the lesson itself. It's fine to put on th
 - **Random name**: press **Pick a name**. Nobody comes up twice until everyone has had a turn; **Start again** resets the round.
 - **Groups**: choose **Groups of** a size or a **Number of groups**, then **Make groups**. **Shuffle** until you like them.
 - **Timer**: pick 1–15 minutes, **Start**, **Pause**, **Reset**. The corner button makes it full screen, and it chimes when time's up.
-- **Class points**: tap a student's name for +1, or **−** to take one away, with an optional reason (Helping others, On task…). Totals start again each Monday; **Undo last** takes back a mis-tap.
+- **Class points**: pick what the point is for, then tap a student's name for +1, or **−** to take one away. Totals start again each Monday; **Undo last** takes back a mis-tap. What points are for is set in **Settings → Your lists → What class points are for**: rename EduBoard's five (Helping others, On task…), add your own, or **Use a ready-made set** such as 德智体美劳 or Respect / Effort / Teamwork. A category you stop using is hidden, not deleted. Report cards show each student's points per category (switch it off in **Settings → Report cards**), and the family digest can show the past week's.
 
 Students marked **absent** or **excused** today are left out of the picker and groups (untick the box at the top to include them).
 
@@ -359,7 +363,7 @@ Parent letters, Class Story posts and lesson plans each have **Start from a temp
 At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Your lists**). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.
 ## Weekly digest, your week and newsletters
 
-The **weekly digest** is the Monday-morning email the Portal sends each family with an email on file. In **Settings → General**, under the digest email settings, tick what families get: grades, attendance, homework due this week, Class Story and a reminder about unread messages. It's written in the language EduBoard is in. **Settings → Portal sync → Preview** shows exactly what each family would receive this week, and says which families haven't given an email yet.
+The **weekly digest** is the Monday-morning email the Portal sends each family with an email on file. In **Settings → General**, under the digest email settings, tick what families get: grades, attendance, homework due this week, Class Story, a reminder about unread messages and, if you turn it on, each child's class points from the past week by category. It's written in the language EduBoard is in. **Settings → Portal sync → Preview** shows exactly what each family would receive this week, and says which families haven't given an email yet.
 
 **Your week** (the button at the top of the Dashboard) is your own summary across every class: what you taught and what's coming up, homework due and homework not handed in, students to check on and parent follow-ups owed. **Print (PDF)** saves it; **Email it to me** sends it to the address in **Settings → Your email address**, using the same email settings as the digest.
 
@@ -368,9 +372,23 @@ The **weekly digest** is the Monday-morning email the Portal sends each family w
 1. Tick the classes and choose who it's for: **Friendly** (families), **Pyramid** (school leaders: the main message first, then what supports it), **Simple** (young readers), or **My own sections**.
 2. Tick what to include (lessons taught, lessons coming up, homework due, Class Story posts, and, if you like, class averages and attendance) and untick any single fact you don't want. Add your own notes, one per line.
 3. **Arrange for me** puts everything under the headings, word for word, with no internet. **Suggest wording with AI** (needs internet) words and orders the same facts and notes; it isn't allowed to add anything, and leaves [gaps] where it would need information you haven't given.
-4. Edit the text, then **Add to this week's family digest** (it goes at the top until Sunday), **Post to Class Story** (one class), or **Copy**. Fill in any [gaps] first.
+4. Edit the text, then **Add to this week's family digest** (it goes at the top until Sunday), **Post to Class Story** (one class), **Send to group chat** (a DingTalk or WeCom group, below), or **Copy**. Fill in any [gaps] first.
 
 Nothing about any single student goes into a newsletter.
+
+### Class Story read receipts
+
+Under each Class Story post, **Seen by 24 of 30 families** shows how many students' families have opened the Portal since it went up. Click it to see who hasn't yet, and how many students have no Portal login at all (their families can't see posts). Needs the updated Portal.
+
+### DingTalk and WeCom group chats
+
+Most classes in China already have a parents' group on DingTalk (钉钉) or WeCom (企业微信). EduBoard can post into it through the group's robot:
+
+1. In the group's settings, add a **custom robot** (DingTalk: 群设置 → 机器人 → 添加机器人 → 自定义; WeCom: 添加群机器人) and copy its **webhook address**. On DingTalk, choose **加签 (signing)** as the security setting and copy the secret too.
+2. In **Settings → Class group chats**, **Add a group chat**, paste the address (and the DingTalk secret), choose the class, and **Send a test message**. Then **Save group**.
+3. On the class's **Class Story** tab, **Also send to** sends each new post to the group as well (text only; photos stay on the Portal). On the **Newsletter** page, **Send to group chat** sends the newsletter.
+
+It needs internet. Everyone in the group sees what you send, so keep it to class-wide news.
 
 ## Word, PowerPoint and Excel
 
@@ -387,6 +405,8 @@ For anything you'd rather finish in Office or WPS, EduBoard saves a file you can
 **Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.
 
 **Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. Imports also read Chinese headings (姓名, 学号, 家长姓名, 家长电话…); a single 姓名 column is split into family name and given name. These fields stay on your computer; the Portal never receives them.
+
+**Help improve EduBoard** (at the bottom of Settings) is off unless you turn it on. When on, EduBoard tells the project once a week that this copy is still in use. It sends only what the box underneath shows: a random number made up on your computer, the version, the system and language, and rough class and student counts (as ranges). Never names, your school, grades or anything a student wrote. Turning it off forgets the random number.
 
 **Attendance codes** (in **Your lists**) renames the four codes or adds your own, such as Sick or Field trip; each counts as present, late, absent or excused, so attendance rates stay right. In the attendance grid, click a cell to step through the codes, or right-click it to pick any code and add a note. A code you stop using is hidden rather than deleted, so days already marked with it keep counting.
 

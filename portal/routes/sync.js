@@ -701,14 +701,53 @@ router.get('/posts', (req, res) => {
        WHERE c.teacher_id = ? ORDER BY p.created_at DESC`
     )
     .all(req.teacherId)
+
+  // Read receipts, per student: a student's family has seen a post once any account
+  // linked to that student has opened Class Story since it went up. Students with no
+  // Portal login yet are counted separately, since they can't see it at all.
+  const classStudents = new Map()
+  const studentsIn = (classId) => {
+    if (!classStudents.has(classId)) {
+      classStudents.set(
+        classId,
+        db
+          .prepare(
+            `SELECT s.id, s.first_name, s.last_name,
+               (SELECT COUNT(*) FROM account_students a WHERE a.student_id = s.id) AS logins
+             FROM enrollments e JOIN students s ON s.id = e.student_id
+             WHERE e.class_id = ? AND e.status = 'active'
+             ORDER BY s.last_name, s.first_name`
+          )
+          .all(classId)
+      )
+    }
+    return classStudents.get(classId)
+  }
+  const seenBy = db.prepare(
+    `SELECT DISTINCT a.student_id FROM post_reads r
+     JOIN account_students a ON a.account_id = r.account_id
+     WHERE r.post_id = ?`
+  )
+
   res.json(
-    rows.map((r) => ({
-      id: r.id,
-      classId: r.class_id,
-      body: r.body,
-      hasImage: !!r.image_path,
-      createdAt: r.created_at
-    }))
+    rows.map((r) => {
+      const students = studentsIn(r.class_id)
+      const withLogin = students.filter((s) => s.logins > 0)
+      const seen = new Set(seenBy.all(r.id).map((x) => x.student_id))
+      return {
+        id: r.id,
+        classId: r.class_id,
+        body: r.body,
+        hasImage: !!r.image_path,
+        createdAt: r.created_at,
+        seenCount: withLogin.filter((s) => seen.has(s.id)).length,
+        audience: withLogin.length,
+        notSeen: withLogin
+          .filter((s) => !seen.has(s.id))
+          .map((s) => `${s.first_name} ${s.last_name}`),
+        noLogin: students.length - withLogin.length
+      }
+    })
   )
 })
 

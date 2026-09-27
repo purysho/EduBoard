@@ -11,6 +11,7 @@ import { stopExitTicketServer } from './services/exitTicketServer'
 import { purgeOldDeletedAuditEntries } from './repositories/auditLog'
 import { isProtected, startAutoLock, whenFirstUnlocked } from './services/security'
 import { installPendingUpdateOnLaunch, startAutomaticUpdateChecks } from './services/selfUpdate'
+import { startUsagePings } from './services/usagePing'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')
@@ -45,6 +46,7 @@ app.whenReady().then(() => {
     checkAndRecordDeviceSync()
     startAutomaticUpdateChecks()
     startAutoLock()
+    startUsagePings()
   }
 
   if (isProtected()) {

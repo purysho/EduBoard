@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { LayoutGrid, RotateCcw } from 'lucide-react'
-import type { ClassSection } from '@shared/types'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Info, LayoutGrid, RotateCcw, Star, Undo2 } from 'lucide-react'
+import type { ClassSection, Student } from '@shared/types'
+import { startOfWeekIso } from '@shared/classroomTools'
+import { PointCategoryChips } from '@renderer/components/PointCategoryChips'
+import { usePresenting } from '@renderer/lib/presenting'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
@@ -13,6 +17,7 @@ import {
   useClassRoster,
   useClearSeatingChart,
   useSeatAssignments,
+  useSettings,
   useUnassignSeat,
   useUpdateClass
 } from '@renderer/lib/queries'
@@ -30,6 +35,38 @@ export function SeatingChartTab(): React.JSX.Element {
 
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
+  // Arranging seats, or giving class points by tapping a seat.
+  const [mode, setMode] = useState<'arrange' | 'points'>('arrange')
+  const [category, setCategory] = useState<string | null>(null)
+
+  const qc = useQueryClient()
+  const week = startOfWeekIso()
+  const pointsKey = ['behaviourPoints', classSection.id, week]
+  const { data: totals } = useQuery({
+    queryKey: pointsKey,
+    queryFn: () => window.api.behaviourPoints.totals(classSection.id, week)
+  })
+  const weekPoints = new Map((totals ?? []).map((t) => [t.studentId, t.week]))
+  async function give(studentId: string, points: number): Promise<void> {
+    await window.api.behaviourPoints.add({
+      classId: classSection.id,
+      studentId,
+      points,
+      category
+    })
+    void qc.invalidateQueries({ queryKey: pointsKey })
+  }
+
+  // Fields the school marked "show on the seating chart" (allergies, support plan…):
+  // a seat gets an icon when something is recorded in one. Never while presenting.
+  const { data: settings } = useSettings()
+  const presenting = usePresenting()
+  const flagged = presenting ? [] : (settings?.studentFields ?? []).filter((f) => f.onSeatingChart)
+  const needsOf = (s: Student): string[] =>
+    flagged
+      .map((f) => [f.label, s.customFields?.[f.id]?.trim() ?? ''] as const)
+      .filter(([, v]) => v)
+      .map(([label, v]) => `${label}: ${v}`)
 
   const seatByStudentId = useMemo(
     () => new Map((seats ?? []).map((s) => [s.studentId, s])),
@@ -96,11 +133,66 @@ export function SeatingChartTab(): React.JSX.Element {
             />
           </label>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => setConfirmClear(true)}>
-          <RotateCcw size={13} className="mr-1 inline" aria-hidden />
-          {tr('Clear chart')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <div
+            role="group"
+            aria-label={tr('Seating chart mode')}
+            className="flex overflow-hidden rounded-md border border-[var(--color-border)] text-xs"
+          >
+            {(
+              [
+                ['arrange', tr('Arrange seats')],
+                ['points', tr('Give points')]
+              ] as const
+            ).map(([m, label]) => (
+              <button
+                key={m}
+                aria-pressed={mode === m}
+                className={cn(
+                  'px-2.5 py-1',
+                  mode === m
+                    ? 'bg-[var(--color-primary-soft)] font-medium text-[var(--color-primary)]'
+                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)]'
+                )}
+                onClick={() => {
+                  setMode(m)
+                  setSelectedStudentId(null)
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {mode === 'arrange' ? (
+            <Button variant="secondary" size="sm" onClick={() => setConfirmClear(true)}>
+              <RotateCcw size={13} className="mr-1 inline" aria-hidden />
+              {tr('Clear chart')}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                await window.api.behaviourPoints.undoLast(classSection.id)
+                void qc.invalidateQueries({ queryKey: pointsKey })
+              }}
+            >
+              <Undo2 size={13} className="mr-1 inline" aria-hidden />
+              {tr('Undo last')}
+            </Button>
+          )}
+        </div>
       </div>
+      {mode === 'points' && (
+        <div className="mb-3 space-y-1">
+          <PointCategoryChips value={category} onChange={setCategory} />
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'Tap a seat for +1, or its − for −1. The number is this week’s points, the same as in the Classroom tab.'
+            )}
+          </p>
+        </div>
+      )}
 
       {!students.length ? (
         <EmptyState
@@ -163,34 +255,89 @@ export function SeatingChartTab(): React.JSX.Element {
                 const seat = seatByCell.get(`${row}:${col}`)
                 const occupant = seat ? studentById.get(seat.studentId) : undefined
                 const isSelected = occupant?.id === selectedStudentId
+                const needs = occupant ? needsOf(occupant) : []
+                if (mode === 'points') {
+                  const pts = occupant ? (weekPoints.get(occupant.id) ?? 0) : 0
+                  return occupant ? (
+                    <div key={`${row}:${col}`} className="relative">
+                      <button
+                        onClick={() => give(occupant.id, 1)}
+                        title={tr('+1 for {name}', { name: studentFullName(occupant) })}
+                        className="flex h-16 w-24 flex-col items-center justify-center gap-0.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-center text-xs leading-tight hover:border-[var(--color-success)] hover:bg-[var(--color-success-soft)]"
+                      >
+                        <span className="line-clamp-2 px-1">{studentFullName(occupant)}</span>
+                        <span
+                          className={cn(
+                            'flex items-center gap-0.5 rounded-full px-1.5 text-[11px] font-semibold',
+                            pts < 0
+                              ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]'
+                              : 'bg-[var(--color-success-soft)] text-[var(--color-success)]'
+                          )}
+                        >
+                          <Star size={10} aria-hidden />
+                          {pts}
+                        </span>
+                      </button>
+                      <button
+                        aria-label={tr('−1 for {name}', { name: studentFullName(occupant) })}
+                        title={tr('−1 for {name}', { name: studentFullName(occupant) })}
+                        onClick={() => give(occupant.id, -1)}
+                        className="absolute right-0.5 top-0.5 rounded px-1 text-xs leading-none text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]"
+                      >
+                        −
+                      </button>
+                      {needs.length > 0 && <NeedsIcon needs={needs} />}
+                    </div>
+                  ) : (
+                    <div
+                      key={`${row}:${col}`}
+                      className="flex h-16 w-24 items-center justify-center rounded-lg border border-dashed border-[var(--color-border)] text-xs text-[var(--color-text-muted)]"
+                    >
+                      —
+                    </div>
+                  )
+                }
                 return (
-                  <button
-                    key={`${row}:${col}`}
-                    onClick={() => (occupant ? pickStudent(occupant.id) : placeAt(row, col))}
-                    onDoubleClick={() => occupant && unassignSeat.mutate(occupant.id)}
-                    title={
-                      occupant
-                        ? tr('{name} — double-click to unseat', { name: studentFullName(occupant) })
-                        : selectedStudentId
-                          ? tr('Click to place selected student here')
-                          : tr('Empty seat')
-                    }
-                    className={cn(
-                      'flex h-16 w-24 flex-col items-center justify-center rounded-lg border text-center text-xs leading-tight',
-                      occupant
-                        ? isSelected
-                          ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
-                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]'
-                        : 'border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)]'
-                    )}
-                  >
-                    {occupant ? studentFullName(occupant) : '—'}
-                  </button>
+                  <div key={`${row}:${col}`} className="relative">
+                    <button
+                      onClick={() => (occupant ? pickStudent(occupant.id) : placeAt(row, col))}
+                      onDoubleClick={() => occupant && unassignSeat.mutate(occupant.id)}
+                      title={
+                        occupant
+                          ? tr('{name} — double-click to unseat', {
+                              name: studentFullName(occupant)
+                            })
+                          : selectedStudentId
+                            ? tr('Click to place selected student here')
+                            : tr('Empty seat')
+                      }
+                      className={cn(
+                        'flex h-16 w-24 flex-col items-center justify-center rounded-lg border text-center text-xs leading-tight',
+                        occupant
+                          ? isSelected
+                            ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
+                            : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]'
+                          : 'border-dashed border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)]'
+                      )}
+                    >
+                      {occupant ? studentFullName(occupant) : '—'}
+                    </button>
+                    {needs.length > 0 && <NeedsIcon needs={needs} />}
+                  </div>
                 )
               })
             )}
           </div>
         </div>
+      )}
+
+      {flagged.length > 0 && (
+        <p className="mt-3 flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+          <Info size={12} className="text-[var(--color-warning)]" aria-hidden />
+          {tr('Something is recorded in {fields}. Point to the icon to see it.', {
+            fields: [...new Set(flagged.map((f) => f.label))].join(', ')
+          })}
+        </p>
       )}
 
       <ConfirmDialog
@@ -206,5 +353,20 @@ export function SeatingChartTab(): React.JSX.Element {
         onCancel={() => setConfirmClear(false)}
       />
     </div>
+  )
+}
+
+/** A small icon on a seat for what the school wants visible at a glance (allergies, a
+ * support plan…); the details show on hover. */
+function NeedsIcon({ needs }: { needs: string[] }): React.JSX.Element {
+  return (
+    <span
+      role="img"
+      aria-label={needs.join('; ')}
+      title={needs.join('\n')}
+      className="absolute bottom-0.5 left-0.5 rounded-full bg-[var(--color-surface)] text-[var(--color-warning)]"
+    >
+      <Info size={13} aria-hidden />
+    </span>
   )
 }

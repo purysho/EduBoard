@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Copy, FileText, Mail, Megaphone, Sparkles, Wand2 } from 'lucide-react'
+import { Copy, FileText, Mail, Megaphone, MessagesSquare, Sparkles, Wand2 } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
-import { useClasses } from '@renderer/lib/queries'
+import { useClasses, useSettings } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
 import {
   assembleNewsletter,
@@ -35,6 +35,7 @@ function endOfWeek(): string {
  */
 export function NewsletterPage(): React.JSX.Element {
   const { data: classes } = useClasses()
+  const { data: settings } = useSettings()
   const structures = newsletterStructures()
   const [classIds, setClassIds] = useState<string[] | null>(null)
   const chosenClasses = classIds ?? (classes ?? []).map((c) => c.id)
@@ -86,6 +87,14 @@ export function NewsletterPage(): React.JSX.Element {
     .map((s) => s.trim())
     .filter(Boolean)
   const info = structures.find((s) => s.id === structure)!
+
+  // DingTalk / WeCom groups from Settings; the one for the chosen class comes first.
+  const groups = settings?.groupChats ?? []
+  const [groupId, setGroupId] = useState<string | null>(null)
+  const group =
+    groups.find((g) => g.id === groupId) ??
+    groups.find((g) => g.classId && chosenClasses.includes(g.classId)) ??
+    groups[0]
 
   async function run(label: string, action: () => Promise<string | void>): Promise<void> {
     setBusy(label)
@@ -322,6 +331,37 @@ export function NewsletterPage(): React.JSX.Element {
                 <Megaphone size={13} className="mr-1 inline" aria-hidden />
                 {tr('Post to Class Story')}
               </Button>
+              {groups.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <select
+                    aria-label={tr('Group chat')}
+                    className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 py-1 text-xs"
+                    value={group?.id ?? ''}
+                    onChange={(e) => setGroupId(e.target.value)}
+                  >
+                    {groups.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!draft.trim() || !group || !!busy || /\[[^\]]+\]/.test(draft)}
+                    title={tr('Needs internet. Everyone in the group sees it.')}
+                    onClick={() =>
+                      run('group', async () => {
+                        await window.api.groupChats.send(group!.id, draft, tr('Newsletter'))
+                        return tr('Sent to {name}.', { name: group!.name })
+                      })
+                    }
+                  >
+                    <MessagesSquare size={13} className="mr-1 inline" aria-hidden />
+                    {tr('Send to group chat')}
+                  </Button>
+                </span>
+              )}
               <Button
                 variant="ghost"
                 size="sm"

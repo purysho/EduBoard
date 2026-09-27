@@ -9,6 +9,7 @@ import {
 } from '../pointCategories'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack } from '../schoolPack'
 import { DEFAULT_APP_SETTINGS } from '../types'
+import { setUiLanguage } from '../i18n'
 
 describe('point categories', () => {
   it('starts with EduBoard’s five and fills in blank built-in names', () => {
@@ -34,6 +35,12 @@ describe('point categories', () => {
     ])
     expect(next.filter((c) => c.hidden)).toHaveLength(5)
     expect(pointCategoryProblem(next)).toBeNull()
+    // Unrenamed, they follow the interface language.
+    expect(resolvePointCategories(next)[0].name).toBe('Character (德)')
+    setUiLanguage('zh')
+    expect(resolvePointCategories(next)[0].name).toBe('德（品德）')
+    setUiLanguage('en')
+    expect(resolvePointCategories([{ id: 'wuyu-de', name: 'Virtue' }])[0].name).toBe('Virtue')
   })
 
   it('refuses unnamed or clashing categories', () => {

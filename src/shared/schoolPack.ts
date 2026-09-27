@@ -133,7 +133,13 @@ export function parseSchoolPack(json: string): SchoolPack {
     const list = raw.studentFields.filter(
       (f): f is StudentField => isString(f?.id, 64) && isString(f?.label, 60) && !!f.label.trim()
     )
-    if (list.length) pack.studentFields = list.map((f) => ({ id: f.id, label: f.label }))
+    if (list.length) {
+      pack.studentFields = list.map((f) => ({
+        id: f.id,
+        label: f.label,
+        ...(f.onSeatingChart === true ? { onSeatingChart: true } : {})
+      }))
+    }
   }
   if (Array.isArray(raw.terms)) {
     const list = raw.terms.filter(

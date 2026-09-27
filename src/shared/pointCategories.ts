@@ -23,11 +23,28 @@ const BUILT_INS: { id: string; en: string }[] = [
   { id: 'teamwork', en: 'Teamwork' }
 ]
 
-export const BUILT_IN_POINT_CATEGORY_IDS = BUILT_INS.map((b) => b.id)
+// The ready-made sets' categories, in both languages. Like the built-in five, they're
+// saved with a blank name, which shows the usual name in the interface language.
+const SET_NAMES: Record<string, { en: string; zh: string }> = {
+  'wuyu-de': { en: 'Character (德)', zh: '德（品德）' },
+  'wuyu-zhi': { en: 'Learning (智)', zh: '智（学习）' },
+  'wuyu-ti': { en: 'Health and PE (体)', zh: '体（体育健康）' },
+  'wuyu-mei': { en: 'Arts (美)', zh: '美（艺术审美）' },
+  'wuyu-lao': { en: 'Work and service (劳)', zh: '劳（劳动实践）' },
+  'values-respect': { en: 'Respect', zh: '尊重' },
+  'values-effort': { en: 'Effort', zh: '努力' },
+  'values-teamwork': { en: 'Teamwork', zh: '合作' },
+  'values-kindness': { en: 'Kindness', zh: '友善' },
+  'values-responsibility': { en: 'Responsibility', zh: '责任' }
+}
 
-const builtInName = (id: string): string | null => {
+/** A built-in or ready-made category's usual name in the interface language, or null
+ * for the school's own. */
+export function usualPointCategoryName(id: string): string | null {
   const b = BUILT_INS.find((x) => x.id === id)
-  return b ? tr(b.en) : null
+  if (b) return tr(b.en)
+  const set = SET_NAMES[id]
+  return set ? set[uiLanguage() === 'zh' ? 'zh' : 'en'] : null
 }
 
 /** Every category in order, names filled in. With nothing saved, EduBoard's five. */
@@ -35,7 +52,7 @@ export function resolvePointCategories(saved: PointCategory[] | undefined): Poin
   if (!saved?.length) return BUILT_INS.map((b) => ({ id: b.id, name: tr(b.en) }))
   return saved.map((c) => ({
     ...c,
-    name: c.name.trim() || builtInName(c.id) || c.id
+    name: c.name.trim() || usualPointCategoryName(c.id) || c.id
   }))
 }
 
@@ -51,53 +68,32 @@ export interface PointCategorySet {
   categories: PointCategory[]
 }
 
-/** Ready-made sets. Names are written in the interface language when chosen, and can be
- * edited afterwards like any other. */
+const blankNames = (ids: string[]): PointCategory[] => ids.map((id) => ({ id, name: '' }))
+
+/** Ready-made sets, named in the interface language. */
 export function pointCategorySets(): PointCategorySet[] {
   const zh = uiLanguage() === 'zh'
   return [
     {
       id: 'wuyu',
       name: zh ? '德智体美劳（五育）' : '德智体美劳 (the five areas)',
-      categories: zh
-        ? [
-            { id: 'wuyu-de', name: '德（品德）' },
-            { id: 'wuyu-zhi', name: '智（学习）' },
-            { id: 'wuyu-ti', name: '体（体育健康）' },
-            { id: 'wuyu-mei', name: '美（艺术审美）' },
-            { id: 'wuyu-lao', name: '劳（劳动实践）' }
-          ]
-        : [
-            { id: 'wuyu-de', name: 'Character (德)' },
-            { id: 'wuyu-zhi', name: 'Learning (智)' },
-            { id: 'wuyu-ti', name: 'Health and PE (体)' },
-            { id: 'wuyu-mei', name: 'Arts (美)' },
-            { id: 'wuyu-lao', name: 'Work and service (劳)' }
-          ]
+      categories: blankNames(['wuyu-de', 'wuyu-zhi', 'wuyu-ti', 'wuyu-mei', 'wuyu-lao'])
     },
     {
       id: 'values',
       name: zh ? '品格（尊重、努力、合作…）' : 'Values (Respect, Effort, Teamwork…)',
-      categories: zh
-        ? [
-            { id: 'values-respect', name: '尊重' },
-            { id: 'values-effort', name: '努力' },
-            { id: 'values-teamwork', name: '合作' },
-            { id: 'values-kindness', name: '友善' },
-            { id: 'values-responsibility', name: '责任' }
-          ]
-        : [
-            { id: 'values-respect', name: 'Respect' },
-            { id: 'values-effort', name: 'Effort' },
-            { id: 'values-teamwork', name: 'Teamwork' },
-            { id: 'values-kindness', name: 'Kindness' },
-            { id: 'values-responsibility', name: 'Responsibility' }
-          ]
+      categories: blankNames([
+        'values-respect',
+        'values-effort',
+        'values-teamwork',
+        'values-kindness',
+        'values-responsibility'
+      ])
     },
     {
       id: 'eduboard',
       name: tr('EduBoard’s five'),
-      categories: BUILT_INS.map((b) => ({ id: b.id, name: '' }))
+      categories: blankNames(BUILT_INS.map((b) => b.id))
     }
   ]
 }
@@ -120,8 +116,7 @@ export function applyPointCategorySet(
 
 /** Problems with categories being edited, in plain words, or null if they're fine. */
 export function pointCategoryProblem(list: PointCategory[]): string | null {
-  const builtIn = new Set(BUILT_IN_POINT_CATEGORY_IDS)
-  if (list.some((c) => !builtIn.has(c.id) && !c.name.trim())) {
+  if (list.some((c) => !usualPointCategoryName(c.id) && !c.name.trim())) {
     return tr('Every point category needs a name.')
   }
   if (list.some((c) => c.name.trim().length > 40)) {
