@@ -28,3 +28,6 @@ accounts) sit in real tension with.
 
 Have an idea, or want to weigh in on one of these? Open an issue — see
 [SECURITY.md](SECURITY.md) instead if it's a security report rather than a feature idea.
+
+For competitor research, the logins plan (Google, Microsoft, Apple, WeChat, Alipay, SSO)
+and the funding roadmap, see [docs/ROADMAP_VC.md](docs/ROADMAP_VC.md).
