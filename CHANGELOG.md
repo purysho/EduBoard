@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Automatic updates.** A new version downloads in the background while you work and installs the next time you open EduBoard, after the usual launch backup; a small window says so and EduBoard reopens by itself. While it waits, a banner says it's ready, and an update icon at the top of the sidebar and a dot on Settings stay until it's installed. **Restart and update now** in Settings installs it straight away. Turn it off in Settings → *Install updates automatically* to update only by hand. If an automatic install ever doesn't finish, EduBoard doesn't retry on every launch; it waits for you to install from Settings.
+
 ## [0.3.3] — 2026-09-26
 
 ### Added

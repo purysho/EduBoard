@@ -18,6 +18,7 @@ import type {
   ExtraBackupStatus,
   AppUpdateInfo,
   AppUpdateProgress,
+  AppUpdateStatus,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -204,6 +205,8 @@ export interface EduBoardApi {
     /** Backs up, downloads and installs the newest release, then EduBoard restarts. */
     installAppUpdate(): Promise<void>
     appUpdateProgress(): Promise<AppUpdateProgress>
+    /** For the update icon and badges; cheap, polled. Doesn't reach the internet. */
+    appUpdateStatus(): Promise<AppUpdateStatus>
   }
   backup: {
     create(): Promise<BackupInfo>

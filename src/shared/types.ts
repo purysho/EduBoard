@@ -651,6 +651,9 @@ export interface AppSettings {
   /** A second place backups are copied to (a cloud-synced folder or USB stick), so a
    * lost or broken computer doesn't take the backups with it. Empty means none. */
   extraBackupFolder: string
+  /** Download new versions in the background and install them the next time EduBoard
+   * opens. On by default; off means updates only happen from Settings. */
+  autoUpdate: boolean
 }
 
 /** A student whose attendance in a class is under that class's minimum. */
@@ -697,10 +700,29 @@ export interface AppUpdateInfo {
 }
 
 export interface AppUpdateProgress {
-  phase: 'idle' | 'downloading' | 'installing' | 'failed'
+  phase: 'idle' | 'downloading' | 'ready' | 'installing' | 'failed'
   /** 0–1 while downloading. */
   fraction: number
   error: string | null
+}
+
+/** Everything the update icon, the Settings badge and the "update ready" banner need,
+ * polled by the window. */
+export interface AppUpdateStatus {
+  current: string
+  /** Newest version seen by the last check; null before one has succeeded. */
+  latest: string | null
+  /** A newer version exists (downloaded or not). */
+  updateAvailable: boolean
+  /** A newer version is downloaded and waiting; it installs the next time EduBoard opens
+   * (when automatic updates are on) or when the teacher restarts now. */
+  readyVersion: string | null
+  /** Background download of `latest` in progress, 0–1. */
+  downloading: number | null
+  /** The last automatic install didn't finish, so it now waits for the teacher. */
+  autoInstallFailed: boolean
+  canInstall: boolean
+  cannotInstallReason: string | null
 }
 
 /** Where the second backup copy stands, for Settings and the Dashboard reminder. */
@@ -739,7 +761,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestFromEmail: '',
   digestFromName: '',
   onboardingDismissed: false,
-  extraBackupFolder: ''
+  extraBackupFolder: '',
+  autoUpdate: true
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

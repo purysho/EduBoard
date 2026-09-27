@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import {
+  ArrowUpCircle,
   BarChart3,
   BookOpenText,
   Calendar,
@@ -17,7 +18,7 @@ import {
   Users
 } from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
-import { usePortalMessageThreads, useSettings } from '@renderer/lib/queries'
+import { useAppUpdateStatus, usePortalMessageThreads, useSettings } from '@renderer/lib/queries'
 
 // Grouped so fourteen destinations scan as four short lists instead of one long one.
 const navGroups: {
@@ -73,6 +74,16 @@ export function Sidebar(): React.JSX.Element {
   const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
   const { data: threads } = usePortalMessageThreads({ enabled: portalConfigured })
   const unreadMessages = threads?.reduce((sum, t) => sum + t.unread, 0) ?? 0
+  // Stays until the new version is running: downloading, waiting to install, or (when
+  // this copy can't update itself) simply available.
+  const { data: update } = useAppUpdateStatus()
+  const updateLabel = !update?.updateAvailable
+    ? null
+    : update.readyVersion
+      ? `EduBoard ${update.readyVersion} is ready to install`
+      : update.downloading !== null
+        ? `Downloading EduBoard ${update.latest}… ${Math.round(update.downloading * 100)}%`
+        : `EduBoard ${update.latest} is available`
 
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -83,6 +94,23 @@ export function Sidebar(): React.JSX.Element {
         <span className="text-base font-semibold tracking-tight text-[var(--color-text)]">
           EduBoard
         </span>
+        {updateLabel && (
+          <Link
+            to="/settings?section=updates"
+            title={updateLabel}
+            aria-label={updateLabel}
+            className="relative ml-auto rounded-lg p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+          >
+            <ArrowUpCircle
+              size={18}
+              aria-hidden
+              className={
+                update?.downloading !== null && !update?.readyVersion ? 'animate-pulse' : ''
+              }
+            />
+            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[var(--color-danger)]" />
+          </Link>
+        )}
       </div>
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3">
         {navGroups.map((group) => (
@@ -117,6 +145,13 @@ export function Sidebar(): React.JSX.Element {
                     />
                     <item.icon size={17} strokeWidth={2} aria-hidden />
                     {item.label}
+                    {item.to === '/settings' && updateLabel && (
+                      <span
+                        className="ml-auto h-2 w-2 rounded-full bg-[var(--color-danger)]"
+                        title={updateLabel}
+                        aria-label={updateLabel}
+                      />
+                    )}
                     {item.to === '/messages' && unreadMessages > 0 && (
                       <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
                         {unreadMessages > 99 ? '99+' : unreadMessages}

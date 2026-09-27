@@ -7,6 +7,7 @@ import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/back
 import { checkAndRecordDeviceSync } from './services/deviceSync'
 import { stopExitTicketServer } from './services/exitTicketServer'
 import { purgeOldDeletedAuditEntries } from './repositories/auditLog'
+import { installPendingUpdateOnLaunch, startAutomaticUpdateChecks } from './services/selfUpdate'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')
@@ -17,11 +18,17 @@ app.whenReady().then(() => {
 
   initDb()
   createAutoBackupOnLaunch()
-  startDailyAutoBackups()
-  purgeOldDeletedAuditEntries()
-  checkAndRecordDeviceSync()
-  registerIpcHandlers()
-  createMainWindow()
+  const openApp = (): void => {
+    startDailyAutoBackups()
+    purgeOldDeletedAuditEntries()
+    checkAndRecordDeviceSync()
+    registerIpcHandlers()
+    createMainWindow()
+    startAutomaticUpdateChecks()
+  }
+  // An update downloaded last session installs now, before anything else opens; EduBoard
+  // then reopens as the new version.
+  if (!installPendingUpdateOnLaunch(openApp)) openApp()
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

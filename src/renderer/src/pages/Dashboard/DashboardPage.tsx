@@ -17,7 +17,6 @@ import { formatDate, formatPercent, formatRate } from '@renderer/lib/format'
 import { ClassCard } from '@renderer/pages/Classes/ClassCard'
 import { GettingStarted } from './GettingStarted'
 import { BackupReminder } from './BackupReminder'
-import { UpdateNotice } from './UpdateNotice'
 import { ResetRequests } from './ResetRequests'
 import { UnpublishedNotice } from './UnpublishedNotice'
 import { AttendanceWarnings } from './AttendanceWarnings'
@@ -34,7 +33,6 @@ export function DashboardPage(): React.JSX.Element {
 
       <ResetRequests />
       <UnpublishedNotice />
-      <UpdateNotice />
       <GettingStarted />
       <BackupReminder hasData={stats.classCount > 0} />
       <AttendanceWarnings />

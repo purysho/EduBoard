@@ -1,23 +1,29 @@
-import { app } from 'electron'
+import { app, BrowserWindow, Notification } from 'electron'
 import { spawn } from 'child_process'
 import {
   accessSync,
   chmodSync,
   constants,
   copyFileSync,
-  existsSync,
   mkdirSync,
   renameSync,
-  unlinkSync,
   writeFileSync
 } from 'fs'
 import { dirname, join } from 'path'
 import { getSettings } from '../repositories/settingsRepo'
 import { createBackup } from './backup'
 import { isNewerVersion } from '@shared/appVersion'
-import type { AppUpdateInfo, AppUpdateProgress } from '@shared/types'
+import type { AppUpdateInfo, AppUpdateProgress, AppUpdateStatus } from '@shared/types'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import { downloadAsset, fetchLatestRelease, pickAsset, type InstallKind } from './selfUpdateCore'
+import {
+  clearPending,
+  launchAction,
+  pendingFileReady,
+  readPending,
+  writePending,
+  type PendingUpdate
+} from './pendingUpdate'
 
 /** How this copy of EduBoard was installed, which decides how it replaces itself; or
  * why it can't (running from source, from the Mac disk image…). */
@@ -68,6 +74,15 @@ function portalUrl(): string | null {
   return url && !portalUrlProblem(url) ? url : null
 }
 
+/** Where a background download waits for the next launch: this computer's own profile,
+ * never next to a portable copy's data, since it belongs to this computer's install. */
+function pendingDir(): string {
+  return join(app.getPath('userData'), 'pending-update')
+}
+
+/** Newest version the last check saw. */
+let latestKnown: string | null = null
+
 export async function getAppUpdateInfo(): Promise<AppUpdateInfo> {
   const current = app.getVersion()
   const where = installKind()
@@ -78,6 +93,7 @@ export async function getAppUpdateInfo(): Promise<AppUpdateInfo> {
   }
   try {
     const release = await fetchLatestRelease(portalUrl())
+    latestKnown = release.version
     return {
       ...base,
       latest: release.version,
@@ -95,27 +111,213 @@ export function getAppUpdateProgress(): AppUpdateProgress {
   return progress
 }
 
-/** Backs up, downloads the new version, then hands over to a small helper that waits
- * for EduBoard to close, puts the new version in place and reopens it. */
+/** A waiting download, if it's usable by this copy of EduBoard. */
+function usablePending(): PendingUpdate | null {
+  const where = installKind()
+  const pending = readPending(pendingDir())
+  if (!pending || !('kind' in where) || pending.kind !== where.kind) return null
+  if (!isNewerVersion(pending.version, app.getVersion())) return null
+  return pendingFileReady(pendingDir(), pending) ? pending : null
+}
+
+export function getAppUpdateStatus(): AppUpdateStatus {
+  const current = app.getVersion()
+  const where = installKind()
+  const pending = usablePending()
+  const latest = latestKnown ?? pending?.version ?? null
+  return {
+    current,
+    latest,
+    updateAvailable: Boolean(latest && isNewerVersion(latest, current)),
+    readyVersion: pending?.version ?? null,
+    downloading: progress.phase === 'downloading' ? progress.fraction : null,
+    autoInstallFailed: Boolean(pending && pending.attempts >= 1),
+    canInstall: 'kind' in where,
+    cannotInstallReason: 'reason' in where ? where.reason : null
+  }
+}
+
+/** Downloads `version`'s file for this computer into the pending folder and records it.
+ * Downloads to a .part file first, so a download cut short is never mistaken for a
+ * finished one. */
+async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
+  const release = await fetchLatestRelease(portalUrl())
+  latestKnown = release.version
+  const asset = pickAsset(kind, process.arch, release.assets)
+  if (!asset) throw new Error('The newest release has no download for this computer.')
+  const dir = pendingDir()
+  clearPending(dir)
+  mkdirSync(dir, { recursive: true })
+  const part = join(dir, `${asset.name}.part`)
+  progress = { phase: 'downloading', fraction: 0, error: null }
+  await downloadAsset(asset, part, (fraction) => {
+    progress = { phase: 'downloading', fraction, error: null }
+  })
+  renameSync(part, join(dir, asset.name))
+  const pending: PendingUpdate = {
+    version: release.version,
+    fileName: asset.name,
+    size: asset.size,
+    kind,
+    attempts: 0,
+    downloadedAt: new Date().toISOString()
+  }
+  writePending(dir, pending)
+  progress = { phase: 'ready', fraction: 1, error: null }
+  return pending
+}
+
+let backgroundRunning = false
+let notifiedVersion: string | null = null
+
+/** Checks for a newer EduBoard and, when automatic updates are on and this copy can
+ * update itself, downloads it quietly. Never throws: a failed check just waits for the
+ * next one. */
+export async function checkForUpdateInBackground(): Promise<void> {
+  if (backgroundRunning || progress.phase === 'downloading' || progress.phase === 'installing')
+    return
+  backgroundRunning = true
+  try {
+    const where = installKind()
+    const release = await fetchLatestRelease(portalUrl())
+    latestKnown = release.version
+    if (!isNewerVersion(release.version, app.getVersion())) {
+      clearPending(pendingDir())
+      return
+    }
+    if (!('kind' in where) || !getSettings().autoUpdate) return
+    const pending = usablePending()
+    if (pending?.version === release.version) return
+    const ready = await downloadToPending(where.kind)
+    announceReady(ready.version)
+  } catch (err) {
+    // downloadToPending() moves `progress` on while this awaits; TypeScript can't see that.
+    if ((progress as AppUpdateProgress).phase === 'downloading') {
+      progress = { phase: 'idle', fraction: 0, error: null }
+    }
+    console.error('[eduboard] Background update check failed:', (err as Error).message)
+  } finally {
+    backgroundRunning = false
+  }
+}
+
+/** A system notification, once per version, that the update installs next launch. The
+ * window shows its own banner, icon and Settings badge from getAppUpdateStatus(). */
+function announceReady(version: string): void {
+  if (notifiedVersion === version || !Notification.isSupported()) return
+  notifiedVersion = version
+  const note = new Notification({
+    title: `EduBoard ${version} is ready`,
+    body: 'It installs the next time you open EduBoard. To install it now, restart from Settings.'
+  })
+  note.on('click', () => {
+    const win = BrowserWindow.getAllWindows()[0]
+    if (win) {
+      if (win.isMinimized()) win.restore()
+      win.focus()
+    }
+  })
+  note.show()
+}
+
+const FIRST_CHECK_DELAY_MS = 15_000
+const CHECK_EVERY_MS = 4 * 60 * 60 * 1000
+
+/** Starts the background checks: shortly after launch, then every few hours. */
+export function startAutomaticUpdateChecks(): void {
+  if (!app.isPackaged) return
+  setTimeout(() => void checkForUpdateInBackground(), FIRST_CHECK_DELAY_MS)
+  setInterval(() => void checkForUpdateInBackground(), CHECK_EVERY_MS).unref()
+}
+
+/**
+ * Called at launch, after the launch backup and before the main window opens. If an
+ * update downloaded earlier is waiting, installs it (a small window says so) and returns
+ * true: the caller must not open the main window, because EduBoard is about to close and
+ * reopen as the new version. If the install can't start after all, `openNormally` runs
+ * so the teacher still gets EduBoard.
+ */
+export function installPendingUpdateOnLaunch(openNormally: () => void): boolean {
+  const dir = pendingDir()
+  const pending = readPending(dir)
+  const where = installKind()
+  const action = launchAction(pending, {
+    currentVersion: app.getVersion(),
+    kind: 'kind' in where ? where.kind : null,
+    fileReady: pending ? pendingFileReady(dir, pending) : false,
+    auto: getSettings().autoUpdate
+  })
+  if (action === 'clear') {
+    if (pending) clearPending(dir)
+    return false
+  }
+  if (action === 'wait' || !pending || !('kind' in where)) return false
+  const kind = where.kind
+  writePending(dir, { ...pending, attempts: pending.attempts + 1 })
+  progress = { phase: 'installing', fraction: 1, error: null }
+  const win = showUpdatingWindow(pending.version)
+  let started = false
+  const start = (): void => {
+    if (started) return
+    started = true
+    try {
+      // On Linux this copies the new version into place, which blocks for a moment, so
+      // it runs only once the window has drawn its message.
+      startInstaller(kind, join(dir, pending.fileName), dir)
+      setTimeout(() => app.quit(), 1500)
+    } catch (err) {
+      console.error('[eduboard] Installing the waiting update failed:', err)
+      progress = { phase: 'idle', fraction: 0, error: null }
+      if (!win.isDestroyed()) win.close()
+      openNormally()
+    }
+  }
+  win.once('ready-to-show', () => {
+    win.show()
+    setTimeout(start, 300)
+  })
+  // If the window never draws, install anyway.
+  setTimeout(start, 4000)
+  return true
+}
+
+function showUpdatingWindow(version: string): BrowserWindow {
+  const win = new BrowserWindow({
+    width: 420,
+    height: 150,
+    show: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    autoHideMenuBar: true,
+    title: 'Updating EduBoard'
+  })
+  const html = `<!doctype html><meta charset="utf-8"><title>Updating EduBoard</title>
+<body style="font:15px system-ui,sans-serif;margin:0;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;color:#1f2937;background:#fff">
+<div><strong>Updating EduBoard to ${version.replace(/[^0-9A-Za-z.-]/g, '')}…</strong><br>
+<span style="color:#6b7280">It will reopen by itself in a moment. Your data is kept.</span></div></body>`
+  void win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+  return win
+}
+
+/** "Update now" / "Restart and update" in Settings. Uses the waiting download when
+ * there is one, otherwise downloads first. Backs up, then hands over to a small helper
+ * that waits for EduBoard to close, puts the new version in place and reopens it. */
 export async function installAppUpdate(): Promise<void> {
-  if (progress.phase === 'downloading' || progress.phase === 'installing') return
+  if (progress.phase === 'installing') return
   const where = installKind()
   if (!('kind' in where)) throw new Error(where.reason)
-  progress = { phase: 'downloading', fraction: 0, error: null }
   try {
     createBackup()
-    const release = await fetchLatestRelease(portalUrl())
-    const asset = pickAsset(where.kind, process.arch, release.assets)
-    if (!asset) throw new Error('The newest release has no download for this computer.')
-    const dir = join(app.getPath('temp'), 'eduboard-update')
-    mkdirSync(dir, { recursive: true })
-    const file = join(dir, asset.name)
-    if (existsSync(file)) unlinkSync(file)
-    await downloadAsset(asset, file, (fraction) => {
-      progress = { phase: 'downloading', fraction, error: null }
-    })
+    let pending = usablePending()
+    if (!pending || (latestKnown && isNewerVersion(latestKnown, pending.version))) {
+      if (progress.phase === 'downloading') throw new Error('The update is still downloading.')
+      pending = await downloadToPending(where.kind)
+    }
     progress = { phase: 'installing', fraction: 1, error: null }
-    startInstaller(where.kind, file, dir)
+    // A teacher-started install resets the automatic-try count.
+    writePending(pendingDir(), { ...pending, attempts: 0 })
+    startInstaller(where.kind, join(pendingDir(), pending.fileName), pendingDir())
     // Give the helper a moment to start before this window goes away.
     setTimeout(() => app.quit(), 800)
   } catch (err) {

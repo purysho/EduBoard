@@ -731,6 +731,17 @@ export function useAppUpdateInfo() {
   })
 }
 
+/** Whether an update is downloading, waiting to install, or available, for the update
+ * icon, the Settings badge and the banner. Asks the main process only (no internet), so
+ * polling is cheap; the background download finishing shows up within half a minute. */
+export function useAppUpdateStatus() {
+  return useQuery({
+    queryKey: ['appUpdateStatus'],
+    queryFn: () => api().settings.appUpdateStatus(),
+    refetchInterval: 30_000
+  })
+}
+
 /** Keyed under dashboardStats, so everything that refreshes the Dashboard numbers
  * (marking attendance, enrolling…) refreshes these too. */
 export function useAttendanceWarnings() {
