@@ -144,6 +144,12 @@ async function completeWith(
   return completeOpenAiCompatible(preset.baseUrl, preset.model, apiKey, system, user, maxTokens)
 }
 
+/** Plain-text completion for other services (newsletters). Same provider, key and
+ * error wording as everything else here. */
+export function completeText(system: string, user: string, maxTokens: number): Promise<string> {
+  return complete(system, user, maxTokens)
+}
+
 async function complete(system: string, user: string, maxTokens: number): Promise<string> {
   const settings = getSettings()
   return completeWith(

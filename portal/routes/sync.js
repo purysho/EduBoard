@@ -7,8 +7,8 @@ const { requireSyncSecret, hashPassword, passwordProblem, revokeSessions } = req
 const { saveAiSettings, complete, AiNotConfiguredError } = require('../services/ai')
 const { isLanguage, buildTranslationPrompt, cleanReply } = require('../services/translate')
 const { aiUsageSummary, listInteractions } = require('../services/aiUsage')
-const { saveDigestSettings } = require('../services/mailer')
-const { sendAllDigests } = require('../services/digest')
+const { saveDigestSettings, getDigestSettings, sendMail } = require('../services/mailer')
+const { sendAllDigests, previewDigests } = require('../services/digest')
 const { isValidTimeZone } = require('../services/deadlines')
 const { validateFlashcards, validatePracticeQuiz } = require('../services/practiceSets')
 const { checkUpload } = require('../services/fileSafety')
@@ -61,6 +61,9 @@ router.post('/', (req, res) => {
     digestSmtpPass,
     digestFromEmail,
     digestFromName,
+    digestOptions,
+    digestLanguage,
+    teacherEmail,
     timeZone
   } = req.body
 
@@ -85,7 +88,10 @@ router.post('/', (req, res) => {
     smtpUser: digestSmtpUser,
     smtpPass: digestSmtpPass,
     fromEmail: digestFromEmail,
-    fromName: digestFromName
+    fromName: digestFromName,
+    options: digestOptions,
+    language: digestLanguage,
+    teacherEmail
   })
 
   const teacherId = req.teacherId
@@ -893,6 +899,50 @@ router.post('/digest/send-now', async (req, res) => {
   try {
     const result = await sendAllDigests(req.teacherId)
     res.json(result)
+  } catch (err) {
+    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })
+  }
+})
+
+// What each family would get this week, so the teacher can look before it goes.
+router.get('/digest/preview', (req, res) => {
+  res.json(previewDigests(req.teacherId))
+})
+
+// This week's newsletter from the teacher, included at the top of the family digest
+// until the given date. An empty text clears it. Stored as text and escaped when the
+// email is built, so nothing in it can become HTML.
+router.post('/digest/newsletter', (req, res) => {
+  const { text, until } = req.body || {}
+  if (typeof text !== 'string' || text.length > 20000) {
+    return res.status(400).json({ error: 'Newsletter text is required (up to 20,000 characters)' })
+  }
+  if (until != null && (typeof until !== 'string' || Number.isNaN(Date.parse(until)))) {
+    return res.status(400).json({ error: 'until must be a date' })
+  }
+  db.prepare(
+    `INSERT INTO digest_settings (teacher_id) VALUES (?) ON CONFLICT(teacher_id) DO NOTHING`
+  ).run(req.teacherId)
+  db.prepare(
+    'UPDATE digest_settings SET newsletter = ?, newsletter_until = ? WHERE teacher_id = ?'
+  ).run(text.trim() || null, text.trim() ? until || null : null, req.teacherId)
+  res.json({ ok: true })
+})
+
+// The teacher's own weekly summary, built by the desktop app, emailed to the address
+// the teacher set for themselves (never anywhere else).
+router.post('/digest/send-teacher', async (req, res) => {
+  const { subject, html } = req.body || {}
+  if (typeof subject !== 'string' || typeof html !== 'string' || html.length > 500000) {
+    return res.status(400).json({ error: 'subject and html are required' })
+  }
+  const settings = getDigestSettings(req.teacherId)
+  if (!settings?.teacher_email) {
+    return res.status(400).json({ error: 'Add your own email address in Settings first.' })
+  }
+  try {
+    await sendMail(req.teacherId, settings.teacher_email, subject.slice(0, 200), html)
+    res.json({ ok: true, to: settings.teacher_email })
   } catch (err) {
     res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })
   }

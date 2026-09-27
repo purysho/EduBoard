@@ -33,6 +33,8 @@ import { MessagesPage } from './pages/Messages/MessagesPage'
 import { PortalTab } from './pages/Classes/PortalTab'
 import { ClassLettersPrintPage } from './pages/Print/ClassLettersPrintPage'
 import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrintPage'
+import { WeeklySummaryPage, WeeklySummaryPrintPage } from './pages/WeeklySummary/WeeklySummaryPage'
+import { NewsletterPage } from './pages/Newsletter/NewsletterPage'
 
 function App(): React.JSX.Element {
   return (
@@ -42,6 +44,7 @@ function App(): React.JSX.Element {
         <Route path="/print/class/:classId" element={<ClassReportsPrintPage />} />
         <Route path="/print/letters/:classId" element={<ClassLettersPrintPage />} />
         <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
+        <Route path="/print/weekly-summary" element={<WeeklySummaryPrintPage />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/students" element={<StudentsListPage />} />
@@ -73,6 +76,8 @@ function App(): React.JSX.Element {
           <Route path="/timetable" element={<TimetablePage />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/weekly-summary" element={<WeeklySummaryPage />} />
+          <Route path="/newsletter" element={<NewsletterPage />} />
         </Route>
       </Routes>
     </SecurityGate>

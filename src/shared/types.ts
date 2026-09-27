@@ -524,6 +524,25 @@ export interface PortalMessageThread {
 
 /** A Class Story post — lives only on the Portal, same as messages/homework
  * attachments, fetched live rather than mirrored locally. */
+/** What one family would get in this week's digest. */
+export interface DigestPreview {
+  accountId: string
+  username: string
+  /** Null when the family hasn't given an email yet (they'd get nothing). */
+  email: string | null
+  students: string[]
+  html: string
+}
+
+/** The parts of the family digest a teacher can switch off. */
+export interface DigestOptions {
+  grades: boolean
+  attendance: boolean
+  homework: boolean
+  classStory: boolean
+  messages: boolean
+}
+
 export interface ClassPost {
   id: string
   classId: string
@@ -689,6 +708,10 @@ export interface AppSettings {
   accentColor: string
   /** The school's own attendance codes, plus any renaming of the built-in four. */
   attendanceCodes: AttendanceCode[]
+  /** What the family weekly digest includes. */
+  digestOptions: DigestOptions
+  /** The teacher's own address, for their weekly summary. */
+  teacherEmail: string
   /** Letters, Class Story posts and lesson plans the teacher saved as templates. */
   savedTemplates: SavedTemplate[]
   /** What a printed report card shows; anything missing comes from its preset. */
@@ -862,6 +885,14 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   schoolLogo: '',
   accentColor: '',
   attendanceCodes: [],
+  digestOptions: {
+    grades: true,
+    attendance: true,
+    homework: true,
+    classStory: true,
+    messages: true
+  },
+  teacherEmail: '',
   savedTemplates: [],
   reportCard: {},
   terminology: {},

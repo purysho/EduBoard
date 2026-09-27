@@ -4,7 +4,7 @@ import type { PhraseSuggestion } from './commentBank'
 // checked against the same interface instead of preload's object literal being trusted.
 import type { SetupProgress } from './setupChecklist'
 import type { PortalAiInteraction } from './aiUsage'
-import type { PortalJoinLink, PortalJoinLinksOverview, PublishResult } from './types'
+import type { DigestPreview, PortalJoinLink, PortalJoinLinksOverview, PublishResult } from './types'
 import type {
   FeedbackDraft,
   PortalStudentProfile,
@@ -119,6 +119,8 @@ import type {
   CreatePortalInviteBatchInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
+import type { NewsletterFact, NewsletterStructure } from './newsletter'
+import type { NewsletterSourceChoice, WeeklySummary } from './summaries'
 
 /** What happened on the Portal when a student was deleted here. */
 export type PortalRemoval = 'removed' | 'queued' | 'no-portal'
@@ -478,6 +480,26 @@ export interface EduBoardApi {
       total: number
       errors: { username: string; error: string }[]
     }>
+    /** What each family would get this week, from the Portal. */
+    preview(): Promise<DigestPreview[]>
+    /** Adds a newsletter at the top of the digest until `until` (empty text clears it). */
+    setNewsletter(text: string, until: string | null): Promise<void>
+  }
+  weeklySummary: {
+    /** The teacher's own weekly summary, as data and as the HTML that's shown and sent. */
+    get(): Promise<{ summary: WeeklySummary; html: string }>
+    print(): Promise<{ saved: boolean; filePath?: string }>
+    /** Emails it to the teacher's own address; returns that address. */
+    email(): Promise<string>
+  }
+  newsletter: {
+    facts(choice: NewsletterSourceChoice): Promise<NewsletterFact[]>
+    draft(input: {
+      structure: NewsletterStructure
+      customSections: string[]
+      facts: NewsletterFact[]
+      notes: string
+    }): Promise<string>
   }
   portalAccounts: {
     /** Sets a new password on a student/family Portal account and signs out all of its

@@ -80,6 +80,9 @@ import {
   resetPortalPassword,
   getPortalProfile,
   mergeStudentsEverywhere,
+  previewDigest,
+  setDigestNewsletter,
+  emailTeacherSummary,
   removeStudentFromPortal,
   listPortalResetRequests,
   answerPortalResetRequest,
@@ -102,6 +105,10 @@ import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { getSetupProgress } from '../services/setupProgress'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr } from '@shared/i18n'
+import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
+import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
+import type { NewsletterFact, NewsletterStructure } from '@shared/newsletter'
+import type { NewsletterSourceChoice } from '@shared/summaries'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
@@ -1029,6 +1036,43 @@ export function registerIpcHandlers(): void {
   })
 
   handle(IpcChannels.digest.sendNow, () => sendDigestNow())
+  handle(IpcChannels.digest.preview, () => previewDigest())
+  handle(IpcChannels.digest.setNewsletter, (_e, text: unknown, until: unknown) => {
+    if (typeof text !== 'string') throw new Error(tr('Write the newsletter first.'))
+    return setDigestNewsletter(text, typeof until === 'string' ? until : null)
+  })
+  handle(IpcChannels.weeklySummary.get, () => {
+    const summary = getWeeklySummary()
+    return { summary, html: weeklySummaryHtml(summary) }
+  })
+  handle(IpcChannels.weeklySummary.print, () =>
+    printRouteToPdf(
+      '/print/weekly-summary',
+      `${tr('Your week')} ${new Date().toISOString().slice(0, 10)}.pdf`
+    )
+  )
+  handle(IpcChannels.weeklySummary.email, () => {
+    const summary = getWeeklySummary()
+    return emailTeacherSummary(
+      tr('Your week: {date}', { date: summary.weekOf }),
+      weeklySummaryHtml(summary)
+    )
+  })
+  handle(IpcChannels.newsletter.facts, (_e, choice: NewsletterSourceChoice) =>
+    gatherNewsletterFacts(choice)
+  )
+  handle(
+    IpcChannels.newsletter.draft,
+    (
+      _e,
+      input: {
+        structure: NewsletterStructure
+        customSections: string[]
+        facts: NewsletterFact[]
+        notes: string
+      }
+    ) => draftNewsletter(input)
+  )
   handle(IpcChannels.portalAccounts.listResetRequests, () => listPortalResetRequests())
   handle(IpcChannels.portalAccounts.answerResetRequest, (_e, id: string, approve: boolean) =>
     answerPortalResetRequest(id, approve)

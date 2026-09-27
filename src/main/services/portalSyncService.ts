@@ -26,7 +26,7 @@ import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles
 import { checkUpload } from '@shared/fileSafety'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import { portalFailure } from './portalErrors'
-import type { PublishResult } from '@shared/types'
+import type { DigestPreview, PublishResult } from '@shared/types'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
@@ -37,7 +37,7 @@ import type {
   PortalMessageThread,
   PortalStudentProfile
 } from '@shared/types'
-import { tr } from '@shared/i18n'
+import { tr, uiLanguage } from '@shared/i18n'
 
 export class PortalNotConfiguredError extends Error {
   constructor() {
@@ -292,6 +292,9 @@ function buildPublishPayload(): {
     digestSmtpPass: settings.digestSmtpPass,
     digestFromEmail: settings.digestFromEmail,
     digestFromName: settings.digestFromName,
+    digestOptions: settings.digestOptions,
+    digestLanguage: uiLanguage(),
+    teacherEmail: settings.teacherEmail,
     // Due dates end at midnight in this zone (see src/shared/deadlines.ts), so the
     // Portal's Late/Missing labels match what the teacher sees here.
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -831,6 +834,44 @@ export async function resetPortalPassword(username: string, newPassword: string)
     const body = (await res.json().catch(() => null)) as { error?: string } | null
     throw new Error(body?.error || tr('Password reset failed: {status}', { status: res.status }))
   }
+}
+
+/** What each family would get in this week's digest. */
+export async function previewDigest(): Promise<DigestPreview[]> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await fetch(`${portalUrl}/api/sync/digest/preview`, {
+    headers: { 'X-Sync-Secret': portalSyncSecret }
+  })
+  if (res.status === 404) {
+    throw new Error(tr('Your Portal server is too old to preview the digest. Update it first.'))
+  }
+  if (!res.ok) throw await portalFailure(tr('Previewing the digest failed'), res)
+  return res.json()
+}
+
+/** Puts a newsletter at the top of the family digest until the given date ('' clears). */
+export async function setDigestNewsletter(text: string, until: string | null): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await fetch(`${portalUrl}/api/sync/digest/newsletter`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ text, until })
+  })
+  if (!res.ok) throw await portalFailure(tr('Adding the newsletter to the digest failed'), res)
+}
+
+/** Emails the teacher their own weekly summary, to the address in Settings. */
+export async function emailTeacherSummary(subject: string, html: string): Promise<string> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  // The Portal sends it to the address from the last publish: make sure it has the latest.
+  await publishToPortal()
+  const res = await fetch(`${portalUrl}/api/sync/digest/send-teacher`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({ subject, html })
+  })
+  if (!res.ok) throw await portalFailure(tr('Emailing your summary failed'), res)
+  return ((await res.json()) as { to: string }).to
 }
 
 export async function sendDigestNow(): Promise<{

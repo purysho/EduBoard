@@ -290,6 +290,14 @@ ensureColumn('accounts', 'email', 'email TEXT')
 ensureColumn('accounts', 'onboarded_at', 'onboarded_at TEXT')
 ensureColumn('accounts', 'session_version', 'session_version INTEGER NOT NULL DEFAULT 0')
 ensureColumn('classes', 'teacher_id', 'teacher_id TEXT')
+// Weekly digest: what families get (JSON of on/off switches), its language, this week's
+// newsletter from the teacher and until when to include it, and the teacher's own
+// address for their weekly summary.
+ensureColumn('digest_settings', 'options', 'options TEXT')
+ensureColumn('digest_settings', 'language', "language TEXT NOT NULL DEFAULT 'en'")
+ensureColumn('digest_settings', 'newsletter', 'newsletter TEXT')
+ensureColumn('digest_settings', 'newsletter_until', 'newsletter_until TEXT')
+ensureColumn('digest_settings', 'teacher_email', 'teacher_email TEXT')
 // A student who forgot their password asks here; their teacher approves in the desktop
 // app; then the same browser (holding secret_hash's secret) sets a new password.
 db.exec(`

@@ -355,6 +355,21 @@ Parent letters, Class Story posts and lesson plans each have **Start from a temp
 ### Report card comments
 
 At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Your lists**). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.
+## Weekly digest, your week and newsletters
+
+The **weekly digest** is the Monday-morning email the Portal sends each family with an email on file. In **Settings → General**, under the digest email settings, tick what families get: grades, attendance, homework due this week, Class Story and a reminder about unread messages. It's written in the language EduBoard is in. **Settings → Portal sync → Preview** shows exactly what each family would receive this week, and says which families haven't given an email yet.
+
+**Your week** (the button at the top of the Dashboard) is your own summary across every class: what you taught and what's coming up, homework due and homework not handed in, students to check on and parent follow-ups owed. **Print (PDF)** saves it; **Email it to me** sends it to the address in **Settings → Your email address**, using the same email settings as the digest.
+
+**Newsletter** (in the sidebar) turns the week into a newsletter:
+
+1. Tick the classes and choose who it's for: **Friendly** (families), **Pyramid** (school leaders: the main message first, then what supports it), **Simple** (young readers), or **My own sections**.
+2. Tick what to include (lessons taught, lessons coming up, homework due, Class Story posts, and, if you like, class averages and attendance) and untick any single fact you don't want. Add your own notes, one per line.
+3. **Arrange for me** puts everything under the headings, word for word, with no internet. **Suggest wording with AI** (needs internet) words and orders the same facts and notes; it isn't allowed to add anything, and leaves [gaps] where it would need information you haven't given.
+4. Edit the text, then **Add to this week's family digest** (it goes at the top until Sunday), **Post to Class Story** (one class), or **Copy**. Fill in any [gaps] first.
+
+Nothing about any single student goes into a newsletter.
+
 ## Your school's look and settings
 
 **Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.

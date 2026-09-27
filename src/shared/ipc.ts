@@ -292,7 +292,18 @@ export const IpcChannels = {
     pickImage: 'classPosts:pickImage'
   },
   digest: {
-    sendNow: 'digest:sendNow'
+    sendNow: 'digest:sendNow',
+    preview: 'digest:preview',
+    setNewsletter: 'digest:setNewsletter'
+  },
+  weeklySummary: {
+    get: 'weeklySummary:get',
+    print: 'weeklySummary:print',
+    email: 'weeklySummary:email'
+  },
+  newsletter: {
+    facts: 'newsletter:facts',
+    draft: 'newsletter:draft'
   },
   portalAccounts: {
     resetPassword: 'portalAccounts:resetPassword',

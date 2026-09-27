@@ -3,6 +3,7 @@
 import { CLASSES } from './zh/classes'
 import { CODES } from './zh/codes'
 import { COMMON } from './zh/common'
+import { DIGEST } from './zh/digest'
 import { PAGES } from './zh/pages'
 import { SETTINGS } from './zh/settings'
 import { SYSTEM } from './zh/system'
@@ -12,6 +13,7 @@ export const ZH: Record<string, string> = {
   ...CLASSES,
   ...CODES,
   ...COMMON,
+  ...DIGEST,
   ...PAGES,
   ...SETTINGS,
   ...SYSTEM,

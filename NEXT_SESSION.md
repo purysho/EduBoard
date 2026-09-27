@@ -65,14 +65,11 @@ built since 0.3.3).
 5. ~~Templates for each section~~ **done** (`src/shared/templates.ts`,
    `components/TemplatePicker.tsx`, Settings → Report cards). Newsletters get theirs
    with item 6.
-6. **Weekly Digest**: a preview of what's in it before it goes; a **teacher
-   version** and a **family version** (student details vs parent details:
-   decide which fields each audience sees); **AI-assisted newsletter**: choose
-   a structure (Minto pyramid for school leaders, a friendly one for families,
-   simple language for younger readers, custom), with include/exclude fields.
-   AI suggests and formats; the teacher approves. Say "needs internet"
-   next to AI features (the user's standing rule: AI suggests, never writes the
-   whole thing unchecked, to avoid made-up content).
+6. ~~Weekly Digest preview, teacher/family versions, AI newsletter~~ **done**
+   (portal/services/digest.js, src/main/services/weeklySummary.ts,
+   newsletterService.ts, shared/newsletter.ts, pages/Newsletter). The user's rule
+   still applies: AI suggests, never writes the whole thing unchecked; "needs
+   internet" next to AI.
 7. **Competitor website**: https://www.educationtek.com/en-US/en-solution/smart-school-system.html
    (HappyClass Smart School System: homework guide videos, flipped classroom,
    IoT smart classroom, vocabulary system, SPOC live/on-demand courses). Fold

@@ -414,8 +414,56 @@ export function SettingsPage(): React.JSX.Element {
                       placeholder={tr('Ms. Smith')}
                     />
                   </FormRow>
+                  <fieldset className="col-span-2">
+                    <legend className="mb-1 text-sm font-medium">
+                      {tr('What families get each week')}
+                    </legend>
+                    <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm">
+                      {(
+                        [
+                          ['grades', tr('Grades')],
+                          ['attendance', tr('Attendance')],
+                          ['homework', tr('Homework due this week')],
+                          ['classStory', tr('Class Story')],
+                          ['messages', tr('Unread messages reminder')]
+                        ] as const
+                      ).map(([key, label]) => (
+                        <label key={key} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={form.digestOptions?.[key] !== false}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                digestOptions: { ...form.digestOptions, [key]: e.target.checked }
+                              })
+                            }
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      {tr(
+                        'The digest is written in the language EduBoard is in. A newsletter from the Newsletter page goes at the top.'
+                      )}
+                    </p>
+                  </fieldset>
                 </>
               )}
+              <FormRow
+                label={tr('Your email address')}
+                hint={tr(
+                  'Where “Email it to me” sends your own weekly summary (Dashboard → Your week).'
+                )}
+              >
+                <Input
+                  type="email"
+                  value={form.teacherEmail ?? ''}
+                  onChange={(e) => setForm({ ...form, teacherEmail: e.target.value })}
+                  placeholder="you@school.edu"
+                />
+              </FormRow>
               <div className="col-span-2">
                 <Button variant="primary" type="submit" disabled={updateSettings.isPending}>
                   {updateSettings.isPending ? tr('Saving…') : tr('Save')}

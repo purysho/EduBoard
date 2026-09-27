@@ -354,7 +354,18 @@ const api: EduBoardApi = {
       invoke(IpcChannels.portalAccounts.answerResetRequest, id, approve)
   },
   digest: {
-    sendNow: () => invoke(IpcChannels.digest.sendNow)
+    sendNow: () => invoke(IpcChannels.digest.sendNow),
+    preview: () => invoke(IpcChannels.digest.preview),
+    setNewsletter: (text, until) => invoke(IpcChannels.digest.setNewsletter, text, until)
+  },
+  weeklySummary: {
+    get: () => invoke(IpcChannels.weeklySummary.get),
+    print: () => invoke(IpcChannels.weeklySummary.print),
+    email: () => invoke(IpcChannels.weeklySummary.email)
+  },
+  newsletter: {
+    facts: (choice) => invoke(IpcChannels.newsletter.facts, choice),
+    draft: (input) => invoke(IpcChannels.newsletter.draft, input)
   }
 }
 

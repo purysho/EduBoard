@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import {
   ArrowUpCircle,
   Lock,
+  Newspaper,
   Projector,
   BarChart3,
   BookOpenText,
@@ -63,7 +64,8 @@ const navGroups: {
     heading: tr('Families & students'),
     items: [
       { to: '/messages', label: tr('Messages'), icon: MessageSquare },
-      { to: '/communications', label: tr('Communications'), icon: MessageCircle }
+      { to: '/communications', label: tr('Communications'), icon: MessageCircle },
+      { to: '/newsletter', label: tr('Newsletter'), icon: Newspaper }
     ]
   },
   {

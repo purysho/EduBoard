@@ -17,7 +17,18 @@ function getDigestSettings(teacherId) {
 
 function saveDigestSettings(
   teacherId,
-  { enabled, smtpHost, smtpPort, smtpUser, smtpPass, fromEmail, fromName }
+  {
+    enabled,
+    smtpHost,
+    smtpPort,
+    smtpUser,
+    smtpPass,
+    fromEmail,
+    fromName,
+    options,
+    language,
+    teacherEmail
+  }
 ) {
   db.prepare(
     `INSERT INTO digest_settings (teacher_id, enabled, smtp_host, smtp_port, smtp_user, smtp_pass, from_email, from_name)
@@ -40,6 +51,44 @@ function saveDigestSettings(
     fromEmail || '',
     fromName || ''
   )
+  // Sent by newer desktop apps only; an older one leaves them as they were.
+  if (options && typeof options === 'object') {
+    const clean = {}
+    for (const key of DIGEST_PARTS) clean[key] = options[key] !== false
+    db.prepare('UPDATE digest_settings SET options = ? WHERE teacher_id = ?').run(
+      JSON.stringify(clean),
+      teacherId
+    )
+  }
+  if (language === 'en' || language === 'zh') {
+    db.prepare('UPDATE digest_settings SET language = ? WHERE teacher_id = ?').run(
+      language,
+      teacherId
+    )
+  }
+  if (typeof teacherEmail === 'string') {
+    const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(teacherEmail.trim())
+      ? teacherEmail.trim()
+      : null
+    db.prepare('UPDATE digest_settings SET teacher_email = ? WHERE teacher_id = ?').run(
+      email,
+      teacherId
+    )
+  }
+}
+
+/** The parts of the family digest a teacher can switch off. */
+const DIGEST_PARTS = ['grades', 'attendance', 'homework', 'classStory', 'messages']
+
+/** What families get: every part on unless the teacher switched it off. */
+function digestOptions(settings) {
+  let saved = {}
+  try {
+    saved = settings?.options ? JSON.parse(settings.options) : {}
+  } catch {
+    // Unreadable: everything on.
+  }
+  return Object.fromEntries(DIGEST_PARTS.map((key) => [key, saved[key] !== false]))
 }
 
 function markDigestSent(teacherId) {
@@ -67,6 +116,8 @@ async function sendMail(teacherId, to, subject, html) {
 }
 
 module.exports = {
+  DIGEST_PARTS,
+  digestOptions,
   getDigestSettings,
   saveDigestSettings,
   markDigestSent,

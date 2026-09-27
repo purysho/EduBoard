@@ -34,6 +34,14 @@ export function DashboardPage(): React.JSX.Element {
       <PageHeader
         title={tr('Dashboard')}
         description={tr("Everything you're teaching, at a glance.")}
+        actions={
+          <Link
+            to="/weekly-summary"
+            className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-surface-muted)]"
+          >
+            {tr('Your week')}
+          </Link>
+        }
       />
 
       <ResetRequests />

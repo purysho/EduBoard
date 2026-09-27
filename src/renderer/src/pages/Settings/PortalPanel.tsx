@@ -12,6 +12,7 @@ import {
 } from '@renderer/lib/queries'
 import { PublishSummary } from '@renderer/components/portal/PublishSummary'
 import { tr, trn } from '@shared/i18n'
+import { DigestPreviewModal } from './DigestPreviewModal'
 
 // No 0/O/1/l/I, so a temporary password read aloud or copied off a screen can't be
 // mistyped. 10 characters from 56 symbols is about 58 bits: plenty for a password the
@@ -25,6 +26,7 @@ function generateTempPassword(): string {
 }
 
 export function PortalPanel(): React.JSX.Element {
+  const [previewing, setPreviewing] = useState(false)
   const publish = usePublishToPortal()
   const pull = usePullSubmissionsFromPortal()
   const sendDigest = useSendDigestNow()
@@ -103,6 +105,10 @@ export function PortalPanel(): React.JSX.Element {
             <Mail size={14} className="mr-1 inline" aria-hidden />
             {sendDigest.isPending ? tr('Sending…') : tr('Send weekly digest now')}
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setPreviewing(true)}>
+            {tr('Preview')}
+          </Button>
+          {previewing && <DigestPreviewModal onClose={() => setPreviewing(false)} />}
           {sendDigest.isError && (
             <span className="text-[var(--color-danger)]">
               {ipcErrorMessage(sendDigest.error, tr('Could not send the digest.'))}
