@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { app, BrowserWindow, Notification } from 'electron'
 import { spawn } from 'child_process'
 import {
@@ -152,7 +153,8 @@ async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
   const release = await fetchLatestRelease(portalUrl())
   latestKnown = release.version
   const asset = pickAsset(kind, process.arch, release.assets)
-  if (!asset) throw new Error(tr('The newest release has no download for this computer.'))
+  if (!asset)
+    throw new AppError('EB-3001', tr('The newest release has no download for this computer.'))
   const dir = pendingDir()
   clearPending(dir)
   mkdirSync(dir, { recursive: true })
@@ -327,12 +329,13 @@ function showUpdatingWindow(version: string): BrowserWindow {
 export async function installAppUpdate(): Promise<void> {
   if (progress.phase === 'installing') return
   const where = installKind()
-  if (!('kind' in where)) throw new Error(where.reason)
+  if (!('kind' in where)) throw new AppError('EB-3006', where.reason)
   try {
     createBackup()
     let pending = usablePending()
     if (!pending || (latestKnown && isNewerVersion(latestKnown, pending.version))) {
-      if (progress.phase === 'downloading') throw new Error(tr('The update is still downloading.'))
+      if (progress.phase === 'downloading')
+        throw new AppError('EB-3005', tr('The update is still downloading.'))
       pending = await downloadToPending(where.kind)
     }
     progress = { phase: 'installing', fraction: 1, error: null }

@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { writeFile } from 'fs/promises'
 import ExcelJS from 'exceljs'
 import { getSqlite } from '../db/client'
@@ -61,7 +62,7 @@ async function loadFirstWorksheet(filePath: string): Promise<ExcelJS.Worksheet> 
   }
   await workbook.xlsx.readFile(filePath)
   const sheet = workbook.worksheets[0]
-  if (!sheet) throw new Error(tr('Workbook has no sheets'))
+  if (!sheet) throw new AppError('EB-2002', tr('Workbook has no sheets'))
   return sheet
 }
 
@@ -110,7 +111,8 @@ export async function importRoster(
 
   const splitNames = !(headerIndex.has('firstName') && headerIndex.has('lastName'))
   if (splitNames && !headerIndex.has('fullName')) {
-    throw new Error(
+    throw new AppError(
+      'EB-2002',
       tr('The file needs “First Name” and “Last Name” columns, or one “Name” (姓名) column.')
     )
   }
@@ -177,7 +179,7 @@ export async function exportGradebookXlsx(classId: string, filePath: string): Pr
 /** One class's gradebook (every assessment score, percent and letter) as a worksheet. */
 function addGradebookSheet(workbook: ExcelJS.Workbook, classId: string, sheetName?: string): void {
   const cls = getClass(classId)
-  if (!cls) throw new Error(tr('Class not found'))
+  if (!cls) throw new AppError('EB-0002', tr('Class not found'))
 
   const assessmentsList = listAssessmentsByClass(classId)
   const scoresByKey = new Map(
@@ -241,7 +243,7 @@ export async function exportCourseGradeSheetXlsx(
 ): Promise<void> {
   const composite = getCourseGroupComposite(courseGroupId)
   const classesInGroup = listClassesByCourseGroup(courseGroupId)
-  if (!classesInGroup.length) throw new Error(tr('This course has no classes yet.'))
+  if (!classesInGroup.length) throw new AppError('EB-2003', tr('This course has no classes yet.'))
   // Same term order the Composite Grades page uses.
   const order = new Map<string, number>()
   for (const entry of composite.flatMap((c) => c.classes)) {
@@ -321,7 +323,7 @@ function csvField(value: string): string {
  * without opening the app. */
 export async function exportAttendanceCsv(classId: string, filePath: string): Promise<void> {
   const cls = getClass(classId)
-  if (!cls) throw new Error(tr('Class not found'))
+  if (!cls) throw new AppError('EB-0002', tr('Class not found'))
 
   const roster = getClassRoster(classId)
   const records = listAttendanceByClass(classId)

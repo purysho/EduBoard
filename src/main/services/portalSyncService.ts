@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { createHash } from 'crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
@@ -26,7 +27,7 @@ import { getSettings, getStoredValue, setStoredValue } from '../repositories/set
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
-import { portalFailure } from './portalErrors'
+import { portalFailure, portalFetch } from './portalErrors'
 import type { DigestPreview, PublishResult } from '@shared/types'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
@@ -40,9 +41,9 @@ import type {
 } from '@shared/types'
 import { tr, uiLanguage } from '@shared/i18n'
 
-export class PortalNotConfiguredError extends Error {
+export class PortalNotConfiguredError extends AppError {
   constructor() {
-    super(tr('Set a Portal URL and sync secret in Settings first.'))
+    super('EB-1001', tr('Set a Portal URL and sync secret in Settings first.'))
     this.name = 'PortalNotConfiguredError'
   }
 }
@@ -84,7 +85,7 @@ function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } 
   if (!portalUrl || !portalSyncSecret) throw new PortalNotConfiguredError()
   // Never send the secret or student data over an unencrypted connection.
   const problem = portalUrlProblem(portalUrl)
-  if (problem) throw new Error(problem)
+  if (problem) throw new AppError('EB-1002', problem)
   return { portalUrl, portalSyncSecret }
 }
 
@@ -340,7 +341,7 @@ export function getPublishStatus(): PublishStatus {
 async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
   const { body, attachmentPaths, materialChunks, skipped } = buildPublishPayload()
-  const res = await fetch(`${portalUrl}/api/sync`, {
+  const res = await portalFetch(`${portalUrl}/api/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify(body)
@@ -362,7 +363,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   for (const id of reply.needFiles) {
     const filePath = attachmentPaths.get(String(id))
     if (!filePath) continue
-    const upload = await fetch(
+    const upload = await portalFetch(
       `${portalUrl}/api/sync/homework/${encodeURIComponent(String(id))}/file`,
       {
         method: 'POST',
@@ -377,7 +378,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   for (const id of reply.needChunks) {
     const chunks = materialChunks.get(String(id))
     if (!chunks) continue
-    const upload = await fetch(
+    const upload = await portalFetch(
       `${portalUrl}/api/sync/materials/${encodeURIComponent(String(id))}/chunks`,
       {
         method: 'POST',
@@ -434,7 +435,7 @@ async function sendPendingStudentDeletes(): Promise<void> {
   if (!queue.length) return
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
   for (const studentId of queue) {
-    const res = await fetch(`${portalUrl}/api/sync/delete-student`, {
+    const res = await portalFetch(`${portalUrl}/api/sync/delete-student`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
       body: JSON.stringify({ studentId })
@@ -456,7 +457,7 @@ async function sendPendingStudentDeletes(): Promise<void> {
  * the Portal's ids. Returns how many were new here. Safe to call repeatedly. */
 export async function importNewStudentsFromPortal(): Promise<number> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const res = await fetch(`${portalUrl}/api/sync/new-students`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/new-students`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (res.status === 404) return 0 // a Portal from before join links
@@ -494,7 +495,7 @@ export async function importNewStudentsFromPortal(): Promise<number> {
 export async function getStudentsWithPortalAccounts(): Promise<string[] | null> {
   try {
     const { portalUrl, portalSyncSecret } = requirePortalConfig()
-    const res = await fetch(`${portalUrl}/api/sync/accounts`, {
+    const res = await portalFetch(`${portalUrl}/api/sync/accounts`, {
       headers: { 'X-Sync-Secret': portalSyncSecret }
     })
     return res.ok ? ((await res.json()) as string[]) : null
@@ -509,7 +510,7 @@ export async function getStudentsWithPortalAccounts(): Promise<string[] | null> 
 export async function pullSubmissionsFromPortal(): Promise<number> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/submissions`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/submissions`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw await portalFailure(tr('Portal pull failed'), res)
@@ -558,7 +559,7 @@ export async function pushSubmissionGrade(input: {
 }): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/submissions/grade`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/submissions/grade`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ grades: [input] })
@@ -586,7 +587,7 @@ export async function mergeStudentsEverywhere(
   }
   if (portalConfigured) {
     const { portalUrl, portalSyncSecret } = requirePortalConfig()
-    const res = await fetch(`${portalUrl}/api/sync/merge-students`, {
+    const res = await portalFetch(`${portalUrl}/api/sync/merge-students`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
       body: JSON.stringify({ from: duplicateId, into: keepId })
@@ -610,7 +611,7 @@ export async function pushSubmissionPortfolio(input: {
 }): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/submissions/portfolio`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/submissions/portfolio`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify(input)
@@ -627,7 +628,7 @@ export async function downloadSubmissionFile(
 ): Promise<string> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(
+  const res = await portalFetch(
     `${portalUrl}/api/sync/submissions/${homeworkAssignmentId}/${studentId}/file`,
     { headers: { 'X-Sync-Secret': portalSyncSecret } }
   )
@@ -643,7 +644,8 @@ export async function downloadSubmissionFile(
   // contents, or through an older Portal, must not reach the disk unvetted.
   const check = checkUpload(fileName, bytes)
   if (!check.ok) {
-    throw new Error(
+    throw new AppError(
+      'EB-2006',
       tr('EduBoard didn’t open this file because {reason}.', { reason: check.reason })
     )
   }
@@ -659,9 +661,12 @@ export async function getPortalProfile(studentId: string): Promise<PortalStudent
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
   const headers = { 'X-Sync-Secret': portalSyncSecret }
 
-  const res = await fetch(`${portalUrl}/api/sync/profiles`, { headers })
+  const res = await portalFetch(`${portalUrl}/api/sync/profiles`, { headers })
   if (!res.ok)
-    throw new Error(tr('Could not load Portal profiles: {status}', { status: res.status }))
+    throw new AppError(
+      'EB-1008',
+      tr('Could not load Portal profiles: {status}', { status: res.status })
+    )
   const profiles = (await res.json()) as (Omit<PortalStudentProfile, 'photoDataUrl'> & {
     hasPhoto: boolean
   })[]
@@ -670,7 +675,7 @@ export async function getPortalProfile(studentId: string): Promise<PortalStudent
 
   let photoDataUrl: string | null = null
   if (profile.hasPhoto) {
-    const photo = await fetch(
+    const photo = await portalFetch(
       `${portalUrl}/api/sync/profiles/${encodeURIComponent(studentId)}/photo`,
       { headers }
     )
@@ -698,7 +703,7 @@ export async function getPortalProfile(studentId: string): Promise<PortalStudent
 export async function listMessageThreads(): Promise<PortalMessageThread[]> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/messages/threads`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/messages/threads`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw await portalFailure(tr('Could not load messages'), res)
@@ -708,7 +713,7 @@ export async function listMessageThreads(): Promise<PortalMessageThread[]> {
 export async function sendTeacherMessage(accountId: string, body: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/messages`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ accountId, body })
@@ -725,7 +730,7 @@ export async function getStudentAiActivity(
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
   const query = new URLSearchParams({ studentId })
   if (homeworkId) query.set('homeworkId', homeworkId)
-  const res = await fetch(`${portalUrl}/api/sync/ai-activity?${query}`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/ai-activity?${query}`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (res.status === 404) return []
@@ -739,7 +744,7 @@ export async function getStudentAiActivity(
 export async function translateMessage(messageId: string, targetLang: string): Promise<string> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/messages/${messageId}/translate`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/messages/${messageId}/translate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ targetLang })
@@ -752,7 +757,7 @@ export async function translateMessage(messageId: string, targetLang: string): P
 export async function markMessageThreadRead(accountId: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/messages/${accountId}/read`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/messages/${accountId}/read`, {
     method: 'POST',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
@@ -762,7 +767,7 @@ export async function markMessageThreadRead(accountId: string): Promise<void> {
 export async function listClassPosts(): Promise<ClassPost[]> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/posts`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/posts`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw await portalFailure(tr('Could not load posts'), res)
@@ -783,7 +788,7 @@ export async function createClassPost(
     imageData = readFileSync(imagePath).toString('base64')
   }
 
-  const res = await fetch(`${portalUrl}/api/sync/posts`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ classId, body, imageName, imageData })
@@ -794,7 +799,7 @@ export async function createClassPost(
 export async function deleteClassPost(id: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/posts/${id}`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/posts/${id}`, {
     method: 'DELETE',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
@@ -814,7 +819,7 @@ export async function listPortalResetRequests(): Promise<PortalResetRequest[]> {
   } catch {
     return []
   }
-  const res = await fetch(`${config.portalUrl}/api/sync/reset-requests`, {
+  const res = await portalFetch(`${config.portalUrl}/api/sync/reset-requests`, {
     headers: { 'X-Sync-Secret': config.portalSyncSecret }
   })
   if (!res.ok) throw await portalFailure(tr('Checking password reset requests failed'), res)
@@ -823,7 +828,7 @@ export async function listPortalResetRequests(): Promise<PortalResetRequest[]> {
 
 export async function answerPortalResetRequest(id: string, approve: boolean): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const res = await fetch(`${portalUrl}/api/sync/reset-requests/${encodeURIComponent(id)}`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/reset-requests/${encodeURIComponent(id)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ approve })
@@ -834,7 +839,7 @@ export async function answerPortalResetRequest(id: string, approve: boolean): Pr
 export async function resetPortalPassword(username: string, newPassword: string): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/reset-password`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ username, newPassword })
@@ -843,18 +848,24 @@ export async function resetPortalPassword(username: string, newPassword: string)
     // The Portal's own message ("No such account", "Password must be at least 8
     // characters") is what the teacher needs to see, not the raw status line.
     const body = (await res.json().catch(() => null)) as { error?: string } | null
-    throw new Error(body?.error || tr('Password reset failed: {status}', { status: res.status }))
+    throw new AppError(
+      'EB-1009',
+      body?.error || tr('Password reset failed: {status}', { status: res.status })
+    )
   }
 }
 
 /** What each family would get in this week's digest. */
 export async function previewDigest(): Promise<DigestPreview[]> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const res = await fetch(`${portalUrl}/api/sync/digest/preview`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/digest/preview`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (res.status === 404) {
-    throw new Error(tr('Your Portal server is too old to preview the digest. Update it first.'))
+    throw new AppError(
+      'EB-1007',
+      tr('Your Portal server is too old to preview the digest. Update it first.')
+    )
   }
   if (!res.ok) throw await portalFailure(tr('Previewing the digest failed'), res)
   return res.json()
@@ -863,7 +874,7 @@ export async function previewDigest(): Promise<DigestPreview[]> {
 /** Puts a newsletter at the top of the family digest until the given date ('' clears). */
 export async function setDigestNewsletter(text: string, until: string | null): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const res = await fetch(`${portalUrl}/api/sync/digest/newsletter`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/digest/newsletter`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ text, until })
@@ -876,7 +887,7 @@ export async function emailTeacherSummary(subject: string, html: string): Promis
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
   // The Portal sends it to the address from the last publish: make sure it has the latest.
   await publishToPortal()
-  const res = await fetch(`${portalUrl}/api/sync/digest/send-teacher`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/digest/send-teacher`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ subject, html })
@@ -892,7 +903,7 @@ export async function sendDigestNow(): Promise<{
 }> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
-  const res = await fetch(`${portalUrl}/api/sync/digest/send-now`, {
+  const res = await portalFetch(`${portalUrl}/api/sync/digest/send-now`, {
     method: 'POST',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })

@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import type { FeedbackDraft } from '@shared/types'
 
 // First-pass feedback on a student's submission. The model *proposes*; nothing here
@@ -33,9 +34,9 @@ const MAX_GRADE_CHARS = 20
 const MAX_FLAGS = 5
 const MAX_FLAG_CHARS = 200
 
-export class AiDraftFormatError extends Error {
+export class AiDraftFormatError extends AppError {
   constructor(detail: string) {
-    super(`The AI's reply wasn't in the expected format (${detail}). Try again.`)
+    super('EB-4003', `The AI's reply wasn't in the expected format (${detail}). Try again.`)
     this.name = 'AiDraftFormatError'
   }
 }

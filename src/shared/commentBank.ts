@@ -1,5 +1,6 @@
 // Report card comment bank: ready-made sentences with placeholders the teacher adds to
 // a student's comment in one click, then edits. {name} is the name the student goes by.
+import { AppError } from './errorCodes'
 import { tr, uiLanguage } from './i18n'
 
 export const COMMENT_CATEGORIES = [
@@ -128,9 +129,10 @@ export function parsePhraseSuggestions(text: string): PhraseSuggestion[] {
   try {
     raw = JSON.parse(cleaned)
   } catch {
-    throw new Error(tr('The AI’s suggestions couldn’t be read. Try again.'))
+    throw new AppError('EB-4003', tr('The AI’s suggestions couldn’t be read. Try again.'))
   }
-  if (!Array.isArray(raw)) throw new Error(tr('The AI’s suggestions couldn’t be read. Try again.'))
+  if (!Array.isArray(raw))
+    throw new AppError('EB-4003', tr('The AI’s suggestions couldn’t be read. Try again.'))
   const out: PhraseSuggestion[] = []
   for (const item of raw) {
     const phrase = typeof item?.phrase === 'string' ? item.phrase.trim() : ''
@@ -140,6 +142,7 @@ export function parsePhraseSuggestions(text: string): PhraseSuggestion[] {
     out.push({ phrase, basis })
     if (out.length === 5) break
   }
-  if (!out.length) throw new Error(tr('The AI didn’t suggest anything usable. Try again.'))
+  if (!out.length)
+    throw new AppError('EB-4003', tr('The AI didn’t suggest anything usable. Try again.'))
   return out
 }

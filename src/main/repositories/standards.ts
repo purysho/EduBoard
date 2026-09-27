@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { standards } from '../db/schema'
@@ -21,7 +22,7 @@ export function updateStandard(id: string, patch: UpdateStandardInput): Standard
   getDb().update(standards).set(patch).where(eq(standards.id, id)).run()
   const updated = getDb().select().from(standards).where(eq(standards.id, id)).get() as
     Standard | undefined
-  if (!updated) throw new Error(`Standard ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Standard ${id} not found after update`)
   return updated
 }
 

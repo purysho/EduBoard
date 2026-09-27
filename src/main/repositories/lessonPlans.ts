@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { addDays } from '@shared/dates'
 import { and, asc, eq, gte } from 'drizzle-orm'
 import { getDb } from '../db/client'
@@ -52,7 +53,7 @@ export function updateLessonPlan(id: string, patch: UpdateLessonPlanInput): Less
     .where(eq(lessonPlans.id, id))
     .run()
   const updated = getLessonPlan(id)
-  if (!updated) throw new Error(`Lesson plan ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Lesson plan ${id} not found after update`)
   return updated
 }
 

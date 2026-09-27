@@ -1,4 +1,5 @@
 // Sends a message into a class's DingTalk or WeCom group through its robot webhook.
+import { AppError } from '@shared/errorCodes'
 import { createHmac } from 'crypto'
 import {
   groupChatKind,
@@ -29,8 +30,8 @@ export async function sendToGroupChat(
   now = Date.now()
 ): Promise<void> {
   const kind = groupChatKind(group.webhook)
-  if (!kind) throw new Error(tr('That isn’t a DingTalk or WeCom robot address.'))
-  if (!text.trim()) throw new Error(tr('There’s nothing to send.'))
+  if (!kind) throw new AppError('EB-6001', tr('That isn’t a DingTalk or WeCom robot address.'))
+  if (!text.trim()) throw new AppError('EB-6002', tr('There’s nothing to send.'))
   let res: Response
   try {
     res = await doFetch(signedWebhook(group, now), {
@@ -40,11 +41,14 @@ export async function sendToGroupChat(
       signal: AbortSignal.timeout(15_000)
     })
   } catch {
-    throw new Error(tr('Couldn’t reach the group chat. Check the internet connection.'))
+    throw new AppError(
+      'EB-6003',
+      tr('Couldn’t reach the group chat. Check the internet connection.')
+    )
   }
   const reply = (await res.json().catch(() => null)) as { errcode?: number; errmsg?: string } | null
   const problem = groupReplyProblem(kind, res.ok ? reply : null)
-  if (problem) throw new Error(problem)
+  if (problem) throw new AppError(problem.code, problem.message)
 }
 
 /** Sends to one of the groups saved in Settings. */
@@ -54,6 +58,6 @@ export async function sendToSavedGroupChat(
   title: string
 ): Promise<void> {
   const group = (getSettings().groupChats ?? []).find((g) => g.id === groupId)
-  if (!group) throw new Error(tr('That group chat is no longer set up.'))
+  if (!group) throw new AppError('EB-6007', tr('That group chat is no longer set up.'))
   await sendToGroupChat(group, text, title)
 }

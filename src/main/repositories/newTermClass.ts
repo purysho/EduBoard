@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { getDb } from '../db/client'
 import { getClass, createClass } from './classes'
 import { createGradeCategory, listGradeCategories } from './gradeCategories'
@@ -26,7 +27,7 @@ export function duplicateClassForNewTerm(
   input: DuplicateClassForNewTermInput
 ): ClassSection {
   const source = getClass(classId)
-  if (!source) throw new Error(tr('That class no longer exists.'))
+  if (!source) throw new AppError('EB-0002', tr('That class no longer exists.'))
   return getDb().transaction(() => {
     const created = createClass({
       name: input.name.trim() || source.name,

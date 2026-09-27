@@ -22,7 +22,8 @@
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac -c.npmRebuild=true",
     "build:linux": "npm run build && electron-builder --linux",
-    "version": "node -e \"require('fs').writeFileSync('portal/desktop-version.json', JSON.stringify({ version: require('./package.json').version }, null, 2) + '\\n')\" && git add portal/desktop-version.json"
+    "version": "node -e \"require('fs').writeFileSync('portal/desktop-version.json', JSON.stringify({ version: require('./package.json').version }, null, 2) + '\\n')\" && git add portal/desktop-version.json",
+    "error-codes": "node --experimental-strip-types --no-warnings tools/error-codes/write.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

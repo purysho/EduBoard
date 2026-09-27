@@ -77,25 +77,34 @@ export function groupMessageBody(
     : { msgtype: 'markdown', markdown: { content } }
 }
 
-/** A service's reply as a plain-words error, or null when it was sent. */
+/** A service's reply as a plain-words error with its code, or null when it was sent. */
 export function groupReplyProblem(
   kind: GroupChatKind,
   reply: { errcode?: number; errmsg?: string } | null
-): string | null {
+): { code: 'EB-6004' | 'EB-6005' | 'EB-6006'; message: string } | null {
   if (reply && reply.errcode === 0) return null
   const code = reply?.errcode
   if (kind === 'dingtalk' && code === 310000) {
-    return tr(
-      'DingTalk refused the message because of the robot’s security setting. Use signing (加签) and paste the secret here, or add a keyword that the message contains.'
-    )
+    return {
+      code: 'EB-6004',
+      message: tr(
+        'DingTalk refused the message because of the robot’s security setting. Use signing (加签) and paste the secret here, or add a keyword that the message contains.'
+      )
+    }
   }
   if (
     (kind === 'dingtalk' && (code === 300001 || code === 300005)) ||
     (kind === 'wecom' && code === 93000)
   ) {
-    return tr('The group’s robot address is no longer valid. Copy it again from the group.')
+    return {
+      code: 'EB-6005',
+      message: tr('The group’s robot address is no longer valid. Copy it again from the group.')
+    }
   }
-  return tr('The group chat didn’t accept the message ({reason}).', {
-    reason: reply?.errmsg || (code !== undefined ? String(code) : tr('no reply'))
-  })
+  return {
+    code: 'EB-6006',
+    message: tr('The group chat didn’t accept the message ({reason}).', {
+      reason: reply?.errmsg || (code !== undefined ? String(code) : tr('no reply'))
+    })
+  }
 }

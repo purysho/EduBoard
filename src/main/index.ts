@@ -12,6 +12,12 @@ import { purgeOldDeletedAuditEntries } from './repositories/auditLog'
 import { isProtected, startAutoLock, whenFirstUnlocked } from './services/security'
 import { installPendingUpdateOnLaunch, startAutomaticUpdateChecks } from './services/selfUpdate'
 import { startUsagePings } from './services/usagePing'
+import { toWindowError } from './services/errorLog'
+
+// A promise nobody waited on failed: log it with a reference (it never reached a screen).
+process.on('unhandledRejection', (reason) => {
+  toWindowError(reason, 'background')
+})
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.eduboard.app')

@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { classes } from '../db/schema'
@@ -51,7 +52,7 @@ export function updateClass(id: string, patch: UpdateClassInput): ClassSection {
     .where(eq(classes.id, id))
     .run()
   const updated = getClass(id)
-  if (!updated) throw new Error(`Class ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Class ${id} not found after update`)
   recordAudit({
     entityType: 'class',
     entityId: id,

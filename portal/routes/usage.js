@@ -37,13 +37,14 @@ router.post('/ping', rateLimit(LIMITS.usagePingPerIp), (req, res) => {
     !STUDENT_BANDS.includes(b.students) ||
     typeof b.portal !== 'boolean'
   ) {
-    return res.status(400).json({ error: 'Not a usage ping' })
+    return res.status(400).json({ error: 'Not a usage ping', code: 'PT-6006' })
   }
   const week = weekOf(new Date())
   const known = db.prepare('SELECT 1 FROM usage_installs WHERE install_id = ?').get(b.id)
   if (!known) {
     const { n } = db.prepare('SELECT COUNT(*) AS n FROM usage_installs').get()
-    if (n >= MAX_INSTALLS) return res.status(503).json({ error: 'Not accepting new installs' })
+    if (n >= MAX_INSTALLS)
+      return res.status(503).json({ error: 'Not accepting new installs', code: 'PT-6006' })
     db.prepare('INSERT INTO usage_installs (install_id, first_week) VALUES (?, ?)').run(b.id, week)
   }
   db.prepare(

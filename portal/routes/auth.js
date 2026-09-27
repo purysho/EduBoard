@@ -36,7 +36,7 @@ router.post('/login', loginPerIp, (req, res) => {
   // Runs bcrypt even when the account doesn't exist, so timing doesn't reveal usernames.
   if (!verifyPassword(password || '', account?.password_hash)) {
     loginFailures.consume(userKey)
-    return res.status(401).json({ error: 'Wrong username or password' })
+    return res.status(401).json({ error: 'Wrong username or password', code: 'PT-1002' })
   }
   loginFailures.reset(userKey)
   issueSessionCookie(res, account.id)
@@ -82,7 +82,7 @@ function findResetRequest(id, secret) {
 
 router.post('/reset-request', resetRequestPerIp, (req, res) => {
   const username = String(req.body?.username || '').trim()
-  if (!username) return res.status(400).json({ error: 'Enter your username' })
+  if (!username) return res.status(400).json({ error: 'Enter your username', code: 'PT-1004' })
   const account = db.prepare('SELECT id FROM accounts WHERE username = ?').get(username)
   if (account) {
     // One open request per account: asking again replaces the old one.
@@ -101,18 +101,20 @@ router.post('/reset-request', resetRequestPerIp, (req, res) => {
 
 router.post('/reset-request/:id/status', secretUrlPerIp, (req, res) => {
   const row = findResetRequest(req.params.id, req.body?.secret)
-  if (!row) return res.status(404).json({ error: 'Request not found' })
+  if (!row) return res.status(404).json({ error: 'Request not found', code: 'PT-1005' })
   res.json({ status: row.status })
 })
 
 router.post('/reset-request/:id/complete', secretUrlPerIp, (req, res) => {
   const row = findResetRequest(req.params.id, req.body?.secret)
   if (!row || row.status !== 'approved' || !row.account_id) {
-    return res.status(403).json({ error: 'This reset hasn’t been approved by your teacher.' })
+    return res
+      .status(403)
+      .json({ error: 'This reset hasn’t been approved by your teacher.', code: 'PT-1005' })
   }
   const newPassword = req.body?.newPassword
   const problem = passwordProblem(newPassword)
-  if (problem) return res.status(400).json({ error: problem })
+  if (problem) return res.status(400).json({ error: problem, code: 'PT-1006' })
   db.transaction(() => {
     db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
       hashPassword(newPassword),

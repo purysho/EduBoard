@@ -66,13 +66,14 @@ const isRealDate = (value) => {
 
 router.get('/:code', (req, res) => {
   const invite = getValidInvite(req.params.code)
-  if (!invite) return res.status(404).json({ error: 'Invalid or already-used code' })
+  if (!invite)
+    return res.status(404).json({ error: 'Invalid or already-used code', code: 'PT-2001' })
   const cls = db.prepare('SELECT name FROM classes WHERE id = ?').get(invite.class_id)
 
   if (invite.kind === 'student') {
     const student = db.prepare('SELECT * FROM students WHERE id = ?').get(invite.student_id)
     if (!student || hasAccount(student.id)) {
-      return res.status(404).json({ error: 'Invalid or already-used code' })
+      return res.status(404).json({ error: 'Invalid or already-used code', code: 'PT-2001' })
     }
     return res.json({
       kind: 'student',
@@ -177,21 +178,23 @@ function joinClass(invite, body) {
 
 router.post('/:code/redeem', (req, res) => {
   const invite = getValidInvite(req.params.code)
-  if (!invite) return res.status(404).json({ error: 'Invalid or already-used code' })
+  if (!invite)
+    return res.status(404).json({ error: 'Invalid or already-used code', code: 'PT-2001' })
   const body = req.body || {}
   const { username, password, dateOfBirth } = body
-  if (!username || !password) return res.status(400).json({ error: 'All fields are required' })
+  if (!username || !password)
+    return res.status(400).json({ error: 'All fields are required', code: 'PT-2002' })
   const credentialProblem = validateCredentials(username, password)
-  if (credentialProblem) return res.status(400).json({ error: credentialProblem })
+  if (credentialProblem) return res.status(400).json({ error: credentialProblem, code: 'PT-2002' })
 
   // A personal link: the student is fixed by the invite, not by anything sent.
   if (invite.kind === 'student') {
     const student = db.prepare('SELECT * FROM students WHERE id = ?').get(invite.student_id)
     if (!student || hasAccount(student.id)) {
-      return res.status(404).json({ error: 'Invalid or already-used code' })
+      return res.status(404).json({ error: 'Invalid or already-used code', code: 'PT-2001' })
     }
     const problem = checkDob(student, dateOfBirth)
-    if (problem) return res.status(400).json({ error: problem })
+    if (problem) return res.status(400).json({ error: problem, code: 'PT-2002' })
     return createAccount(res, {
       username,
       password,
@@ -211,9 +214,10 @@ router.post('/:code/redeem', (req, res) => {
       .get(body.studentId, invite.class_id)
     const student =
       enrolled && db.prepare('SELECT * FROM students WHERE id = ?').get(body.studentId)
-    if (!student) return res.status(400).json({ error: 'Not a student in this class' })
+    if (!student)
+      return res.status(400).json({ error: 'Not a student in this class', code: 'PT-2003' })
     const problem = checkDob(student, dateOfBirth)
-    if (problem) return res.status(400).json({ error: problem })
+    if (problem) return res.status(400).json({ error: problem, code: 'PT-2002' })
     return createAccount(res, {
       username,
       password,
@@ -224,7 +228,7 @@ router.post('/:code/redeem', (req, res) => {
   }
 
   const joined = joinClass(invite, body)
-  if (joined.error) return res.status(400).json({ error: joined.error })
+  if (joined.error) return res.status(400).json({ error: joined.error, code: 'PT-2004' })
   createAccount(res, {
     username,
     password,

@@ -41,7 +41,9 @@ router.get('/', async (_req, res) => {
       assets: assets.map(({ name, size }) => ({ name, size }))
     })
   } catch (err) {
-    res.status(502).json({ error: `Couldn't check GitHub for updates: ${err.message}` })
+    res
+      .status(502)
+      .json({ error: `Couldn't check GitHub for updates: ${err.message}`, code: 'PT-6004' })
   }
 })
 
@@ -54,14 +56,18 @@ router.get(
     try {
       release = await latestRelease()
     } catch (err) {
-      return res.status(502).json({ error: `Couldn't reach GitHub: ${err.message}` })
+      return res
+        .status(502)
+        .json({ error: `Couldn't reach GitHub: ${err.message}`, code: 'PT-6004' })
     }
     const asset = release.assets.find((a) => a.name === req.params.name)
-    if (!asset) return res.status(404).json({ error: 'No such download' })
+    if (!asset) return res.status(404).json({ error: 'No such download', code: 'PT-6005' })
     try {
       const upstream = await fetch(asset.url, { headers: { 'User-Agent': 'EduBoard-Portal' } })
       if (!upstream.ok || !upstream.body) {
-        return res.status(502).json({ error: `GitHub answered ${upstream.status}` })
+        return res
+          .status(502)
+          .json({ error: `GitHub answered ${upstream.status}`, code: 'PT-6004' })
       }
       res.set({
         'Content-Type': 'application/octet-stream',
@@ -70,7 +76,8 @@ router.get(
       })
       Readable.fromWeb(upstream.body).pipe(res)
     } catch (err) {
-      if (!res.headersSent) res.status(502).json({ error: `Couldn't reach GitHub: ${err.message}` })
+      if (!res.headersSent)
+        res.status(502).json({ error: `Couldn't reach GitHub: ${err.message}`, code: 'PT-6004' })
       else res.destroy(err)
     }
   }

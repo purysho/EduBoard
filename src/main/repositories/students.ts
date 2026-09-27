@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { students } from '../db/schema'
@@ -84,7 +85,7 @@ export function updateStudent(id: string, patch: UpdateStudentInput): Student {
     .where(eq(students.id, id))
     .run()
   const updated = getStudent(id)
-  if (!updated) throw new Error(`Student ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Student ${id} not found after update`)
   recordAudit({
     entityType: 'student',
     entityId: id,

@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
+import { ScreenErrorBoundary } from '../ScreenErrorBoundary'
 import { DeviceSyncBanner } from './DeviceSyncBanner'
 import { UpdateBanner } from './UpdateBanner'
 import { HiddenWhilePresenting, PresentingBanner } from './PresentingBanner'
@@ -19,7 +20,13 @@ export function AppShell(): React.JSX.Element {
         {!presenting && <UpdateBanner />}
         <DeviceSyncBanner />
         <div className="mx-auto max-w-6xl px-8 py-8">
-          {presenting && !isShownWhilePresenting(pathname) ? <HiddenWhilePresenting /> : <Outlet />}
+          {presenting && !isShownWhilePresenting(pathname) ? (
+            <HiddenWhilePresenting />
+          ) : (
+            <ScreenErrorBoundary resetKey={pathname}>
+              <Outlet />
+            </ScreenErrorBoundary>
+          )}
         </div>
       </main>
     </div>

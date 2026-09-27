@@ -283,7 +283,11 @@ async function api(path, opts) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
     if (res.status === 401) await clearSavedData()
-    throw new Error(tError(data.error || 'Something went wrong'))
+    // The error code (and, for server errors, a reference) goes after the message, so a
+    // student or parent can read it out to the teacher: "Not your class (PT-3001)".
+    const code = /^PT-\d{4}$/.test(data.code || '') ? data.code : ''
+    const ref = /^[A-Z0-9]{4,12}$/.test(data.ref || '') ? ` · ref ${data.ref}` : ''
+    throw new Error(tError(data.error || 'Something went wrong') + (code ? ` (${code}${ref})` : ''))
   }
   servedFromCache = false
   if (isGet && 'caches' in window) {

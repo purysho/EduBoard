@@ -469,6 +469,9 @@ Two things worth knowing:
 
 ## Troubleshooting
 
+**An error message ends with a code, such as (EB-1003) or (PT-3001).**
+The code says what went wrong: EB codes come from EduBoard on your computer, PT codes from the Portal. [ERROR_CODES.md](ERROR_CODES.md) lists every code, what it means and what to do. When you ask for help, give the code. **Settings → Help** lists your recent errors, and **Copy error report** copies EduBoard's version, your system and those errors to send. If a message says "ref" and six letters (for example EB-0900 · ref 7KQ2MX), include that too: it points to the full details in the error log. If a screen can't be drawn, EduBoard shows "This screen couldn't be shown" with a code and a **Reload** button; your data is safe.
+
 **Windows says "Windows protected your PC" / macOS says the app "cannot be opened."**
 Expected — see [Installing](#installing) above. It's a code-signing warning, not a real error.
 

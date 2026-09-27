@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { mkdirSync } from 'fs'
@@ -30,7 +31,7 @@ export function currentDbPath(): string {
 /** Applies an encryption key to a just-opened connection. Keys are generated hex, so
  * the value can't break out of the quoted pragma. */
 export function applyKey(sqlite: Database.Database, key: string): void {
-  if (!/^[0-9a-f]{64}$/.test(key)) throw new Error('Invalid database key')
+  if (!/^[0-9a-f]{64}$/.test(key)) throw new AppError('EB-5001', 'Invalid database key')
   sqlite.pragma(`key='${key}'`)
 }
 
@@ -88,7 +89,8 @@ export function currentDbKey(): string | null {
  * place. SQLite can't change the key of a database in WAL mode, so the log is folded
  * in and the database leaves WAL mode for the moment it takes. */
 export function setDatabaseKey(key: string | null): void {
-  if (key !== null && !/^[0-9a-f]{64}$/.test(key)) throw new Error('Invalid database key')
+  if (key !== null && !/^[0-9a-f]{64}$/.test(key))
+    throw new AppError('EB-5001', 'Invalid database key')
   const sqlite = getSqlite()
   sqlite.pragma('wal_checkpoint(TRUNCATE)')
   sqlite.pragma('journal_mode = DELETE')

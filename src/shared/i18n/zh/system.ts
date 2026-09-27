@@ -300,5 +300,24 @@ export const SYSTEM: Record<string, string> = {
   Strength: '优点',
   'Next step': '改进方向',
   Effort: '学习态度',
-  Behaviour: '行为表现'
+  Behaviour: '行为表现',
+  'Something unexpected went wrong. The details are in the error report (Settings → Help).':
+    '出现了意外错误。详细信息在错误报告中（设置 → 帮助）。',
+  'The Portal took too long to answer. Check the internet connection and try again.':
+    '学生门户响应超时。请检查网络连接后重试。',
+  'Couldn’t reach the Portal. Check the internet connection and the Portal address in Settings.':
+    '无法连接到学生门户。请检查网络连接，以及“设置”中的门户地址。',
+  'This screen couldn’t be shown': '无法显示此页面',
+  'Your data is safe. Reload to try again. If it happens again, copy the error report in Settings → Help and send it with this code:':
+    '你的数据是安全的。请重新加载再试。如果再次出现，请在“设置 → 帮助”中复制错误报告，并连同下面的代码一起发送：',
+  Reload: '重新加载',
+  Help: '帮助',
+  'Every error message ends with a code such as EB-1003. When you ask for help, give the code, or copy the error report below and send it. The report has EduBoard’s version, your system and the recent errors; read it before you send it.':
+    '每条错误信息末尾都有一个代码，例如 EB-1003。寻求帮助时，请提供这个代码，或复制下面的错误报告并发送。报告包含 EduBoard 的版本、你的系统和最近的错误；发送前请先看一遍。',
+  'No errors so far.': '目前没有错误。',
+  'Copy error report': '复制错误报告',
+  'Show the log file': '显示日志文件',
+  'Copied. Paste it into a message or email.': '已复制。请粘贴到消息或邮件中。',
+  'Couldn’t copy. Use “Show the log file” and send errors.log instead.':
+    '无法复制。请点“显示日志文件”，然后发送 errors.log。'
 }

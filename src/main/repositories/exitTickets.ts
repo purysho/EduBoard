@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { and, asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { exitTicketResponses, exitTickets } from '../db/schema'
@@ -82,7 +83,7 @@ export function setExitTicketOpen(
     .where(eq(exitTickets.id, id))
     .run()
   const updated = getExitTicket(id)
-  if (!updated) throw new Error(`Exit ticket ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Exit ticket ${id} not found after update`)
   return updated
 }
 

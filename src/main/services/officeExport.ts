@@ -2,6 +2,7 @@
 // WPS: parent letters, report cards, newsletters and lesson plans as .docx, and a
 // lesson plan as a starter .pptx deck. Everything is built here from this computer's
 // data; nothing is uploaded anywhere.
+import { AppError } from '@shared/errorCodes'
 import {
   AlignmentType,
   Document,
@@ -74,7 +75,7 @@ const pack = (children: Paragraph[] | (Paragraph | Table)[]): Promise<Buffer> =>
 export async function lettersDocx(classId: string): Promise<Buffer> {
   const settings = getSettings()
   const cls = getClass(classId)
-  if (!cls) throw new Error(tr('That class no longer exists.'))
+  if (!cls) throw new AppError('EB-0002', tr('That class no longer exists.'))
   const rows = getClassRoster(classId)
     .filter((r) => r.enrollment.status === 'active')
     .sort((a, b) => a.student.lastName.localeCompare(b.student.lastName))
@@ -115,7 +116,7 @@ export async function lettersDocx(classId: string): Promise<Buffer> {
 export async function reportCardsDocx(classId: string): Promise<Buffer> {
   const settings = getSettings()
   const cls = getClass(classId)
-  if (!cls) throw new Error(tr('That class no longer exists.'))
+  if (!cls) throw new AppError('EB-0002', tr('That class no longer exists.'))
   const comments = new Map(listReportComments(classId).map((c) => [c.studentId, c.text]))
   const points = resolveReportLayout(settings.reportCard).showPoints
     ? pointSummaries(classId)
@@ -212,7 +213,7 @@ function lessonOr404(planId: string): {
   className: string
 } {
   const plan = getLessonPlan(planId)
-  if (!plan) throw new Error(tr('That lesson plan no longer exists.'))
+  if (!plan) throw new AppError('EB-0002', tr('That lesson plan no longer exists.'))
   return { plan, className: getClass(plan.classId)?.name ?? '' }
 }
 

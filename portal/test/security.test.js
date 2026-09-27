@@ -177,12 +177,12 @@ test('responses carry security headers and errors never leak stack traces', asyn
 
   const malformed = await portal.call('POST', '/api/auth/login', { body: '{not json' })
   assert.equal(malformed.status, 400)
-  assert.deepEqual(malformed.json, { error: 'Malformed request.' })
+  assert.deepEqual(malformed.json, { error: 'Malformed request.', code: 'PT-9002' })
   assert.doesNotMatch(malformed.text, /at \//)
 
   const missing = await portal.call('GET', '/api/nope')
   assert.equal(missing.status, 404)
-  assert.deepEqual(missing.json, { error: 'Not found' })
+  assert.deepEqual(missing.json, { error: 'Not found', code: 'PT-9001' })
 })
 
 test('X-Forwarded-For is ignored unless the request comes from a trusted proxy', async (t) => {

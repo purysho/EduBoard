@@ -59,9 +59,10 @@ class RateLimiter {
 
 function tooMany(res, retryAfterSec, message) {
   res.set('Retry-After', String(retryAfterSec))
-  return res
-    .status(429)
-    .json({ error: message || 'Too many attempts. Please wait a few minutes and try again.' })
+  return res.status(429).json({
+    error: message || 'Too many attempts. Please wait a few minutes and try again.',
+    code: 'PT-1003'
+  })
 }
 
 /** Express middleware that counts every request under `keyFn(req)`. */

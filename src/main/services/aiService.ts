@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import Anthropic from '@anthropic-ai/sdk'
 import { getSettings } from '../repositories/settingsRepo'
 import { parsePhraseSuggestions, type PhraseSuggestion } from '@shared/commentBank'
@@ -33,16 +34,16 @@ const OPENAI_COMPATIBLE_PRESETS: Record<
 const AI_TIMEOUT_MS = 180_000
 
 /** A provider failure reworded for the teacher (see describeAiFailure). */
-export class AiRequestError extends Error {
+export class AiRequestError extends AppError {
   constructor(message: string) {
-    super(message)
+    super('EB-4002', message)
     this.name = 'AiRequestError'
   }
 }
 
-export class AiNotConfiguredError extends Error {
+export class AiNotConfiguredError extends AppError {
   constructor() {
-    super(tr('No AI API key set — add one in Settings to use AI features.'))
+    super('EB-4001', tr('No AI API key set — add one in Settings to use AI features.'))
     this.name = 'AiNotConfiguredError'
   }
 }
@@ -103,7 +104,7 @@ async function completeOpenAiCompatible(
     })
   })
   if (!res.ok) {
-    throw new Error(`AI provider error ${res.status}: ${await res.text()}`)
+    throw new AppError('EB-4002', `AI provider error ${res.status}: ${await res.text()}`)
   }
   const data = (await res.json()) as { choices?: { message?: { content?: string } }[] }
   return data.choices?.[0]?.message?.content ?? ''

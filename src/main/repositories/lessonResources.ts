@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { desc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { lessonResources } from '../db/schema'
@@ -42,7 +43,7 @@ export function updateLessonResource(id: string, patch: UpdateLessonResourceInpu
     .run()
   const updated = getDb().select().from(lessonResources).where(eq(lessonResources.id, id)).get() as
     LessonResource | undefined
-  if (!updated) throw new Error(`Lesson resource ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Lesson resource ${id} not found after update`)
   return updated
 }
 

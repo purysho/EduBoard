@@ -1,4 +1,5 @@
 const path = require('path')
+const crypto = require('crypto')
 const express = require('express')
 const cookieParser = require('cookie-parser')
 
@@ -86,7 +87,7 @@ app.get('/api/app-version', async (_req, res) => {
   })
 })
 
-app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }))
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found', code: 'PT-9001' }))
 
 // Express's default handler answers with an HTML page that includes the stack trace
 // outside production. Never show internals to a browser. Log them server-side and
@@ -94,13 +95,20 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }))
 // Express recognises an error handler by its four parameters, so _next must stay.
 app.use((err, _req, res, _next) => {
   if (err.type === 'entity.too.large') {
-    return res.status(413).json({ error: 'That upload is too large.' })
+    return res.status(413).json({ error: 'That upload is too large.', code: 'PT-3004' })
   }
   if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ error: 'Malformed request.' })
+    return res.status(400).json({ error: 'Malformed request.', code: 'PT-9002' })
   }
-  console.error(err)
-  res.status(500).json({ error: 'Something went wrong on the server. Please try again.' })
+  // A reference the person can quote; the same one is in the server log with the details
+  // (journalctl -u eduboard-portal | grep <ref>).
+  const ref = crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6)
+  console.error(`[PT-9900 ref ${ref}] ${_req.method} ${_req.path}`, err)
+  res.status(500).json({
+    error: 'Something went wrong on the server. Please try again.',
+    code: 'PT-9900',
+    ref
+  })
 })
 
 const port = process.env.PORT || 4790

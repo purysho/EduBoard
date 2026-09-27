@@ -1,6 +1,7 @@
 import { differenceInCalendarDays, format, parseISO, isValid } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { tr, trMaybe, trn, uiLanguage } from '@shared/i18n'
+import { splitCode } from '@shared/errorCodes'
 
 // The date patterns the app uses, and how Chinese writes each one.
 const ZH_PATTERNS: Record<string, string> = {
@@ -80,6 +81,9 @@ export function todayIso(): string {
 export function ipcErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback
   const match = error.message.match(/Error invoking remote method '[^']*': (?:\w*Error: )?(.*)/s)
-  // Messages from the main process are English; show the translation when there is one.
-  return trMaybe(match ? match[1] : error.message)
+  // The error code (and reference) travels at the end as "[EB-1003]"; it's shown as
+  // "(EB-1003)" so a teacher can quote it when asking for help (see ERROR_CODES.md).
+  const { text, code, ref } = splitCode(match ? match[1] : error.message)
+  const shown = trMaybe(text)
+  return code ? `${shown} (${code}${ref ? ` · ref ${ref}` : ''})` : shown
 }

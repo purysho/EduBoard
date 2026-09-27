@@ -498,6 +498,16 @@ export interface EduBoardApi {
     /** Emails it to the teacher's own address; returns that address. */
     email(): Promise<string>
   }
+  errorReport: {
+    /** Version, system and recent errors, as text to copy and send (Settings → Help). */
+    get(): Promise<string>
+    /** The last few errors shown, newest first. */
+    recent(): Promise<{ at: string; code: string; message: string; ref?: string }[]>
+    /** Logs a screen that failed to draw; returns the reference to show. */
+    logWindowError(input: { message: string; stack?: string; where?: string }): Promise<string>
+    /** Shows the error log file in the file manager. */
+    openFolder(): Promise<void>
+  }
   usagePing: {
     /** Exactly what the anonymous weekly ping sends (the id is blank while it's off). */
     preview(): Promise<UsagePing>

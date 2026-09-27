@@ -90,14 +90,14 @@ function issueSessionCookie(res, accountId) {
 
 function requireAuth(req, res, next) {
   const payload = verify(req.cookies?.eduboard_session)
-  if (!payload) return res.status(401).json({ error: 'Not logged in' })
+  if (!payload) return res.status(401).json({ error: 'Not logged in', code: 'PT-1001' })
   const db = require('./db')
   const account = db
     .prepare('SELECT session_version FROM accounts WHERE id = ?')
     .get(payload.accountId)
   if (!account || account.session_version !== (payload.sv ?? 0)) {
     res.clearCookie('eduboard_session')
-    return res.status(401).json({ error: 'Not logged in' })
+    return res.status(401).json({ error: 'Not logged in', code: 'PT-1001' })
   }
   req.accountId = payload.accountId
   next()
@@ -136,7 +136,7 @@ function requireSyncSecret(req, res, next) {
     : null
   if (!teacher) {
     badSecretLimiter.consume(req.ip)
-    return res.status(401).json({ error: 'Bad sync secret' })
+    return res.status(401).json({ error: 'Bad sync secret', code: 'PT-5001' })
   }
   req.teacherId = teacher.id
   next()
@@ -154,7 +154,7 @@ function requireAdminSecret(req, res, next) {
   const expected = process.env.ADMIN_SECRET
   if (!expected || !secret || !secretsEqual(secret, expected)) {
     badSecretLimiter.consume(req.ip)
-    return res.status(401).json({ error: 'Bad admin secret' })
+    return res.status(401).json({ error: 'Bad admin secret', code: 'PT-6001' })
   }
   next()
 }

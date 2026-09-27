@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { desc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { studentLogEntries, students } from '../db/schema'
@@ -39,7 +40,7 @@ export function updateStudentLogEntry(
     .from(studentLogEntries)
     .where(eq(studentLogEntries.id, id))
     .get() as StudentLogEntry | undefined
-  if (!updated) throw new Error(`Student log entry ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Student log entry ${id} not found after update`)
   return updated
 }
 

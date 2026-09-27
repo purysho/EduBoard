@@ -36,6 +36,13 @@ built since the last release).
 - The Portal (student/parent website) is `portal/` (Node/Express, `db.js`,
   `routes/`, `services/digest.js` = weekly digest, `public/i18n.js` = its
   English/Chinese switch).
+- Errors: throw `new AppError('EB-xxxx', tr('…'))` (codes in `src/shared/errorCodes.ts`,
+  with what they mean and how to fix them). The IPC `handle()` wrapper adds the code to
+  the message ("… [EB-1003]"), logs it (`src/main/services/errorLog.ts`, beside the
+  database in `logs/errors.log`), and turns anything uncoded into EB-0900 with a
+  reference. Portal errors answer `{ error, code: 'PT-xxxx' }` (`portal/errorCodes.js`).
+  After adding a code run `npm run error-codes` to regenerate `docs/ERROR_CODES.md`;
+  tests fail if a code is missing from a catalog, unused, or the doc is stale.
 - Checks before every push: `npm test`, `npm run typecheck`, `npm run lint`,
   `npx prettier --check "src/**/*.{ts,tsx}"`.
 - Seeing it in the real app: `tools/ui-check/app.mjs` (launch/go/seed with

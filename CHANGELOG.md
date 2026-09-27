@@ -6,6 +6,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **Error codes.** Every error message now ends with a code: EB-xxxx from EduBoard on the teacher's computer, PT-xxxx from the Portal (shown on the Portal's pages too). [docs/ERROR_CODES.md](docs/ERROR_CODES.md) says what each one means and how to fix it. **Settings → Help** lists recent errors and copies an error report (version, system, recent errors) to send; unexpected errors show a short reference that points to the full details in the error log (`logs/errors.log` beside the database) or, for the Portal, in the server log. A screen that fails to draw now shows a Reload button and its code instead of a blank window.
 - **A homepage with downloads** at `/download` on the Portal (portal.edu-board.com/download), in English and Chinese: what EduBoard does, screenshots, and every download for Windows, Mac and Linux through the Portal server (so they work where GitHub is blocked), with GitHub as a second link. The Portal's login page links to it for teachers. A Portal can also make it the front page of another address (`HOMEPAGE_HOSTS`).
 
 ## [0.5.0] — 2026-09-27

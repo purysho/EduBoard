@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { readFile } from 'fs/promises'
 import { extname } from 'path'
 import { PDFParse } from 'pdf-parse'
@@ -27,9 +28,9 @@ import { tr } from '@shared/i18n'
 const CHUNK_TARGET_CHARS = 800
 const MAX_CONTEXT_CHUNKS = 8
 
-export class NotebookExtractionError extends Error {
+export class NotebookExtractionError extends AppError {
   constructor(message: string) {
-    super(message)
+    super('EB-2005', message)
     this.name = 'NotebookExtractionError'
   }
 }
@@ -165,7 +166,7 @@ function splitLongParagraph(paragraph: string): string[] {
  * prior chunks first. */
 export async function indexResource(resourceId: string): Promise<number> {
   const resource = getLessonResource(resourceId)
-  if (!resource) throw new Error(`Resource ${resourceId} not found`)
+  if (!resource) throw new AppError('EB-0002', `Resource ${resourceId} not found`)
 
   const text = await extractText(resource)
   const chunks = chunkText(text)

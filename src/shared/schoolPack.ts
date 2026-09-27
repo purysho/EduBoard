@@ -2,6 +2,7 @@
 // Export) and every teacher imports, so the whole school gets the same logo, colour,
 // grading scale, terms and lists without an account or a server. Everything in it is
 // checked on import, since the file comes from outside the app.
+import { AppError } from './errorCodes'
 import type { AppSettings, GradeThresholds, LogQuickAdd, StudentField, Term } from './types'
 import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
@@ -71,10 +72,10 @@ export function parseSchoolPack(json: string): SchoolPack {
   try {
     raw = JSON.parse(json)
   } catch {
-    throw new Error(tr('That file isn’t a school pack (it isn’t readable JSON).'))
+    throw new AppError('EB-2001', tr('That file isn’t a school pack (it isn’t readable JSON).'))
   }
   if (!raw || raw.kind !== 'eduboard-school-pack' || raw.version !== 1) {
-    throw new Error(tr('That file isn’t an EduBoard school pack.'))
+    throw new AppError('EB-2001', tr('That file isn’t an EduBoard school pack.'))
   }
   const pack: SchoolPack = {
     kind: 'eduboard-school-pack',

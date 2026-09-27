@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { assessments } from '../db/schema'
@@ -43,7 +44,7 @@ export function updateAssessment(id: string, patch: UpdateAssessmentInput): Asse
     .where(eq(assessments.id, id))
     .run()
   const updated = getAssessment(id)
-  if (!updated) throw new Error(`Assessment ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Assessment ${id} not found after update`)
   return updated
 }
 

@@ -2,6 +2,7 @@
 // opens, and it locks itself after a while with no one at the computer. Locking hides the
 // app behind the password screen and refuses the window's requests; the database stays
 // open underneath, so an exit ticket running for the class and the daily backup carry on.
+import { AppError } from '@shared/errorCodes'
 import { powerMonitor } from 'electron'
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs'
 import {
@@ -38,7 +39,11 @@ export function isProtected(): boolean {
 
 function readKeyFile(): KeyFile {
   const file = parseKeyFile(readFileSync(keyFilePath(), 'utf-8'))
-  if (!file) throw new Error(tr('EduBoard’s key file is damaged. Restore a backup to continue.'))
+  if (!file)
+    throw new AppError(
+      'EB-5001',
+      tr('EduBoard’s key file is damaged. Restore a backup to continue.')
+    )
   return file
 }
 
@@ -105,14 +110,14 @@ export function lockNow(): void {
 
 function checkPassword(password: string): void {
   if (password.length < MIN_PASSWORD_LENGTH) {
-    throw new Error(tr('Use at least {n} characters.', { n: MIN_PASSWORD_LENGTH }))
+    throw new AppError('EB-5002', tr('Use at least {n} characters.', { n: MIN_PASSWORD_LENGTH }))
   }
 }
 
 /** Turns protection on: encrypts the open database with a new random key and writes
  * the key file. Returns the recovery key, which is shown once and never stored. */
 export function enableProtection(password: string): { recoveryKey: string } {
-  if (isProtected()) throw new Error(tr('Password protection is already on.'))
+  if (isProtected()) throw new AppError('EB-5003', tr('Password protection is already on.'))
   checkPassword(password)
   const dbKey = newDatabaseKey()
   const recoveryKey = newRecoveryKey()
@@ -131,14 +136,14 @@ export function changePassword(current: string, next: string): void {
   checkPassword(next)
   const file = readKeyFile()
   const key = unlockKeyFile(file, current)
-  if (!key) throw new Error(tr('That isn’t your current password or recovery key.'))
+  if (!key) throw new AppError('EB-5004', tr('That isn’t your current password or recovery key.'))
   writeKeyFile(withNewPassword(file, key, next))
 }
 
 /** Turns protection off: decrypts the database and removes the key file. */
 export function disableProtection(password: string): void {
   if (!unlockKeyFile(readKeyFile(), password)) {
-    throw new Error(tr('That isn’t your current password or recovery key.'))
+    throw new AppError('EB-5004', tr('That isn’t your current password or recovery key.'))
   }
   setDatabaseKey(null)
   rmSync(keyFilePath(), { force: true })

@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { courseGroups } from '../db/schema'
@@ -21,7 +22,7 @@ export function renameCourseGroup(id: string, name: string): CourseGroup {
   getDb().update(courseGroups).set({ name }).where(eq(courseGroups.id, id)).run()
   const updated = getDb().select().from(courseGroups).where(eq(courseGroups.id, id)).get() as
     CourseGroup | undefined
-  if (!updated) throw new Error(`Course group ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Course group ${id} not found after update`)
   return updated
 }
 

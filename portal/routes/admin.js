@@ -24,8 +24,8 @@ router.use((_req, res, next) => {
 // desktop app's Settings → Portal sync secret field.
 router.post('/teachers', (req, res) => {
   const name = (req.body?.name || '').trim()
-  if (!name) return res.status(400).json({ error: 'name is required' })
-  if (name.length > 100) return res.status(400).json({ error: 'name is too long' })
+  if (!name) return res.status(400).json({ error: 'name is required', code: 'PT-6002' })
+  if (name.length > 100) return res.status(400).json({ error: 'name is too long', code: 'PT-6002' })
 
   const id = crypto.randomUUID()
   const syncSecret = newRandomToken()
@@ -134,7 +134,7 @@ router.delete('/teachers/:id', (req, res) => {
   })
 
   const removed = run()
-  if (!removed) return res.status(404).json({ error: 'No such teacher' })
+  if (!removed) return res.status(404).json({ error: 'No such teacher', code: 'PT-6003' })
   for (const file of files) fs.rmSync(file, { force: true })
   res.json({ ok: true })
 })

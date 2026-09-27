@@ -379,14 +379,14 @@ router.post(
       )
       .get(req.params.id, req.teacherId)
     if (!hw || !hw.file_name || !hw.file_hash) {
-      return res.status(404).json({ error: 'Assignment not found' })
+      return res.status(404).json({ error: 'Assignment not found', code: 'PT-3002' })
     }
     const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0)
     const hash = crypto.createHash('sha256').update(bytes).digest('hex')
     if (hash !== hw.file_hash) {
       return res
         .status(409)
-        .json({ error: 'This isn’t the file that was published. Publish again.' })
+        .json({ error: 'This isn’t the file that was published. Publish again.', code: 'PT-5002' })
     }
     const storedName = `${hw.id}-${sanitizeFileName(hw.file_name)}`
     fs.writeFileSync(path.join(UPLOADS_DIR, storedName), bytes)
@@ -408,14 +408,16 @@ router.post('/materials/:id/chunks', (req, res) => {
     )
     .get(req.params.id, req.teacherId)
   if (!material || !material.chunks_hash)
-    return res.status(404).json({ error: 'Material not found' })
+    return res.status(404).json({ error: 'Material not found', code: 'PT-3002' })
   const chunks = req.body?.chunks
   if (!Array.isArray(chunks) || !chunks.every((c) => typeof c === 'string')) {
-    return res.status(400).json({ error: 'chunks must be a list of text' })
+    return res.status(400).json({ error: 'chunks must be a list of text', code: 'PT-5003' })
   }
   const hash = crypto.createHash('sha256').update(JSON.stringify(chunks)).digest('hex')
   if (hash !== material.chunks_hash) {
-    return res.status(409).json({ error: 'This isn’t the text that was published. Publish again.' })
+    return res
+      .status(409)
+      .json({ error: 'This isn’t the text that was published. Publish again.', code: 'PT-5002' })
   }
   const insert = db.prepare(
     'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
@@ -471,7 +473,7 @@ router.get('/accounts', (req, res) => {
 router.post('/merge-students', (req, res) => {
   const { from, into } = req.body || {}
   if (typeof from !== 'string' || typeof into !== 'string' || !from || !into || from === into) {
-    return res.status(400).json({ error: 'from and into are required' })
+    return res.status(400).json({ error: 'from and into are required', code: 'PT-5003' })
   }
   const owner = (id) => db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(id)
   // Only this teacher's own students; the kept one may not have been published yet.
@@ -481,7 +483,7 @@ router.post('/merge-students', (req, res) => {
     (fromRow && fromRow.teacher_id !== req.teacherId) ||
     (intoRow && intoRow.teacher_id !== req.teacherId)
   ) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
   if (!fromRow) return res.json({ ok: true, moved: false })
 
@@ -520,11 +522,11 @@ router.post('/merge-students', (req, res) => {
 router.post('/delete-student', (req, res) => {
   const { studentId } = req.body || {}
   if (typeof studentId !== 'string' || !studentId) {
-    return res.status(400).json({ error: 'studentId is required' })
+    return res.status(400).json({ error: 'studentId is required', code: 'PT-5003' })
   }
   const row = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
   if (row && row.teacher_id !== req.teacherId) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
 
   const files = []
@@ -620,7 +622,7 @@ router.get('/ai-activity', (req, res) => {
   const owned = db
     .prepare('SELECT 1 FROM students WHERE id = ? AND teacher_id = ?')
     .get(String(studentId || ''), req.teacherId)
-  if (!owned) return res.status(404).json({ error: 'Student not found' })
+  if (!owned) return res.status(404).json({ error: 'Student not found', code: 'PT-3002' })
   res.json(listInteractions(String(studentId), homeworkId ? String(homeworkId) : null))
 })
 
@@ -629,10 +631,12 @@ router.get('/ai-activity', (req, res) => {
 router.post('/submissions/portfolio', (req, res) => {
   const { homeworkAssignmentId, studentId, portfolio } = req.body
   if (!homeworkAssignmentId || !studentId) {
-    return res.status(400).json({ error: 'homeworkAssignmentId and studentId required' })
+    return res
+      .status(400)
+      .json({ error: 'homeworkAssignmentId and studentId required', code: 'PT-5003' })
   }
   if (!ownsAssignment(req.teacherId, homeworkAssignmentId)) {
-    return res.status(404).json({ error: 'Assignment not found' })
+    return res.status(404).json({ error: 'Assignment not found', code: 'PT-3002' })
   }
   db.prepare(
     `UPDATE homework_submissions SET portfolio = ?, updated_at = ?
@@ -646,14 +650,15 @@ router.post('/submissions/portfolio', (req, res) => {
 // no Portal browser session of their own.
 router.get('/submissions/:homeworkId/:studentId/file', (req, res) => {
   if (!ownsAssignment(req.teacherId, req.params.homeworkId)) {
-    return res.status(404).json({ error: 'Not found' })
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   }
   const submission = db
     .prepare(
       'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
     )
     .get(req.params.homeworkId, req.params.studentId)
-  if (!submission || !submission.file_path) return res.status(404).json({ error: 'No file' })
+  if (!submission || !submission.file_path)
+    return res.status(404).json({ error: 'No file', code: 'PT-3002' })
   res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
@@ -754,15 +759,19 @@ router.get('/posts', (req, res) => {
 router.post('/posts', (req, res) => {
   const { classId, body, imageName, imageData } = req.body
   const text = (body || '').trim()
-  if (!classId || !text) return res.status(400).json({ error: 'classId and body required' })
-  if (!ownsClass(req.teacherId, classId)) return res.status(404).json({ error: 'Class not found' })
+  if (!classId || !text)
+    return res.status(400).json({ error: 'classId and body required', code: 'PT-5003' })
+  if (!ownsClass(req.teacherId, classId))
+    return res.status(404).json({ error: 'Class not found', code: 'PT-3002' })
 
   let imagePath = null
   if (imageName && imageData) {
     // Shown inline to every family in the class, so it must really be an image.
     const check = checkUpload(String(imageName), Buffer.from(String(imageData), 'base64'))
     if (!check.ok || !['png', 'jpg', 'gif', 'webp'].includes(check.kind)) {
-      return res.status(400).json({ error: 'The photo must be a PNG, JPEG, GIF or WebP image.' })
+      return res
+        .status(400)
+        .json({ error: 'The photo must be a PNG, JPEG, GIF or WebP image.', code: 'PT-3006' })
     }
     const id = crypto.randomUUID()
     const storedName = `${id}-${sanitizeFileName(imageName)}`
@@ -786,7 +795,7 @@ router.post('/posts', (req, res) => {
 router.delete('/posts/:id', (req, res) => {
   const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
   if (!post || !ownsClass(req.teacherId, post.class_id)) {
-    return res.status(404).json({ error: 'Not found' })
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   }
   if (post?.image_path) fs.rmSync(path.join(POSTS_DIR, post.image_path), { force: true })
   db.prepare('DELETE FROM class_posts WHERE id = ?').run(req.params.id)
@@ -882,7 +891,7 @@ router.get('/reset-requests', (req, res) => {
 router.post('/reset-requests/:id', (req, res) => {
   const row = db.prepare('SELECT * FROM password_reset_requests WHERE id = ?').get(req.params.id)
   if (!row || row.status !== 'pending' || !ownsAccount(req.teacherId, row.account_id)) {
-    return res.status(404).json({ error: 'That request is no longer waiting' })
+    return res.status(404).json({ error: 'That request is no longer waiting', code: 'PT-5007' })
   }
   const status = req.body?.approve ? 'approved' : 'declined'
   db.prepare('UPDATE password_reset_requests SET status = ?, decided_at = ? WHERE id = ?').run(
@@ -896,8 +905,10 @@ router.post('/reset-requests/:id', (req, res) => {
 router.post('/messages', (req, res) => {
   const { accountId, body } = req.body
   const text = (body || '').trim()
-  if (!accountId || !text) return res.status(400).json({ error: 'accountId and body required' })
-  if (!ownsAccount(req.teacherId, accountId)) return res.status(404).json({ error: 'Not found' })
+  if (!accountId || !text)
+    return res.status(400).json({ error: 'accountId and body required', code: 'PT-5003' })
+  if (!ownsAccount(req.teacherId, accountId))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   db.prepare(
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_family) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), accountId, 'teacher', text, new Date().toISOString())
@@ -909,11 +920,12 @@ router.post('/messages', (req, res) => {
 // whoever asks first just supplies whichever targetLang they need.
 router.post('/messages/:id/translate', async (req, res) => {
   const targetLang = req.body?.targetLang
-  if (!isLanguage(targetLang)) return res.status(400).json({ error: 'Unsupported language' })
+  if (!isLanguage(targetLang))
+    return res.status(400).json({ error: 'Unsupported language', code: 'PT-3008' })
 
   const message = db.prepare('SELECT * FROM messages WHERE id = ?').get(req.params.id)
   if (!message || !ownsAccount(req.teacherId, message.account_id)) {
-    return res.status(404).json({ error: 'Not found' })
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   }
 
   const cached = db
@@ -933,14 +945,15 @@ router.post('/messages/:id/translate', async (req, res) => {
     ).run(message.id, translatedBody, targetLang)
     res.json({ translatedBody })
   } catch (err) {
-    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
-    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+    if (err instanceof AiNotConfiguredError)
+      return res.status(503).json({ error: err.message, code: 'PT-4001' })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.', code: 'PT-4002' })
   }
 })
 
 router.post('/messages/:accountId/read', (req, res) => {
   if (!ownsAccount(req.teacherId, req.params.accountId)) {
-    return res.status(404).json({ error: 'Not found' })
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   }
   db.prepare('UPDATE messages SET read_by_teacher = 1 WHERE account_id = ? AND sender = ?').run(
     req.params.accountId,
@@ -957,7 +970,10 @@ router.post('/digest/send-now', async (req, res) => {
     const result = await sendAllDigests(req.teacherId)
     res.json(result)
   } catch (err) {
-    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })
+    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({
+      error: err.message,
+      code: err.name === 'DigestNotConfiguredError' ? 'PT-5004' : 'PT-5005'
+    })
   }
 })
 
@@ -972,10 +988,12 @@ router.get('/digest/preview', (req, res) => {
 router.post('/digest/newsletter', (req, res) => {
   const { text, until } = req.body || {}
   if (typeof text !== 'string' || text.length > 20000) {
-    return res.status(400).json({ error: 'Newsletter text is required (up to 20,000 characters)' })
+    return res
+      .status(400)
+      .json({ error: 'Newsletter text is required (up to 20,000 characters)', code: 'PT-5003' })
   }
   if (until != null && (typeof until !== 'string' || Number.isNaN(Date.parse(until)))) {
-    return res.status(400).json({ error: 'until must be a date' })
+    return res.status(400).json({ error: 'until must be a date', code: 'PT-5003' })
   }
   db.prepare(
     `INSERT INTO digest_settings (teacher_id) VALUES (?) ON CONFLICT(teacher_id) DO NOTHING`
@@ -991,17 +1009,22 @@ router.post('/digest/newsletter', (req, res) => {
 router.post('/digest/send-teacher', async (req, res) => {
   const { subject, html } = req.body || {}
   if (typeof subject !== 'string' || typeof html !== 'string' || html.length > 500000) {
-    return res.status(400).json({ error: 'subject and html are required' })
+    return res.status(400).json({ error: 'subject and html are required', code: 'PT-5003' })
   }
   const settings = getDigestSettings(req.teacherId)
   if (!settings?.teacher_email) {
-    return res.status(400).json({ error: 'Add your own email address in Settings first.' })
+    return res
+      .status(400)
+      .json({ error: 'Add your own email address in Settings first.', code: 'PT-5006' })
   }
   try {
     await sendMail(req.teacherId, settings.teacher_email, subject.slice(0, 200), html)
     res.json({ ok: true, to: settings.teacher_email })
   } catch (err) {
-    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({ error: err.message })
+    res.status(err.name === 'DigestNotConfiguredError' ? 503 : 500).json({
+      error: err.message,
+      code: err.name === 'DigestNotConfiguredError' ? 'PT-5004' : 'PT-5005'
+    })
   }
 })
 
@@ -1011,13 +1034,13 @@ router.post('/digest/send-teacher', async (req, res) => {
 router.post('/reset-password', (req, res) => {
   const { username, newPassword } = req.body
   if (!username || !newPassword) {
-    return res.status(400).json({ error: 'username and newPassword are required' })
+    return res.status(400).json({ error: 'username and newPassword are required', code: 'PT-5003' })
   }
   const problem = passwordProblem(newPassword)
-  if (problem) return res.status(400).json({ error: problem })
+  if (problem) return res.status(400).json({ error: problem, code: 'PT-1006' })
   const account = db.prepare('SELECT id FROM accounts WHERE username = ?').get(username)
   if (!account || !ownsAccount(req.teacherId, account.id)) {
-    return res.status(404).json({ error: 'No such account' })
+    return res.status(404).json({ error: 'No such account', code: 'PT-5008' })
   }
   db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
     hashPassword(newPassword),
@@ -1050,7 +1073,7 @@ router.get('/profiles/:studentId/photo', (req, res) => {
        WHERE p.student_id = ? AND s.teacher_id = ?`
     )
     .get(req.params.studentId, req.teacherId)
-  if (!row?.photo_file) return res.status(404).json({ error: 'No photo' })
+  if (!row?.photo_file) return res.status(404).json({ error: 'No photo', code: 'PT-3002' })
   res.set('Content-Type', 'image/webp')
   res.sendFile(path.join(PROFILE_PHOTOS_DIR, row.photo_file))
 })

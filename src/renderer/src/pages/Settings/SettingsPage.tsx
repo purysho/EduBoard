@@ -20,6 +20,7 @@ import { ReportCardPanel } from './ReportCardPanel'
 import { ListsPanel } from './ListsPanel'
 import { GroupChatsPanel } from './GroupChatsPanel'
 import { UsagePingPanel } from './UsagePingPanel'
+import { HelpPanel } from './HelpPanel'
 import { SchoolPackPanel } from './SchoolPackPanel'
 import { tr } from '@shared/i18n'
 import { trNodes } from '@renderer/lib/trNodes'
@@ -492,6 +493,7 @@ export function SettingsPage(): React.JSX.Element {
         <PortalPanel />
         <GroupChatsPanel />
         <UsagePingPanel />
+        <HelpPanel />
         <AboutPanel />
       </div>
     </div>

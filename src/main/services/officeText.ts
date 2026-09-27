@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import JSZip from 'jszip'
 import { tr } from '@shared/i18n'
 
@@ -15,9 +16,9 @@ export const OFFICE_EXTENSIONS = ['.docx', '.pptx', '.odt', '.odp'] as const
  * (a "zip bomb"); real lesson documents are far below it. */
 const MAX_UNPACKED_BYTES = 80 * 1024 * 1024
 
-export class OfficeTextError extends Error {
+export class OfficeTextError extends AppError {
   constructor(message: string) {
-    super(message)
+    super('EB-2004', message)
     this.name = 'OfficeTextError'
   }
 }

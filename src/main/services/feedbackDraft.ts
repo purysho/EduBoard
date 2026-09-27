@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import {
   getHomeworkAssignment,
   listSubmissionsForAssignment
@@ -18,12 +19,12 @@ export async function draftSubmissionFeedback(
   studentId: string
 ): Promise<FeedbackDraft> {
   const assignment = getHomeworkAssignment(homeworkAssignmentId)
-  if (!assignment) throw new Error(tr('Assignment not found'))
+  if (!assignment) throw new AppError('EB-0002', tr('Assignment not found'))
   const submission = listSubmissionsForAssignment(homeworkAssignmentId, assignment.classId).find(
     (s) => s.studentId === studentId
   )
   if (!submission || submission.status === 'not_started') {
-    throw new Error(tr('This student has not turned anything in yet.'))
+    throw new AppError('EB-4004', tr('This student has not turned anything in yet.'))
   }
 
   let attachment: { name: string; text: string | null } | null = null

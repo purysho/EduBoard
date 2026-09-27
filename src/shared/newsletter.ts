@@ -6,6 +6,7 @@
 //
 // Text format, shared with the Portal's digest: "# Heading" lines, "- " bullet lines
 // and plain paragraphs, separated by blank lines.
+import { AppError } from './errorCodes'
 import { tr } from './i18n'
 
 export type NewsletterStructure = 'friendly' | 'minto' | 'simple' | 'custom'
@@ -111,8 +112,9 @@ export function cleanNewsletterDraft(text: string): string {
     .replace(/^#{2,}\s/gm, '# ')
     .replace(/^\s*[*•]\s+/gm, '- ')
     .trim()
-  if (!cleaned) throw new Error(tr('The AI didn’t suggest anything usable. Try again.'))
+  if (!cleaned)
+    throw new AppError('EB-4003', tr('The AI didn’t suggest anything usable. Try again.'))
   if (cleaned.length > 8000)
-    throw new Error(tr('The AI’s draft was too long. Try again with fewer facts.'))
+    throw new AppError('EB-4003', tr('The AI’s draft was too long. Try again with fewer facts.'))
   return cleaned
 }

@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq, inArray } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { rubrics, rubricCriteria, rubricLevels } from '../db/schema'
@@ -177,7 +178,7 @@ export function createRubric(input: CreateRubricInput): RubricWithCriteria {
   })
 
   const created = getRubric(id)
-  if (!created) throw new Error(`Rubric ${id} not found after create`)
+  if (!created) throw new AppError('EB-0002', `Rubric ${id} not found after create`)
   return created
 }
 
@@ -193,7 +194,7 @@ export function updateRubric(id: string, input: UpdateRubricInput): RubricWithCr
   })
 
   const updated = getRubric(id)
-  if (!updated) throw new Error(`Rubric ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Rubric ${id} not found after update`)
   return updated
 }
 

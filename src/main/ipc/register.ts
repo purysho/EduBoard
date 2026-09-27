@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
@@ -104,11 +105,18 @@ import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { getSetupProgress } from '../services/setupProgress'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
-import { tr } from '@shared/i18n'
+import { tr, uiLanguage } from '@shared/i18n'
 import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
+import {
+  errorLogPath,
+  errorReportText,
+  logWindowError,
+  recentErrors,
+  toWindowError
+} from '../services/errorLog'
 import type { NewsletterFact, NewsletterStructure } from '@shared/newsletter'
 import type { NewsletterSourceChoice } from '@shared/summaries'
 import {
@@ -121,12 +129,22 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
-  ipcMain.handle(channel, (event, ...args) => {
-    // Behind the lock screen the window may only ask about, and try to open, the lock.
-    if (!channel.startsWith('security:') && security.isLocked()) {
-      throw new Error(tr('EduBoard is locked.'))
+  ipcMain.handle(channel, async (event, ...args) => {
+    // Behind the lock screen the window may only ask about, and try to open, the lock
+    // (and report a screen that failed to draw).
+    if (
+      !channel.startsWith('security:') &&
+      channel !== IpcChannels.errorReport.logWindowError &&
+      security.isLocked()
+    ) {
+      throw toWindowError(new AppError('EB-0001', tr('EduBoard is locked.')), channel)
     }
-    return fn(event, ...args)
+    try {
+      return await fn(event, ...args)
+    } catch (err) {
+      // Every error reaches the window with its code, and unexpected ones are logged.
+      throw toWindowError(err, channel)
+    }
   })
 }
 
@@ -249,7 +267,7 @@ export function registerIpcHandlers(): void {
         !Array.isArray(input?.classIds) ||
         !input.classIds.every((id) => typeof id === 'string')
       ) {
-        throw new Error(tr('Choose the classes to carry on.'))
+        throw new AppError('EB-0004', tr('Choose the classes to carry on.'))
       }
       // Makes many classes at once, so the same recovery point as other big changes.
       backupService.createBackup()
@@ -337,7 +355,7 @@ export function registerIpcHandlers(): void {
   const checkAttendanceCode = (status: unknown): void => {
     const known = resolveAttendanceCodes(settingsRepo.getSettings().attendanceCodes)
     if (!known.some((c) => c.id === status))
-      throw new Error(tr('That attendance code doesn’t exist.'))
+      throw new AppError('EB-0004', tr('That attendance code doesn’t exist.'))
   }
   handle(IpcChannels.attendance.mark, (_e, input: attendanceRepo.MarkAttendanceInput) => {
     checkAttendanceCode(input?.status)
@@ -381,7 +399,8 @@ export function registerIpcHandlers(): void {
     IpcChannels.lessonPlans.copyWeek,
     (_e, classId: string, fromMonday: string, toMonday: string) => {
       const iso = /^\d{4}-\d{2}-\d{2}$/
-      if (!iso.test(fromMonday) || !iso.test(toMonday)) throw new Error(tr('Invalid week'))
+      if (!iso.test(fromMonday) || !iso.test(toMonday))
+        throw new AppError('EB-0004', tr('Invalid week'))
       return lessonPlansRepo.copyWeekOfPlans(String(classId), fromMonday, toMonday)
     }
   )
@@ -580,7 +599,8 @@ export function registerIpcHandlers(): void {
     IpcChannels.homeworkRubricScores.save,
     async (_e, input: homeworkRubricScoresRepo.SaveHomeworkRubricScoresInput) => {
       const assignment = homeworkRepo.getHomeworkAssignment(input.homeworkAssignmentId)
-      if (!assignment?.rubricId) throw new Error(tr('This assignment has no rubric linked.'))
+      if (!assignment?.rubricId)
+        throw new AppError('EB-0005', tr('This assignment has no rubric linked.'))
       const result = homeworkRubricScoresRepo.saveHomeworkRubricScores(input, assignment.rubricId)
       await pushSubmissionGrade({
         homeworkAssignmentId: input.homeworkAssignmentId,
@@ -761,7 +781,7 @@ export function registerIpcHandlers(): void {
     if (
       !enrollmentsRepo.getRosterForClass(String(classId)).some((r) => r.student.id === studentId)
     ) {
-      throw new Error(tr('That student isn’t in this class.'))
+      throw new AppError('EB-0003', tr('That student isn’t in this class.'))
     }
     reportCommentsRepo.setReportComment(String(classId), String(studentId), String(text ?? ''))
   })
@@ -772,7 +792,7 @@ export function registerIpcHandlers(): void {
     const studentId = String(input?.studentId ?? '')
     // Only a student in this class can get points in it.
     if (!enrollmentsRepo.getRosterForClass(classId).some((r) => r.student.id === studentId)) {
-      throw new Error(tr('That student isn’t in this class.'))
+      throw new AppError('EB-0003', tr('That student isn’t in this class.'))
     }
     return behaviourPointsRepo.addBehaviourPoint({
       classId,
@@ -1055,7 +1075,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.digest.sendNow, () => sendDigestNow())
   handle(IpcChannels.digest.preview, () => previewDigest())
   handle(IpcChannels.digest.setNewsletter, (_e, text: unknown, until: unknown) => {
-    if (typeof text !== 'string') throw new Error(tr('Write the newsletter first.'))
+    if (typeof text !== 'string') throw new AppError('EB-0004', tr('Write the newsletter first.'))
     return setDigestNewsletter(text, typeof until === 'string' ? until : null)
   })
   handle(IpcChannels.weeklySummary.get, () => {
@@ -1107,17 +1127,26 @@ export function registerIpcHandlers(): void {
         return saveOffice(await lessonPlanDocx(what.planId), tr('Lesson plan'), 'docx')
       case 'newsletter':
         if (typeof what.text !== 'string' || !what.text.trim()) {
-          throw new Error(tr('Write the newsletter first.'))
+          throw new AppError('EB-0004', tr('Write the newsletter first.'))
         }
         return saveOffice(await newsletterDocx(what.text), tr('Newsletter'), 'docx')
       default:
-        throw new Error(tr('Nothing to export.'))
+        throw new AppError('EB-0004', tr('Nothing to export.'))
     }
   })
   handle(IpcChannels.office.slides, async (_e, planId: string) =>
     saveOffice(await lessonPlanPptx(String(planId)), tr('Lesson plan'), 'pptx')
   )
   handle(IpcChannels.usagePing.preview, () => usagePingPreview())
+  handle(IpcChannels.errorReport.get, () => {
+    const s = settingsRepo.getSettings()
+    return errorReportText({ language: uiLanguage(), portal: !!s.portalUrl })
+  })
+  handle(IpcChannels.errorReport.recent, () =>
+    recentErrors(8).map(({ at, code, message, ref }) => ({ at, code, message, ref }))
+  )
+  handle(IpcChannels.errorReport.logWindowError, (_e, input) => logWindowError(input))
+  handle(IpcChannels.errorReport.openFolder, () => shell.showItemInFolder(errorLogPath()))
   handle(IpcChannels.groupChats.send, (_e, groupId: string, text: string, title: string) =>
     sendToSavedGroupChat(String(groupId), String(text ?? ''), String(title ?? ''))
   )

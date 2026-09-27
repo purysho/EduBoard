@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { terms } from '../db/schema'
@@ -29,7 +30,7 @@ export function updateTerm(id: string, patch: UpdateTermInput): Term {
     .where(eq(terms.id, id))
     .run()
   const updated = getTerm(id)
-  if (!updated) throw new Error(`Term ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Term ${id} not found after update`)
   return updated
 }
 

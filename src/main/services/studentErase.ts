@@ -2,6 +2,7 @@
 // or erased for good. An ordinary delete keeps an audit trail for a year and takes a
 // backup first so a mistake can be undone; erasing is for when a student or family asks
 // for their data to be removed, so it keeps neither.
+import { AppError } from '@shared/errorCodes'
 import { existsSync, readdirSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -55,7 +56,7 @@ export interface StudentDataExport {
 
 export function exportStudentData(studentId: string): StudentDataExport {
   const student = studentRow(studentId)
-  if (!student) throw new Error(tr('That student no longer exists.'))
+  if (!student) throw new AppError('EB-0002', tr('That student no longer exists.'))
   const records: Record<string, Row[]> = {}
   for (const table of tablesWithStudentId()) {
     const rows = getSqlite()
@@ -78,7 +79,7 @@ export interface EraseResult {
 export function eraseStudent(studentId: string): EraseResult {
   const sqlite = getSqlite()
   const student = studentRow(studentId)
-  if (!student) throw new Error(tr('That student no longer exists.'))
+  if (!student) throw new AppError('EB-0002', tr('That student no longer exists.'))
   let rowsErased = 0
   sqlite.transaction(() => {
     const typedIds = unlinkedExitTicketAnswers(student).map((r) => r.id as string)

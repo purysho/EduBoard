@@ -1,3 +1,4 @@
+import { AppError } from '@shared/errorCodes'
 import { asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { gradeCategories } from '../db/schema'
@@ -26,7 +27,7 @@ export function updateGradeCategory(id: string, patch: UpdateGradeCategoryInput)
   getDb().update(gradeCategories).set(patch).where(eq(gradeCategories.id, id)).run()
   const updated = getDb().select().from(gradeCategories).where(eq(gradeCategories.id, id)).get() as
     GradeCategory | undefined
-  if (!updated) throw new Error(`Grade category ${id} not found after update`)
+  if (!updated) throw new AppError('EB-0002', `Grade category ${id} not found after update`)
   return updated
 }
 

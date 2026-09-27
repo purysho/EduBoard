@@ -240,7 +240,7 @@ router.get('/', (req, res) => {
 // otherwise fetch another class's attachment just by guessing/incrementing an id.
 router.get('/homework/:id/file', (req, res) => {
   const hw = db.prepare('SELECT * FROM homework_assignments WHERE id = ?').get(req.params.id)
-  if (!hw || !hw.file_path) return res.status(404).json({ error: 'No file' })
+  if (!hw || !hw.file_path) return res.status(404).json({ error: 'No file', code: 'PT-3002' })
 
   const linked = getLinkedStudentIds(req.accountId)
   const enrolled = linked.some((studentId) =>
@@ -250,7 +250,7 @@ router.get('/homework/:id/file', (req, res) => {
       )
       .get(studentId, hw.class_id)
   )
-  if (!enrolled) return res.status(403).json({ error: 'Not your class' })
+  if (!enrolled) return res.status(403).json({ error: 'Not your class', code: 'PT-3001' })
 
   res.download(path.join(UPLOADS_DIR, hw.file_path), hw.file_name)
 })
@@ -262,29 +262,33 @@ router.get('/homework/:id/file', (req, res) => {
 router.post('/homework/:id/submit', (req, res) => {
   const { studentId, textAnswer, fileName, fileData, aiDeclared } = req.body
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
   if (!textAnswer && !fileData) {
-    return res.status(400).json({ error: 'Add some text or a file before submitting' })
+    return res
+      .status(400)
+      .json({ error: 'Add some text or a file before submitting', code: 'PT-3003' })
   }
   // base64 is 4 chars per 3 bytes; checking the encoded length avoids decoding a huge
   // string only to reject it.
   if (fileData && (String(fileData).length * 3) / 4 > MAX_SUBMISSION_BYTES) {
-    return res.status(413).json({ error: 'That file is too large (20 MB max).' })
+    return res.status(413).json({ error: 'That file is too large (20 MB max).', code: 'PT-3004' })
   }
 
   const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(req.params.id)
-  if (!hw) return res.status(404).json({ error: 'Assignment not found' })
+  if (!hw) return res.status(404).json({ error: 'Assignment not found', code: 'PT-3002' })
   const enrolled = db
     .prepare(
       "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
     )
     .get(studentId, hw.class_id)
-  if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+  if (!enrolled)
+    return res.status(403).json({ error: 'Not enrolled in this class', code: 'PT-3001' })
   if (isFinishedClass(hw.class_id)) {
-    return res
-      .status(403)
-      .json({ error: "This class has finished, so work can't be handed in any more." })
+    return res.status(403).json({
+      error: "This class has finished, so work can't be handed in any more.",
+      code: 'PT-3005'
+    })
   }
 
   let storedFileName = null
@@ -295,7 +299,9 @@ router.post('/homework/:id/submit', (req, res) => {
     // carrying macros is refused here, before it can reach the teacher's computer.
     const check = checkUpload(String(fileName), bytes)
     if (!check.ok) {
-      return res.status(400).json({ error: `This file can't be submitted: ${check.reason}.` })
+      return res
+        .status(400)
+        .json({ error: `This file can't be submitted: ${check.reason}.`, code: 'PT-3006' })
     }
     // The display name is the student's own, but never a path: the teacher's desktop app
     // saves the file under this name when they open it.
@@ -362,30 +368,33 @@ router.post('/homework/:id/submit', (req, res) => {
 router.post('/homework/:id/answers', (req, res) => {
   const { studentId, answers } = req.body
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
   if (!answers || typeof answers !== 'object') {
-    return res.status(400).json({ error: 'answers required' })
+    return res.status(400).json({ error: 'answers required', code: 'PT-3003' })
   }
 
   const hw = db.prepare('SELECT class_id FROM homework_assignments WHERE id = ?').get(req.params.id)
-  if (!hw) return res.status(404).json({ error: 'Assignment not found' })
+  if (!hw) return res.status(404).json({ error: 'Assignment not found', code: 'PT-3002' })
   const enrolled = db
     .prepare(
       "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
     )
     .get(studentId, hw.class_id)
-  if (!enrolled) return res.status(403).json({ error: 'Not enrolled in this class' })
+  if (!enrolled)
+    return res.status(403).json({ error: 'Not enrolled in this class', code: 'PT-3001' })
   if (isFinishedClass(hw.class_id)) {
-    return res
-      .status(403)
-      .json({ error: "This class has finished, so work can't be handed in any more." })
+    return res.status(403).json({
+      error: "This class has finished, so work can't be handed in any more.",
+      code: 'PT-3005'
+    })
   }
 
   const questions = db
     .prepare('SELECT * FROM homework_questions WHERE homework_assignment_id = ?')
     .all(req.params.id)
-  if (!questions.length) return res.status(400).json({ error: 'This assignment has no questions' })
+  if (!questions.length)
+    return res.status(400).json({ error: 'This assignment has no questions', code: 'PT-3003' })
 
   const normalize = (s) =>
     String(s ?? '')
@@ -430,14 +439,15 @@ router.post('/homework/:id/answers', (req, res) => {
 router.get('/homework/:id/submission-file', (req, res) => {
   const { studentId } = req.query
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
   const submission = db
     .prepare(
       'SELECT * FROM homework_submissions WHERE homework_assignment_id = ? AND student_id = ?'
     )
     .get(req.params.id, studentId)
-  if (!submission || !submission.file_path) return res.status(404).json({ error: 'No file' })
+  if (!submission || !submission.file_path)
+    return res.status(404).json({ error: 'No file', code: 'PT-3002' })
   res.download(path.join(SUBMISSIONS_DIR, submission.file_path), submission.file_name)
 })
 
@@ -518,7 +528,7 @@ router.get('/posts', (req, res) => {
 router.get('/posts/:id/image', (req, res) => {
   const studentIds = getLinkedStudentIds(req.accountId)
   const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
-  if (!post || !post.image_path) return res.status(404).json({ error: 'No image' })
+  if (!post || !post.image_path) return res.status(404).json({ error: 'No image', code: 'PT-3002' })
   const enrolled = studentIds.some((studentId) =>
     db
       .prepare(
@@ -526,7 +536,7 @@ router.get('/posts/:id/image', (req, res) => {
       )
       .get(studentId, post.class_id)
   )
-  if (!enrolled) return res.status(403).json({ error: 'Not your class' })
+  if (!enrolled) return res.status(403).json({ error: 'Not your class', code: 'PT-3001' })
   res.sendFile(path.join(POSTS_DIR, post.image_path))
 })
 
@@ -558,7 +568,7 @@ router.get('/messages', (req, res) => {
 
 router.post('/messages', (req, res) => {
   const body = (req.body?.body || '').trim()
-  if (!body) return res.status(400).json({ error: 'Message is empty' })
+  if (!body) return res.status(400).json({ error: 'Message is empty', code: 'PT-3007' })
   db.prepare(
     'INSERT INTO messages (id, account_id, sender, body, created_at, read_by_teacher) VALUES (?, ?, ?, ?, ?, 0)'
   ).run(crypto.randomUUID(), req.accountId, 'family', body, new Date().toISOString())
@@ -573,12 +583,12 @@ router.post('/messages', (req, res) => {
 router.post('/messages/:id/translate', aiLimits, async (req, res) => {
   const targetLang = req.body?.targetLang
   if (!isLanguage(targetLang))
-    return res.status(400).json({ error: 'Pick a language from the list' })
+    return res.status(400).json({ error: 'Pick a language from the list', code: 'PT-3008' })
 
   const message = db
     .prepare('SELECT * FROM messages WHERE id = ? AND account_id = ?')
     .get(req.params.id, req.accountId)
-  if (!message) return res.status(404).json({ error: 'Not found' })
+  if (!message) return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
 
   const cached = db
     .prepare('SELECT * FROM message_translations WHERE message_id = ?')
@@ -600,8 +610,9 @@ router.post('/messages/:id/translate', aiLimits, async (req, res) => {
     ).run(message.id, translatedBody, targetLang)
     res.json({ translatedBody })
   } catch (err) {
-    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
-    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+    if (err instanceof AiNotConfiguredError)
+      return res.status(503).json({ error: err.message, code: 'PT-4001' })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.', code: 'PT-4002' })
   }
 })
 
@@ -626,13 +637,14 @@ router.post('/translate', async (req, res) => {
   const { kind, id, targetLang } = req.body || {}
   const spec = Object.hasOwn(TRANSLATABLE, kind) ? TRANSLATABLE[kind] : null
   if (!spec || typeof id !== 'string')
-    return res.status(400).json({ error: 'Nothing to translate' })
+    return res.status(400).json({ error: 'Nothing to translate', code: 'PT-3007' })
   if (!isLanguage(targetLang))
-    return res.status(400).json({ error: 'Pick a language from the list' })
+    return res.status(400).json({ error: 'Pick a language from the list', code: 'PT-3008' })
 
   const row = db.prepare(spec.sql).get(id)
   const classIds = getActiveClassIds(getLinkedStudentIds(req.accountId))
-  if (!row || !classIds.includes(row.class_id)) return res.status(404).json({ error: 'Not found' })
+  if (!row || !classIds.includes(row.class_id))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
 
   const teacher = db.prepare('SELECT teacher_id FROM classes WHERE id = ?').get(row.class_id)
   try {
@@ -648,9 +660,11 @@ router.post('/translate', async (req, res) => {
     }
     res.json({ ...out, truncated })
   } catch (err) {
-    if (err instanceof AiBudgetError) return res.status(429).json({ error: err.message })
-    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
-    res.status(502).json({ error: 'Translation failed. Try again in a moment.' })
+    if (err instanceof AiBudgetError)
+      return res.status(429).json({ error: err.message, code: 'PT-4003' })
+    if (err instanceof AiNotConfiguredError)
+      return res.status(503).json({ error: err.message, code: 'PT-4001' })
+    res.status(502).json({ error: 'Translation failed. Try again in a moment.', code: 'PT-4002' })
   }
 })
 
@@ -742,9 +756,9 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
   const { studentId, message, language, homeworkId } = req.body
   const text = (message || '').trim().slice(0, 2000)
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
-  if (!text) return res.status(400).json({ error: 'Message is empty' })
+  if (!text) return res.status(400).json({ error: 'Message is empty', code: 'PT-3007' })
 
   const classIds = getActiveClassIds([studentId])
   // Help asked from an assignment is about that assignment, and is logged against it.
@@ -754,7 +768,7 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
       .prepare('SELECT id, class_id, title, description FROM homework_assignments WHERE id = ?')
       .get(homeworkId)
     if (!homework || !classIds.includes(homework.class_id)) {
-      return res.status(404).json({ error: 'Assignment not found' })
+      return res.status(404).json({ error: 'Assignment not found', code: 'PT-3002' })
     }
   }
   const materialMatches = searchMaterials(classIds, text, 6)
@@ -814,8 +828,9 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
     })
     res.json({ reply, citations })
   } catch (err) {
-    if (err instanceof AiNotConfiguredError) return res.status(503).json({ error: err.message })
-    res.status(502).json({ error: 'AI request failed. Try again in a moment.' })
+    if (err instanceof AiNotConfiguredError)
+      return res.status(503).json({ error: err.message, code: 'PT-4001' })
+    res.status(502).json({ error: 'AI request failed. Try again in a moment.', code: 'PT-4002' })
   }
 })
 
@@ -824,7 +839,7 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
 router.get('/ai/history', (req, res) => {
   const { studentId, homeworkId } = req.query
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
-    return res.status(403).json({ error: 'Not your student' })
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
   }
   const all = listInteractions(studentId, homeworkId || null)
   res.json(homeworkId ? all : all.filter((i) => !i.homeworkId))
@@ -841,7 +856,9 @@ router.get('/account', (req, res) => {
 router.post('/account', (req, res) => {
   const email = (req.body?.email || '').trim()
   if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
-    return res.status(400).json({ error: "That doesn't look like an email address" })
+    return res
+      .status(400)
+      .json({ error: "That doesn't look like an email address", code: 'PT-1008' })
   }
   db.prepare('UPDATE accounts SET email = ? WHERE id = ?').run(email || null, req.accountId)
   res.json({ ok: true })
@@ -858,10 +875,10 @@ router.post(
     const { currentPassword, newPassword } = req.body || {}
     const account = db.prepare('SELECT password_hash FROM accounts WHERE id = ?').get(req.accountId)
     if (!verifyPassword(currentPassword || '', account?.password_hash)) {
-      return res.status(400).json({ error: 'Your current password is incorrect' })
+      return res.status(400).json({ error: 'Your current password is incorrect', code: 'PT-1007' })
     }
     const problem = passwordProblem(newPassword)
-    if (problem) return res.status(400).json({ error: problem })
+    if (problem) return res.status(400).json({ error: problem, code: 'PT-1006' })
 
     db.prepare('UPDATE accounts SET password_hash = ? WHERE id = ?').run(
       hashPassword(newPassword),
@@ -929,9 +946,10 @@ router.get('/profiles', (req, res) => {
 
 router.put('/profiles/:studentId', (req, res) => {
   const { studentId } = req.params
-  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  if (!ownsStudent(req, studentId))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   const result = validateProfilePatch(req.body)
-  if (!result.ok) return res.status(400).json({ error: result.reason })
+  if (!result.ok) return res.status(400).json({ error: result.reason, code: 'PT-3006' })
 
   const fields = Object.keys(result.value)
   const now = new Date().toISOString()
@@ -958,12 +976,14 @@ const photoUploads = rateLimit({
 
 router.post('/profiles/:studentId/photo', photoUploads, async (req, res) => {
   const { studentId } = req.params
-  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  if (!ownsStudent(req, studentId))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   const { fileName, fileData } = req.body || {}
-  if (!fileName || !fileData) return res.status(400).json({ error: 'Choose a photo first' })
+  if (!fileName || !fileData)
+    return res.status(400).json({ error: 'Choose a photo first', code: 'PT-3003' })
 
   const result = await processProfilePhoto(fileName, Buffer.from(String(fileData), 'base64'))
-  if (!result.ok) return res.status(400).json({ error: result.reason })
+  if (!result.ok) return res.status(400).json({ error: result.reason, code: 'PT-3006' })
 
   // A fresh random name each time, so a cached old photo can never be served for a new one.
   const stored = `${studentId.replace(/[^\w-]/g, '_')}-${crypto.randomUUID()}.webp`
@@ -980,7 +1000,8 @@ router.post('/profiles/:studentId/photo', photoUploads, async (req, res) => {
 
 router.delete('/profiles/:studentId/photo', (req, res) => {
   const { studentId } = req.params
-  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  if (!ownsStudent(req, studentId))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   const previous = getProfileRow(studentId)?.photo_file
   if (previous) {
     db.prepare(
@@ -993,9 +1014,10 @@ router.delete('/profiles/:studentId/photo', (req, res) => {
 
 router.get('/profiles/:studentId/photo', (req, res) => {
   const { studentId } = req.params
-  if (!ownsStudent(req, studentId)) return res.status(404).json({ error: 'Not found' })
+  if (!ownsStudent(req, studentId))
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
   const file = getProfileRow(studentId)?.photo_file
-  if (!file) return res.status(404).json({ error: 'No photo' })
+  if (!file) return res.status(404).json({ error: 'No photo', code: 'PT-3002' })
   res.set({ 'Content-Type': 'image/webp', 'Cache-Control': 'private, max-age=300' })
   res.sendFile(path.join(PROFILE_PHOTOS_DIR, file))
 })

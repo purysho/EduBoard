@@ -368,6 +368,12 @@ const api: EduBoardApi = {
     word: (what) => invoke(IpcChannels.office.word, what),
     slides: (planId) => invoke(IpcChannels.office.slides, planId)
   },
+  errorReport: {
+    get: () => invoke(IpcChannels.errorReport.get),
+    recent: () => invoke(IpcChannels.errorReport.recent),
+    logWindowError: (input) => invoke(IpcChannels.errorReport.logWindowError, input),
+    openFolder: () => invoke(IpcChannels.errorReport.openFolder)
+  },
   usagePing: {
     preview: () => invoke(IpcChannels.usagePing.preview)
   },

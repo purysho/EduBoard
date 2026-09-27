@@ -237,6 +237,18 @@ mail deliverability from a fresh VPS is its own headache. Instead:
   one stops working) or **Turn off**. A student who lost their personal link can use the
   class link instead.
 
+## Error codes and the server log
+
+Every error the Portal answers with has a code (`{ "error": "…", "code": "PT-3001" }`),
+shown after the message on the Portal's pages and inside the desktop app's messages.
+[docs/ERROR_CODES.md](../docs/ERROR_CODES.md) says what each code means and what to do.
+An unexpected server error (PT-9900) also carries a reference; the same reference is in
+the server log with the details:
+
+```bash
+journalctl -u eduboard-portal --since today | grep 7KQ2MX
+```
+
 ## Local testing
 
 ```bash

@@ -309,6 +309,12 @@ export const IpcChannels = {
   usagePing: {
     preview: 'usagePing:preview'
   },
+  errorReport: {
+    get: 'errorReport:get',
+    recent: 'errorReport:recent',
+    logWindowError: 'errorReport:logWindowError',
+    openFolder: 'errorReport:openFolder'
+  },
   groupChats: {
     send: 'groupChats:send',
     test: 'groupChats:test'
