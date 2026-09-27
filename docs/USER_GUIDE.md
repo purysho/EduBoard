@@ -210,6 +210,8 @@ Today's date is there by default — add more with the date picker and **+ Add d
 
 **Lesson plans** is a running list, newest additions included. Each entry has a date, status (Planned / Taught / Skipped), title, objectives, materials, activities, homework, and an optional link to one of the class's assessments (handy for tracing which lesson a quiz grew out of). Nothing here is required — use as much or as little structure as is useful to you.
 
+**Copy last week** copies every plan from last week (Monday to Sunday) to the same day this week, marked Planned, so a repeating timetable only needs editing rather than retyping. Plans already there with the same date and title aren't copied twice.
+
 ---
 
 ## Seating charts
@@ -332,6 +334,10 @@ A **Contact** entry is a parent-communication record: pick how you reached them 
 
 The **Dashboard** rolls all of this up across every class at once — total students, overall average, pass rate, attendance, and what's coming up in your lesson plans.
 
+Two cards on the Dashboard help day to day. **Today** lists today's lessons from your timetable, with whether attendance is taken yet and the lesson plan for that day, plus how many parent follow-ups are due. **Students to check on** lists anyone below their class's pass mark, dropping 8 or more points over their recent scores, or with three or more concerns in their log in the last 30 days, with the reason next to each name. Neither card appears when there's nothing to show.
+
+**Parent letters** on the Report tab prints one letter per student into a single PDF. Edit the template in the window that opens: {guardian}, {name}, {class}, {grade}, {percent}, {attendance}, {teacher}, {school} and {date} are filled in for each student. **Print letters (PDF)** also keeps your edited template for next time, and a school pack carries it too.
+
 ![Dashboard](screenshots/dashboard.png)
 
 ---
@@ -346,7 +352,7 @@ At the bottom of a class's **Report** tab, **Report card comments** has a box fo
 
 **Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. These fields stay on your computer; the Portal never receives them.
 
-**Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
+**Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields, comment bank, parent letter) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
 
 ## Password protection
 
@@ -378,6 +384,8 @@ On a student's page, **Their data** has two buttons:
 ## Backing up your data
 
 **Settings → Backups → Back up now** makes a timestamped copy of your entire database. Do this before anything you'd hate to redo (a big import, end of term) — it takes a second. **Open folder** shows you where backups live on disk, so you can copy one to a USB stick, a cloud-synced folder, or email it to yourself.
+
+**Export everything (Excel)** saves all your data as one workbook, a sheet per table. It's for reading, a school's records or moving to another system; to move EduBoard itself to a new computer, use a backup.
 
 **Restore** replaces everything currently in EduBoard with a chosen backup and restarts the app — use it if something goes wrong or you're setting up on a new computer from an old backup.
 

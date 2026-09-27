@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { NotebookPen, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import { CopyPlus, NotebookPen, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import type { ClassSection, LessonPlan } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -14,8 +14,10 @@ import {
   useDraftLessonPlan,
   useLessonPlans
 } from '@renderer/lib/queries'
-import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { formatDate, ipcErrorMessage, todayIso } from '@renderer/lib/format'
 import { LessonPlanFormModal, type LessonPlanDraft } from './LessonPlanFormModal'
+import { useQueryClient } from '@tanstack/react-query'
+import { addDays, mondayOf } from '@shared/dates'
 
 const STATUS_TONE = {
   planned: 'primary',
@@ -24,6 +26,8 @@ const STATUS_TONE = {
 } as const
 
 export function LessonPlannerTab(): React.JSX.Element {
+  const qc = useQueryClient()
+  const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const { data: plans, isLoading } = useLessonPlans(classSection.id)
   const { data: assessments } = useAssessments(classSection.id)
@@ -74,6 +78,27 @@ export function LessonPlannerTab(): React.JSX.Element {
             </Button>
           </div>
         )}
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            const thisMonday = mondayOf(todayIso())
+            const n = await window.api.lessonPlans.copyWeek(
+              classSection.id,
+              addDays(thisMonday, -7),
+              thisMonday
+            )
+            setCopyMessage(
+              n
+                ? `Copied ${n} plan${n === 1 ? '' : 's'} from last week to this week.`
+                : 'Nothing to copy: no new plans last week.'
+            )
+            await qc.invalidateQueries({ queryKey: ['classes', classSection.id] })
+          }}
+          title="Copy last week's plans to the same days this week"
+        >
+          <CopyPlus size={15} className="mr-1 inline" aria-hidden />
+          Copy last week
+        </Button>
         <Button variant="secondary" onClick={() => setShowAiTopic((v) => !v)}>
           <Sparkles size={15} className="mr-1 inline" aria-hidden />
           Draft with AI
@@ -89,6 +114,7 @@ export function LessonPlannerTab(): React.JSX.Element {
           Lesson plan
         </Button>
       </div>
+      {copyMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{copyMessage}</p>}
       {draftPlan.isError && (
         <p className="mb-4 text-sm text-[var(--color-danger)]">
           {ipcErrorMessage(draftPlan.error, 'Could not draft a lesson plan.')}

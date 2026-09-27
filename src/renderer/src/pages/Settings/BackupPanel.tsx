@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CloudUpload, FolderOpen, HardDriveDownload, ShieldCheck } from 'lucide-react'
+import { CloudUpload, FolderOpen, HardDriveDownload, ShieldCheck, Sheet } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { RestoreDialog } from './RestoreDialog'
@@ -80,6 +80,7 @@ export function BackupPanel(): React.JSX.Element {
   const { data: backups } = useBackups()
   const createBackup = useCreateBackup()
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null)
+  const [exported, setExported] = useState<string | null>(null)
 
   return (
     <Card>
@@ -89,6 +90,18 @@ export function BackupPanel(): React.JSX.Element {
           Backups
         </h2>
         <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            title="Everything (except settings) as one Excel file, a sheet per kind of data, for handing over. It isn't a backup: EduBoard can't restore from it."
+            onClick={async () => {
+              const r = await window.api.importExport.exportEverything()
+              setExported(r.saved ? `Exported ${r.sheets} sheets to ${r.filePath}` : null)
+            }}
+          >
+            <Sheet size={14} className="mr-1 inline" aria-hidden />
+            Export everything (Excel)
+          </Button>
           <Button variant="secondary" size="sm" onClick={() => window.api.backup.revealFolder()}>
             <FolderOpen size={14} className="mr-1 inline" aria-hidden />
             Open folder
@@ -105,6 +118,7 @@ export function BackupPanel(): React.JSX.Element {
         </div>
       </CardHeader>
       <CardBody>
+        {exported && <p className="mb-3 text-sm text-[var(--color-text-muted)]">{exported}</p>}
         <ExtraBackupFolder />
         <p className="mb-3 text-sm text-[var(--color-text-muted)]">
           EduBoard automatically backs up your database every time it starts (the last{' '}

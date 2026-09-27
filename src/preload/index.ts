@@ -77,7 +77,9 @@ const api: EduBoardApi = {
       invoke(IpcChannels.lessonPlans.listUpcoming, fromDate, limit),
     create: (input) => invoke(IpcChannels.lessonPlans.create, input),
     update: (id, patch) => invoke(IpcChannels.lessonPlans.update, id, patch),
-    remove: (id) => invoke(IpcChannels.lessonPlans.remove, id)
+    remove: (id) => invoke(IpcChannels.lessonPlans.remove, id),
+    copyWeek: (classId, fromMonday, toMonday) =>
+      invoke(IpcChannels.lessonPlans.copyWeek, classId, fromMonday, toMonday)
   },
   scheduleSlots: {
     listByClass: (classId) => invoke(IpcChannels.scheduleSlots.listByClass, classId),
@@ -139,13 +141,16 @@ const api: EduBoardApi = {
         homeworkAssignmentId,
         classId,
         filePath
-      )
+      ),
+    exportEverything: () => invoke(IpcChannels.importExport.exportEverything)
   },
   print: {
     printStudentReport: (studentId, classId, suggestedFileName) =>
       invoke(IpcChannels.print.printStudentReport, studentId, classId, suggestedFileName),
     printClassReports: (classId, suggestedFileName) =>
-      invoke(IpcChannels.print.printClassReports, classId, suggestedFileName)
+      invoke(IpcChannels.print.printClassReports, classId, suggestedFileName),
+    printClassLetters: (classId, suggestedFileName) =>
+      invoke(IpcChannels.print.printClassLetters, classId, suggestedFileName)
   },
   standards: {
     list: () => invoke(IpcChannels.standards.list),
@@ -228,6 +233,10 @@ const api: EduBoardApi = {
     upsert: (input) => invoke(IpcChannels.assignmentSubmissions.upsert, input),
     remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
     openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
+  },
+  today: {
+    overview: () => invoke(IpcChannels.today.overview),
+    watchList: () => invoke(IpcChannels.today.watchList)
   },
   reportComments: {
     list: (classId) => invoke(IpcChannels.reportComments.list, classId),

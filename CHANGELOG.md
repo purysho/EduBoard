@@ -6,6 +6,11 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **Today** on the Dashboard: today's lessons from the timetable, each showing whether attendance is taken and which lesson plan it has, plus parent follow-ups due.
+- **Students to check on** (Dashboard): students below their class's pass mark, dropping 8 or more points over their last few scores, or with three or more concerns logged in 30 days, each with the reason.
+- **Copy last week** (Lesson plans): copies last week's plans to the same days this week as Planned, skipping any already there.
+- **Parent letters** (a class's Report tab): one letter per student as a single PDF, from a template you edit, with the parent's name, grade, percent and attendance filled in. The template travels in school packs.
+- **Export everything (Excel)** (Settings → Backups): all your data in one workbook, a sheet per table, for a school's records or moving to another system.
 - **Grading scales.** Besides A–F: A–F with + and −, 优秀/良好/合格/待合格, 优秀/良好/中等/及格/不及格, 1–7, 9–1, Pass/Fail, or your own bands, per class (class Settings) and as the default for new classes (Settings). Badges, reports, composite grades and the Portal use the class's own labels.
 - **Report card comments** (a class's Report tab): write each student's comment, add sentences from a comment bank with {name}, {class}, {grade} and {percent} filled in (edit the bank in Settings → Your lists; it travels in school packs), and **Print all report cards** as one PDF, a page each. Comments print on the report card.
 - **Classroom tab** on every class, made for the projector (it stays visible while presenting): a random name picker that gets through everyone before repeating, a group maker (groups of N or N groups), a full-screen timer with a chime, and class points (+1 / −1 with an optional reason, weekly totals, undo). Students marked absent today are left out of the picker and groups.

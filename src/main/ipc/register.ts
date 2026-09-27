@@ -88,6 +88,7 @@ import * as backupService from '../services/backup'
 import * as security from '../services/security'
 import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
+import { getTodayOverview, getWatchList } from '../services/today'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -120,6 +121,29 @@ async function showSaveDialogOnTop(
   const owner = BrowserWindow.getAllWindows().find((w) => w.isVisible())
   if (owner) owner.focus()
   return owner ? dialog.showSaveDialog(owner, options) : dialog.showSaveDialog(options)
+}
+
+/** Renders a print route in a hidden window and saves it as a PDF where the teacher
+ * chooses. A whole class loads many students' data, so it may take a while to be ready. */
+async function printRouteToPdf(
+  route: string,
+  suggestedFileName: string
+): Promise<{ saved: boolean; filePath?: string }> {
+  const win = createPrintWindow()
+  try {
+    await loadAppRoute(win, route)
+    await waitForPrintReady(win, 60_000)
+    const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: suggestedFileName,
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, pdfBuffer)
+    return { saved: true, filePath }
+  } finally {
+    win.destroy()
+  }
 }
 
 export function registerIpcHandlers(): void {
@@ -307,11 +331,20 @@ export function registerIpcHandlers(): void {
       lessonPlansRepo.updateLessonPlan(id, patch)
   )
   handle(IpcChannels.lessonPlans.remove, (_e, id: string) => lessonPlansRepo.deleteLessonPlan(id))
+  handle(
+    IpcChannels.lessonPlans.copyWeek,
+    (_e, classId: string, fromMonday: string, toMonday: string) => {
+      const iso = /^\d{4}-\d{2}-\d{2}$/
+      if (!iso.test(fromMonday) || !iso.test(toMonday)) throw new Error('Invalid week')
+      return lessonPlansRepo.copyWeekOfPlans(String(classId), fromMonday, toMonday)
+    }
+  )
 
   // --- Schedule slots (Timetable) ------------------------------------------------------------
   handle(IpcChannels.scheduleSlots.listByClass, (_e, classId: string) =>
     scheduleSlotsRepo.listScheduleSlotsByClass(classId)
   )
+
   handle(IpcChannels.scheduleSlots.listAll, () => scheduleSlotsRepo.listAllScheduleSlots())
   handle(
     IpcChannels.scheduleSlots.create,
@@ -447,26 +480,11 @@ export function registerIpcHandlers(): void {
       }
     }
   )
-  handle(
-    IpcChannels.print.printClassReports,
-    async (_e, classId: string, suggestedFileName: string) => {
-      const win = createPrintWindow()
-      try {
-        await loadAppRoute(win, `/print/class/${classId}`)
-        // A whole class loads many students' data; allow it longer than one report.
-        await waitForPrintReady(win, 60_000)
-        const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
-        const { canceled, filePath } = await showSaveDialogOnTop({
-          defaultPath: suggestedFileName,
-          filters: [{ name: 'PDF', extensions: ['pdf'] }]
-        })
-        if (canceled || !filePath) return { saved: false as const }
-        await writeFile(filePath, pdfBuffer)
-        return { saved: true as const, filePath }
-      } finally {
-        win.destroy()
-      }
-    }
+  handle(IpcChannels.print.printClassReports, (_e, classId: string, suggestedFileName: string) =>
+    printRouteToPdf(`/print/class/${classId}`, suggestedFileName)
+  )
+  handle(IpcChannels.print.printClassLetters, (_e, classId: string, suggestedFileName: string) =>
+    printRouteToPdf(`/print/letters/${classId}`, suggestedFileName)
   )
 
   // --- Standards ------------------------------------------------------------------------
@@ -664,6 +682,21 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Exit tickets -----------------------------------------------------------------------
+  handle(IpcChannels.importExport.exportEverything, async () => {
+    const stamp = new Date().toISOString().slice(0, 10)
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `EduBoard-everything-${stamp}.xlsx`,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    const sheets = await importExportService.exportEverythingXlsx(filePath)
+    return { saved: true, filePath, sheets }
+  })
+
+  // --- Dashboard: today and students to check on --------------------------------------------
+  handle(IpcChannels.today.overview, () => getTodayOverview())
+  handle(IpcChannels.today.watchList, () => getWatchList())
+
   // --- Report card comments ---------------------------------------------------------------
   handle(IpcChannels.reportComments.list, (_e, classId: string) =>
     reportCommentsRepo.listReportComments(String(classId))

@@ -31,6 +31,7 @@ import { ClassStoryTab } from './pages/Classes/ClassStoryTab'
 import { NotebookPage } from './pages/Notebook/NotebookPage'
 import { MessagesPage } from './pages/Messages/MessagesPage'
 import { PortalTab } from './pages/Classes/PortalTab'
+import { ClassLettersPrintPage } from './pages/Print/ClassLettersPrintPage'
 import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrintPage'
 
 function App(): React.JSX.Element {
@@ -39,6 +40,7 @@ function App(): React.JSX.Element {
       <Routes>
         <Route path="/print/student/:studentId/:classId" element={<StudentReportPrintPage />} />
         <Route path="/print/class/:classId" element={<ClassReportsPrintPage />} />
+        <Route path="/print/letters/:classId" element={<ClassLettersPrintPage />} />
         <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />

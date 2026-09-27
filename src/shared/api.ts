@@ -24,6 +24,8 @@ import type {
   BehaviourPoint,
   BehaviourTotal,
   ReportComment,
+  TodayOverview,
+  WatchListEntry,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -186,6 +188,8 @@ export interface EduBoardApi {
     create(input: CreateLessonPlanInput): Promise<LessonPlan>
     update(id: string, patch: UpdateLessonPlanInput): Promise<LessonPlan>
     remove(id: string): Promise<void>
+    /** Copies the week starting fromMonday to the week starting toMonday; returns the count. */
+    copyWeek(classId: string, fromMonday: string, toMonday: string): Promise<number>
   }
   scheduleSlots: {
     listByClass(classId: string): Promise<ClassScheduleSlot[]>
@@ -244,6 +248,8 @@ export interface EduBoardApi {
       classId: string,
       filePath: string
     ): Promise<void>
+    /** Every table (except settings) as one .xlsx, a sheet each, to a file the teacher picks. */
+    exportEverything(): Promise<{ saved: boolean; filePath?: string; sheets?: number }>
   }
   print: {
     printStudentReport(
@@ -253,6 +259,11 @@ export interface EduBoardApi {
     ): Promise<{ saved: boolean; filePath?: string }>
     /** Every active student's report card for the class in one PDF, a page each. */
     printClassReports(
+      classId: string,
+      suggestedFileName: string
+    ): Promise<{ saved: boolean; filePath?: string }>
+    /** A personalised parent letter per active student, from the letter template. */
+    printClassLetters(
       classId: string,
       suggestedFileName: string
     ): Promise<{ saved: boolean; filePath?: string }>
@@ -330,6 +341,12 @@ export interface EduBoardApi {
     upsert(input: UpsertAssignmentSubmissionInput): Promise<AssignmentSubmission>
     remove(id: string): Promise<void>
     openPath(filePath: string): Promise<void>
+  }
+  today: {
+    /** Today's lessons from the timetable, and parent follow-ups due. */
+    overview(): Promise<TodayOverview>
+    /** Students below the pass mark, falling, or with repeated concerns. */
+    watchList(): Promise<WatchListEntry[]>
   }
   reportComments: {
     list(classId: string): Promise<ReportComment[]>

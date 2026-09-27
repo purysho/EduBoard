@@ -1,5 +1,6 @@
 import { writeFile } from 'fs/promises'
 import ExcelJS from 'exceljs'
+import { getSqlite } from '../db/client'
 import { createStudent } from '../repositories/students'
 import { enrollStudent, getRosterForClass } from '../repositories/enrollments'
 import { getClass, listClassesByCourseGroup } from '../repositories/classes'
@@ -336,4 +337,40 @@ export async function exportHomeworkSubmissionsCsv(
   }
 
   await writeFile(filePath, lines.join('\n'), 'utf-8')
+}
+
+/** Tables left out of "Export everything": settings hold the Portal secret and AI and
+ * email passwords, and the migrations table is EduBoard's own bookkeeping. */
+const EXPORT_SKIP = new Set(['settings', '_migrations'])
+
+/** Everything EduBoard holds, as one Excel workbook with a sheet per table, for handing
+ * over at the end of a year or to a school office. It isn't a backup: EduBoard can't
+ * restore from it. Returns the number of sheets written. */
+export async function exportEverythingXlsx(filePath: string): Promise<number> {
+  const sqlite = getSqlite()
+  const tables = (
+    sqlite
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+      )
+      .all() as { name: string }[]
+  )
+    .map((t) => t.name)
+    .filter((n) => !EXPORT_SKIP.has(n))
+  const workbook = new ExcelJS.Workbook()
+  for (const table of tables) {
+    const columns = (
+      sqlite.prepare(`PRAGMA table_info("${table}")`).all() as { name: string }[]
+    ).map((c) => c.name)
+    const sheet = workbook.addWorksheet(table.slice(0, 31))
+    sheet.addRow(columns).font = { bold: true }
+    for (const row of sqlite.prepare(`SELECT * FROM "${table}"`).all() as Record<
+      string,
+      unknown
+    >[]) {
+      sheet.addRow(columns.map((c) => (row[c] instanceof Buffer ? '' : row[c])))
+    }
+  }
+  await workbook.xlsx.writeFile(filePath)
+  return tables.length
 }

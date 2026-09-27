@@ -68,7 +68,8 @@ export const IpcChannels = {
     listUpcoming: 'lessonPlans:listUpcoming',
     create: 'lessonPlans:create',
     update: 'lessonPlans:update',
-    remove: 'lessonPlans:remove'
+    remove: 'lessonPlans:remove',
+    copyWeek: 'lessonPlans:copyWeek'
   },
   scheduleSlots: {
     listByClass: 'scheduleSlots:listByClass',
@@ -116,11 +117,13 @@ export const IpcChannels = {
     exportAttendance: 'importExport:exportAttendance',
     exportHomeworkSubmissions: 'importExport:exportHomeworkSubmissions',
     pickImportFile: 'importExport:pickImportFile',
-    pickExportPath: 'importExport:pickExportPath'
+    pickExportPath: 'importExport:pickExportPath',
+    exportEverything: 'importExport:exportEverything'
   },
   print: {
     printStudentReport: 'print:printStudentReport',
-    printClassReports: 'print:printClassReports'
+    printClassReports: 'print:printClassReports',
+    printClassLetters: 'print:printClassLetters'
   },
   standards: {
     list: 'standards:list',
@@ -194,6 +197,10 @@ export const IpcChannels = {
     upsert: 'assignmentSubmissions:upsert',
     remove: 'assignmentSubmissions:remove',
     openPath: 'assignmentSubmissions:openPath'
+  },
+  today: {
+    overview: 'today:overview',
+    watchList: 'today:watchList'
   },
   reportComments: {
     list: 'reportComments:list',

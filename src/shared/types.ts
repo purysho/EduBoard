@@ -1,6 +1,7 @@
 // Shared domain types used by both the main (Node/Electron) process and the renderer (React) UI.
 // Keep these framework-agnostic — no Electron or DOM types here.
 import { DEFAULT_COMMENT_BANK, type BankComment } from './commentBank'
+import { DEFAULT_LETTER_TEMPLATE } from './letters'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
@@ -685,6 +686,8 @@ export interface AppSettings {
   customCss: string
   /** Report card sentences with placeholders ({name}, {class}, {grade}, {percent}). */
   commentBank: BankComment[]
+  /** The parent letter template (see shared/letters.ts for its placeholders). */
+  letterTemplate: string
 }
 
 export interface LogQuickAdd {
@@ -828,7 +831,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   logQuickAdds: DEFAULT_LOG_QUICK_ADDS,
   studentFields: [],
   customCss: '',
-  commentBank: DEFAULT_COMMENT_BANK
+  commentBank: DEFAULT_COMMENT_BANK,
+  letterTemplate: DEFAULT_LETTER_TEMPLATE
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------
@@ -1053,4 +1057,31 @@ export interface SuggestCommentPhrasesInput {
   recentNotes: string[]
   trendDirection: GradeTrendDirection | null
   trendDeltaPoints: number | null
+}
+
+export interface TodayLesson {
+  classId: string
+  className: string
+  classColor: string | null
+  startTime: string
+  endTime: string
+  room: string | null
+  attendanceTaken: boolean
+  lessonPlanTitle: string | null
+}
+
+export interface TodayOverview {
+  /** Local date, YYYY-MM-DD. */
+  date: string
+  lessons: TodayLesson[]
+  /** Parent-contact log entries marked for follow-up and not done yet. */
+  followUpsDue: number
+}
+
+export interface WatchListEntry {
+  studentId: string
+  studentName: string
+  classId: string
+  className: string
+  reasons: string[]
 }

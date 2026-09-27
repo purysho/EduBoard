@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Download,
   FileDown,
+  Mail,
   Printer,
   TrendingUp
 } from 'lucide-react'
@@ -30,6 +31,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useClassReport, useClassRoster } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 import { ReportComments } from './ReportComments'
+import { ParentLettersModal } from './ParentLettersModal'
 
 const LETTER_COLOR: Record<string, string> = {
   A: 'var(--color-success)',
@@ -58,6 +60,7 @@ export function ReportTab(): React.JSX.Element {
   }
 
   const [printingAll, setPrintingAll] = useState(false)
+  const [lettersOpen, setLettersOpen] = useState(false)
   async function handlePrintAll(): Promise<void> {
     setPrintingAll(true)
     try {
@@ -82,6 +85,10 @@ export function ReportTab(): React.JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={() => setLettersOpen(true)}>
+          <Mail size={15} className="mr-1 inline" aria-hidden />
+          Parent letters
+        </Button>
         <Button variant="secondary" onClick={handlePrintAll} disabled={printingAll}>
           <Printer size={15} className="mr-1 inline" aria-hidden />
           {printingAll ? 'Preparing…' : 'Print all report cards (PDF)'}
@@ -274,6 +281,11 @@ export function ReportTab(): React.JSX.Element {
       </Card>
 
       {roster && <ReportComments classSection={classSection} roster={roster} />}
+      <ParentLettersModal
+        open={lettersOpen}
+        onClose={() => setLettersOpen(false)}
+        classSection={classSection}
+      />
     </div>
   )
 }

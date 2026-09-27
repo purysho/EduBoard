@@ -29,6 +29,7 @@ export interface SchoolPack {
   terms?: SchoolPackTerm[]
   customCss?: string
   commentBank?: BankComment[]
+  letterTemplate?: string
 }
 
 const MAX_LOGO_CHARS = 700_000
@@ -151,6 +152,9 @@ export function parseSchoolPack(json: string): SchoolPack {
     )
     if (list.length) pack.commentBank = list.map((c) => ({ category: c.category, text: c.text }))
   }
+  if (isString(raw.letterTemplate, 5000) && raw.letterTemplate.trim()) {
+    pack.letterTemplate = raw.letterTemplate
+  }
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     pack.customCss = sanitizeCss(raw.customCss)
   }
@@ -178,7 +182,8 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
       endDate: t.endDate
     })),
     ...(settings.customCss ? { customCss: settings.customCss } : {}),
-    commentBank: settings.commentBank
+    commentBank: settings.commentBank,
+    letterTemplate: settings.letterTemplate
   }
 }
 
@@ -250,6 +255,10 @@ export function planSchoolPack(
   ) {
     patch.commentBank = pack.commentBank
     changes.push(`Report comment bank (${pack.commentBank.length} comments)`)
+  }
+  if (pack.letterTemplate && pack.letterTemplate !== settings.letterTemplate) {
+    patch.letterTemplate = pack.letterTemplate
+    changes.push('Parent letter')
   }
   if (pack.customCss !== undefined && pack.customCss !== settings.customCss) {
     patch.customCss = pack.customCss

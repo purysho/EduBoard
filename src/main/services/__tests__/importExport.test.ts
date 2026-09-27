@@ -144,3 +144,23 @@ describe('exportGradebookXlsx', () => {
     expect(hopperRow).toContain('B')
   })
 })
+
+describe('exportEverythingXlsx', () => {
+  it('writes a sheet per table, leaving out settings (keys and passwords)', async () => {
+    const { exportEverythingXlsx } = await import('../importExport')
+    const { updateSettings } = await import('../../repositories/settingsRepo')
+    updateSettings({ aiApiKey: ['sk', 'not', 'a', 'real', 'key'].join('-') })
+    const filePath = join(tempDir, 'roster.csv')
+    writeFileSync(filePath, CSV)
+    await importRoster(filePath)
+    const out = join(tempDir, 'everything.xlsx')
+    const sheets = await exportEverythingXlsx(out)
+    const wb = new ExcelJS.Workbook()
+    await wb.xlsx.readFile(out)
+    const names = wb.worksheets.map((w) => w.name)
+    expect(sheets).toBe(names.length)
+    expect(names).toContain('students')
+    expect(names).not.toContain('settings')
+    expect(wb.getWorksheet('students')!.rowCount).toBe(3) // header + 2 students
+  })
+})
