@@ -21,6 +21,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Students using AI](#students-using-ai)
 - [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
+- [Your school's look and settings](#your-schools-look-and-settings)
 - [Password protection](#password-protection)
 - [Presenting on a projector](#presenting-on-a-projector)
 - [A student's or family's data request](#a-students-or-familys-data-request)
@@ -322,6 +323,14 @@ The **Dashboard** rolls all of this up across every class at once — total stud
 ![Dashboard](screenshots/dashboard.png)
 
 ---
+
+## Your school's look and settings
+
+**Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.
+
+**Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. These fields stay on your computer; the Portal never receives them.
+
+**Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
 
 ## Password protection
 

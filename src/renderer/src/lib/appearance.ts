@@ -1,4 +1,5 @@
 import type { AppSettings } from '@shared/types'
+import { sanitizeCss } from '@shared/schoolPack'
 
 // The school's colour, text size and contrast, applied on top of styles.css's tokens.
 
@@ -48,7 +49,7 @@ export const TEXT_ZOOM: Record<AppSettings['textSize'], number> = {
 
 /** Applies the appearance settings to the document. */
 export function applyAppearance(
-  s: Pick<AppSettings, 'accentColor' | 'textSize' | 'highContrast' | 'reduceMotion'>
+  s: Pick<AppSettings, 'accentColor' | 'textSize' | 'highContrast' | 'reduceMotion' | 'customCss'>
 ): void {
   const root = document.documentElement
   let style = document.getElementById('eb-accent') as HTMLStyleElement | null
@@ -58,6 +59,15 @@ export function applyAppearance(
     document.head.appendChild(style)
   }
   style.textContent = accentCss(s.accentColor)
+  // The school stylesheet goes last so it can override the tokens above. Cleaned again
+  // here (it was cleaned when saved) so nothing in it can load from the internet.
+  let custom = document.getElementById('eb-custom') as HTMLStyleElement | null
+  if (!custom) {
+    custom = document.createElement('style')
+    custom.id = 'eb-custom'
+    document.head.appendChild(custom)
+  }
+  custom.textContent = s.customCss ? sanitizeCss(s.customCss) : ''
   root.style.zoom = String(TEXT_ZOOM[s.textSize] ?? 1)
   root.classList.toggle('high-contrast', s.highContrast)
   root.classList.toggle('reduce-motion', s.reduceMotion)

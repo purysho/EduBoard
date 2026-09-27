@@ -7,6 +7,8 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 ### Added
 
 - **Grading scales.** Besides A–F: A–F with + and −, 优秀/良好/合格/待合格, 优秀/良好/中等/及格/不及格, 1–7, 9–1, Pass/Fail, or your own bands, per class (class Settings) and as the default for new classes (Settings). Badges, reports, composite grades and the Portal use the class's own labels.
+- **School pack** (Settings): export the school's name, logo, colour, grading scale, pass mark, terms, log buttons, student fields and stylesheet as one file; colleagues import it (after seeing exactly what it changes) to match. No student data is in it.
+- **School stylesheet** (Settings → Appearance): load a .css file for the school's own background or fonts. It can change EduBoard's colour tokens and use inline images, but nothing in it can load from the internet.
 - **Your lists** (Settings): edit the one-tap buttons above a student's log, and add your own student fields (house, allergies, support plan…), which appear on the student form and page and are filled by a roster import from columns with the same name. They're never sent to the Portal.
 - **Appearance** (Settings): the school's logo (in the sidebar and on report cards) and colour, text size, higher contrast and reduced motion. The school's name also shows under EduBoard in the sidebar.
 

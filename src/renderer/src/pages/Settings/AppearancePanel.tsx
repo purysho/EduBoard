@@ -137,6 +137,34 @@ export function AppearancePanel(): React.JSX.Element | null {
           )}
         </section>
 
+        <section>
+          <h3 className="mb-1 font-medium">School stylesheet</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            For a school that wants its own background or fonts: a .css file applied on top of
+            EduBoard’s look. It can change the colour tokens (such as --color-bg, --color-surface,
+            --color-primary) and use inline images, but can’t load anything from the internet.
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={async () => {
+                if (await window.api.schoolPack.importCss()) {
+                  await update.mutateAsync({})
+                }
+              }}
+            >
+              {settings.customCss ? 'Replace stylesheet' : 'Load .css file'}
+            </Button>
+            {settings.customCss && (
+              <Button variant="ghost" size="sm" onClick={() => set({ customCss: '' })}>
+                <X size={13} className="mr-1 inline" aria-hidden />
+                Remove
+              </Button>
+            )}
+          </div>
+        </section>
+
         <section className="grid grid-cols-2 gap-4">
           <label className="block">
             <span className="mb-1 block font-medium">Text size</span>

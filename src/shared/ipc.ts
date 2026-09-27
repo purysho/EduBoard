@@ -194,6 +194,12 @@ export const IpcChannels = {
     remove: 'assignmentSubmissions:remove',
     openPath: 'assignmentSubmissions:openPath'
   },
+  schoolPack: {
+    export: 'schoolPack:export',
+    preview: 'schoolPack:preview',
+    apply: 'schoolPack:apply',
+    importCss: 'schoolPack:importCss'
+  },
   security: {
     status: 'security:status',
     unlock: 'security:unlock',

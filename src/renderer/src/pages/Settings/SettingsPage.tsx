@@ -17,6 +17,7 @@ import { SecurityPanel } from './SecurityPanel'
 import { AppearancePanel } from './AppearancePanel'
 import { GradingDefaultsPanel } from './GradingDefaultsPanel'
 import { ListsPanel } from './ListsPanel'
+import { SchoolPackPanel } from './SchoolPackPanel'
 
 const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
   deepseek: 'DeepSeek',
@@ -387,6 +388,7 @@ export function SettingsPage(): React.JSX.Element {
         <AppearancePanel />
         <GradingDefaultsPanel />
         <ListsPanel />
+        <SchoolPackPanel />
         <TermsPanel />
         <ImportPanel />
         <SecurityPanel />

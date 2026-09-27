@@ -1,5 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
-import { writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
 import type {
   PortalJoinLink,
@@ -87,6 +87,7 @@ import {
 import * as backupService from '../services/backup'
 import * as security from '../services/security'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
+import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
@@ -640,6 +641,47 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Exit tickets -----------------------------------------------------------------------
+  // --- School pack ----------------------------------------------------------------------
+  handle(IpcChannels.schoolPack.export, async () => {
+    const pack = makeSchoolPack(settingsRepo.getSettings(), termsRepo.listTerms())
+    const name = (pack.schoolName || 'school').replace(/[^\p{L}\p{N}-]+/gu, '_')
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `${name}.eduboard-school.json`,
+      filters: [{ name: 'EduBoard school pack', extensions: ['json'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, JSON.stringify(pack, null, 2))
+    return { saved: true, filePath }
+  })
+  handle(IpcChannels.schoolPack.preview, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'EduBoard school pack', extensions: ['json'] }]
+    })
+    if (canceled || !filePaths[0]) return null
+    const pack = parseSchoolPack(await readFile(filePaths[0], 'utf-8'))
+    const plan = planSchoolPack(pack, settingsRepo.getSettings(), termsRepo.listTerms())
+    return { filePath: filePaths[0], changes: plan.changes }
+  })
+  handle(IpcChannels.schoolPack.apply, async (_e, filePath: string) => {
+    const pack = parseSchoolPack(await readFile(String(filePath), 'utf-8'))
+    const existing = termsRepo.listTerms()
+    const plan = planSchoolPack(pack, settingsRepo.getSettings(), existing)
+    if (Object.keys(plan.settings).length) settingsRepo.updateSettings(plan.settings)
+    let order = existing.reduce((max, t) => Math.max(max, t.sortOrder), 0)
+    for (const t of plan.newTerms) termsRepo.createTerm({ ...t, sortOrder: ++order })
+    return { changes: plan.changes }
+  })
+  handle(IpcChannels.schoolPack.importCss, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: 'Stylesheet', extensions: ['css'] }]
+    })
+    if (canceled || !filePaths[0]) return false
+    settingsRepo.updateSettings({ customCss: sanitizeCss(await readFile(filePaths[0], 'utf-8')) })
+    return true
+  })
+
   // --- Password protection --------------------------------------------------------------
   handle(IpcChannels.security.status, () => security.getSecurityStatus())
   handle(IpcChannels.security.unlock, (_e, secret: string) => security.unlock(String(secret)))

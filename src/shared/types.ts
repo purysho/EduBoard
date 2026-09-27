@@ -679,6 +679,9 @@ export interface AppSettings {
   logQuickAdds: LogQuickAdd[]
   /** Extra things to record about every student (house, allergies, support plan…). */
   studentFields: StudentField[]
+  /** A school stylesheet (sanitized: nothing it contains can load from the internet),
+   * applied after EduBoard's own. '' for none. */
+  customCss: string
 }
 
 export interface LogQuickAdd {
@@ -820,7 +823,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   highContrast: false,
   reduceMotion: false,
   logQuickAdds: DEFAULT_LOG_QUICK_ADDS,
-  studentFields: []
+  studentFields: [],
+  customCss: ''
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

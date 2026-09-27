@@ -322,6 +322,16 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     openPath(filePath: string): Promise<void>
   }
+  schoolPack: {
+    /** Saves this computer's school-wide settings and terms as a school pack file. */
+    export(): Promise<{ saved: boolean; filePath?: string }>
+    /** Asks for a pack file and lists what importing it would change (nothing applied). */
+    preview(): Promise<{ filePath: string; changes: string[] } | null>
+    /** Applies the pack at filePath (read and checked again, not trusted from preview). */
+    apply(filePath: string): Promise<{ changes: string[] }>
+    /** Asks for a .css file and saves it, cleaned, as the school stylesheet. */
+    importCss(): Promise<boolean>
+  }
   security: {
     status(): Promise<SecurityStatus>
     /** Password or recovery key. */

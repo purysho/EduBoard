@@ -227,6 +227,12 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
     openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
   },
+  schoolPack: {
+    export: () => invoke(IpcChannels.schoolPack.export),
+    preview: () => invoke(IpcChannels.schoolPack.preview),
+    apply: (filePath) => invoke(IpcChannels.schoolPack.apply, filePath),
+    importCss: () => invoke(IpcChannels.schoolPack.importCss)
+  },
   security: {
     status: () => invoke(IpcChannels.security.status),
     unlock: (secret) => invoke(IpcChannels.security.unlock, secret),
