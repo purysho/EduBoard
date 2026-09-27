@@ -13,12 +13,32 @@ families logins, homework hand-in, a Class Story and a weekly digest email. AI i
 only to _suggest_ (short report-comment phrases, newsletter wording) and every AI button
 says it needs internet; nothing AI-written goes out unchecked.
 
-**What's built (v0.4.0):** 157 commits, ~57 test files / 324 tests, Windows
-installer, macOS and Linux builds, auto-update, encrypted database with app lock, Chinese
-UI across every screen and printout, school branding packs, custom attendance codes and
-school terminology, templates for letters / posts / lesson plans / report cards, weekly
-digest with teacher and family versions, AI-assisted newsletter, and Word / PowerPoint /
-Excel export.
+**What's built (v0.4.0, plus unreleased work since):** over 160 commits, 60 test files and
+337 desktop tests plus 144 Portal tests, a Windows installer, macOS and Linux builds and
+auto-update. Every screen and printout is in Chinese and English, with an encrypted
+database and app lock. Also built:
+
+- school branding packs, custom attendance codes and school terminology;
+- templates for letters, posts, lesson plans and report cards;
+- a weekly digest in teacher and family versions, and an AI-assisted newsletter;
+- Word, PowerPoint and Excel export;
+- class point categories (德智体美劳 or the school's own) on report cards and in the
+  digest, and a seating chart that gives points and shows student needs;
+- Class Story read receipts;
+- posting to DingTalk and WeCom groups;
+- an opt-in anonymous usage count.
+
+### The four parts of EduBoard
+
+EduBoard should grow as four parts around a teacher-owned core, not into a slower copy
+of a smart-campus ERP.
+
+| Part                 | What it is                                                   | Built                                                                                                                             | Next                                                                                                                 |
+| -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **EduBoard Desktop** | The teacher's own workspace, offline, data on their computer | Gradebook, attendance, planning, reports, classroom tools, points, seating, exit tickets                                          | Student timeline, score import, support plans                                                                        |
+| **EduBoard Connect** | Families and students: the Portal, digest, group chats       | Logins, homework hand-in, Class Story with read receipts, messages, weekly digest, DingTalk / WeCom posting                       | Private report delivery, notices with acknowledgement (回执), targeted messages with attachments, conference booking |
+| **EduBoard Bridge**  | Getting data in and out of other systems                     | Roster import, Excel / Word / PowerPoint export, school packs, "export everything", Portal sync that queues changes while offline | Documented file formats, OneRoster CSV, score import from exam systems, an API when a partner asks                   |
+| **EduBoard AI**      | Optional help that suggests; the teacher decides             | Report-comment phrases, newsletter wording; any OpenAI-compatible provider, including a model on the school's own computer        | A named "local model" option, class summaries for the teacher, resource tagging, explaining "students to check on"   |
 
 ## 2. HappyClass Smart School System (educationtek.com)
 
@@ -43,15 +63,17 @@ Effort: S = days, M = 1–3 weeks, L = a month or more, for one developer.
 
 ### Family communication
 
-| Product                   | Known for                                                                                                                                                                                                                     | Feature to adapt for EduBoard                                                                                                                                          | Fit                 | Effort | Value                         |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------ | ----------------------------- |
-| ClassDojo                 | Class points, Class Story, messaging; reported a user in 95% of US preK–8 schools ([EdSurge, 2019](https://www.edsurge.com/news/2019-02-28-now-with-revenue-classdojo-raises-35-million-to-expand-to-homes-across-the-world)) | **Message translation:** a family reads a teacher's message in their own language; the teacher sees both (AI, needs internet, shown as a translation)                  | Good                | S–M    | High in international schools |
-| Remind                    | Texting families without sharing a phone number; office hours                                                                                                                                                                 | **Quiet hours** on Portal messages (no notifications to families after a set time)                                                                                     | Good                | S      | Medium                        |
-| ParentSquare              | One place for every school message; forms, permission slips, sign-ups                                                                                                                                                         | **Forms and permission slips** on the Portal with a yes/no and a typed signature, and a list of who hasn't answered                                                    | Good                | M      | High                          |
-| Bloomz                    | Parent-teacher conference sign-ups, volunteer slots                                                                                                                                                                           | **Conference booking:** the teacher offers time slots, families pick one on the Portal, slots feed the parent-communication log                                        | Good                | M      | High, a pain point every term |
-| 晓黑板 (Xiaoheiban)       | Shanghai school notices with read receipts; daily check-ins (打卡)                                                                                                                                                            | **Read receipts** on Class Story and notices ("24 of 30 families have read this") and **daily check-ins** (reading log, exercise, a photo)                             | Very good for China | S / M  | High                          |
-| 钉钉 DingTalk 家校本      | Class groups, homework hand-in, notices inside DingTalk                                                                                                                                                                       | **Post to a DingTalk group:** send the newsletter or a notice to a class group through its robot webhook (no company registration needed for a custom robot _(check)_) | Good                | S      | High in China                 |
-| 企业微信 WeCom 家校通讯录 | School directory that reaches parents inside ordinary WeChat                                                                                                                                                                  | Same as DingTalk: **post to a WeCom group** by webhook, then later a proper WeCom app (needs a registered organisation)                                                | Good                | S / L  | Very high in China            |
+| Product                   | Known for                                                                                                                                                                                                                                                                                                                                                                     | Feature to adapt for EduBoard                                                                                                                                          | Fit                 | Effort | Value                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------ | ----------------------------- |
+| ClassDojo                 | Class points, Class Story, messaging; reported a user in 95% of US preK–8 schools ([EdSurge, 2019](https://www.edsurge.com/news/2019-02-28-now-with-revenue-classdojo-raises-35-million-to-expand-to-homes-across-the-world))                                                                                                                                                 | **Message translation:** a family reads a teacher's message in their own language; the teacher sees both (AI, needs internet, shown as a translation)                  | Good                | S–M    | High in international schools |
+| Remind                    | Texting families without sharing a phone number; office hours                                                                                                                                                                                                                                                                                                                 | **Quiet hours** on Portal messages (no notifications to families after a set time)                                                                                     | Good                | S      | Medium                        |
+| ParentSquare              | One place for every school message; forms, permission slips, sign-ups                                                                                                                                                                                                                                                                                                         | **Forms and permission slips** on the Portal with a yes/no and a typed signature, and a list of who hasn't answered                                                    | Good                | M      | High                          |
+| Bloomz                    | Parent-teacher conference sign-ups, volunteer slots                                                                                                                                                                                                                                                                                                                           | **Conference booking:** the teacher offers time slots, families pick one on the Portal, slots feed the parent-communication log                                        | Good                | M      | High, a pain point every term |
+| 晓黑板 (Xiaoheiban)       | Shanghai school notices with read receipts; daily check-ins (打卡)                                                                                                                                                                                                                                                                                                            | **Read receipts** on Class Story and notices ("24 of 30 families have read this") and **daily check-ins** (reading log, exercise, a photo)                             | Very good for China | S / M  | High                          |
+| 钉钉 DingTalk 家校本      | Class groups, homework hand-in, notices inside DingTalk                                                                                                                                                                                                                                                                                                                       | **Post to a DingTalk group:** send the newsletter or a notice to a class group through its robot webhook (no company registration needed for a custom robot _(check)_) | Good                | S      | High in China                 |
+| 企业微信 WeCom 家校通讯录 | School directory that reaches parents inside ordinary WeChat                                                                                                                                                                                                                                                                                                                  | Same as DingTalk: **post to a WeCom group** by webhook, then later a proper WeCom app (needs a registered organisation)                                                | Good                | S / L  | Very high in China            |
+| 蜜蜂家校                  | Private scores sent one-to-one to each family, notices with a list of who has read them and a one-click reminder to those who haven't, 接龙 sign-ups, AI homework marking with a class 错题本. Reports tens of millions of users across 100+ schools ([site](http://www.mifengjiaoyu.com/), [ScienceNet, April 2026](https://news.sciencenet.cn/htmlnews/2026/4/563493.shtm)) | **Private report delivery** on the Portal (each family sees only their child's report card and scores) and **"remind families who haven't read"** on notices           | Very good for China | S–M    | High                          |
+| 慧管                      | 家校通: notices, check-ins (打卡), surveys, grades and homework ([site](https://huiguan.com/))                                                                                                                                                                                                                                                                                | **Notices with acknowledgement (回执)**: "I've read this" or a yes / no, and who hasn't answered                                                                       | Very good for China | S–M    | High                          |
 
 ### Classroom and behaviour
 
@@ -73,21 +95,51 @@ Effort: S = days, M = 1–3 weeks, L = a month or more, for one developer.
 | 一起作业 (17zuoye) / Quizlet | Vocabulary and listening practice; spaced repetition                                                                                                                                      | Feeds the **word lists** idea in section 2                                                                                                                                                                                                                    | Good   | M–L    | High for English teachers in China     |
 | MagicSchool / Brisk          | AI tools for teachers; MagicSchool raised a $45M Series B and Brisk a $15M Series A in 2025 ([New Market Pitch deal list](https://newmarketpitch.com/blogs/news/edtech-funding-analysis)) | Keep AI narrow and checked: phrase suggestions, wording help, translation. Possible next ones: **differentiate a worksheet** (easier / harder version of text the teacher gives) and **mark against a rubric as a suggestion** the teacher accepts or changes | Good   | M each | High (it's what investors are funding) |
 
-### The top ten, in the order we'd build them
+### Built from this list (September 2026)
 
-1. **Point categories** (德智体美劳 or the school's own), with report-card and digest summaries. S.
-2. **Read receipts** on Class Story posts and notices. S.
-3. **Post to a DingTalk / WeCom group** by webhook (newsletter, notices). S.
-4. **Seating chart with points and needs icons.** S.
-5. **Conference booking** on the Portal. M.
-6. **Forms and permission slips** on the Portal. M.
-7. **Help clips on homework and question-level scores** (the "most missed" list). M.
-8. **Preview before the lesson** (flipped classroom). M.
-9. **Word lists by unit** with Portal practice and in-class checks. M–L.
-10. **Message translation for families** (AI, needs internet). S–M.
+- **Point categories** (德智体美劳 or the school's own), on report cards and in the digest.
+- **Read receipts** on Class Story posts.
+- **Posting to DingTalk and WeCom groups** by robot webhook.
+- **Seating chart with points and needs icons.**
+- An **opt-in anonymous usage count**, for the retention numbers in section 5.
 
-Items 1–4 are **built** (September 2026, after 0.4.0), along with the opt-in usage ping from section 5. Items 5–8 make the Portal something a school would pay to have
-hosted.
+### What to build next, in order
+
+Chinese smart-campus buyers' guides for 2026 treat student growth records (学生成长档案),
+timetabling and home–school notices and reports as standard
+([163.com, June 2026](https://www.163.com/dy/article/L09OEA5T0556CAMO.html)). So
+EduBoard needs these basics, done its own way: teacher-owned, offline first, bilingual.
+
+**P0 (now): proof, then Connect**
+
+1. **Pilots and numbers:** update the live Portal so usage pings count; three pilot schools; a Windows code-signing certificate so installs don't trip SmartScreen; a plain privacy notice and data-processing terms a school can sign (PIPL, GDPR-style). S each.
+2. **Private report delivery:** publish each student's report card (PDF) and scores to their family on the Portal, with read status. S–M.
+3. **Notices with acknowledgement (回执):** "I've read this" or a yes / no answer, who hasn't responded, and a reminder to those families. Builds on read receipts. S–M.
+4. **Targeted messages with attachments:** to chosen families, with a PDF or photo. M.
+5. **Conference booking** and **forms / permission slips** (a form is a notice with questions). M each.
+
+**P1 (next): capture, record, AI, bridge**
+
+6. **Score import:** from an exam system's or colleague's spreadsheet, with column matching, a preview and the teacher confirming before anything reaches the gradebook. EduBoard has no score import today. S–M.
+7. **Question-level scores** and a class "most missed" list (错题本). M.
+8. **Student timeline:** one view per student in date order: attendance, scores, points, log notes, parent contacts, report comments and messages. M.
+9. **Local AI as a named option:** a model on the school's or teacher's own computer (Ollama, LM Studio), already possible through the "custom" provider. New suggestion types, all checked by the teacher: class summaries, resource tagging, explaining why a student is on "students to check on". S for the option, M per suggestion type.
+10. **Bridge basics:** documented import and export formats, OneRoster CSV, Google Classroom import. M.
+11. **Assessment providers as plug-ins** (OCR or AI marking from another company): only with the school's consent, since student work leaves the computer. L; after 6 and 7.
+
+**P2 (later): specialist modules, school plan**
+
+12. **Support plans (optional module):** goals, accommodations and review dates per student, shown on the seating chart. Off unless a school turns it on. M.
+13. **Cover and substitutions:** teacher timetables (EduBoard has these), rooms, absences and cover. Needs several teachers on one Portal, so it belongs in the school plan. L.
+14. **HappyClass ideas:** homework help clips, preview before the lesson, word lists by unit. M each.
+15. **Message translation** for families. S–M.
+
+**Deliberately not doing**
+
+- **AI that writes whole report comments or messages.** EduBoard suggests phrases and wording, and the teacher writes. Cautious schools prefer this, and it avoids AI inventing facts.
+- **Hardware and IoT classrooms**, and hosting video courses.
+- **A full school ERP** (admissions, billing, school-wide scheduling). Bridge connects to those systems instead.
+- **An open API before anyone needs one.** The API comes when a school or partner asks.
 
 ## 4. Connecting to other apps and logins
 
@@ -143,7 +195,7 @@ nothing outside the teacher's computer, so most of this applies only to the host
 ### The wedge and the business model
 
 - **Wedge:** a free desktop app for one teacher, bottom-up, the way ClassDojo spread. It is useful on day one with no IT department, no account and no internet.
-- **Paid, per school:** a hosted Portal (families, homework, digest, conference booking, forms), a school dashboard across teachers, SSO, school packs managed centrally, priority support.
+- **Paid, per school:** a hosted Connect (families, homework, digest, report delivery, notices with 回执, conference booking, forms), a school dashboard across teachers, cover and substitutions, SSO, school packs managed centrally, priority support.
 - **Paid, China:** the same hosted Portal run in China with WeChat login, through an entity or a partner.
 - **Optional, per teacher:** AI features at cost, or bring your own key (already supported).
 
@@ -167,14 +219,14 @@ nothing outside the teacher's computer, so most of this applies only to the host
 
 ### Roadmap tied to funding
 
-| Stage                  | Money                                                                     | What it pays for                                                                                                                   | Milestone                                                                 |
-| ---------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Now (bootstrapped)     | —                                                                         | Top-four features from section 3; generic OpenID Connect; usage ping (opt-in); code signing; 0.4.0 release                         | 3 pilot schools, first retention numbers                                  |
-| Pre-seed / accelerator | ~$100k–$500k _(check current accelerator terms, e.g. YC's standard deal)_ | Hosted Portal for schools; conference booking, forms, read receipts; China partner talks; Apple developer account; security review | 20 schools on a paid pilot, 500 weekly active teachers _(targets to set)_ |
-| Seed                   | ~$1.5M–$3M                                                                | Small team; China entity or partner, ICP and mainland hosting; WeChat login and SMS; school dashboard; SAML                        | Paid schools in two markets, a repeatable sales motion                    |
-| Series A               | —                                                                         | Word lists, homework help clips, flipped preview; standards-based grading; OneRoster; SOC 2 / ISO 27001; MLPS in China             | —                                                                         |
+| Stage                  | Money                                                                     | What it pays for                                                                                                                     | Milestone                                                                 |
+| ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Now (bootstrapped)     | —                                                                         | P0 from section 3: pilots, code signing, privacy terms, private report delivery, notices with 回执; generic OpenID Connect           | 3 pilot schools, first retention numbers                                  |
+| Pre-seed / accelerator | ~$100k–$500k _(check current accelerator terms, e.g. YC's standard deal)_ | Hosted Portal for schools; conference booking, forms; score import, student timeline, local AI; China partner talks; security review | 20 schools on a paid pilot, 500 weekly active teachers _(targets to set)_ |
+| Seed                   | ~$1.5M–$3M                                                                | Small team; China entity or partner, ICP and mainland hosting; WeChat login and SMS; school dashboard; SAML                          | Paid schools in two markets, a repeatable sales motion                    |
+| Series A               | —                                                                         | Support plans, cover and substitutions, assessment plug-ins, HappyClass ideas; standards-based grading; SOC 2 / ISO 27001; MLPS      | —                                                                         |
 
-### Honest risks to address up front
+### Risks to address up front
 
 - **Single developer, early stage:** no usage data yet. The first job is the numbers above.
 - **Offline-first limits network effects:** the Portal is where the network effect comes from (families, schools), so it needs to be easy to host or hosted for the school.

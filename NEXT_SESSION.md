@@ -94,8 +94,11 @@ built since the last release).
       `https://portal.edu-board.com/api/usage/ping` (Portal `routes/usage.js`); admin
       page shows weekly active copies and 4/12-week retention. **The live Portal needs
       updating (Update-Live-Portal) before pings are counted.**
-    Next from the roadmap: conference booking, forms / permission slips, homework
-    help clips with question-level scores, flipped-lesson preview.
+    Next: the P0 / P1 / P2 list in `docs/ROADMAP_VC.md` section 3 ("What to build
+    next"). P0 is private report delivery, notices with acknowledgement (回执),
+    targeted messages with attachments, conference booking and forms; P1 is score
+    import, student timeline, a named local-AI option and Bridge basics. Keep to the
+    user's rule: AI suggests, the teacher writes.
 
 ## Still unverified from last session
 
