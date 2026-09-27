@@ -80,7 +80,9 @@ export function RosterTab(): React.JSX.Element {
                   <td className="px-4 py-2.5">{formatPercent(row.grade.percent)}</td>
                   <td className="px-4 py-2.5">
                     {row.grade.letter ? (
-                      <Badge tone={letterTone(row.grade.letter)}>{row.grade.letter}</Badge>
+                      <Badge tone={letterTone(row.grade.letter, classSection.gradeThresholds)}>
+                        {row.grade.letter}
+                      </Badge>
                     ) : (
                       '—'
                     )}

@@ -27,6 +27,8 @@ import {
 import { ClassFormModal } from './ClassFormModal'
 import { CategoryFormModal } from './CategoryFormModal'
 import { NewTermClassModal } from './NewTermClassModal'
+import { GradeScaleEditor } from '@renderer/components/GradeScaleEditor'
+import { gradeScaleIsValid } from '@shared/gradeScales'
 
 const NEW_COURSE_GROUP_VALUE = '__new__'
 
@@ -66,10 +68,7 @@ export function ClassSettingsTab(): React.JSX.Element {
 
   const [passMark, setPassMark] = useState(classSection.passMark)
   const [maxScore, setMaxScore] = useState(classSection.maxScore)
-  const [thresholdA, setThresholdA] = useState(classSection.gradeThresholds.A)
-  const [thresholdB, setThresholdB] = useState(classSection.gradeThresholds.B)
-  const [thresholdC, setThresholdC] = useState(classSection.gradeThresholds.C)
-  const [thresholdD, setThresholdD] = useState(classSection.gradeThresholds.D)
+  const [thresholds, setThresholds] = useState(classSection.gradeThresholds)
 
   const [showEditClass, setShowEditClass] = useState(false)
   const [showAddCategory, setShowAddCategory] = useState(false)
@@ -85,12 +84,7 @@ export function ClassSettingsTab(): React.JSX.Element {
       patch: {
         passMark: Number(passMark),
         maxScore: Number(maxScore),
-        gradeThresholds: {
-          A: Number(thresholdA),
-          B: Number(thresholdB),
-          C: Number(thresholdC),
-          D: Number(thresholdD)
-        }
+        gradeThresholds: thresholds
       }
     })
   }
@@ -149,37 +143,12 @@ export function ClassSettingsTab(): React.JSX.Element {
                 />
               </FormRow>
             </div>
-            <div className="grid grid-cols-4 gap-3">
-              <FormRow label="A ≥">
-                <Input
-                  type="number"
-                  value={thresholdA}
-                  onChange={(e) => setThresholdA(Number(e.target.value))}
-                />
-              </FormRow>
-              <FormRow label="B ≥">
-                <Input
-                  type="number"
-                  value={thresholdB}
-                  onChange={(e) => setThresholdB(Number(e.target.value))}
-                />
-              </FormRow>
-              <FormRow label="C ≥">
-                <Input
-                  type="number"
-                  value={thresholdC}
-                  onChange={(e) => setThresholdC(Number(e.target.value))}
-                />
-              </FormRow>
-              <FormRow label="D ≥">
-                <Input
-                  type="number"
-                  value={thresholdD}
-                  onChange={(e) => setThresholdD(Number(e.target.value))}
-                />
-              </FormRow>
-            </div>
-            <Button variant="primary" type="submit" disabled={updateClass.isPending}>
+            <GradeScaleEditor value={thresholds} onChange={setThresholds} />
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={updateClass.isPending || !gradeScaleIsValid(thresholds)}
+            >
               {updateClass.isPending ? 'Saving…' : 'Save grading scale'}
             </Button>
           </form>

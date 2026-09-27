@@ -15,6 +15,9 @@ export interface GradeThresholds {
   B: number
   C: number
   D: number
+  /** Any scale other than A–F: its bands (see shared/gradeScales.ts). A–D above are
+   * then unused but kept, so switching back restores the teacher's old cut-offs. */
+  scale?: { label: string; min: number }[]
 }
 
 export const DEFAULT_GRADE_THRESHOLDS: GradeThresholds = { A: 90, B: 80, C: 70, D: 60 }

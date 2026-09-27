@@ -95,7 +95,11 @@ export function StudentClassRow({
         )}
       </td>
       <td className="px-4 py-2.5">
-        {grade?.letter ? <Badge tone={letterTone(grade.letter)}>{grade.letter}</Badge> : '—'}
+        {grade?.letter ? (
+          <Badge tone={letterTone(grade.letter, cls.gradeThresholds)}>{grade.letter}</Badge>
+        ) : (
+          '—'
+        )}
       </td>
       <td className="px-4 py-2.5 text-[var(--color-text-muted)]">{formatRate(attendance?.rate)}</td>
       <td className="px-4 py-2.5">

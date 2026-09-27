@@ -1,5 +1,3 @@
-import type { GradeThresholds } from '@shared/types'
-
 export interface AssessmentLike {
   id: string
   categoryId: string | null
@@ -136,13 +134,8 @@ export function computeClassGrade(
   }
 }
 
-export function letterForPercent(percent: number, thresholds: GradeThresholds): string {
-  if (percent >= thresholds.A) return 'A'
-  if (percent >= thresholds.B) return 'B'
-  if (percent >= thresholds.C) return 'C'
-  if (percent >= thresholds.D) return 'D'
-  return 'F'
-}
+// Lives in shared/ so the renderer can preview a scale while it's being edited.
+export { letterForPercent } from '@shared/gradeScales'
 
 export function isPassing(percent: number, passMark: number): boolean {
   return percent >= passMark

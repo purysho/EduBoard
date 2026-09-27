@@ -7,6 +7,7 @@ import { listAttendanceByClass } from '../repositories/attendanceRecords'
 import { listUpcomingLessonPlans } from '../repositories/lessonPlans'
 import { listStudents } from '../repositories/students'
 import { computeClassGrade, letterForPercent, isPassing } from './grading'
+import { gradeBands } from '@shared/gradeScales'
 import { computeAttendanceCounts } from './attendance'
 import type {
   AnalyticsOverview,
@@ -33,8 +34,6 @@ function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
   }
   return map
 }
-
-const LETTERS = ['A', 'B', 'C', 'D', 'F'] as const
 
 /** Grade for every currently-enrolled student in one class, keyed by student id. */
 export function getClassGrades(classId: string): Map<string, StudentClassGrade> {
@@ -152,12 +151,13 @@ export function getClassReport(classId: string): ClassReport | null {
     ? percents.filter((p) => isPassing(p, cls.passMark)).length / percents.length
     : null
 
-  const distributionCounts = new Map<string, number>(LETTERS.map((l) => [l, 0]))
+  const letters = gradeBands(cls.gradeThresholds).map((b) => b.label)
+  const distributionCounts = new Map<string, number>(letters.map((l) => [l, 0]))
   for (const p of percents) {
     const letter = letterForPercent(p, cls.gradeThresholds)
     distributionCounts.set(letter, (distributionCounts.get(letter) ?? 0) + 1)
   }
-  const gradeDistribution: GradeDistributionEntry[] = LETTERS.map((letter) => ({
+  const gradeDistribution: GradeDistributionEntry[] = letters.map((letter) => ({
     letter,
     count: distributionCounts.get(letter) ?? 0,
     share: percents.length ? (distributionCounts.get(letter) ?? 0) / percents.length : 0

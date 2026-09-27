@@ -162,7 +162,9 @@ export function GradebookTab(): React.JSX.Element {
                     <div className="flex items-center justify-center gap-1.5">
                       <span>{formatPercent(row.grade.percent)}</span>
                       {row.grade.letter && (
-                        <Badge tone={letterTone(row.grade.letter)}>{row.grade.letter}</Badge>
+                        <Badge tone={letterTone(row.grade.letter, classSection.gradeThresholds)}>
+                          {row.grade.letter}
+                        </Badge>
                       )}
                     </div>
                   </td>

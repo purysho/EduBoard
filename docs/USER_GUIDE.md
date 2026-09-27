@@ -125,6 +125,10 @@ If your weights don't add to 100%, EduBoard tells you (categories with data are 
 
 ---
 
+### Grading scales
+
+A class's **Settings** tab has its **Grading scale**. Choose A–F (the default), A–F with + and −, 优秀 / 良好 / 合格 / 待合格, 优秀 / 良好 / 中等 / 及格 / 不及格, 1–7, 9–1, Pass / Fail, or **Your own…**, then set where each band starts. The example line underneath shows what a few percents would get. Everything that shows a letter (gradebook, report cards, class report, composite grades, the Portal) uses the class's own labels. **Settings → Grading scale for new classes** sets the scale new classes start with. Pass rates still use the class's pass mark.
+
 ## Using the gradebook
 
 **Gradebook → + Assessment** to add a quiz, homework set, exam, or anything else you grade — name, category, date, and max score.

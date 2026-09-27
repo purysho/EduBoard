@@ -91,7 +91,11 @@ export function StudentReportPrintPage(): React.JSX.Element {
           <p className="text-xs uppercase text-slate-500">Overall grade</p>
           <p className="text-base font-medium">
             {formatPercent(grade?.percent ?? null)}{' '}
-            {grade?.letter && <Badge tone={letterTone(grade.letter)}>{grade.letter}</Badge>}
+            {grade?.letter && (
+              <Badge tone={letterTone(grade.letter, classSection.gradeThresholds)}>
+                {grade.letter}
+              </Badge>
+            )}
           </p>
         </div>
         <div>
