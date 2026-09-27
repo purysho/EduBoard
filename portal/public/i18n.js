@@ -274,6 +274,8 @@ const ZH = {
   'Class Story': '班级动态',
   'No homework yet.': '暂无作业。',
   'Ask your teacher for a reset': '请老师帮你重置',
+  'Teacher?': '老师？',
+  'Download EduBoard': '下载 EduBoard',
   'Ask your teacher for a reset. Once they approve it, you choose a new password here, on this device.':
     '向老师申请重置密码。老师批准后，你就可以在这台设备上设置新密码。',
   'Ask my teacher': '向老师申请',

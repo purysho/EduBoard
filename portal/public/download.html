@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EduBoard: the teacher’s desk on your own computer</title>
+    <meta
+      name="description"
+      content="EduBoard is a free gradebook, attendance, report card and classroom app for teachers, in English and Chinese. It works offline and keeps student data on your computer."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#f7f7fb" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#12121a" media="(prefers-color-scheme: dark)" />
+    <!-- No web fonts or outside scripts: Google and most CDNs are blocked or slow in
+     mainland China. Everything this page needs comes from this server. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f7fb;
+        --surface: #ffffff;
+        --surface-2: #f0f0f7;
+        --line: #e2e2ec;
+        --ink: #151527;
+        --ink-soft: #3b3b52;
+        --muted: #686880;
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --primary-soft: #eceafd;
+        --on-primary: #ffffff;
+        --chalk: #0f766e;
+        --chalk-soft: #e3f4f1;
+        --shadow: 0 1px 2px rgb(21 21 39 / 0.06), 0 12px 32px -12px rgb(21 21 39 / 0.18);
+        --sans:
+          system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', 'Noto Sans CJK SC', Roboto, sans-serif;
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #12121a;
+          --surface: #1b1b26;
+          --surface-2: #232331;
+          --line: #2e2e40;
+          --ink: #ececf6;
+          --ink-soft: #c6c6d8;
+          --muted: #9a9ab2;
+          --primary: #8b85ff;
+          --primary-dark: #a5a0ff;
+          --primary-soft: #26244a;
+          --on-primary: #12121a;
+          --chalk: #5fd0c2;
+          --chalk-soft: #17302d;
+          --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.6 var(--sans);
+      }
+      a {
+        color: var(--primary);
+        text-underline-offset: 2px;
+      }
+      a:focus-visible,
+      button:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding-inline: 20px;
+      }
+      header.top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 12px;
+        padding-block: 16px;
+      }
+      @media (max-width: 480px) {
+        .login {
+          font-size: 13px;
+        }
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .brand img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+      .top .spacer {
+        flex: 1;
+      }
+      .lang {
+        display: flex;
+        flex: none;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        font-size: 13px;
+      }
+      .lang button {
+        white-space: nowrap;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 5px 10px;
+        cursor: pointer;
+        font: inherit;
+      }
+      .lang button[aria-pressed='true'] {
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-weight: 600;
+      }
+      .login {
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+        gap: 48px;
+        align-items: center;
+        padding-block: 40px 56px;
+      }
+      @media (max-width: 860px) {
+        .hero {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 28px;
+          padding-block: 16px 40px;
+        }
+      }
+      .eyebrow {
+        font: 600 12px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--chalk);
+        margin: 0 0 14px;
+      }
+      h1 {
+        font-size: clamp(32px, 5vw, 50px);
+        line-height: 1.08;
+        letter-spacing: -0.02em;
+        margin: 0 0 18px;
+        text-wrap: balance;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--primary);
+      }
+      .lede {
+        font-size: 18px;
+        color: var(--ink-soft);
+        margin: 0 0 28px;
+        max-width: 34em;
+      }
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+        align-items: center;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--primary);
+        color: var(--on-primary);
+        text-decoration: none;
+        font-weight: 600;
+        padding: 13px 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+      .btn:hover {
+        background: var(--primary-dark);
+      }
+      .btn small {
+        font-weight: 400;
+        opacity: 0.85;
+      }
+      .btn svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+      .cta .alt {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .facts {
+        list-style: none;
+        padding: 0;
+        margin: 22px 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .facts li::before {
+        content: '✓ ';
+        color: var(--chalk);
+        font-weight: 700;
+      }
+
+      .shot {
+        margin: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+      .shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        object-position: left top;
+      }
+      .shot figcaption {
+        font-size: 13px;
+        color: var(--muted);
+        padding: 10px 14px;
+        border-top: 1px solid var(--line);
+      }
+
+      section {
+        padding-block: 48px;
+        border-top: 1px solid var(--line);
+      }
+      h2 {
+        font-size: clamp(24px, 3.2vw, 32px);
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+        text-wrap: balance;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 28px;
+        max-width: 40em;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      @media (max-width: 860px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 560px) {
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 18px 20px;
+      }
+      .card h3 {
+        font-size: 16px;
+        margin: 0 0 6px;
+      }
+      .card p {
+        margin: 0;
+        font-size: 15px;
+        color: var(--ink-soft);
+      }
+      .card .tag {
+        display: inline-block;
+        font: 600 11px/1 var(--mono);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--chalk);
+        background: var(--chalk-soft);
+        padding: 4px 6px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+      }
+      @media (max-width: 760px) {
+        .pair {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .downloads {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .dl {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px 16px;
+        align-items: center;
+        padding: 14px 18px;
+        border-top: 1px solid var(--line);
+      }
+      .dl:first-child {
+        border-top: 0;
+      }
+      .dl .what strong {
+        display: block;
+      }
+      .dl .what span {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .dl .links {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .dl .get {
+        font-weight: 600;
+        text-decoration: none;
+        background: var(--primary-soft);
+        color: var(--primary);
+        padding: 7px 12px;
+        border-radius: 8px;
+      }
+      .dl .size {
+        font: 13px var(--mono);
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      @media (max-width: 560px) {
+        .dl {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .note {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 14px 0 0;
+      }
+      .howto {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+      @media (max-width: 860px) {
+        .howto {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .howto h3 {
+        font-size: 15px;
+        margin: 0 0 4px;
+      }
+      .howto p {
+        font-size: 14px;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      code {
+        font: 13px var(--mono);
+        background: var(--surface-2);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+
+      footer {
+        padding-block: 32px 48px;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .btn,
+        .dl .get {
+          transition: background 0.15s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href="/download"><img src="/icon.svg" alt="" />EduBoard</a>
+        <span class="spacer"></span>
+        <div class="lang" role="group" aria-label="Language / 语言">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="zh">中文</button>
+        </div>
+        <a class="login" href="/" data-t="login">Student or parent? Log in</a>
+      </header>
+
+      <main>
+        <div class="hero">
+          <div>
+            <p class="eyebrow" data-t="eyebrow">For teachers · free</p>
+            <h1 data-t-html="headline">Your classes, on <em>your own computer</em>.</h1>
+            <p class="lede" data-t="lede">
+              Gradebook, attendance, report cards, lesson plans and classroom tools in one app, in
+              English and Chinese. It works without internet, and student data stays on your
+              computer, encrypted.
+            </p>
+            <div class="cta">
+              <a class="btn" id="main-download" href="#downloads">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+                  />
+                </svg>
+                <span id="main-label" data-t="downloadAll">Download EduBoard</span>
+                <small id="main-size"></small>
+              </a>
+              <a class="alt" href="#downloads" data-t="otherSystems">Other systems</a>
+            </div>
+            <p id="other" style="margin: 8px 0 0; font-size: 14px; color: var(--muted)"></p>
+            <ul class="facts">
+              <li data-t="fact1">Windows, Mac and Linux</li>
+              <li data-t="fact2">No account needed</li>
+              <li data-t="fact3">Updates itself</li>
+            </ul>
+          </div>
+          <figure class="shot">
+            <img
+              data-shot="dashboard"
+              src="/home/dashboard-en.webp"
+              width="1280"
+              height="800"
+              alt=""
+            />
+            <figcaption data-t="capDashboard">
+              Today’s lessons, students to check on and every class at a glance.
+            </figcaption>
+          </figure>
+        </div>
+
+        <section>
+          <h2 data-t="whatTitle">What’s in it</h2>
+          <p class="sub" data-t="whatSub">
+            Everything a teacher does between lessons, without a school IT department or a
+            subscription.
+          </p>
+          <div class="grid">
+            <div class="card">
+              <span class="tag" data-t="tagGrades">Grades</span>
+              <h3 data-t="f1t">Gradebook and report cards</h3>
+              <p data-t="f1">
+                Weighted categories, rubrics and your school’s grading scale. Report cards as PDF or
+                Word, with a comment bank.
+              </p>
+            </div>
+            <div class="card">
+              <span class="tag" data-t="tagClass">Classroom</span>
+              <h3 data-t="f2t">Attendance and classroom tools</h3>
+              <p data-t="f2">
+                Attendance with your own codes, a random name picker, groups, a timer, class points
+                (德智体美劳 or your own) and seating charts.
+              </p>
+            </div>
+            <div class="card">
+              <span class="tag" data-t="tagPlan">Planning</span>
+              <h3 data-t="f3t">Lesson plans and templates</h3>
+              <p data-t="f3">
+                Plan lessons from templates (5E, PPP, I do / We do / You do) and turn a plan into a
+                PowerPoint to start from.
+              </p>
+            </div>
+            <div class="card">
+              <span class="tag" data-t="tagFamilies">Families</span>
+              <h3 data-t="f4t">A website for students and families</h3>
+              <p data-t="f4">
+                Homework hand-in, a Class Story with read receipts, messages and a weekly email.
+                Post to your DingTalk or WeCom class group too.
+              </p>
+            </div>
+            <div class="card">
+              <span class="tag" data-t="tagPrivate">Private</span>
+              <h3 data-t="f5t">Your data stays with you</h3>
+              <p data-t="f5">
+                Everything is saved on your computer, encrypted, with an app lock, automatic backups
+                and a presenting mode that hides grades.
+              </p>
+            </div>
+            <div class="card">
+              <span class="tag" data-t="tagAI">Careful AI</span>
+              <h3 data-t="f6t">AI that suggests, never decides</h3>
+              <p data-t="f6">
+                Optional. It suggests short phrases for report comments and wording for newsletters;
+                you write the rest. It needs internet and your own key.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="pair">
+            <figure class="shot">
+              <img
+                data-shot="gradebook"
+                src="/home/gradebook-en.webp"
+                width="1280"
+                height="800"
+                alt=""
+                loading="lazy"
+              />
+              <figcaption data-t="capGradebook">
+                A gradebook that works like a spreadsheet, with grades that update as you type.
+              </figcaption>
+            </figure>
+            <figure class="shot">
+              <img
+                data-shot="seating"
+                src="/home/seating-en.webp"
+                width="1280"
+                height="800"
+                alt=""
+                loading="lazy"
+              />
+              <figcaption data-t="capSeating">
+                Give class points straight from the seating chart, on the projector.
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="downloads">
+          <h2 data-t="dlTitle">Download</h2>
+          <p class="sub" id="dl-sub" data-t="dlSub">Free. Pick the file for your computer.</p>
+          <div class="downloads" id="dl-list"></div>
+          <p class="note" id="dl-note" data-t="dlNote">
+            Downloads come through this server, so they work where GitHub is slow or blocked. Each
+            file is also on GitHub.
+          </p>
+          <div class="howto">
+            <div>
+              <h3>Windows</h3>
+              <p data-t="howWin">
+                If Windows says “Windows protected your PC”, click More info, then Run anyway.
+                EduBoard isn’t code-signed yet; nothing is wrong with it.
+              </p>
+            </div>
+            <div>
+              <h3>Mac</h3>
+              <p data-t="howMac">
+                Open the .dmg and drag EduBoard to Applications. The first time, right-click it and
+                choose Open, then Open again.
+              </p>
+            </div>
+            <div>
+              <h3>Linux</h3>
+              <p data-t-html="howLinux">
+                Make the AppImage runnable with <code>chmod +x EduBoard.AppImage</code>, then open
+                it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 data-t="schoolTitle">For schools</h2>
+          <p class="sub" data-t="schoolSub">
+            Each teacher’s data stays on their own computer. The student and family website is a
+            small server your school can run itself, or use this one. A school pack shares your
+            logo, colours, grading scale, terms and templates with every teacher.
+          </p>
+          <p>
+            <a
+              href="https://github.com/purysho/EduBoard/blob/main/portal/README.md"
+              data-t="schoolLink"
+              >How to run your own Portal</a
+            >
+            ·
+            <a
+              href="https://github.com/purysho/EduBoard/blob/main/docs/USER_GUIDE.md"
+              data-t="guideLink"
+              >User guide</a
+            >
+          </p>
+        </section>
+      </main>
+
+      <footer>
+        <span id="version-line">EduBoard</span>
+        <a href="https://github.com/purysho/EduBoard" data-t="source"
+          >Open source on GitHub (MIT)</a
+        >
+        <a href="/" data-t="login2">Portal login</a>
+      </footer>
+    </div>
+
+    <script>
+      // English is written in the page; Chinese is here. The chosen language is remembered.
+      const ZH = {
+        login: '学生或家长？登录',
+        eyebrow: '为老师打造 · 免费',
+        headline: '你的班级，在<em>你自己的电脑上</em>。',
+        lede: '成绩册、考勤、成绩单、教案和课堂工具集于一个应用，支持中文和英文。无需联网也能使用，学生数据加密保存在你自己的电脑上。',
+        downloadAll: '下载 EduBoard',
+        otherSystems: '其他系统',
+        fact1: 'Windows、Mac 和 Linux',
+        fact2: '无需注册账号',
+        fact3: '自动更新',
+        capDashboard: '今天的课、需要关注的学生和所有班级，一目了然。',
+        whatTitle: '有哪些功能',
+        whatSub: '老师课前课后的工作都在这里，不需要学校 IT 部门，也不需要订阅。',
+        tagGrades: '成绩',
+        tagClass: '课堂',
+        tagPlan: '备课',
+        tagFamilies: '家校',
+        tagPrivate: '隐私',
+        tagAI: '谨慎的 AI',
+        f1t: '成绩册和成绩单',
+        f1: '加权类别、评分量规和学校自己的等级标准。成绩单可导出 PDF 或 Word，并有评语库。',
+        f2t: '考勤和课堂工具',
+        f2: '可自定义考勤代码，随机点名、分组、计时器、课堂积分（德智体美劳或自定义）和座位表。',
+        f3t: '教案和模板',
+        f3: '用模板备课（5E、PPP、I do / We do / You do），还能把教案生成可继续编辑的 PowerPoint。',
+        f4t: '面向学生和家长的网站',
+        f4: '在线交作业、带已读回执的班级动态、消息和每周简报邮件。也可以发到钉钉或企业微信班级群。',
+        f5t: '数据留在你手里',
+        f5: '所有数据加密保存在你的电脑上，有应用锁、自动备份，以及隐藏成绩的投屏模式。',
+        f6t: 'AI 只提建议，不替你决定',
+        f6: '可选功能。为成绩单评语提供短语建议、为简报提供措辞建议，其余由你来写。需要联网和你自己的密钥。',
+        capGradebook: '像表格一样好用的成绩册，输入时成绩自动更新。',
+        capSeating: '在投影上直接从座位表给学生加分。',
+        dlTitle: '下载',
+        dlSub: '免费。选择适合你电脑的文件。',
+        dlNote:
+          '下载经由本服务器，在 GitHub 较慢或无法访问的地方也能下载。每个文件在 GitHub 上也有。',
+        howWin:
+          '如果 Windows 提示“Windows 已保护你的电脑”，点“更多信息”，再点“仍要运行”。EduBoard 暂未进行代码签名，软件本身没有问题。',
+        howMac:
+          '打开 .dmg，把 EduBoard 拖到“应用程序”。第一次打开时，右键点它选“打开”，再点一次“打开”。',
+        howLinux: '先运行 <code>chmod +x EduBoard.AppImage</code> 让它可以执行，然后打开。',
+        schoolTitle: '学校使用',
+        schoolSub:
+          '每位老师的数据都保存在自己的电脑上。面向学生和家长的网站是一个小型服务器，学校可以自己部署，也可以使用这个。学校配置包可以把校徽、颜色、等级标准、学期和模板共享给每位老师。',
+        schoolLink: '如何部署自己的学生门户',
+        guideLink: '使用指南',
+        source: '在 GitHub 上开源（MIT）',
+        login2: '学生门户登录',
+        // Built in script below
+        recommended: '推荐',
+        viaGithub: 'GitHub',
+        download: '下载',
+        winSetup: 'Windows 安装程序',
+        winSetupWhat: '普通安装，带开始菜单快捷方式',
+        winPortable: 'Windows 便携版',
+        winPortableWhat: '无需安装，可放在 U 盘上，数据保存在旁边',
+        macArm: 'Mac（Apple 芯片，M1 及以后）',
+        macArmWhat: '2020 年底之后的大多数 Mac',
+        macIntel: 'Mac（Intel 芯片）',
+        macIntelWhat: '较早的 Mac',
+        linux: 'Linux（AppImage）',
+        linuxWhat: '大多数发行版',
+        forYour: '下载 {name} 版',
+        osWindows: 'Windows',
+        osMac: 'Mac',
+        osLinux: 'Linux',
+        intelNote: 'Intel 芯片的 Mac？见下方其他下载。',
+        latest: 'EduBoard {v}',
+        offline: '无法从本服务器获取版本信息，下面的链接直接指向 GitHub。'
+      }
+      const EN = {
+        recommended: 'Recommended',
+        viaGithub: 'GitHub',
+        download: 'Download',
+        winSetup: 'Windows installer',
+        winSetupWhat: 'A normal install with a Start menu shortcut',
+        winPortable: 'Windows portable',
+        winPortableWhat: 'No install; runs from a USB stick and keeps its data beside it',
+        macArm: 'Mac (Apple chip, M1 and later)',
+        macArmWhat: 'Most Macs from late 2020 on',
+        macIntel: 'Mac (Intel chip)',
+        macIntelWhat: 'Older Macs',
+        linux: 'Linux (AppImage)',
+        linuxWhat: 'Most distributions',
+        forYour: 'Download for {name}',
+        osWindows: 'Windows',
+        osMac: 'Mac',
+        osLinux: 'Linux',
+        intelNote: 'Mac with an Intel chip? See the other downloads below.',
+        latest: 'EduBoard {v}',
+        offline:
+          'Couldn’t get the version from this server, so the links below go straight to GitHub.'
+      }
+
+      let lang = 'en'
+      try {
+        const saved = localStorage.getItem('eduboard-ui-lang')
+        lang =
+          saved === 'zh' || saved === 'en'
+            ? saved
+            : /^zh/i.test(navigator.language || '')
+              ? 'zh'
+              : 'en'
+      } catch {
+        lang = /^zh/i.test(navigator.language || '') ? 'zh' : 'en'
+      }
+      const w = (key, vars = {}) =>
+        ((lang === 'zh' ? ZH[key] : EN[key]) ?? EN[key] ?? key).replace(
+          /\{(\w+)\}/g,
+          (_, k) => vars[k] ?? ''
+        )
+
+      function applyLanguage() {
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'
+        for (const el of document.querySelectorAll('[data-t]')) {
+          el.dataset.en ??= el.textContent
+          el.textContent = lang === 'zh' && ZH[el.dataset.t] ? ZH[el.dataset.t] : el.dataset.en
+        }
+        for (const el of document.querySelectorAll('[data-t-html]')) {
+          el.dataset.en ??= el.innerHTML
+          el.innerHTML =
+            lang === 'zh' && ZH[el.dataset.tHtml] ? ZH[el.dataset.tHtml] : el.dataset.en
+        }
+        for (const img of document.querySelectorAll('img[data-shot]')) {
+          img.src = `/home/${img.dataset.shot}-${lang}.webp`
+          img.alt = img.closest('figure').querySelector('figcaption').textContent
+        }
+        for (const b of document.querySelectorAll('.lang button')) {
+          b.setAttribute('aria-pressed', String(b.dataset.lang === lang))
+        }
+        document.title =
+          lang === 'zh'
+            ? 'EduBoard：装在你自己电脑上的教师工作台'
+            : 'EduBoard: the teacher’s desk on your own computer'
+        renderDownloads()
+      }
+      for (const b of document.querySelectorAll('.lang button')) {
+        b.addEventListener('click', () => {
+          lang = b.dataset.lang
+          try {
+            localStorage.setItem('eduboard-ui-lang', lang)
+          } catch {
+            /* not remembered */
+          }
+          applyLanguage()
+        })
+      }
+
+      // The files a release has, in the order they're listed.
+      const FILES = [
+        {
+          name: 'EduBoard-Setup.exe',
+          label: 'winSetup',
+          what: 'winSetupWhat',
+          os: 'windows',
+          short: 'osWindows'
+        },
+        {
+          name: 'EduBoard-Portable.exe',
+          label: 'winPortable',
+          what: 'winPortableWhat',
+          os: 'windows-portable'
+        },
+        {
+          name: 'EduBoard-arm64.dmg',
+          label: 'macArm',
+          what: 'macArmWhat',
+          os: 'mac',
+          short: 'osMac'
+        },
+        { name: 'EduBoard-x64.dmg', label: 'macIntel', what: 'macIntelWhat', os: 'mac-intel' },
+        {
+          name: 'EduBoard.AppImage',
+          label: 'linux',
+          what: 'linuxWhat',
+          os: 'linux',
+          short: 'osLinux'
+        }
+      ]
+      const GITHUB = 'https://github.com/purysho/EduBoard/releases/latest/download/'
+      let release = null // { version, assets: [{ name, size }] } from this server, or null
+      let serverOk = false
+
+      const detected = (() => {
+        const p = (
+          navigator.userAgentData?.platform ||
+          navigator.platform ||
+          navigator.userAgent ||
+          ''
+        ).toLowerCase()
+        if (p.includes('win')) return 'windows'
+        if (p.includes('mac')) return 'mac'
+        if (p.includes('linux') && !/android/i.test(navigator.userAgent)) return 'linux'
+        return null
+      })()
+
+      const mb = (bytes) => (bytes ? `${Math.round(bytes / 1048576)} MB` : '')
+      const hrefFor = (name) =>
+        serverOk ? `/api/app-release/download/${encodeURIComponent(name)}` : GITHUB + name
+
+      function renderDownloads() {
+        const list = document.getElementById('dl-list')
+        const sizes = new Map((release?.assets || []).map((a) => [a.name, a.size]))
+        list.replaceChildren(
+          ...FILES.map((f) => {
+            const row = document.createElement('div')
+            row.className = 'dl'
+            const what = document.createElement('div')
+            what.className = 'what'
+            const strong = document.createElement('strong')
+            strong.textContent = w(f.label) + (f.os === detected ? ` · ${w('recommended')}` : '')
+            const span = document.createElement('span')
+            span.textContent = w(f.what)
+            what.append(strong, span)
+            const links = document.createElement('div')
+            links.className = 'links'
+            const size = document.createElement('span')
+            size.className = 'size'
+            size.textContent = mb(sizes.get(f.name))
+            const get = document.createElement('a')
+            get.className = 'get'
+            get.href = hrefFor(f.name)
+            get.textContent = w('download')
+            links.append(size, get)
+            if (serverOk) {
+              const gh = document.createElement('a')
+              gh.href = GITHUB + f.name
+              gh.textContent = w('viaGithub')
+              links.append(gh)
+            }
+            row.append(what, links)
+            return row
+          })
+        )
+        const main = FILES.find((f) => f.os === detected)
+        const btn = document.getElementById('main-download')
+        const label = document.getElementById('main-label')
+        const size = document.getElementById('main-size')
+        if (main) {
+          btn.href = hrefFor(main.name)
+          label.textContent = w('forYour', { name: w(main.short) })
+          document.getElementById('other').textContent = main.os === 'mac' ? w('intelNote') : ''
+          size.textContent = mb(sizes.get(main.name))
+        }
+        document.getElementById('version-line').textContent = release
+          ? w('latest', { v: release.version })
+          : 'EduBoard'
+        const note = document.getElementById('dl-note')
+        if (!serverOk && release === null && loaded) note.textContent = w('offline')
+      }
+
+      let loaded = false
+      fetch('/api/app-release', { headers: { Accept: 'application/json' } })
+        .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then((r) => {
+          release = r
+          serverOk = Array.isArray(r.assets) && r.assets.length > 0
+        })
+        .catch(() => {})
+        .finally(() => {
+          loaded = true
+          renderDownloads()
+        })
+
+      applyLanguage()
+    </script>
+  </body>
+</html>

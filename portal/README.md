@@ -70,6 +70,7 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    | `PORTAL_DATA_DIR` | `portal/data` | Where the database and every upload live. Back up this one folder. |
    | `HOST` | all interfaces | Set `127.0.0.1` to accept connections from this machine only (Caddy on the same machine still works). The local test launcher sets this. |
    | `PORTAL_TIMEZONE` | `UTC` | Only used until a teacher's desktop app publishes once. After that, each teacher's own time zone decides when their due dates end (Late/Missing labels). |
+   | `HOMEPAGE_HOSTS` | none | Comma-separated host names (e.g. `edu-board.com,www.edu-board.com`) whose front page is EduBoard's homepage with downloads instead of the student login. The homepage is always at `/download` too. Point those names at this server and add them to the Caddyfile. |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
    | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |
    | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |

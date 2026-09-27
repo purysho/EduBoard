@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- **A homepage with downloads** at `/download` on the Portal (portal.edu-board.com/download), in English and Chinese: what EduBoard does, screenshots, and every download for Windows, Mac and Linux through the Portal server (so they work where GitHub is blocked), with GitHub as a second link. The Portal's login page links to it for teachers. A Portal can also make it the front page of another address (`HOMEPAGE_HOSTS`).
+
 ## [0.5.0] — 2026-09-27
 
 **If you run a Portal, update it** (Update-Live-Portal): read receipts, class points in the digest and the usage count need the updated Portal.

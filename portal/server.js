@@ -33,6 +33,19 @@ app.use((_req, res, next) => {
 const { requireSyncSecret, requireAuth } = require('./auth')
 
 app.use(cookieParser())
+
+// EduBoard's homepage (what it is, and downloads through this server): /download on every
+// Portal, and the front page for any host listed in HOMEPAGE_HOSTS (e.g. the project's
+// own "edu-board.com"), where "/" would otherwise be the student login.
+const HOMEPAGE = path.join(__dirname, 'public', 'download.html')
+const homepageHosts = (process.env.HOMEPAGE_HOSTS || '')
+  .split(',')
+  .map((h) => h.trim().toLowerCase())
+  .filter(Boolean)
+app.get(['/download', '/download/'], (_req, res) => res.sendFile(HOMEPAGE))
+app.get('/', (req, res, next) =>
+  homepageHosts.includes((req.hostname || '').toLowerCase()) ? res.sendFile(HOMEPAGE) : next()
+)
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Request bodies are only read after the caller has proven who they are, and only as
