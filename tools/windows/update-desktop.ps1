@@ -43,6 +43,17 @@ if ($code -eq 401 -and $token) {
   $resp = Send "https://api.github.com/repos/$Repo/releases/tags/$Tag" 'application/vnd.github+json' $true
   $code = [int]$resp.StatusCode
 }
+# GitHub limits how often a network address may ask without a token, and a school's
+# computers often share one address; wait and ask again a few times before giving up.
+$tries = 0
+while (($code -eq 403 -or $code -eq 429) -and $tries -lt 4) {
+  $tries++
+  $wait = 15 * $tries
+  Write-Host "  GitHub is busy ($code); asking again in $wait seconds..."
+  Start-Sleep -Seconds $wait
+  $resp = Send "https://api.github.com/repos/$Repo/releases/tags/$Tag" 'application/vnd.github+json' $true
+  $code = [int]$resp.StatusCode
+}
 if ($code -eq 404) {
   Write-Host '  No test build found yet. Try again in a few minutes.'
   exit 1
