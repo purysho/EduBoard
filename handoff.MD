@@ -1,5 +1,7 @@
 # Handoff — EduBoard local testing session
 
+> **Newer notes: see `NEXT_SESSION.md` first.**
+
 Written for a fresh chat picking this up cold. Covers what was built this
 session, what got fixed while testing on the user's Windows machine, and the
 one blocking issue that testing stalled on.
