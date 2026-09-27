@@ -150,7 +150,7 @@ export function AttendanceTab(): React.JSX.Element {
                     />
                   </td>
                 ))}
-                <td className="px-3 py-1.5 text-center text-[var(--color-text-muted)]">
+                <td data-private className="px-3 py-1.5 text-center text-[var(--color-text-muted)]">
                   {formatRate(row.attendanceRate)}
                 </td>
               </tr>

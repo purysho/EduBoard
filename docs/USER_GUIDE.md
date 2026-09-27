@@ -22,6 +22,8 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
 - [Password protection](#password-protection)
+- [Presenting on a projector](#presenting-on-a-projector)
+- [A student's or family's data request](#a-students-or-familys-data-request)
 - [Backing up your data](#backing-up-your-data)
 - [Carrying EduBoard on a USB stick](#carrying-eduboard-on-a-usb-stick)
 - [Troubleshooting](#troubleshooting)
@@ -332,6 +334,17 @@ After five wrong tries, EduBoard makes you wait 30 seconds between tries.
 **Backups** of a protected database are encrypted too. Each one keeps a copy of the lock it was made with, so a backup still restores after you change your password; EduBoard then asks for the password you had when the backup was made, or that time's recovery key. Backups made **before** you turned protection on can still be read without a password: the Password protection panel counts them and offers **Delete unprotected backups**.
 
 **Change password** keeps the same recovery key. **Turn off** decrypts your data again (it asks for your password first).
+
+## Presenting on a projector
+
+Press the **projector icon** at the top of the sidebar before putting EduBoard on the big screen. While presenting, pages with grades, notes, contact details or keys (Dashboard, Students, Gradebook, Report, Homework, Portal, Analytics, Messages, Communications, Audit Log and Settings) show *Hidden while presenting* instead, and attendance rates are blurred. The pages a class normally sees stay as they are: seating chart, exit ticket, attendance (with its QR check-in), lesson plans, class story, timetable, calendar, resources and rubrics. **Stop presenting** in the banner, or the icon again, turns it off.
+
+## A student's or family's data request
+
+On a student's page, **Their data** has two buttons:
+
+- **Download their data** saves everything EduBoard holds about the student (their details and every record that refers to them) as a file you can pass on.
+- **Erase all their data…** removes the student and every record about them, including their history in the audit log, and rewrites the database file so nothing is left in it. Unlike **Delete**, it takes no backup first and can't be undone; type the student's name to confirm. Backups made before then still contain the student until they're replaced or you delete them. A Portal account, and work handed in on the Portal, stay on the Portal server.
 
 ## Backing up your data
 

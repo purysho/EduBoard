@@ -13,7 +13,9 @@ const api: EduBoardApi = {
     create: (input) => invoke(IpcChannels.students.create, input),
     update: (id, patch) => invoke(IpcChannels.students.update, id, patch),
     remove: (id) => invoke(IpcChannels.students.remove, id),
-    merge: (keepId, duplicateId) => invoke(IpcChannels.students.merge, keepId, duplicateId)
+    merge: (keepId, duplicateId) => invoke(IpcChannels.students.merge, keepId, duplicateId),
+    exportData: (id) => invoke(IpcChannels.students.exportData, id),
+    erase: (id) => invoke(IpcChannels.students.erase, id)
   },
   terms: {
     list: () => invoke(IpcChannels.terms.list),

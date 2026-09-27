@@ -120,6 +120,10 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     /** Folds duplicateId into keepId here and on the Portal (login included). */
     merge(keepId: string, duplicateId: string): Promise<Student>
+    /** Everything held about the student, saved as a JSON file the teacher chooses. */
+    exportData(id: string): Promise<{ saved: boolean; filePath?: string }>
+    /** Removes every record of the student for good (no backup, no audit trail). */
+    erase(id: string): Promise<{ rowsErased: number; olderBackups: number }>
   }
   terms: {
     list(): Promise<Term[]>

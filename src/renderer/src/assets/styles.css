@@ -103,3 +103,9 @@ body {
 .modal-panel {
   animation: modal-in 0.15s ease-out;
 }
+
+/* Presenting mode (lib/presenting.ts): private details on pages that stay visible. */
+html.presenting [data-private] {
+  filter: blur(6px);
+  user-select: none;
+}

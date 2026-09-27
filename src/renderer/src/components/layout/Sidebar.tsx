@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import {
   ArrowUpCircle,
   Lock,
+  Projector,
   BarChart3,
   BookOpenText,
   Calendar,
@@ -19,6 +20,7 @@ import {
   Users
 } from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
+import { setPresenting, usePresenting } from '@renderer/lib/presenting'
 import {
   useAppUpdateStatus,
   usePortalMessageThreads,
@@ -84,6 +86,7 @@ export function Sidebar(): React.JSX.Element {
   // this copy can't update itself) simply available.
   const { data: update } = useAppUpdateStatus()
   const { data: security } = useSecurityStatus()
+  const presenting = usePresenting()
   const updateLabel = !update?.updateAvailable
     ? null
     : update.readyVersion
@@ -101,12 +104,25 @@ export function Sidebar(): React.JSX.Element {
         <span className="text-base font-semibold tracking-tight text-[var(--color-text)]">
           EduBoard
         </span>
-        {updateLabel && (
+        <button
+          onClick={() => setPresenting(!presenting)}
+          title={presenting ? 'Stop presenting' : 'Present: hide grades, notes and contact details'}
+          aria-label={presenting ? 'Stop presenting' : 'Present'}
+          aria-pressed={presenting}
+          className={cn(
+            'rounded-lg p-1.5 hover:bg-[var(--color-surface-muted)]',
+            !updateLabel && 'ml-auto',
+            presenting ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'
+          )}
+        >
+          <Projector size={18} aria-hidden />
+        </button>
+        {!presenting && updateLabel && (
           <Link
             to="/settings?section=updates"
             title={updateLabel}
             aria-label={updateLabel}
-            className="relative ml-auto rounded-lg p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+            className="relative rounded-lg p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
           >
             <ArrowUpCircle
               size={18}
@@ -152,14 +168,14 @@ export function Sidebar(): React.JSX.Element {
                     />
                     <item.icon size={17} strokeWidth={2} aria-hidden />
                     {item.label}
-                    {item.to === '/settings' && updateLabel && (
+                    {item.to === '/settings' && updateLabel && !presenting && (
                       <span
                         className="ml-auto h-2 w-2 rounded-full bg-[var(--color-danger)]"
                         title={updateLabel}
                         aria-label={updateLabel}
                       />
                     )}
-                    {item.to === '/messages' && unreadMessages > 0 && (
+                    {item.to === '/messages' && unreadMessages > 0 && !presenting && (
                       <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-semibold text-white">
                         {unreadMessages > 99 ? '99+' : unreadMessages}
                       </span>

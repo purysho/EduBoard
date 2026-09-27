@@ -86,6 +86,7 @@ import {
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import * as security from '../services/security'
+import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
@@ -136,6 +137,21 @@ export function registerIpcHandlers(): void {
     backupService.createBackup()
     studentsRepo.deleteStudent(id)
   })
+  handle(IpcChannels.students.exportData, async (_e, id: string) => {
+    const data = exportStudentData(id)
+    const name = `${data.student.first_name}-${data.student.last_name}`.replace(
+      /[^\p{L}\p{N}-]+/gu,
+      '_'
+    )
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `${name}-EduBoard-data.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, JSON.stringify(data, null, 2))
+    return { saved: true, filePath }
+  })
+  handle(IpcChannels.students.erase, (_e, id: string) => eraseStudent(id))
   handle(IpcChannels.students.merge, (_e, keepId: string, duplicateId: string) => {
     // Merging removes a student record too, so it gets the same recovery point.
     backupService.createBackup()

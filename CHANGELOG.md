@@ -11,6 +11,8 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Security
 
+- **Presenting mode** (projector icon in the sidebar): hides pages with grades, notes, contact details and keys, and blurs attendance rates, while the seating chart, exit ticket, QR check-in and lesson plans stay usable on the projector.
+- **A student's data**: download everything held about a student, or erase all of it for good (every record, their audit history, and the free space in the database file) from their page.
 - **Password protection** (Settings → Password protection). Encrypts EduBoard's database and backups, asks for the password when EduBoard opens, and locks after a chosen idle time or when the computer locks or sleeps (exit tickets and backups keep running while it's locked). A recovery key, shown once, opens it if the password is forgotten. Backups made before it was turned on can be deleted from the same panel.
 - **QR attendance:** each phone can check in one student per session, so a student can't mark absent friends present. Exit tickets and check-in limit how often one device can send, generously enough for a whole class behind one network address.
 

@@ -20,6 +20,7 @@ import { StudentFormModal } from './StudentFormModal'
 import { StudentClassRow } from './StudentClassRow'
 import { StudentLogPanel } from './StudentLogPanel'
 import { MergeStudentsModal } from './MergeStudentsModal'
+import { PrivacyCard } from './PrivacyCard'
 
 export function StudentProfilePage(): React.JSX.Element {
   const { studentId } = useParams<{ studentId: string }>()
@@ -144,6 +145,8 @@ export function StudentProfilePage(): React.JSX.Element {
           onMerged={(kept) => navigate(`/students/${kept.id}`)}
         />
       )}
+
+      <PrivacyCard student={student} />
 
       <ConfirmDialog
         open={confirmDelete}
