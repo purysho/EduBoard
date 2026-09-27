@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Copy, Mail, Megaphone, Sparkles, Wand2 } from 'lucide-react'
+import { Copy, FileText, Mail, Megaphone, Sparkles, Wand2 } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Button } from '@renderer/components/ui/Button'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
@@ -333,6 +333,20 @@ export function NewsletterPage(): React.JSX.Element {
               >
                 <Copy size={13} className="mr-1 inline" aria-hidden />
                 {tr('Copy')}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!draft.trim()}
+                onClick={() =>
+                  run('word', async () => {
+                    const r = await window.api.office.word({ kind: 'newsletter', text: draft })
+                    return r.saved ? tr('Saved to {path}', { path: r.filePath }) : undefined
+                  })
+                }
+              >
+                <FileText size={13} className="mr-1 inline" aria-hidden />
+                {tr('Word (.docx)')}
               </Button>
               <Button
                 variant="ghost"

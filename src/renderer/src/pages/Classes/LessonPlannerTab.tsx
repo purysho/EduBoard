@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { CopyPlus, NotebookPen, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
+import {
+  CopyPlus,
+  FileText,
+  NotebookPen,
+  Pencil,
+  Plus,
+  Presentation,
+  Sparkles,
+  Trash2
+} from 'lucide-react'
 import type { ClassSection, LessonPlan } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -159,6 +168,26 @@ export function LessonPlannerTab(): React.JSX.Element {
                   <Button variant="secondary" size="sm" onClick={() => setEditingPlan(plan)}>
                     <Pencil size={13} className="mr-1 inline" aria-hidden />
                     {tr('Edit')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title={tr('Save as a Word document')}
+                    onClick={() =>
+                      void window.api.office.word({ kind: 'lessonPlan', planId: plan.id })
+                    }
+                  >
+                    <FileText size={13} className="mr-1 inline" aria-hidden />
+                    {tr('Word')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title={tr('A starter slide deck from this plan, for PowerPoint or WPS')}
+                    onClick={() => void window.api.office.slides(plan.id)}
+                  >
+                    <Presentation size={13} className="mr-1 inline" aria-hidden />
+                    {tr('Slides')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPendingDelete(plan)}>
                     <Trash2 size={13} className="mr-1 inline" aria-hidden />

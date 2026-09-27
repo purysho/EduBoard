@@ -22,6 +22,8 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Students using AI](#students-using-ai)
 - [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
+- [Weekly digest, your week and newsletters](#weekly-digest-your-week-and-newsletters)
+- [Word, PowerPoint and Excel](#word-powerpoint-and-excel)
 - [Your school's look and settings](#your-schools-look-and-settings)
 - [Password protection](#password-protection)
 - [Presenting on a projector](#presenting-on-a-projector)
@@ -369,6 +371,16 @@ The **weekly digest** is the Monday-morning email the Portal sends each family w
 4. Edit the text, then **Add to this week's family digest** (it goes at the top until Sunday), **Post to Class Story** (one class), or **Copy**. Fill in any [gaps] first.
 
 Nothing about any single student goes into a newsletter.
+
+## Word, PowerPoint and Excel
+
+For anything you'd rather finish in Office or WPS, EduBoard saves a file you can edit there. Nothing is uploaded; the files are made on your computer.
+
+- **Report cards (Word)** on a class's Report tab: every student's report card (grade, attendance, categories and your comment) in one .docx, a page each.
+- **Word (.docx)** in the Parent letters window: every letter, a page each, with the school logo.
+- **Word** and **Slides** next to each lesson plan: the plan as a document, or a starter PowerPoint deck: a title slide in the school colour, then objectives, materials, one slide per activity (write "Warm-up: song" and the slide is headed "Warm-up") and homework.
+- **Word (.docx)** on the Newsletter page, with headings and bullets kept.
+- Excel: **Export gradebook (.xlsx)** on the Report tab, the course grade sheet on Composite grades, **Export everything (Excel)** in Settings → Backups, and roster imports from .xlsx.
 
 ## Your school's look and settings
 

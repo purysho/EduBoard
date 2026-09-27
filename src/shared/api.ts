@@ -492,6 +492,18 @@ export interface EduBoardApi {
     /** Emails it to the teacher's own address; returns that address. */
     email(): Promise<string>
   }
+  office: {
+    /** Saves a Word document (asks where). Letters and report cards are for a class,
+     * a lesson plan by its id, a newsletter from its text. */
+    word(
+      what:
+        | { kind: 'letters' | 'reportCards'; classId: string }
+        | { kind: 'lessonPlan'; planId: string }
+        | { kind: 'newsletter'; text: string }
+    ): Promise<{ saved: boolean; filePath?: string }>
+    /** Saves a lesson plan as a starter PowerPoint deck (asks where). */
+    slides(planId: string): Promise<{ saved: boolean; filePath?: string }>
+  }
   newsletter: {
     facts(choice: NewsletterSourceChoice): Promise<NewsletterFact[]>
     draft(input: {

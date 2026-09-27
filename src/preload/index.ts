@@ -363,6 +363,10 @@ const api: EduBoardApi = {
     print: () => invoke(IpcChannels.weeklySummary.print),
     email: () => invoke(IpcChannels.weeklySummary.email)
   },
+  office: {
+    word: (what) => invoke(IpcChannels.office.word, what),
+    slides: (planId) => invoke(IpcChannels.office.slides, planId)
+  },
   newsletter: {
     facts: (choice) => invoke(IpcChannels.newsletter.facts, choice),
     draft: (input) => invoke(IpcChannels.newsletter.draft, input)

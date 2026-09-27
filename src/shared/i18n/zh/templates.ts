@@ -27,5 +27,17 @@ export const TEMPLATES: Record<string, string> = {
   'Line at the bottom': '底部说明',
   'e.g. Next term starts on 2 March.': '例如：下学期 3 月 2 日开学。',
   'Report card layout': '成绩单版式',
-  'Templates added: {list}': '新增模板：{list}'
+  'Templates added: {list}': '新增模板：{list}',
+  'Nothing to export.': '没有可导出的内容。',
+  'That lesson plan no longer exists.': '该教案已不存在。',
+  Activity: '活动',
+  'Save as a Word document': '另存为 Word 文档',
+  Word: 'Word',
+  'A starter slide deck from this plan, for PowerPoint or WPS':
+    '根据此教案生成初始幻灯片，可用 PowerPoint 或 WPS 打开',
+  Slides: '幻灯片',
+  'Word (.docx)': 'Word (.docx)',
+  'An editable copy of every report card, for Word or WPS':
+    '所有成绩单的可编辑副本，可用 Word 或 WPS 打开',
+  'Report cards (Word)': '成绩单（Word）'
 }

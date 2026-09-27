@@ -20,7 +20,8 @@ import {
   FileDown,
   Mail,
   Printer,
-  TrendingUp
+  TrendingUp,
+  FileText
 } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
 import { StatCard } from '@renderer/components/ui/StatCard'
@@ -93,6 +94,16 @@ export function ReportTab(): React.JSX.Element {
         <Button variant="secondary" onClick={handlePrintAll} disabled={printingAll}>
           <Printer size={15} className="mr-1 inline" aria-hidden />
           {printingAll ? tr('Preparing…') : tr('Print all report cards (PDF)')}
+        </Button>
+        <Button
+          variant="secondary"
+          title={tr('An editable copy of every report card, for Word or WPS')}
+          onClick={() =>
+            void window.api.office.word({ kind: 'reportCards', classId: classSection.id })
+          }
+        >
+          <FileText size={15} className="mr-1 inline" aria-hidden />
+          {tr('Report cards (Word)')}
         </Button>
         <Button variant="secondary" onClick={handleExport} disabled={exporting}>
           <Download size={15} className="mr-1 inline" aria-hidden />

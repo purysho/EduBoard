@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { fillLetter } from '@shared/letters'
+import { uiLocale } from '@shared/i18n'
 import { Spinner } from '@renderer/components/ui/EmptyState'
 import { useClassRoster, useClasses, useSettings } from '@renderer/lib/queries'
 
@@ -19,7 +20,7 @@ export function ClassLettersPrintPage(): React.JSX.Element {
 
   if (loading || !settings) return <Spinner />
   const cls = classes?.find((c) => c.id === classId)
-  const date = new Date().toLocaleDateString(undefined, {
+  const date = new Date().toLocaleDateString(uiLocale(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric'

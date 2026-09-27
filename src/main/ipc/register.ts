@@ -109,6 +109,13 @@ import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
 import type { NewsletterFact, NewsletterStructure } from '@shared/newsletter'
 import type { NewsletterSourceChoice } from '@shared/summaries'
+import {
+  lessonPlanDocx,
+  lessonPlanPptx,
+  lettersDocx,
+  newsletterDocx,
+  reportCardsDocx
+} from '../services/officeExport'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
@@ -1058,6 +1065,48 @@ export function registerIpcHandlers(): void {
       weeklySummaryHtml(summary)
     )
   })
+  // Word and PowerPoint files, saved where the teacher chooses.
+  const saveOffice = async (
+    buffer: Buffer,
+    defaultName: string,
+    ext: 'docx' | 'pptx'
+  ): Promise<{ saved: boolean; filePath?: string }> => {
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `${defaultName.replace(/[^\p{L}\p{N} ._-]/gu, '').trim() || 'EduBoard'}.${ext}`,
+      filters: [{ name: ext === 'docx' ? 'Word' : 'PowerPoint', extensions: [ext] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, buffer)
+    return { saved: true, filePath }
+  }
+  handle(IpcChannels.office.word, async (_e, what) => {
+    switch (what?.kind) {
+      case 'letters':
+        return saveOffice(
+          await lettersDocx(what.classId),
+          `${classesRepo.getClass(what.classId)?.name ?? ''} - ${tr('Parent letters')}`,
+          'docx'
+        )
+      case 'reportCards':
+        return saveOffice(
+          await reportCardsDocx(what.classId),
+          `${classesRepo.getClass(what.classId)?.name ?? ''} - ${tr('Report cards')}`,
+          'docx'
+        )
+      case 'lessonPlan':
+        return saveOffice(await lessonPlanDocx(what.planId), tr('Lesson plan'), 'docx')
+      case 'newsletter':
+        if (typeof what.text !== 'string' || !what.text.trim()) {
+          throw new Error(tr('Write the newsletter first.'))
+        }
+        return saveOffice(await newsletterDocx(what.text), tr('Newsletter'), 'docx')
+      default:
+        throw new Error(tr('Nothing to export.'))
+    }
+  })
+  handle(IpcChannels.office.slides, async (_e, planId: string) =>
+    saveOffice(await lessonPlanPptx(String(planId)), tr('Lesson plan'), 'pptx')
+  )
   handle(IpcChannels.newsletter.facts, (_e, choice: NewsletterSourceChoice) =>
     gatherNewsletterFacts(choice)
   )

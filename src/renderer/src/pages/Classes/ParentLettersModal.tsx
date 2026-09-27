@@ -54,6 +54,17 @@ export function ParentLettersModal({
           <Button variant="secondary" onClick={onClose}>
             {tr('Close')}
           </Button>
+          <Button
+            variant="secondary"
+            disabled={busy || !text.trim()}
+            onClick={async () => {
+              if (draft !== null) await update.mutateAsync({ letterTemplate: draft })
+              const r = await window.api.office.word({ kind: 'letters', classId: classSection.id })
+              if (r.saved) setMessage(tr('Saved to {path}', { path: r.filePath }))
+            }}
+          >
+            {tr('Word (.docx)')}
+          </Button>
           <Button variant="primary" onClick={print} disabled={busy || !text.trim()}>
             {busy ? tr('Preparing…') : tr('Print letters (PDF)')}
           </Button>

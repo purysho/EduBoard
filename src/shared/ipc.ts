@@ -301,6 +301,10 @@ export const IpcChannels = {
     print: 'weeklySummary:print',
     email: 'weeklySummary:email'
   },
+  office: {
+    word: 'office:word',
+    slides: 'office:slides'
+  },
   newsletter: {
     facts: 'newsletter:facts',
     draft: 'newsletter:draft'

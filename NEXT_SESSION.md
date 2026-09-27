@@ -74,14 +74,11 @@ built since 0.3.3).
    (HappyClass Smart School System: homework guide videos, flipped classroom,
    IoT smart classroom, vocabulary system, SPOC live/on-demand courses). Fold
    into the competitor research doc.
-8. **Connect to other apps**:
-   - Now: Word (.docx), PowerPoint (.pptx) and Excel (.xlsx) export/import for
-     reports, letters, lesson plans, gradebook (Excel export already exists).
-   - Plan, and prototype if feasible: WeChat and Alipay login / phone-number
-     binding for China on the Portal; Google, Apple ID and school SSO
-     (OIDC/SAML). Anything that needs company registration, app-store
-     accounts or paid developer programs: write it into a **VC roadmap** section
-     instead, with what each needs (accounts, costs, ICP licence for China, etc.).
+8. ~~Connect to other apps~~ **Word/PowerPoint done** (`src/main/services/officeExport.ts`,
+   `docx` + `pptxgenjs`; IPC `office:word` / `office:slides`). Excel already existed
+   (gradebook, course grade sheet, export everything, roster import). WeChat, Alipay,
+   Google, Apple ID and SSO logins: planned in `docs/ROADMAP_VC.md` with what each
+   needs; none built yet.
 9. **Competitor list**: research ClassDojo, Seesaw, Google Classroom, PowerSchool,
    Toddle, ManageBac, Veracross, Class Charts, Bloomz, Remind, ParentSquare,
    SchoolCues, 钉钉/DingTalk, 企业微信/WeCom, 班级优化大师, 晓黑板 and similar.
