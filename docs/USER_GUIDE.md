@@ -346,6 +346,12 @@ Two cards on the Dashboard help day to day. **Today** lists today's lessons from
 ---
 
 
+### Templates and report card layouts
+
+Parent letters, Class Story posts and lesson plans each have **Start from a template…** with EduBoard's own (in the language EduBoard is in) and any you've saved. **Save as template** keeps what you've written for next time; your saved templates are listed, and can be deleted, in **Settings → Your lists**. The comment bank there can **Add a ready-made set** of sentences for primary, secondary or English-as-an-additional-language classes.
+
+**Settings → Report cards** chooses what printed report cards show: **Standard** (grade, categories and every assessment), **Compact** (grade, attendance rate and comment) or **Detailed** (everything, plus signature lines for teacher and parent). Each part can be switched on or off, and you can set your own title ("End of term report") and a line printed at the bottom ("Next term starts on 2 March.").
+
 ### Report card comments
 
 At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Your lists**). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.

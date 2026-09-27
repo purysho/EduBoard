@@ -16,6 +16,7 @@ import { AboutPanel } from './AboutPanel'
 import { SecurityPanel } from './SecurityPanel'
 import { AppearancePanel } from './AppearancePanel'
 import { GradingDefaultsPanel } from './GradingDefaultsPanel'
+import { ReportCardPanel } from './ReportCardPanel'
 import { ListsPanel } from './ListsPanel'
 import { SchoolPackPanel } from './SchoolPackPanel'
 import { tr } from '@shared/i18n'
@@ -426,6 +427,7 @@ export function SettingsPage(): React.JSX.Element {
 
         <AppearancePanel />
         <GradingDefaultsPanel />
+        <ReportCardPanel />
         <ListsPanel />
         <SchoolPackPanel />
         <TermsPanel />

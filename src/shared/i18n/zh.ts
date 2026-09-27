@@ -6,6 +6,7 @@ import { COMMON } from './zh/common'
 import { PAGES } from './zh/pages'
 import { SETTINGS } from './zh/settings'
 import { SYSTEM } from './zh/system'
+import { TEMPLATES } from './zh/templates'
 
 export const ZH: Record<string, string> = {
   ...CLASSES,
@@ -13,5 +14,6 @@ export const ZH: Record<string, string> = {
   ...COMMON,
   ...PAGES,
   ...SETTINGS,
-  ...SYSTEM
+  ...SYSTEM,
+  ...TEMPLATES
 }

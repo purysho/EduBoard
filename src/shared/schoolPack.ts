@@ -7,6 +7,7 @@ import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
 import { COMMENT_CATEGORIES, type BankComment } from './commentBank'
 import { BUILT_IN_STATUSES, type AttendanceCode } from './attendanceCodes'
+import { resolveReportLayout, type ReportCardLayout, type SavedTemplate } from './templates'
 import { RENAMEABLE_WORDS, tr, type RenameableWord, type Terminology } from './i18n'
 
 export interface SchoolPackTerm {
@@ -34,6 +35,8 @@ export interface SchoolPack {
   letterTemplate?: string
   attendanceCodes?: AttendanceCode[]
   terminology?: Terminology
+  reportCard?: Partial<ReportCardLayout>
+  savedTemplates?: SavedTemplate[]
 }
 
 const MAX_LOGO_CHARS = 700_000
@@ -200,6 +203,51 @@ export function parseSchoolPack(json: string): SchoolPack {
       }
     }
   }
+  if (raw.reportCard && typeof raw.reportCard === 'object') {
+    const r = raw.reportCard as Record<string, unknown>
+    const layout = resolveReportLayout({
+      preset: r.preset as ReportCardLayout['preset'],
+      ...Object.fromEntries(
+        (
+          [
+            'showCategories',
+            'showAssessments',
+            'showComment',
+            'showAttendance',
+            'showSignatures'
+          ] as const
+        )
+          .filter((k) => typeof r[k] === 'boolean')
+          .map((k) => [k, r[k]])
+      ),
+      title: isString(r.title, 120) ? r.title : '',
+      footer: isString(r.footer, 300) ? r.footer : ''
+    })
+    pack.reportCard = layout
+  }
+  if (Array.isArray(raw.savedTemplates)) {
+    const list = raw.savedTemplates.filter(
+      (t): t is SavedTemplate =>
+        isString(t?.id, 64) &&
+        ['letter', 'story', 'lesson'].includes(t?.kind) &&
+        isString(t?.name, 80) &&
+        !!t.name.trim() &&
+        (t.body === undefined || isString(t.body, 5000)) &&
+        (t.lesson === undefined ||
+          (['objectives', 'materials', 'activities', 'homework'] as const).every((k) =>
+            isString(t.lesson?.[k], 5000)
+          ))
+    )
+    if (list.length) {
+      pack.savedTemplates = list.map((t) => ({
+        id: t.id,
+        kind: t.kind,
+        name: t.name.trim(),
+        ...(t.body !== undefined ? { body: t.body } : {}),
+        ...(t.lesson ? { lesson: { ...t.lesson } } : {})
+      }))
+    }
+  }
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     pack.customCss = sanitizeCss(raw.customCss)
   }
@@ -230,6 +278,10 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
     commentBank: settings.commentBank,
     letterTemplate: settings.letterTemplate,
     ...(settings.attendanceCodes?.length ? { attendanceCodes: settings.attendanceCodes } : {}),
+    ...(settings.reportCard && Object.keys(settings.reportCard).length
+      ? { reportCard: settings.reportCard }
+      : {}),
+    ...(settings.savedTemplates?.length ? { savedTemplates: settings.savedTemplates } : {}),
     ...(settings.terminology && Object.keys(settings.terminology).length
       ? { terminology: settings.terminology }
       : {})
@@ -348,6 +400,22 @@ export function planSchoolPack(
   ) {
     patch.terminology = pack.terminology
     changes.push(tr('The school’s own words (for class, student, assessment…)'))
+  }
+  if (
+    pack.reportCard &&
+    JSON.stringify(pack.reportCard) !== JSON.stringify(resolveReportLayout(settings.reportCard))
+  ) {
+    patch.reportCard = pack.reportCard
+    changes.push(tr('Report card layout'))
+  }
+  if (pack.savedTemplates) {
+    // Templates are only added: one with the same id is already here.
+    const have = new Set((settings.savedTemplates ?? []).map((t) => t.id))
+    const added = pack.savedTemplates.filter((t) => !have.has(t.id))
+    if (added.length) {
+      patch.savedTemplates = [...(settings.savedTemplates ?? []), ...added]
+      changes.push(tr('Templates added: {list}', { list: added.map((t) => t.name).join(', ') }))
+    }
   }
   if (pack.customCss !== undefined && pack.customCss !== settings.customCss) {
     patch.customCss = pack.customCss

@@ -17,6 +17,7 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 import { tr } from '@shared/i18n'
+import { resolveReportLayout } from '@shared/templates'
 
 /** One student's report card for one class, as printed. `onReady` fires once
  * everything it shows has loaded, so a print can wait for it. */
@@ -47,6 +48,7 @@ export function ReportCard({
   const { data: categories } = useGradeCategories(classId)
   const { data: settings, isLoading: settingsLoading } = useSettings()
 
+  const layout = resolveReportLayout(settings?.reportCard)
   const student = students?.find((s) => s.id === studentId)
   const classSection = classes?.find((c) => c.id === classId)
 
@@ -82,7 +84,9 @@ export function ReportCard({
         <div>
           <h1 className="text-xl font-semibold">{classSection.name}</h1>
           <p className="text-sm text-slate-500">
-            {tr('Student report — {date}', { date: formatDate(new Date().toISOString()) })}
+            {layout.title.trim()
+              ? `${layout.title.trim()} — ${formatDate(new Date().toISOString())}`
+              : tr('Student report — {date}', { date: formatDate(new Date().toISOString()) })}
           </p>
         </div>
         {(settings?.schoolName || settings?.teacherName || settings?.schoolLogo) && (
@@ -120,7 +124,7 @@ export function ReportCard({
         </div>
       </div>
 
-      {!!grade?.categoryBreakdown.length && (
+      {layout.showCategories && !!grade?.categoryBreakdown.length && (
         <div className="mb-6">
           <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
             {tr('Category breakdown')}
@@ -138,73 +142,98 @@ export function ReportCard({
         </div>
       )}
 
-      <div className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">{tr('Assessments')}</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-300 text-left text-xs uppercase text-slate-500">
-              <th className="py-1.5">{tr('Assessment')}</th>
-              <th className="py-1.5">{tr('Category')}</th>
-              <th className="py-1.5">{tr('Date')}</th>
-              <th className="py-1.5 text-right">{tr('Score')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(assessments ?? []).map((a) => {
-              const score = scoreByAssessment.get(a.id)
-              return (
-                <tr key={a.id} className="border-b border-slate-100">
-                  <td className="py-1.5">{a.name}</td>
-                  <td className="py-1.5 text-slate-500">
-                    {a.categoryId ? categoryName.get(a.categoryId) : '—'}
-                  </td>
-                  <td className="py-1.5 text-slate-500">{formatDate(a.assessmentDate)}</td>
-                  <td className="py-1.5 text-right">
-                    {score?.excused
-                      ? tr('Excused')
-                      : score?.pointsEarned != null
-                        ? `${score.pointsEarned}/${a.maxScore}`
-                        : '—'}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      {layout.showAssessments && (
+        <div className="mb-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
+            {tr('Assessments')}
+          </h2>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-300 text-left text-xs uppercase text-slate-500">
+                <th className="py-1.5">{tr('Assessment')}</th>
+                <th className="py-1.5">{tr('Category')}</th>
+                <th className="py-1.5">{tr('Date')}</th>
+                <th className="py-1.5 text-right">{tr('Score')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(assessments ?? []).map((a) => {
+                const score = scoreByAssessment.get(a.id)
+                return (
+                  <tr key={a.id} className="border-b border-slate-100">
+                    <td className="py-1.5">{a.name}</td>
+                    <td className="py-1.5 text-slate-500">
+                      {a.categoryId ? categoryName.get(a.categoryId) : '—'}
+                    </td>
+                    <td className="py-1.5 text-slate-500">{formatDate(a.assessmentDate)}</td>
+                    <td className="py-1.5 text-right">
+                      {score?.excused
+                        ? tr('Excused')
+                        : score?.pointsEarned != null
+                          ? `${score.pointsEarned}/${a.maxScore}`
+                          : '—'}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {comment && (
+      {layout.showComment && comment && (
         <div className="mb-6">
           <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">{tr('Comment')}</h2>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment}</p>
         </div>
       )}
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
-          {tr('Attendance summary')}
-        </h2>
-        <table className="w-full text-sm">
-          <tbody>
-            <tr>
-              <td className="py-1">{tr('Present')}</td>
-              <td className="py-1 text-right">{attendance?.present ?? 0}</td>
-            </tr>
-            <tr>
-              <td className="py-1">{tr('Late')}</td>
-              <td className="py-1 text-right">{attendance?.late ?? 0}</td>
-            </tr>
-            <tr>
-              <td className="py-1">{tr('Absent')}</td>
-              <td className="py-1 text-right">{attendance?.absent ?? 0}</td>
-            </tr>
-            <tr>
-              <td className="py-1">{tr('Excused')}</td>
-              <td className="py-1 text-right">{attendance?.excused ?? 0}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {layout.showAttendance && (
+        <div>
+          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
+            {tr('Attendance summary')}
+          </h2>
+          <table className="w-full text-sm">
+            <tbody>
+              <tr>
+                <td className="py-1">{tr('Present')}</td>
+                <td className="py-1 text-right">{attendance?.present ?? 0}</td>
+              </tr>
+              <tr>
+                <td className="py-1">{tr('Late')}</td>
+                <td className="py-1 text-right">{attendance?.late ?? 0}</td>
+              </tr>
+              <tr>
+                <td className="py-1">{tr('Absent')}</td>
+                <td className="py-1 text-right">{attendance?.absent ?? 0}</td>
+              </tr>
+              <tr>
+                <td className="py-1">{tr('Excused')}</td>
+                <td className="py-1 text-right">{attendance?.excused ?? 0}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {layout.showSignatures && (
+        <div className="mt-10 grid grid-cols-3 gap-6 text-sm text-slate-600">
+          {[tr('Teacher’s signature'), tr('Parent or guardian’s signature'), tr('Date')].map(
+            (label) => (
+              <div key={label}>
+                <div className="mb-1 h-8 border-b border-slate-400" />
+                {label}
+              </div>
+            )
+          )}
+        </div>
+      )}
+
+      {layout.footer.trim() && (
+        <p className="mt-8 border-t border-slate-200 pt-3 text-center text-xs text-slate-500">
+          {layout.footer.trim()}
+        </p>
+      )}
     </div>
   )
 }

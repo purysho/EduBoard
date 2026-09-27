@@ -13,6 +13,7 @@ import {
 } from './letters'
 import { uiLanguage, type Terminology } from './i18n'
 import type { AttendanceCode } from './attendanceCodes'
+import type { ReportCardLayout, SavedTemplate } from './templates'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
@@ -688,6 +689,10 @@ export interface AppSettings {
   accentColor: string
   /** The school's own attendance codes, plus any renaming of the built-in four. */
   attendanceCodes: AttendanceCode[]
+  /** Letters, Class Story posts and lesson plans the teacher saved as templates. */
+  savedTemplates: SavedTemplate[]
+  /** What a printed report card shows; anything missing comes from its preset. */
+  reportCard: Partial<ReportCardLayout>
   /** The school's own words for class, student, assessment… per interface language. */
   terminology: Terminology
   /** Interface language; '' follows the computer's language. */
@@ -857,6 +862,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   schoolLogo: '',
   accentColor: '',
   attendanceCodes: [],
+  savedTemplates: [],
+  reportCard: {},
   terminology: {},
   uiLanguage: '',
   textSize: 'normal',

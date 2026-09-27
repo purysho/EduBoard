@@ -62,9 +62,9 @@ built since 0.3.3).
    settings and in ui-prefs.json beside the database for startup).
 3. ~~Portal: delete one student~~ **done** (`POST /api/sync/delete-student`).
 4. ~~Start next term for every class at once~~ **done** (Classes page).
-5. **Templates for each section**: report cards, comment bank sets, parent
-   letters, class story, lesson plans, newsletters. A template picker with
-   several built-in styles plus the user's own saved ones; school packs carry them.
+5. ~~Templates for each section~~ **done** (`src/shared/templates.ts`,
+   `components/TemplatePicker.tsx`, Settings → Report cards). Newsletters get theirs
+   with item 6.
 6. **Weekly Digest**: a preview of what's in it before it goes; a **teacher
    version** and a **family version** (student details vs parent details:
    decide which fields each audience sees); **AI-assisted newsletter**: choose

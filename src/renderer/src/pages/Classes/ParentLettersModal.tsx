@@ -5,6 +5,8 @@ import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
 import { tr } from '@shared/i18n'
+import { TemplatePicker } from '@renderer/components/TemplatePicker'
+import { letterTemplates } from '@shared/templates'
 
 /** Edit the parent letter and print a copy for every student in the class. */
 export function ParentLettersModal({
@@ -64,6 +66,18 @@ export function ParentLettersModal({
             'One letter per student, filled in for each: {guardian}, {name}, {class}, {grade}, {percent}, {attendance}, {teacher}, {school}, {date}. The school logo and name go at the top. Your letter is kept for next time.'
           )}
         </p>
+        <TemplatePicker
+          kind="letter"
+          builtIns={letterTemplates()}
+          onPick={(choice) =>
+            setDraft(
+              'saved' in choice
+                ? (choice.saved.body ?? '')
+                : (letterTemplates().find((t) => t.id === choice.builtInId)?.body ?? '')
+            )
+          }
+          current={() => (text.trim() ? { body: text } : null)}
+        />
         <textarea
           aria-label={tr('Letter')}
           className="h-72 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 font-mono text-sm"

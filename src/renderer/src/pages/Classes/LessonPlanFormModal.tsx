@@ -6,6 +6,8 @@ import { DateSelect, FormRow, Input, Select, Textarea } from '@renderer/componen
 import { useCreateLessonPlan, useUpdateLessonPlan } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 import { tr } from '@shared/i18n'
+import { TemplatePicker } from '@renderer/components/TemplatePicker'
+import { lessonTemplates } from '@shared/templates'
 
 const STATUS_OPTIONS: { value: LessonPlanStatus; label: string }[] = [
   { value: 'planned', label: tr('Planned') },
@@ -96,6 +98,30 @@ export function LessonPlanFormModal({
       }
     >
       <form id="lesson-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <TemplatePicker
+            kind="lesson"
+            builtIns={lessonTemplates()}
+            onPick={(choice) => {
+              const fields =
+                'saved' in choice
+                  ? choice.saved.lesson
+                  : lessonTemplates().find((t) => t.id === choice.builtInId)
+              if (!fields) return
+              const filled = [objectives, materials, activities, homework].some((f) => f.trim())
+              if (filled && !window.confirm(tr('Replace what’s written with the template?'))) return
+              setObjectives(fields.objectives)
+              setMaterials(fields.materials)
+              setActivities(fields.activities)
+              setHomework(fields.homework)
+            }}
+            current={() =>
+              [objectives, materials, activities, homework].some((f) => f.trim())
+                ? { lesson: { objectives, materials, activities, homework } }
+                : null
+            }
+          />
+        </div>
         <FormRow label={tr('Date')}>
           <DateSelect value={date} onChange={setDate} required />
         </FormRow>

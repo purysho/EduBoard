@@ -13,6 +13,7 @@ import {
   type BankComment,
   type CommentCategory
 } from '@shared/commentBank'
+import { commentSets } from '@shared/templates'
 import {
   BUILT_IN_STATUSES,
   attendanceCodeProblem,
@@ -260,8 +261,62 @@ export function ListsPanel(): React.JSX.Element | null {
             >
               {tr('Restore EduBoard’s')}
             </button>
+            <select
+              aria-label={tr('Add a ready-made set')}
+              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 text-xs"
+              value=""
+              onChange={(e) => {
+                const set = commentSets().find((x) => x.id === e.target.value)
+                if (!set) return
+                const have = new Set(b.map((x) => x.text))
+                setBank([...b, ...set.comments.filter((x) => !have.has(x.text))])
+              }}
+            >
+              <option value="">{tr('Add a ready-made set…')}</option>
+              {commentSets().map((set) => (
+                <option key={set.id} value={set.id}>
+                  {set.name}
+                </option>
+              ))}
+            </select>
           </div>
         </section>
+
+        {(settings.savedTemplates ?? []).length > 0 && (
+          <section>
+            <h3 className="font-medium">{tr('Your templates')}</h3>
+            <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'Saved with “Save as template” on a parent letter, Class Story post or lesson plan.'
+              )}
+            </p>
+            <ul className="space-y-1">
+              {(settings.savedTemplates ?? []).map((t) => (
+                <li key={t.id} className="flex items-center gap-2">
+                  <span className="w-28 text-xs text-[var(--color-text-muted)]">
+                    {t.kind === 'letter'
+                      ? tr('Parent letter')
+                      : t.kind === 'story'
+                        ? tr('Class Story')
+                        : tr('Lesson plan')}
+                  </span>
+                  <span className="flex-1">{t.name}</span>
+                  <button
+                    aria-label={tr('Delete template {name}', { name: t.name })}
+                    className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
+                    onClick={() =>
+                      update.mutate({
+                        savedTemplates: (settings.savedTemplates ?? []).filter((x) => x.id !== t.id)
+                      })
+                    }
+                  >
+                    <X size={13} aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section>
           <h3 className="font-medium">{tr('Attendance codes')}</h3>

@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useClassPosts, useCreateClassPost, useDeleteClassPost } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 import { tr } from '@shared/i18n'
+import { TemplatePicker } from '@renderer/components/TemplatePicker'
+import { storyTemplates } from '@shared/templates'
 
 export function ClassStoryTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -41,6 +43,18 @@ export function ClassStoryTab(): React.JSX.Element {
       <Card className="mb-4">
         <CardBody>
           <form onSubmit={handleSubmit} className="space-y-3">
+            <TemplatePicker
+              kind="story"
+              builtIns={storyTemplates()}
+              onPick={(choice) =>
+                setBody(
+                  'saved' in choice
+                    ? (choice.saved.body ?? '')
+                    : (storyTemplates().find((t) => t.id === choice.builtInId)?.body ?? '')
+                )
+              }
+              current={() => (body.trim() ? { body } : null)}
+            />
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
