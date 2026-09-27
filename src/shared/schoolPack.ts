@@ -6,7 +6,8 @@ import type { AppSettings, GradeThresholds, LogQuickAdd, StudentField, Term } fr
 import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
 import { COMMENT_CATEGORIES, type BankComment } from './commentBank'
-import { tr } from './i18n'
+import { BUILT_IN_STATUSES, type AttendanceCode } from './attendanceCodes'
+import { RENAMEABLE_WORDS, tr, type RenameableWord, type Terminology } from './i18n'
 
 export interface SchoolPackTerm {
   name: string
@@ -31,6 +32,8 @@ export interface SchoolPack {
   customCss?: string
   commentBank?: BankComment[]
   letterTemplate?: string
+  attendanceCodes?: AttendanceCode[]
+  terminology?: Terminology
 }
 
 const MAX_LOGO_CHARS = 700_000
@@ -156,6 +159,47 @@ export function parseSchoolPack(json: string): SchoolPack {
   if (isString(raw.letterTemplate, 5000) && raw.letterTemplate.trim()) {
     pack.letterTemplate = raw.letterTemplate
   }
+  if (Array.isArray(raw.attendanceCodes)) {
+    const list = raw.attendanceCodes.filter(
+      (c): c is AttendanceCode =>
+        typeof c?.id === 'string' &&
+        /^(present|late|absent|excused|c:[a-z0-9]{1,16})$/.test(c.id) &&
+        isString(c?.label, 40) &&
+        isString(c?.letter, 4) &&
+        [...c.letter].length <= 2 &&
+        (BUILT_IN_STATUSES as readonly string[]).includes(c?.countsAs) &&
+        (c.id.startsWith('c:') || c.countsAs === c.id)
+    )
+    if (list.length) {
+      pack.attendanceCodes = list.map((c) => ({
+        id: c.id,
+        label: c.label,
+        letter: c.letter,
+        countsAs: c.countsAs,
+        ...(c.hidden === true ? { hidden: true } : {})
+      }))
+    }
+  }
+  const words = raw.terminology as Terminology | undefined
+  if (words && typeof words === 'object') {
+    const keys = Object.keys(RENAMEABLE_WORDS) as RenameableWord[]
+    const en: NonNullable<Terminology['en']> = {}
+    const zh: NonNullable<Terminology['zh']> = {}
+    for (const k of keys) {
+      const e = words.en?.[k]
+      if (e && isString(e.one, 40) && isString(e.other, 40) && e.one.trim()) {
+        en[k] = { one: e.one.trim(), other: e.other.trim() }
+      }
+      const z = words.zh?.[k]
+      if (isString(z, 20) && z.trim()) zh[k] = z.trim()
+    }
+    if (Object.keys(en).length || Object.keys(zh).length) {
+      pack.terminology = {
+        ...(Object.keys(en).length ? { en } : {}),
+        ...(Object.keys(zh).length ? { zh } : {})
+      }
+    }
+  }
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     pack.customCss = sanitizeCss(raw.customCss)
   }
@@ -184,7 +228,11 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
     })),
     ...(settings.customCss ? { customCss: settings.customCss } : {}),
     commentBank: settings.commentBank,
-    letterTemplate: settings.letterTemplate
+    letterTemplate: settings.letterTemplate,
+    ...(settings.attendanceCodes?.length ? { attendanceCodes: settings.attendanceCodes } : {}),
+    ...(settings.terminology && Object.keys(settings.terminology).length
+      ? { terminology: settings.terminology }
+      : {})
   }
 }
 
@@ -272,6 +320,34 @@ export function planSchoolPack(
   if (pack.letterTemplate && pack.letterTemplate !== settings.letterTemplate) {
     patch.letterTemplate = pack.letterTemplate
     changes.push(tr('Parent letter'))
+  }
+  if (pack.attendanceCodes) {
+    // The pack's codes are added or renamed; codes this computer already uses stay, so
+    // no day already marked loses its meaning.
+    const merged = [...(settings.attendanceCodes ?? [])]
+    for (const code of pack.attendanceCodes) {
+      const at = merged.findIndex((c) => c.id === code.id)
+      if (at >= 0) merged[at] = code
+      else merged.push(code)
+    }
+    if (JSON.stringify(merged) !== JSON.stringify(settings.attendanceCodes ?? [])) {
+      patch.attendanceCodes = merged
+      changes.push(
+        tr('Attendance codes: {list}', {
+          list: pack.attendanceCodes
+            .filter((c) => c.label.trim())
+            .map((c) => c.label)
+            .join(', ')
+        })
+      )
+    }
+  }
+  if (
+    pack.terminology &&
+    JSON.stringify(pack.terminology) !== JSON.stringify(settings.terminology ?? {})
+  ) {
+    patch.terminology = pack.terminology
+    changes.push(tr('The school’s own words (for class, student, assessment…)'))
   }
   if (pack.customCss !== undefined && pack.customCss !== settings.customCss) {
     patch.customCss = pack.customCss

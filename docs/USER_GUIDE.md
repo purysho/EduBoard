@@ -355,6 +355,10 @@ At the bottom of a class's **Report** tab, **Report card comments** has a box fo
 
 **Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. Imports also read Chinese headings (姓名, 学号, 家长姓名, 家长电话…); a single 姓名 column is split into family name and given name. These fields stay on your computer; the Portal never receives them.
 
+**Attendance codes** (in **Your lists**) renames the four codes or adds your own, such as Sick or Field trip; each counts as present, late, absent or excused, so attendance rates stay right. In the attendance grid, click a cell to step through the codes, or right-click it to pick any code and add a note. A code you stop using is hidden rather than deleted, so days already marked with it keep counting.
+
+**Words EduBoard uses** (also in **Your lists**) swaps EduBoard's words for your school's: "section" for "class", "test" for "assessment", "learner" for "student", "unit" for "assignment", "semester" for "term". Type the singular and plural; leave a box empty to keep EduBoard's word. In Chinese it's one box per word (教学班 for 班级, say). EduBoard reloads to use the new words.
+
 **Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields, comment bank, parent letter) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
 
 ## Password protection

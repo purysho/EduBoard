@@ -29,8 +29,6 @@ export const CLASSES: Record<string, string> = {
   'Not marked — click to mark present': '未记录——点击记为出勤',
   'No students enrolled': '还没有学生',
   'Enroll students from the Roster tab first.': '请先在“学生名单”中添加学生。',
-  'Click a cell to cycle Present → Late → Absent → Excused.':
-    '点击单元格可依次切换：出勤 → 迟到 → 缺勤 → 请假。',
   'Add date': '添加日期',
   'Exporting…': '导出中…',
   'Export .csv': '导出 .csv',

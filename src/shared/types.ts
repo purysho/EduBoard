@@ -11,7 +11,8 @@ import {
   DEFAULT_LETTER_TEMPLATE_ZH,
   defaultLetterTemplate
 } from './letters'
-import { uiLanguage } from './i18n'
+import { uiLanguage, type Terminology } from './i18n'
+import type { AttendanceCode } from './attendanceCodes'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
@@ -544,7 +545,8 @@ export interface AttendanceRecord {
   classId: string
   studentId: string
   date: string
-  status: AttendanceStatus
+  /** A built-in status or one of the school's own codes (see attendanceCodes.ts). */
+  status: string
   note: string | null
   createdAt: string
 }
@@ -684,6 +686,10 @@ export interface AppSettings {
   schoolLogo: string
   /** '#rrggbb' to replace EduBoard's indigo with the school's colour; '' keeps it. */
   accentColor: string
+  /** The school's own attendance codes, plus any renaming of the built-in four. */
+  attendanceCodes: AttendanceCode[]
+  /** The school's own words for class, student, assessment… per interface language. */
+  terminology: Terminology
   /** Interface language; '' follows the computer's language. */
   uiLanguage: 'en' | 'zh' | ''
   textSize: 'small' | 'normal' | 'large' | 'larger'
@@ -850,6 +856,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   autoLockMinutes: 10,
   schoolLogo: '',
   accentColor: '',
+  attendanceCodes: [],
+  terminology: {},
   uiLanguage: '',
   textSize: 'normal',
   highContrast: false,

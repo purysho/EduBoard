@@ -9,8 +9,11 @@ import { listStudents } from '../repositories/students'
 import { computeClassGrade, letterForPercent, isPassing } from './grading'
 import { gradeBands } from '@shared/gradeScales'
 import { computeAttendanceCounts } from './attendance'
+import { countsAsFor, resolveAttendanceCodes } from '@shared/attendanceCodes'
+import { getSettings } from '../repositories/settingsRepo'
 import type {
   AnalyticsOverview,
+  AttendanceStatus,
   AttendanceSummary,
   AttendanceWarning,
   CategoryComparisonEntry,
@@ -74,11 +77,17 @@ export function getStudentClassGrade(studentId: string, classId: string): Studen
   return grades.get(studentId) ?? null
 }
 
+/** How this school's attendance codes count toward rates. */
+function schoolCountsAs(): (status: string) => AttendanceStatus {
+  return countsAsFor(resolveAttendanceCodes(getSettings().attendanceCodes))
+}
+
 function attendanceSummaryByStudent(classId: string): Map<string, AttendanceSummary> {
   const recordsByStudent = groupBy(listAttendanceByClass(classId), (r) => r.studentId)
+  const countsAs = schoolCountsAs()
   const result = new Map<string, AttendanceSummary>()
   for (const [studentId, records] of recordsByStudent) {
-    const counts = computeAttendanceCounts(records)
+    const counts = computeAttendanceCounts(records, countsAs)
     result.set(studentId, { studentId, ...counts })
   }
   return result
@@ -184,8 +193,9 @@ export function getClassReport(classId: string): ClassReport | null {
   })
 
   const recordsByDate = groupBy(listAttendanceByClass(classId), (r) => r.date)
+  const countsAs = schoolCountsAs()
   const attendanceTrend = Array.from(recordsByDate.entries())
-    .map(([date, records]) => ({ date, rate: computeAttendanceCounts(records).rate }))
+    .map(([date, records]) => ({ date, rate: computeAttendanceCounts(records, countsAs).rate }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
   const attendanceRates = attendanceTrend.map((t) => t.rate).filter((r): r is number => r !== null)

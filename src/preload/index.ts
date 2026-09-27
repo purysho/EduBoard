@@ -358,13 +358,13 @@ const api: EduBoardApi = {
   }
 }
 
-// The interface language, fetched synchronously so it's known before any screen code
-// runs (src/renderer/src/i18nInit.ts).
-const uiLanguage: string = ipcRenderer.sendSync('i18n:language')
+// The interface language and the school's words, fetched synchronously so they're known
+// before any screen code runs (src/renderer/src/i18nInit.ts).
+const uiPrefs: unknown = ipcRenderer.sendSync('i18n:prefs')
 
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('eduboardLanguage', uiLanguage)
+    contextBridge.exposeInMainWorld('eduboardUiPrefs', uiPrefs)
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
   } catch (error) {
@@ -376,5 +376,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
   // @ts-ignore (define in dts)
-  window.eduboardLanguage = uiLanguage
+  window.eduboardUiPrefs = uiPrefs
 }

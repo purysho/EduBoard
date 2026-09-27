@@ -6,8 +6,18 @@ import { recordAudit } from './auditLog'
 import type { AttendanceRecord } from '@shared/types'
 import type { MarkAttendanceInput } from '@shared/inputs'
 import { tr } from '@shared/i18n'
+import { resolveAttendanceCodes } from '@shared/attendanceCodes'
+import { getSettings } from './settingsRepo'
 
 export type { MarkAttendanceInput }
+
+/** A code's name as the school calls it, for the audit log. */
+function codeLabel(status: string): string {
+  return (
+    resolveAttendanceCodes(getSettings().attendanceCodes).find((c) => c.id === status)?.label ??
+    status
+  )
+}
 
 export function listAttendanceByClass(classId: string): AttendanceRecord[] {
   return getDb()
@@ -44,7 +54,11 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
     .get() as AttendanceRecord | undefined
 
   if (existing) {
-    const patch = { status: input.status, note: input.note ?? existing.note }
+    // A note left out keeps the old one; null clears it.
+    const patch = {
+      status: input.status,
+      note: input.note === undefined ? existing.note : input.note
+    }
     db.update(attendanceRecords).set(patch).where(eq(attendanceRecords.id, existing.id)).run()
     if (patch.status !== existing.status) {
       recordAudit({
@@ -53,7 +67,7 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
         action: 'update',
         summary: tr('Attendance on {date} changed to “{status}”', {
           date: input.date,
-          status: tr(patch.status ?? '')
+          status: codeLabel(patch.status)
         }),
         studentId: input.studentId,
         classId: input.classId
@@ -78,7 +92,7 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
     action: 'create',
     summary: tr('Attendance on {date} marked “{status}”', {
       date: input.date,
-      status: tr(input.status)
+      status: codeLabel(input.status)
     }),
     studentId: input.studentId,
     classId: input.classId

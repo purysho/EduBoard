@@ -88,6 +88,7 @@ export function SchoolPackPanel(): React.JSX.Element {
                     trn('Imported: {n} change.', 'Imported: {n} changes.', r.changes.length)
                   )
                   setPreview(null)
+                  if (r.reload) location.reload()
                   await qc.invalidateQueries()
                 } catch (err) {
                   setMessage(ipcErrorMessage(err, tr('The school pack couldn’t be imported.')))

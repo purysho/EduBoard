@@ -13,10 +13,24 @@ import {
   type BankComment,
   type CommentCategory
 } from '@shared/commentBank'
+import {
+  BUILT_IN_STATUSES,
+  attendanceCodeProblem,
+  newAttendanceCodeId,
+  resolveAttendanceCodes,
+  type AttendanceCode
+} from '@shared/attendanceCodes'
+import type { AttendanceStatus } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
-import { tr } from '@shared/i18n'
+import {
+  RENAMEABLE_WORDS,
+  tr,
+  uiLanguage,
+  type RenameableWord,
+  type Terminology
+} from '@shared/i18n'
 
 const TYPE_LABELS: Record<StudentLogType, string> = {
   note: tr('Note'),
@@ -35,15 +49,31 @@ export function ListsPanel(): React.JSX.Element | null {
   const [quick, setQuick] = useState<LogQuickAdd[] | null>(null)
   const [fields, setFields] = useState<StudentField[] | null>(null)
   const [bank, setBank] = useState<BankComment[] | null>(null)
+  const [codes, setCodes] = useState<AttendanceCode[] | null>(null)
+  const [words, setWords] = useState<Terminology | null>(null)
   if (!settings) return null
+  // Built-ins first (blank label/letter means the usual one), then the school's own.
+  const savedCodes = settings.attendanceCodes ?? []
+  const c = codes ?? [
+    ...BUILT_IN_STATUSES.map(
+      (s) => savedCodes.find((x) => x.id === s) ?? { id: s, label: '', letter: '', countsAs: s }
+    ),
+    ...savedCodes.filter((x) => !(BUILT_IN_STATUSES as readonly string[]).includes(x.id))
+  ]
+  const defaults = resolveAttendanceCodes([])
+  const w = words ?? settings.terminology ?? {}
+  const lang = uiLanguage()
+  const codeProblem = attendanceCodeProblem(c)
   const q = quick ?? settings.logQuickAdds
   const f = fields ?? settings.studentFields
   const b = bank ?? settings.commentBank
-  const dirty = quick !== null || fields !== null || bank !== null
+  const dirty =
+    quick !== null || fields !== null || bank !== null || codes !== null || words !== null
   const valid =
     q.every((x) => x.label.trim() && x.text.trim()) &&
     f.every((x) => x.label.trim()) &&
-    b.every((x) => x.text.trim())
+    b.every((x) => x.text.trim()) &&
+    !codeProblem
 
   return (
     <Card>
@@ -233,6 +263,144 @@ export function ListsPanel(): React.JSX.Element | null {
           </div>
         </section>
 
+        <section>
+          <h3 className="font-medium">{tr('Attendance codes')}</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'Rename the four codes, or add your own (Sick, Field trip, School event…). Each counts as one of the four, so attendance rates stay right. A code you stop using is hidden, not deleted, so days already marked with it keep counting the same way.'
+            )}
+          </p>
+          <div className="space-y-1.5">
+            {c.map((code, i) => {
+              const builtIn = (BUILT_IN_STATUSES as readonly string[]).includes(code.id)
+              const usual = defaults.find((d) => d.id === code.id)
+              const set = (patch: Partial<AttendanceCode>): void =>
+                setCodes(c.map((x, j) => (j === i ? { ...x, ...patch } : x)))
+              return (
+                <div
+                  key={code.id}
+                  className={`flex items-center gap-2 ${code.hidden ? 'opacity-50' : ''}`}
+                >
+                  <input
+                    aria-label={tr('Code name')}
+                    className={`${inputClass} w-44`}
+                    value={code.label}
+                    placeholder={usual?.label ?? tr('e.g. Sick')}
+                    onChange={(e) => set({ label: e.target.value })}
+                  />
+                  <input
+                    aria-label={tr('Short form')}
+                    className={`${inputClass} w-14 text-center`}
+                    value={code.letter}
+                    placeholder={usual?.letter ?? ''}
+                    maxLength={2}
+                    onChange={(e) => set({ letter: e.target.value })}
+                  />
+                  <span className="text-xs text-[var(--color-text-muted)]">{tr('counts as')}</span>
+                  <select
+                    aria-label={tr('Counts as')}
+                    className={inputClass}
+                    value={code.countsAs}
+                    disabled={builtIn}
+                    onChange={(e) => set({ countsAs: e.target.value as AttendanceStatus })}
+                  >
+                    {BUILT_IN_STATUSES.map((st) => (
+                      <option key={st} value={st}>
+                        {defaults.find((d) => d.id === st)?.label}
+                      </option>
+                    ))}
+                  </select>
+                  {!builtIn && (
+                    <button
+                      className="text-xs text-[var(--color-text-muted)] hover:underline"
+                      onClick={() => set({ hidden: !code.hidden })}
+                    >
+                      {code.hidden ? tr('Use again') : tr('Stop using')}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <button
+            className="mt-2 flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"
+            onClick={() =>
+              setCodes([
+                ...c,
+                { id: newAttendanceCodeId(), label: '', letter: '', countsAs: 'excused' }
+              ])
+            }
+          >
+            <Plus size={12} aria-hidden />
+            {tr('Add a code')}
+          </button>
+          {codes !== null && codeProblem && (
+            <p className="mt-1 text-xs text-[var(--color-danger)]">{codeProblem}</p>
+          )}
+        </section>
+
+        <section>
+          <h3 className="font-medium">{tr('Words EduBoard uses')}</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'If your school says “section” instead of “class”, or “test” instead of “assessment”, type your words and EduBoard uses them everywhere. Leave a box empty to keep the usual word. This changes the words for the language EduBoard is in now.'
+            )}
+          </p>
+          <div className="space-y-1.5">
+            {(Object.keys(RENAMEABLE_WORDS) as RenameableWord[]).map((key) => {
+              const usual = RENAMEABLE_WORDS[key]
+              return lang === 'zh' ? (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-24 text-xs text-[var(--color-text-muted)]">{usual.zh}</span>
+                  <input
+                    aria-label={tr('Your word for “{word}”', { word: usual.zh })}
+                    className={`${inputClass} w-44`}
+                    placeholder={usual.zh}
+                    value={w.zh?.[key] ?? ''}
+                    onChange={(e) => setWords({ ...w, zh: { ...w.zh, [key]: e.target.value } })}
+                  />
+                </div>
+              ) : (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-24 text-xs text-[var(--color-text-muted)]">
+                    {usual.en[0]} / {usual.en[1]}
+                  </span>
+                  <input
+                    aria-label={tr('Your word for “{word}”', { word: usual.en[0] })}
+                    className={`${inputClass} w-36`}
+                    placeholder={usual.en[0]}
+                    value={w.en?.[key]?.one ?? ''}
+                    onChange={(e) =>
+                      setWords({
+                        ...w,
+                        en: {
+                          ...w.en,
+                          [key]: { one: e.target.value, other: w.en?.[key]?.other ?? '' }
+                        }
+                      })
+                    }
+                  />
+                  <input
+                    aria-label={tr('Plural of your word for “{word}”', { word: usual.en[0] })}
+                    className={`${inputClass} w-36`}
+                    placeholder={usual.en[1]}
+                    value={w.en?.[key]?.other ?? ''}
+                    onChange={(e) =>
+                      setWords({
+                        ...w,
+                        en: {
+                          ...w.en,
+                          [key]: { one: w.en?.[key]?.one ?? '', other: e.target.value }
+                        }
+                      })
+                    }
+                  />
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
         <div className="flex gap-2">
           <Button
             variant="primary"
@@ -242,8 +410,17 @@ export function ListsPanel(): React.JSX.Element | null {
               await update.mutateAsync({
                 logQuickAdds: q.map((x) => ({ ...x, label: x.label.trim(), text: x.text.trim() })),
                 studentFields: f.map((x) => ({ ...x, label: x.label.trim() })),
-                commentBank: b.map((x) => ({ ...x, text: x.text.trim() }))
+                commentBank: b.map((x) => ({ ...x, text: x.text.trim() })),
+                attendanceCodes: c.map((x) => ({
+                  ...x,
+                  label: x.label.trim(),
+                  letter: x.letter.trim()
+                })),
+                ...(words !== null ? { terminology: words } : {})
               })
+              setCodes(null)
+              // Labels are worked out when a screen's code loads, so new words need a reload.
+              if (words !== null) location.reload()
               setQuick(null)
               setFields(null)
               setBank(null)
@@ -259,6 +436,8 @@ export function ListsPanel(): React.JSX.Element | null {
                 setQuick(null)
                 setFields(null)
                 setBank(null)
+                setCodes(null)
+                setWords(null)
               }}
             >
               {tr('Undo changes')}

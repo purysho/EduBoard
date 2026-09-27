@@ -92,7 +92,9 @@ export function AttendanceTab(): React.JSX.Element {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-muted)]">
-          {tr('Click a cell to cycle Present → Late → Absent → Excused.')}
+          {tr(
+            'Click a cell to step through the codes (Present → Late → Absent → Excused, then your own). Right-click to pick any code or add a note.'
+          )}
         </p>
         <div className="flex items-center gap-2">
           <div className="w-80">

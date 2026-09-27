@@ -91,7 +91,8 @@ import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
 import { getTodayOverview, getWatchList } from '../services/today'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
-import { saveUiLanguage } from '../i18n'
+import { saveUiPrefs } from '../i18n'
+import { resolveAttendanceCodes } from '@shared/attendanceCodes'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -316,12 +317,20 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.attendance.listByStudentAndClass, (_e, studentId: string, classId: string) =>
     attendanceRepo.listAttendanceByStudentAndClass(studentId, classId)
   )
-  handle(IpcChannels.attendance.mark, (_e, input: attendanceRepo.MarkAttendanceInput) =>
-    attendanceRepo.markAttendance(input)
-  )
-  handle(IpcChannels.attendance.markBulk, (_e, inputs: attendanceRepo.MarkAttendanceInput[]) =>
-    attendanceRepo.markAttendanceBulk(inputs)
-  )
+  // Only codes this school has: a built-in status or one of its own.
+  const checkAttendanceCode = (status: unknown): void => {
+    const known = resolveAttendanceCodes(settingsRepo.getSettings().attendanceCodes)
+    if (!known.some((c) => c.id === status))
+      throw new Error(tr('That attendance code doesn’t exist.'))
+  }
+  handle(IpcChannels.attendance.mark, (_e, input: attendanceRepo.MarkAttendanceInput) => {
+    checkAttendanceCode(input?.status)
+    return attendanceRepo.markAttendance(input)
+  })
+  handle(IpcChannels.attendance.markBulk, (_e, inputs: attendanceRepo.MarkAttendanceInput[]) => {
+    for (const input of inputs ?? []) checkAttendanceCode(input?.status)
+    return attendanceRepo.markAttendanceBulk(inputs)
+  })
 
   // --- Attendance QR check-in ----------------------------------------------------------------
   handle(IpcChannels.attendanceCheckIn.getStatus, (_e, classId: string) =>
@@ -405,8 +414,12 @@ export function registerIpcHandlers(): void {
   // --- Settings -----------------------------------------------------------------------------
   handle(IpcChannels.settings.get, () => settingsRepo.getSettings())
   handle(IpcChannels.settings.update, (_e, patch) => {
-    if (patch && 'uiLanguage' in patch)
-      saveUiLanguage(patch.uiLanguage === 'zh' || patch.uiLanguage === 'en' ? patch.uiLanguage : '')
+    if (patch && 'uiLanguage' in patch) {
+      saveUiPrefs({
+        language: patch.uiLanguage === 'zh' || patch.uiLanguage === 'en' ? patch.uiLanguage : ''
+      })
+    }
+    if (patch && 'terminology' in patch) saveUiPrefs({ terminology: patch.terminology ?? {} })
     return settingsRepo.updateSettings(patch)
   })
   handle(IpcChannels.settings.appUpdateInfo, () => getAppUpdateInfo())
@@ -786,7 +799,9 @@ export function registerIpcHandlers(): void {
     if (Object.keys(plan.settings).length) settingsRepo.updateSettings(plan.settings)
     let order = existing.reduce((max, t) => Math.max(max, t.sortOrder), 0)
     for (const t of plan.newTerms) termsRepo.createTerm({ ...t, sortOrder: ++order })
-    return { changes: plan.changes }
+    if (plan.settings.terminology) saveUiPrefs({ terminology: plan.settings.terminology })
+    // New words only show once screens reload.
+    return { changes: plan.changes, reload: !!plan.settings.terminology }
   })
   handle(IpcChannels.schoolPack.importCss, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({

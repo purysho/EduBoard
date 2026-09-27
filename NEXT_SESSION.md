@@ -56,11 +56,10 @@ built since 0.3.3).
    - Language is set before any screen code runs (preload → i18nInit.ts) and a
      switch reloads the window, so module-level `tr()` is fine. The main process
      uses the same `tr` (set in `src/main/i18n.ts`).
-2. **Own attendance codes** (and a comment on a code if needed), and **renaming
-   terms** such as "class" and "assessment". Attendance statuses are currently
-   fixed (present/absent/late/excused); make a list in settings (code, label,
-   colour, counts-as present/absent) and keep reports/attendance % right. Terminology
-   renames should go through the same `t()` layer as item 1. Both go in school packs.
+2. ~~Own attendance codes and renamed terms~~ **done**: `src/shared/attendanceCodes.ts`
+   (codes count as one of the four built-ins; records store the code id) and
+   `setTerminology()` in `src/shared/i18n` (applied inside tr(); the words live in
+   settings and in ui-prefs.json beside the database for startup).
 3. ~~Portal: delete one student~~ **done** (`POST /api/sync/delete-student`).
 4. ~~Start next term for every class at once~~ **done** (Classes page).
 5. **Templates for each section**: report cards, comment bank sets, parent

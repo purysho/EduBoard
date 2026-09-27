@@ -376,7 +376,7 @@ export interface EduBoardApi {
     /** Asks for a pack file and lists what importing it would change (nothing applied). */
     preview(): Promise<{ filePath: string; changes: string[] } | null>
     /** Applies the pack at filePath (read and checked again, not trusted from preview). */
-    apply(filePath: string): Promise<{ changes: string[] }>
+    apply(filePath: string): Promise<{ changes: string[]; reload?: boolean }>
     /** Asks for a .css file and saves it, cleaned, as the school stylesheet. */
     importCss(): Promise<boolean>
   }

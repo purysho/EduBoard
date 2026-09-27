@@ -2,7 +2,8 @@ import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { initDb } from './db/client'
 import { registerIpcHandlers } from './ipc/register'
-import { initUiLanguage } from './i18n'
+import { initUiLanguage, syncUiPrefsWithSettings } from './i18n'
+import { getSettings } from './repositories/settingsRepo'
 import { createMainWindow } from './windows'
 import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
@@ -23,6 +24,10 @@ app.whenReady().then(() => {
 
   // Everything that needs the database open.
   const startWithDatabase = (): void => {
+    // The language and the school's words may differ in this database (a restore, say).
+    if (syncUiPrefsWithSettings(getSettings())) {
+      for (const win of BrowserWindow.getAllWindows()) win.webContents.reload()
+    }
     createAutoBackupOnLaunch()
     // An update downloaded last session installs now, before anything else opens;
     // EduBoard then reopens as the new version.
