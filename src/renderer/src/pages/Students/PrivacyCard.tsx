@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Download, Eraser, ShieldAlert } from 'lucide-react'
 import type { Student } from '@shared/types'
+import type { PortalRemoval } from '@shared/api'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
@@ -71,7 +72,7 @@ function EraseStudentModal({
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ olderBackups: number } | null>(null)
+  const [done, setDone] = useState<{ olderBackups: number; portal: PortalRemoval } | null>(null)
   const matches = typed.trim().toLowerCase() === name.trim().toLowerCase()
 
   function close(): void {
@@ -108,7 +109,7 @@ function EraseStudentModal({
                 setError(null)
                 try {
                   const r = await window.api.students.erase(student.id)
-                  setDone({ olderBackups: r.olderBackups })
+                  setDone({ olderBackups: r.olderBackups, portal: r.portal })
                 } catch (err) {
                   setError(ipcErrorMessage(err, 'Nothing was erased.'))
                 } finally {
@@ -125,6 +126,15 @@ function EraseStudentModal({
       {done ? (
         <div className="space-y-2 text-sm">
           <p>Everything EduBoard held about {name} on this computer has been erased.</p>
+          {done.portal === 'removed' && (
+            <p>Their Portal login, handed-in work and profile have been removed too.</p>
+          )}
+          {done.portal === 'queued' && (
+            <p className="text-[var(--color-warning)]">
+              The Portal couldn’t be reached, so their Portal login and work will be removed the
+              next time you publish.
+            </p>
+          )}
           {done.olderBackups > 0 && (
             <p className="text-[var(--color-text-muted)]">
               {done.olderBackups} {done.olderBackups === 1 ? 'backup' : 'backups'} made before now
@@ -137,7 +147,8 @@ function EraseStudentModal({
         <div className="space-y-3 text-sm">
           <p>
             This removes {name} and every record about them: enrollments, grades, attendance, notes,
-            parent contacts, exit ticket answers, seats and their history in the audit log.{' '}
+            parent contacts, exit ticket answers, seats and their history in the audit log, and on
+            the Portal their login, handed-in work, profile and Study Helper history.{' '}
             <strong>No backup is taken and it can’t be undone.</strong> Use{' '}
             <em>Download their data</em> first if they asked for a copy.
           </p>

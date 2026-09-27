@@ -155,7 +155,7 @@ export function StudentProfilePage(): React.JSX.Element {
       <ConfirmDialog
         open={confirmDelete}
         title="Delete student"
-        message={`Delete ${studentFullName(student)}? This also removes their enrollments, scores, and attendance history. This can't be undone.`}
+        message={`Delete ${studentFullName(student)}? This also removes their enrollments, scores, and attendance history, and their Portal login and handed-in work. This can't be undone.`}
         confirmLabel="Delete"
         danger
         onConfirm={async () => {

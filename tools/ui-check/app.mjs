@@ -1,3 +1,5 @@
+// Dev-only script for driving the built app with Playwright (see NEXT_SESSION.md).
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 // Launch the built EduBoard (dev data dir: <repo>/data) under Playwright's Electron driver.
 import { _electron as electron } from 'playwright'
 export async function launch() {

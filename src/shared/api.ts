@@ -118,18 +118,22 @@ import type {
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 
+/** What happened on the Portal when a student was deleted here. */
+export type PortalRemoval = 'removed' | 'queued' | 'no-portal'
+
 export interface EduBoardApi {
   students: {
     list(includeArchived?: boolean): Promise<Student[]>
     create(input: CreateStudentInput): Promise<Student>
     update(id: string, patch: UpdateStudentInput): Promise<Student>
-    remove(id: string): Promise<void>
+    /** Also removes them from the Portal, or queues that for the next publish. */
+    remove(id: string): Promise<PortalRemoval>
     /** Folds duplicateId into keepId here and on the Portal (login included). */
     merge(keepId: string, duplicateId: string): Promise<Student>
     /** Everything held about the student, saved as a JSON file the teacher chooses. */
     exportData(id: string): Promise<{ saved: boolean; filePath?: string }>
     /** Removes every record of the student for good (no backup, no audit trail). */
-    erase(id: string): Promise<{ rowsErased: number; olderBackups: number }>
+    erase(id: string): Promise<{ rowsErased: number; olderBackups: number; portal: PortalRemoval }>
   }
   terms: {
     list(): Promise<Term[]>

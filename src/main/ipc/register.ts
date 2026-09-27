@@ -80,6 +80,7 @@ import {
   resetPortalPassword,
   getPortalProfile,
   mergeStudentsEverywhere,
+  removeStudentFromPortal,
   listPortalResetRequests,
   answerPortalResetRequest,
   getPublishStatus
@@ -163,6 +164,7 @@ export function registerIpcHandlers(): void {
     // this backup (plus the audit trail's 12-month soft-delete window) is the way back.
     backupService.createBackup()
     studentsRepo.deleteStudent(id)
+    return removeStudentFromPortal(id)
   })
   handle(IpcChannels.students.exportData, async (_e, id: string) => {
     const data = exportStudentData(id)
@@ -178,7 +180,10 @@ export function registerIpcHandlers(): void {
     await writeFile(filePath, JSON.stringify(data, null, 2))
     return { saved: true, filePath }
   })
-  handle(IpcChannels.students.erase, (_e, id: string) => eraseStudent(id))
+  handle(IpcChannels.students.erase, async (_e, id: string) => {
+    const result = eraseStudent(id)
+    return { ...result, portal: await removeStudentFromPortal(id) }
+  })
   handle(IpcChannels.students.merge, (_e, keepId: string, duplicateId: string) => {
     // Merging removes a student record too, so it gets the same recovery point.
     backupService.createBackup()

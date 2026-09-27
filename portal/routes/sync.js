@@ -485,6 +485,67 @@ router.post('/merge-students', (req, res) => {
   res.json({ ok: true, moved: true })
 })
 
+// The teacher deleted or erased a student in the desktop app. Everything the Portal
+// holds about them goes: roster row, enrollments, grades, handed-in work and its files,
+// answers, Study Helper history, profile and photo, personal invites, and their login
+// if no other student is linked to it. A publish alone only
+// replaced the roster row, so the login and work stayed behind, and a student who had
+// joined through a class link came straight back on the next "new students" check.
+// Once a publish has already removed the roster row, nobody owns what's left, so the
+// rest is removed for whichever teacher asks; a student of another teacher is refused.
+router.post('/delete-student', (req, res) => {
+  const { studentId } = req.body || {}
+  if (typeof studentId !== 'string' || !studentId) {
+    return res.status(400).json({ error: 'studentId is required' })
+  }
+  const row = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
+  if (row && row.teacher_id !== req.teacherId) {
+    return res.status(403).json({ error: 'Not your student' })
+  }
+
+  const files = []
+  for (const r of db
+    .prepare('SELECT file_path AS f FROM homework_submissions WHERE student_id = ?')
+    .all(studentId)) {
+    if (r.f) files.push(path.join(SUBMISSIONS_DIR, r.f))
+  }
+  const photo = db
+    .prepare('SELECT photo_file AS f FROM student_profiles WHERE student_id = ?')
+    .get(studentId)
+  if (photo?.f) files.push(path.join(PROFILE_PHOTOS_DIR, photo.f))
+
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+    .all()
+    .map((t) => t.name)
+    .filter((name) => name !== 'students')
+    .filter((name) =>
+      db
+        .prepare(`PRAGMA table_info("${name}")`)
+        .all()
+        .some((c) => c.name === 'student_id')
+    )
+  let removed = 0
+  db.transaction(() => {
+    const accountIds = db
+      .prepare('SELECT account_id FROM account_students WHERE student_id = ?')
+      .all(studentId)
+      .map((r) => r.account_id)
+    for (const table of tables) {
+      removed += db.prepare(`DELETE FROM "${table}" WHERE student_id = ?`).run(studentId).changes
+    }
+    removed += db.prepare('DELETE FROM students WHERE id = ?').run(studentId).changes
+    // A login left with no student was theirs alone; its messages, QR logins and reset
+    // requests go with it.
+    const orphaned = db.prepare(
+      'DELETE FROM accounts WHERE id = ? AND NOT EXISTS (SELECT 1 FROM account_students WHERE account_id = ?)'
+    )
+    for (const id of accountIds) removed += orphaned.run(id, id).changes
+  })()
+  for (const file of files) fs.rmSync(file, { force: true })
+  res.json({ ok: true, removed })
+})
+
 // True for a homework assignment that belongs to one of this teacher's own classes —
 // checked before any submission-grading action touches it, so a valid sync secret for
 // teacher A can never read or grade teacher B's students' work.

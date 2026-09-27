@@ -22,6 +22,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 - **Exit tickets: names from the class list.** Students pick their name instead of typing it, a second answer replaces their first, and the session shows who hasn't answered yet. A session can close itself after 5, 10, 15 or 30 minutes.
 - **Automatic updates.** A new version downloads in the background while you work and installs the next time you open EduBoard, after the usual launch backup; a small window says so and EduBoard reopens by itself. While it waits, a banner says it's ready, and an update icon at the top of the sidebar and a dot on Settings stay until it's installed. **Restart and update now** in Settings installs it straight away. Turn it off in Settings → *Install updates automatically* to update only by hand. If an automatic install ever doesn't finish, EduBoard doesn't retry on every launch; it waits for you to install from Settings.
 
+### Fixed
+
+- **Deleting a student now removes them from the Portal too.** Before, a publish only took their name off the roster: their login still worked, their handed-in work, profile and Study Helper history stayed on the server, and a student who had joined through a class link came back on the next publish. Deleting or erasing a student now removes all of that from the Portal at once, or, if the Portal can't be reached, the next time you publish. The Portal needs updating (Update-Live-Portal) for this.
+
 ### Changed
 
 - **AI and report comments:** instead of drafting whole comments, AI now suggests a few short phrases (needs internet), each labelled with what it's based on (grade, trend, attendance or notes), for the teacher to add and edit. Replies that aren't short, grounded phrases are refused rather than shown.

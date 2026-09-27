@@ -92,6 +92,7 @@ function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } 
 /** Publishes, then brings in any students who joined through a class link (and
  * publishes once more, so the Portal knows the desktop now has them). */
 export async function publishToPortal(): Promise<PublishResult> {
+  await sendPendingStudentDeletes()
   const result = await publishOnce()
   if (result.outdatedServer) return { ...result, studentsJoined: 0 }
   const studentsJoined = await importNewStudentsFromPortal()
@@ -380,6 +381,62 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   return { attachmentsUploaded, materialsUploaded, skipped, outdatedServer: false }
 }
 
+const PENDING_DELETES_KEY = 'portal_pending_student_deletes'
+
+function pendingStudentDeletes(): string[] {
+  return getStoredValue<string[]>(PENDING_DELETES_KEY) ?? []
+}
+
+/** Removes a student deleted or erased here from the Portal too: their roster place,
+ * login, handed-in work, profile and Study Helper history. If the Portal can't be
+ * reached (or is too old to do it), the id is kept and sent before the next publish,
+ * and until then a class-link joiner with that id isn't imported again. */
+export async function removeStudentFromPortal(
+  studentId: string
+): Promise<'removed' | 'queued' | 'no-portal'> {
+  try {
+    requirePortalConfig()
+  } catch (err) {
+    if (err instanceof PortalNotConfiguredError) return 'no-portal'
+    throw err
+  }
+  setStoredValue(PENDING_DELETES_KEY, [
+    ...pendingStudentDeletes().filter((id) => id !== studentId),
+    studentId
+  ])
+  try {
+    await sendPendingStudentDeletes()
+  } catch (err) {
+    console.error('Removing a student from the Portal failed; will retry:', err)
+  }
+  return pendingStudentDeletes().includes(studentId) ? 'queued' : 'removed'
+}
+
+/** Sends each queued deletion; each one that succeeds leaves the queue. A Portal from
+ * before this feature (404) keeps them queued without failing the publish. */
+async function sendPendingStudentDeletes(): Promise<void> {
+  const queue = pendingStudentDeletes()
+  if (!queue.length) return
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  for (const studentId of queue) {
+    const res = await fetch(`${portalUrl}/api/sync/delete-student`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+      body: JSON.stringify({ studentId })
+    })
+    if (res.status === 404) return
+    // 403: the Portal says another teacher has this student there, so there's
+    // nothing of ours left to remove.
+    if (!res.ok && res.status !== 403) {
+      throw await portalFailure('Removing a student from the Portal failed', res)
+    }
+    setStoredValue(
+      PENDING_DELETES_KEY,
+      pendingStudentDeletes().filter((id) => id !== studentId)
+    )
+  }
+}
+
 /** Adds students who joined through a Portal class link to this computer's roster, under
  * the Portal's ids. Returns how many were new here. Safe to call repeatedly. */
 export async function importNewStudentsFromPortal(): Promise<number> {
@@ -398,8 +455,11 @@ export async function importNewStudentsFromPortal(): Promise<number> {
     classIds: string[]
   }[]
   const localClassIds = new Set(listClasses(true).map((c) => c.id))
+  // Deleted here but not yet removed there: don't bring them back.
+  const deleted = new Set(pendingStudentDeletes())
   let added = 0
   for (const row of rows) {
+    if (deleted.has(row.id)) continue
     if (importStudentFromPortal(row)) added++
     const enrolledIn = new Set(listEnrollmentsByStudent(row.id).map((e) => e.classId))
     for (const classId of row.classIds) {

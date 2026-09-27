@@ -379,7 +379,7 @@ Press the **projector icon** at the top of the sidebar before putting EduBoard o
 On a student's page, **Their data** has two buttons:
 
 - **Download their data** saves everything EduBoard holds about the student (their details and every record that refers to them) as a file you can pass on.
-- **Erase all their data…** removes the student and every record about them, including their history in the audit log, and rewrites the database file so nothing is left in it. Unlike **Delete**, it takes no backup first and can't be undone; type the student's name to confirm. Backups made before then still contain the student until they're replaced or you delete them. A Portal account, and work handed in on the Portal, stay on the Portal server.
+- **Erase all their data…** removes the student and every record about them, including their history in the audit log, and rewrites the database file so nothing is left in it. Unlike **Delete**, it takes no backup first and can't be undone; type the student's name to confirm. Backups made before then still contain the student until they're replaced or you delete them. If you use the Portal, **Delete** and **Erase** also remove the student there: their login, handed-in work, profile and Study Helper history. If the Portal can't be reached at that moment, it happens the next time you publish.
 
 ## Backing up your data
 
