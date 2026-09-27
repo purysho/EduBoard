@@ -4,6 +4,8 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-09-27
+
 **If you run a Portal, update it** (Update-Live-Portal): read receipts, class points in the digest and the usage count need the updated Portal.
 
 ### Added

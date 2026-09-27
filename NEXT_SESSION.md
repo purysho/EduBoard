@@ -9,12 +9,14 @@ built since the last release).
 
 - Repo `purysho/EduBoard`, branch **`main`**. Commit and push straight to `main`
   (the user asked for this). No PRs unless asked.
-- **0.4.0 released 2026-09-27** (tag `v0.4.0`; the Release workflow builds Windows,
-  Mac and Linux and publishes to GitHub Releases, which is where the in-app updater
-  looks). Anything new goes under `## [Unreleased]` in `CHANGELOG.md`. To release
+- **0.5.0 released 2026-09-27** (tag `v0.5.0`; 0.4.0 the same day). The Release
+  workflow builds Windows, Mac and Linux and publishes to GitHub Releases, which is
+  where the in-app updater looks (through the teacher's Portal when one is set up, so
+  it works from mainland China). Anything new goes under `## [Unreleased]` in `CHANGELOG.md`. To release
   again: `npm version X.Y.Z --no-git-tag-version` (also updates
   `portal/desktop-version.json`), move the changelog section, commit, push `main`,
-  then `git push origin vX.Y.Z`.
+  then start Actions → Release → Run workflow on `main` (this environment can't push
+  tags; the workflow makes the tag from package.json).
 - Commits end with the Co-Authored-By / Claude-Session lines the harness gives you.
   No model names in commits.
 

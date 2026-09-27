@@ -13,7 +13,7 @@ families logins, homework hand-in, a Class Story and a weekly digest email. AI i
 only to _suggest_ (short report-comment phrases, newsletter wording) and every AI button
 says it needs internet; nothing AI-written goes out unchecked.
 
-**What's built (v0.4.0, plus unreleased work since):** over 160 commits, 60 test files and
+**What's built (v0.5.0):** over 160 commits, 60 test files and
 337 desktop tests plus 144 Portal tests, a Windows installer, macOS and Linux builds and
 auto-update. Every screen and printout is in Chinese and English, with an encrypted
 database and app lock. Also built:
