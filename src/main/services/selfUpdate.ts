@@ -256,6 +256,9 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
   writePending(dir, { ...pending, attempts: pending.attempts + 1 })
   progress = { phase: 'installing', fraction: 1, error: null }
   const win = showUpdatingWindow(pending.version)
+  // With password protection the main window is already open (it was the lock screen).
+  const others = BrowserWindow.getAllWindows().filter((w) => w !== win)
+  for (const w of others) w.hide()
   let started = false
   const start = (): void => {
     if (started) return
@@ -269,6 +272,7 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
       console.error('[eduboard] Installing the waiting update failed:', err)
       progress = { phase: 'idle', fraction: 0, error: null }
       if (!win.isDestroyed()) win.close()
+      for (const w of others) if (!w.isDestroyed()) w.show()
       openNormally()
     }
   }

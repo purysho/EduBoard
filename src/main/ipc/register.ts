@@ -85,6 +85,7 @@ import {
   getPublishStatus
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
+import * as security from '../services/security'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
@@ -95,7 +96,13 @@ import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
-  ipcMain.handle(channel, (event, ...args) => fn(event, ...args))
+  ipcMain.handle(channel, (event, ...args) => {
+    // Behind the lock screen the window may only ask about, and try to open, the lock.
+    if (!channel.startsWith('security:') && security.isLocked()) {
+      throw new Error('EduBoard is locked.')
+    }
+    return fn(event, ...args)
+  })
 }
 
 /** The hidden print window created for printToPDF is never a valid dialog owner (it's
@@ -617,6 +624,27 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Exit tickets -----------------------------------------------------------------------
+  // --- Password protection --------------------------------------------------------------
+  handle(IpcChannels.security.status, () => security.getSecurityStatus())
+  handle(IpcChannels.security.unlock, (_e, secret: string) => security.unlock(String(secret)))
+  handle(IpcChannels.security.lock, () => security.lockNow())
+  handle(IpcChannels.security.enable, (_e, password: string) => {
+    backupService.createBackup() // a copy from just before, in case anything goes wrong
+    const result = security.enableProtection(String(password))
+    backupService.createBackup() // and a protected one straight after
+    return result
+  })
+  handle(IpcChannels.security.changePassword, (_e, current: string, next: string) =>
+    security.changePassword(String(current), String(next))
+  )
+  handle(IpcChannels.security.disable, (_e, password: string) =>
+    security.disableProtection(String(password))
+  )
+  handle(IpcChannels.security.unprotectedBackups, () => backupService.listUnprotectedBackups())
+  handle(IpcChannels.security.deleteUnprotectedBackups, () =>
+    backupService.deleteUnprotectedBackups()
+  )
+
   handle(IpcChannels.exitTickets.getByClass, (_e, classId: string) =>
     exitTicketsRepo.getExitTicketByClass(classId)
   )

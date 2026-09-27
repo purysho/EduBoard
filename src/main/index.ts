@@ -7,6 +7,7 @@ import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/back
 import { checkAndRecordDeviceSync } from './services/deviceSync'
 import { stopExitTicketServer } from './services/exitTicketServer'
 import { purgeOldDeletedAuditEntries } from './repositories/auditLog'
+import { isProtected, startAutoLock, whenFirstUnlocked } from './services/security'
 import { installPendingUpdateOnLaunch, startAutomaticUpdateChecks } from './services/selfUpdate'
 
 app.whenReady().then(() => {
@@ -16,19 +17,38 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  initDb()
-  createAutoBackupOnLaunch()
-  const openApp = (): void => {
+  registerIpcHandlers()
+
+  // Everything that needs the database open.
+  const startWithDatabase = (): void => {
+    createAutoBackupOnLaunch()
+    // An update downloaded last session installs now, before anything else opens;
+    // EduBoard then reopens as the new version.
+    const installing = installPendingUpdateOnLaunch(() => {
+      if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+      carryOn()
+    })
+    if (installing) return
+    if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+    carryOn()
+  }
+  const carryOn = (): void => {
     startDailyAutoBackups()
     purgeOldDeletedAuditEntries()
     checkAndRecordDeviceSync()
-    registerIpcHandlers()
-    createMainWindow()
     startAutomaticUpdateChecks()
+    startAutoLock()
   }
-  // An update downloaded last session installs now, before anything else opens; EduBoard
-  // then reopens as the new version.
-  if (!installPendingUpdateOnLaunch(openApp)) openApp()
+
+  if (isProtected()) {
+    // Password protection: the window opens on the lock screen, and the rest of startup
+    // waits until the database is unlocked.
+    whenFirstUnlocked(startWithDatabase)
+    createMainWindow()
+  } else {
+    initDb()
+    startWithDatabase()
+  }
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

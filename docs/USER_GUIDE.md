@@ -21,6 +21,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Students using AI](#students-using-ai)
 - [Student logs and parent communications](#student-logs-and-parent-communications)
 - [Reports and report cards](#reports-and-report-cards)
+- [Password protection](#password-protection)
 - [Backing up your data](#backing-up-your-data)
 - [Carrying EduBoard on a USB stick](#carrying-eduboard-on-a-usb-stick)
 - [Troubleshooting](#troubleshooting)
@@ -315,6 +316,22 @@ The **Dashboard** rolls all of this up across every class at once — total stud
 ![Dashboard](screenshots/dashboard.png)
 
 ---
+
+## Password protection
+
+**Settings → Password protection → Turn on password protection** encrypts everything EduBoard keeps (students, grades, notes, guardian contacts, and the Portal and AI keys in Settings), so the database file is unreadable without your password. Recommended if the computer is shared, goes home with you, or your data lives on a USB stick.
+
+1. Choose a password (at least 8 characters). EduBoard backs up first, then encrypts.
+2. You get a **recovery key** (five groups of letters and numbers). Write it down or print it and keep it away from the computer. **If you forget your password, the recovery key is the only way in**; nobody can recover your data without one of them.
+3. From then on EduBoard asks for the password when it opens. On the lock screen, **Forgot your password? Use your recovery key** takes the recovery key instead.
+
+EduBoard also locks itself after a while with no keyboard or mouse use (**Lock after**: 5, 10, 15, 30 or 60 minutes, or never), whenever the computer locks or goes to sleep, and when you press the lock icon at the bottom of the sidebar or **Lock now**. While it's locked, an exit ticket or attendance check-in you've started keeps collecting answers, and backups keep running.
+
+After five wrong tries, EduBoard makes you wait 30 seconds between tries.
+
+**Backups** of a protected database are encrypted too. Each one keeps a copy of the lock it was made with, so a backup still restores after you change your password; EduBoard then asks for the password you had when the backup was made, or that time's recovery key. Backups made **before** you turned protection on can still be read without a password: the Password protection panel counts them and offers **Delete unprotected backups**.
+
+**Change password** keeps the same recovery key. **Turn off** decrypts your data again (it asks for your password first).
 
 ## Backing up your data
 

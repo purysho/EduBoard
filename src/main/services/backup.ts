@@ -1,9 +1,19 @@
 import { app } from 'electron'
-import { copyFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'fs'
+import {
+  closeSync,
+  copyFileSync,
+  existsSync,
+  openSync,
+  readSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  unlinkSync
+} from 'fs'
 import { basename, join } from 'path'
 import Database from 'better-sqlite3'
-import { resolveBackupsDir, resolveDbPath } from '../db/path'
-import { closeDb, getSqlite } from '../db/client'
+import { keyFilePathFor, resolveBackupsDir, resolveDbPath } from '../db/path'
+import { applyKey, closeDb, currentDbKey, getSqlite } from '../db/client'
 import { getSettings } from '../repositories/settingsRepo'
 import type { BackupInfo, BackupPreview, ExtraBackupStatus } from '@shared/types'
 
@@ -12,6 +22,26 @@ import type { BackupInfo, BackupPreview, ExtraBackupStatus } from '@shared/types
  * is safe as long as they don't create 30 more auto-backups after it. */
 const MAX_AUTO_BACKUPS = 10
 const AUTO_BACKUP_PREFIX = 'eduboard-autobackup-'
+
+/** A protected database's backup carries a copy of the key file (wrapped with that
+ * day's password and recovery key), so it can be restored even after the password has
+ * changed or protection was turned off. */
+function copyKeysAlongside(backupFilePath: string): void {
+  const liveKeys = keyFilePathFor(resolveDbPath())
+  if (existsSync(liveKeys)) copyFileSync(liveKeys, keyFilePathFor(backupFilePath))
+}
+
+/** An unencrypted SQLite file starts with this; an encrypted one looks random. */
+function isPlainSqlite(filePath: string): boolean {
+  const header = Buffer.alloc(16)
+  const fd = openSync(filePath, 'r')
+  try {
+    readSync(fd, header, 0, 16, 0)
+  } finally {
+    closeSync(fd)
+  }
+  return header.toString('latin1') === 'SQLite format 3\0'
+}
 
 function timestampForFileName(): string {
   return new Date().toISOString().replace(/[:.]/g, '-')
@@ -34,6 +64,7 @@ function createBackupWithoutExtraCopy(): BackupInfo {
   const filePath = join(backupsDir, fileName)
 
   copyFileSync(dbPath, filePath)
+  copyKeysAlongside(filePath)
   const stats = statSync(filePath)
 
   return {
@@ -59,6 +90,7 @@ export function createAutoBackupOnLaunch(): void {
     const backupsDir = resolveBackupsDir()
     const fileName = `${AUTO_BACKUP_PREFIX}${timestampForFileName()}.db`
     copyFileSync(dbPath, join(backupsDir, fileName))
+    copyKeysAlongside(join(backupsDir, fileName))
 
     pruneAutoBackups(backupsDir)
     copyToExtraFolder(join(backupsDir, fileName))
@@ -94,6 +126,8 @@ export function copyToExtraFolder(
   try {
     if (!existsSync(folder)) return false
     copyFileSync(backupFilePath, join(folder, basename(backupFilePath)))
+    const keys = keyFilePathFor(backupFilePath)
+    if (existsSync(keys)) copyFileSync(keys, join(folder, basename(keys)))
     pruneAutoBackups(folder)
     return true
   } catch (err) {
@@ -144,6 +178,7 @@ export function pruneAutoBackups(backupsDir: string): void {
   const excess = autoBackups.length - MAX_AUTO_BACKUPS
   for (let i = 0; i < excess; i++) {
     unlinkSync(join(backupsDir, autoBackups[i].name))
+    rmSync(keyFilePathFor(join(backupsDir, autoBackups[i].name)), { force: true })
   }
 }
 
@@ -151,14 +186,23 @@ export function pruneAutoBackups(backupsDir: string): void {
  * what's in it, alongside the live database's current counts, so a teacher can see
  * what they're about to overwrite before confirming a restore. */
 export function previewBackup(backupFilePath: string): BackupPreview {
-  const backupCounts = countRows(backupFilePath)
-  const liveCounts = countRows(resolveDbPath())
-  return { backup: backupCounts, current: liveCounts }
+  const protectedBackup = !isPlainSqlite(backupFilePath)
+  let backupCounts: BackupPreview['backup'] = null
+  try {
+    backupCounts = countRows(backupFilePath)
+  } catch {
+    // Encrypted with a key this database no longer uses: restorable, but not previewable.
+  }
+  const liveCounts = countRows(resolveDbPath())!
+  return { backup: backupCounts, current: liveCounts, protectedBackup }
 }
 
 function countRows(dbPath: string): BackupPreview['backup'] {
   const db = new Database(dbPath, { readonly: true, fileMustExist: true })
   try {
+    // A protected backup made since protection was last turned on shares the live key.
+    const key = currentDbKey()
+    if (key && !isPlainSqlite(dbPath)) applyKey(db, key)
     const count = (table: string): number =>
       (db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c
     return {
@@ -177,6 +221,12 @@ function countRows(dbPath: string): BackupPreview['backup'] {
 export function restoreBackup(backupFilePath: string): void {
   closeDb()
   copyFileSync(backupFilePath, resolveDbPath())
+  // The restored database needs the key file it was made with (or none, if it wasn't
+  // protected); the next launch then asks for that day's password or recovery key.
+  const liveKeys = keyFilePathFor(resolveDbPath())
+  const backupKeys = keyFilePathFor(backupFilePath)
+  if (existsSync(backupKeys)) copyFileSync(backupKeys, liveKeys)
+  else rmSync(liveKeys, { force: true })
   app.relaunch()
   app.exit(0)
 }
@@ -197,4 +247,35 @@ export function listBackups(): BackupInfo[] {
       }
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+function backupFolders(): string[] {
+  const extra = getSettings().extraBackupFolder
+  return [resolveBackupsDir(), ...(extra && existsSync(extra) ? [extra] : [])]
+}
+
+/** Backups (in the backups folder and the second folder) that aren't encrypted: made
+ * before password protection was turned on. */
+export function listUnprotectedBackups(): string[] {
+  const found: string[] = []
+  for (const folder of backupFolders()) {
+    for (const f of readdirSync(folder)) {
+      if (!f.startsWith('eduboard-') || !f.endsWith('.db')) continue
+      const filePath = join(folder, f)
+      try {
+        if (isPlainSqlite(filePath)) found.push(filePath)
+      } catch {
+        // unreadable: leave it alone
+      }
+    }
+  }
+  return found
+}
+
+/** Deletes them, once the teacher has chosen to, so an unprotected copy of the class's
+ * data doesn't sit beside the protected one. Returns how many were deleted. */
+export function deleteUnprotectedBackups(): number {
+  const files = listUnprotectedBackups()
+  for (const f of files) rmSync(f, { force: true })
+  return files.length
 }

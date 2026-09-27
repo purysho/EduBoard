@@ -19,6 +19,7 @@ import type {
   AppUpdateInfo,
   AppUpdateProgress,
   AppUpdateStatus,
+  SecurityStatus,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -316,6 +317,19 @@ export interface EduBoardApi {
     upsert(input: UpsertAssignmentSubmissionInput): Promise<AssignmentSubmission>
     remove(id: string): Promise<void>
     openPath(filePath: string): Promise<void>
+  }
+  security: {
+    status(): Promise<SecurityStatus>
+    /** Password or recovery key. */
+    unlock(secret: string): Promise<{ ok: boolean; retryInSeconds: number }>
+    lock(): Promise<void>
+    /** Encrypts the database; the recovery key is returned once, to show the teacher. */
+    enable(password: string): Promise<{ recoveryKey: string }>
+    changePassword(current: string, next: string): Promise<void>
+    disable(password: string): Promise<void>
+    /** Backups (here and in the second folder) made before protection was on. */
+    unprotectedBackups(): Promise<string[]>
+    deleteUnprotectedBackups(): Promise<number>
   }
   exitTickets: {
     getByClass(classId: string): Promise<ExitTicket | undefined>

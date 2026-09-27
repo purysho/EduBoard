@@ -54,3 +54,9 @@ export function resolveBackupsDir(): string {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
   return dir
 }
+
+/** Beside the database: its encryption key, wrapped with the teacher's password and
+ * recovery key (see security/keyFile.ts). Present only while password protection is on. */
+export function keyFilePathFor(dbPath: string): string {
+  return dbPath.replace(/\.db$/, '') + '.keys.json'
+}

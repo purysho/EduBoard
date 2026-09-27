@@ -192,6 +192,16 @@ export const IpcChannels = {
     remove: 'assignmentSubmissions:remove',
     openPath: 'assignmentSubmissions:openPath'
   },
+  security: {
+    status: 'security:status',
+    unlock: 'security:unlock',
+    lock: 'security:lock',
+    enable: 'security:enable',
+    changePassword: 'security:changePassword',
+    disable: 'security:disable',
+    unprotectedBackups: 'security:unprotectedBackups',
+    deleteUnprotectedBackups: 'security:deleteUnprotectedBackups'
+  },
   exitTickets: {
     getByClass: 'exitTickets:getByClass',
     upsert: 'exitTickets:upsert',

@@ -731,6 +731,25 @@ export function useAppUpdateInfo() {
   })
 }
 
+/** Password protection: whether it's on and whether the window must show the lock
+ * screen. Polled, so an automatic lock (idle, or the computer locking) shows within
+ * seconds. */
+export function useSecurityStatus() {
+  return useQuery({
+    queryKey: ['securityStatus'],
+    queryFn: () => api().security.status(),
+    refetchInterval: 3_000
+  })
+}
+
+export function useUnprotectedBackups(enabled: boolean) {
+  return useQuery({
+    queryKey: ['unprotectedBackups'],
+    queryFn: () => api().security.unprotectedBackups(),
+    enabled
+  })
+}
+
 /** Whether an update is downloading, waiting to install, or available, for the update
  * icon, the Settings badge and the banner. Asks the main process only (no internet), so
  * polling is cheap; the background download finishing shows up within half a minute. */

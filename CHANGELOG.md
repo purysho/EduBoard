@@ -11,6 +11,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Security
 
+- **Password protection** (Settings → Password protection). Encrypts EduBoard's database and backups, asks for the password when EduBoard opens, and locks after a chosen idle time or when the computer locks or sleeps (exit tickets and backups keep running while it's locked). A recovery key, shown once, opens it if the password is forgotten. Backups made before it was turned on can be deleted from the same panel.
 - **QR attendance:** each phone can check in one student per session, so a student can't mark absent friends present. Exit tickets and check-in limit how often one device can send, generously enough for a whole class behind one network address.
 
 ## [0.3.3] — 2026-09-26

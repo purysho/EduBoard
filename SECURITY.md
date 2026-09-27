@@ -28,6 +28,11 @@ does not transmit data over the network on its own (the one exception is the opt
 students' devices on the same classroom WiFi can submit responses — it's never reachable
 from the internet, and is off unless a teacher explicitly starts a session).
 
+With **password protection** on (Settings), the database and its backups are encrypted
+(SQLite3 Multiple Ciphers, via `better-sqlite3-multiple-ciphers`). The encryption key is
+random and stored next to the database only wrapped (AES-256-GCM, scrypt) by the teacher's
+password and by a one-time recovery key.
+
 Given that scope, the security issues most worth reporting are things like:
 
 - A way to read or write files outside the app's own data directory.

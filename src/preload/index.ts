@@ -225,6 +225,16 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
     openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
   },
+  security: {
+    status: () => invoke(IpcChannels.security.status),
+    unlock: (secret) => invoke(IpcChannels.security.unlock, secret),
+    lock: () => invoke(IpcChannels.security.lock),
+    enable: (password) => invoke(IpcChannels.security.enable, password),
+    changePassword: (current, next) => invoke(IpcChannels.security.changePassword, current, next),
+    disable: (password) => invoke(IpcChannels.security.disable, password),
+    unprotectedBackups: () => invoke(IpcChannels.security.unprotectedBackups),
+    deleteUnprotectedBackups: () => invoke(IpcChannels.security.deleteUnprotectedBackups)
+  },
   exitTickets: {
     getByClass: (classId) => invoke(IpcChannels.exitTickets.getByClass, classId),
     upsert: (input) => invoke(IpcChannels.exitTickets.upsert, input),

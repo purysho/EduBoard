@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
 import {
   ArrowUpCircle,
+  Lock,
   BarChart3,
   BookOpenText,
   Calendar,
@@ -18,7 +19,12 @@ import {
   Users
 } from 'lucide-react'
 import { cn } from '@renderer/lib/cn'
-import { useAppUpdateStatus, usePortalMessageThreads, useSettings } from '@renderer/lib/queries'
+import {
+  useAppUpdateStatus,
+  usePortalMessageThreads,
+  useSecurityStatus,
+  useSettings
+} from '@renderer/lib/queries'
 
 // Grouped so fourteen destinations scan as four short lists instead of one long one.
 const navGroups: {
@@ -77,6 +83,7 @@ export function Sidebar(): React.JSX.Element {
   // Stays until the new version is running: downloading, waiting to install, or (when
   // this copy can't update itself) simply available.
   const { data: update } = useAppUpdateStatus()
+  const { data: security } = useSecurityStatus()
   const updateLabel = !update?.updateAvailable
     ? null
     : update.readyVersion
@@ -166,7 +173,17 @@ export function Sidebar(): React.JSX.Element {
       </nav>
       <div className="mt-auto flex items-center gap-1.5 px-5 py-4 text-xs text-[var(--color-text-muted)]">
         <ShieldCheck size={14} aria-hidden />
-        Your data stays on this device
+        <span className="flex-1">Your data stays on this device</span>
+        {security?.protected && (
+          <button
+            onClick={() => void window.api.security.lock()}
+            title="Lock EduBoard now"
+            aria-label="Lock EduBoard now"
+            className="rounded-md p-1 hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
+          >
+            <Lock size={14} aria-hidden />
+          </button>
+        )}
       </div>
     </aside>
   )

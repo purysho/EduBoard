@@ -659,6 +659,9 @@ export interface AppSettings {
   /** Download new versions in the background and install them the next time EduBoard
    * opens. On by default; off means updates only happen from Settings. */
   autoUpdate: boolean
+  /** With password protection on: lock after this many minutes with no keyboard or
+   * mouse use (0 = only when locked by hand or the computer locks/sleeps). */
+  autoLockMinutes: number
 }
 
 /** A student whose attendance in a class is under that class's minimum. */
@@ -767,7 +770,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestFromName: '',
   onboardingDismissed: false,
   extraBackupFolder: '',
-  autoUpdate: true
+  autoUpdate: true,
+  autoLockMinutes: 10
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------
@@ -936,6 +940,22 @@ export interface BackupInfo {
 }
 
 export interface BackupPreview {
-  backup: { students: number; classes: number; scores: number; attendanceRecords: number }
+  /** Null when the backup is password-protected with a key this database no longer uses
+   * (protection was turned off and on again since), so it can't be looked inside. */
+  backup: { students: number; classes: number; scores: number; attendanceRecords: number } | null
   current: { students: number; classes: number; scores: number; attendanceRecords: number }
+  /** The backup is encrypted: after restoring, EduBoard asks for the password it had
+   * when the backup was made, or that time's recovery key. */
+  protectedBackup: boolean
+}
+
+export interface SecurityStatus {
+  /** Password protection is on (the database is encrypted). */
+  protected: boolean
+  /** The window must show the lock screen. */
+  locked: boolean
+  /** After repeated wrong tries, how long before the next one is accepted. */
+  retryInSeconds: number
+  /** Null while the database is still closed (before the first unlock). */
+  autoLockMinutes: number | null
 }

@@ -20,16 +20,16 @@ function Row({
 }: {
   label: string
   current: number
-  backup: number
+  backup: number | null
 }): React.JSX.Element {
-  const changed = current !== backup
+  const changed = backup !== null && current !== backup
   return (
     <div className="flex items-center justify-between py-1 text-sm">
       <span className="text-[var(--color-text-muted)]">{label}</span>
       <span className={changed ? 'font-medium text-[var(--color-danger)]' : 'font-medium'}>
         {current} <span className="text-[var(--color-text-muted)]">now</span>
         {' -> '}
-        {backup} <span className="text-[var(--color-text-muted)]">in backup</span>
+        {backup ?? '?'} <span className="text-[var(--color-text-muted)]">in backup</span>
       </span>
     </div>
   )
@@ -91,25 +91,31 @@ export function RestoreDialog({
             <Row
               label="Students"
               current={preview.current.students}
-              backup={preview.backup.students}
+              backup={preview.backup?.students ?? null}
             />
             <Row
               label="Classes"
               current={preview.current.classes}
-              backup={preview.backup.classes}
+              backup={preview.backup?.classes ?? null}
             />
             <Row
               label="Scores recorded"
               current={preview.current.scores}
-              backup={preview.backup.scores}
+              backup={preview.backup?.scores ?? null}
             />
             <Row
               label="Attendance records"
               current={preview.current.attendanceRecords}
-              backup={preview.backup.attendanceRecords}
+              backup={preview.backup?.attendanceRecords ?? null}
             />
           </div>
         ) : null}
+        {preview?.protectedBackup && (
+          <p className="text-sm text-[var(--color-text-muted)]">
+            This backup is password-protected. After restoring, EduBoard asks for the password you
+            had when it was made, or the recovery key from then.
+          </p>
+        )}
 
         <div>
           <label className="mb-1 block text-xs font-medium text-[var(--color-text-muted)]">

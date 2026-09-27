@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
+import { SecurityGate } from './components/security/SecurityGate'
 import { DashboardPage } from './pages/Dashboard/DashboardPage'
 import { StudentsListPage } from './pages/Students/StudentsListPage'
 import { StudentProfilePage } from './pages/Students/StudentProfilePage'
@@ -33,41 +34,43 @@ import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrint
 
 function App(): React.JSX.Element {
   return (
-    <Routes>
-      <Route path="/print/student/:studentId/:classId" element={<StudentReportPrintPage />} />
-      <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
-      <Route element={<AppShell />}>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/students" element={<StudentsListPage />} />
-        <Route path="/students/:studentId" element={<StudentProfilePage />} />
-        <Route path="/classes" element={<ClassesListPage />} />
-        <Route path="/classes/:classId" element={<ClassDetailLayout />}>
-          <Route index element={<RosterTab />} />
-          <Route path="gradebook" element={<GradebookTab />} />
-          <Route path="attendance" element={<AttendanceTab />} />
-          <Route path="lessons" element={<LessonPlannerTab />} />
-          <Route path="seating" element={<SeatingChartTab />} />
-          <Route path="exit-ticket" element={<ExitTicketTab />} />
-          <Route path="homework" element={<HomeworkTab />} />
-          <Route path="story" element={<ClassStoryTab />} />
-          <Route path="portal" element={<PortalTab />} />
-          <Route path="report" element={<ReportTab />} />
-          <Route path="settings" element={<ClassSettingsTab />} />
+    <SecurityGate>
+      <Routes>
+        <Route path="/print/student/:studentId/:classId" element={<StudentReportPrintPage />} />
+        <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
+        <Route element={<AppShell />}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/students" element={<StudentsListPage />} />
+          <Route path="/students/:studentId" element={<StudentProfilePage />} />
+          <Route path="/classes" element={<ClassesListPage />} />
+          <Route path="/classes/:classId" element={<ClassDetailLayout />}>
+            <Route index element={<RosterTab />} />
+            <Route path="gradebook" element={<GradebookTab />} />
+            <Route path="attendance" element={<AttendanceTab />} />
+            <Route path="lessons" element={<LessonPlannerTab />} />
+            <Route path="seating" element={<SeatingChartTab />} />
+            <Route path="exit-ticket" element={<ExitTicketTab />} />
+            <Route path="homework" element={<HomeworkTab />} />
+            <Route path="story" element={<ClassStoryTab />} />
+            <Route path="portal" element={<PortalTab />} />
+            <Route path="report" element={<ReportTab />} />
+            <Route path="settings" element={<ClassSettingsTab />} />
+          </Route>
+          <Route path="/rubrics" element={<RubricsPage />} />
+          <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/notebook" element={<NotebookPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/communications" element={<CommunicationsPage />} />
+          <Route path="/composite-grades" element={<CompositeGradesPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/audit-log" element={<AuditLogPage />} />
+          <Route path="/timetable" element={<TimetablePage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
-        <Route path="/rubrics" element={<RubricsPage />} />
-        <Route path="/rubrics/:rubricId" element={<RubricBuilderPage />} />
-        <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/notebook" element={<NotebookPage />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/communications" element={<CommunicationsPage />} />
-        <Route path="/composite-grades" element={<CompositeGradesPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/audit-log" element={<AuditLogPage />} />
-        <Route path="/timetable" element={<TimetablePage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </SecurityGate>
   )
 }
 
