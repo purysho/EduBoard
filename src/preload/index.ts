@@ -143,7 +143,9 @@ const api: EduBoardApi = {
   },
   print: {
     printStudentReport: (studentId, classId, suggestedFileName) =>
-      invoke(IpcChannels.print.printStudentReport, studentId, classId, suggestedFileName)
+      invoke(IpcChannels.print.printStudentReport, studentId, classId, suggestedFileName),
+    printClassReports: (classId, suggestedFileName) =>
+      invoke(IpcChannels.print.printClassReports, classId, suggestedFileName)
   },
   standards: {
     list: () => invoke(IpcChannels.standards.list),
@@ -227,6 +229,11 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
     openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
   },
+  reportComments: {
+    list: (classId) => invoke(IpcChannels.reportComments.list, classId),
+    set: (classId, studentId, text) =>
+      invoke(IpcChannels.reportComments.set, classId, studentId, text)
+  },
   behaviourPoints: {
     add: (input) => invoke(IpcChannels.behaviourPoints.add, input),
     totals: (classId, weekStartIso) =>
@@ -261,7 +268,7 @@ const api: EduBoardApi = {
   },
   ai: {
     draftLessonPlan: (input) => invoke(IpcChannels.ai.draftLessonPlan, input),
-    draftReportComment: (input) => invoke(IpcChannels.ai.draftReportComment, input),
+    suggestCommentPhrases: (input) => invoke(IpcChannels.ai.suggestCommentPhrases, input),
     testConnection: (config) => invoke(IpcChannels.ai.testConnection, config)
   },
   homeworkAssignments: {

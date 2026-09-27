@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   AppSettings,
   DraftLessonPlanInput,
-  DraftReportCommentInput,
+  SuggestCommentPhrasesInput,
   EnrollmentStatus
 } from '@shared/types'
 import type {
@@ -1325,9 +1325,9 @@ export function useDraftLessonPlan() {
   })
 }
 
-export function useDraftReportComment() {
+export function useSuggestCommentPhrases() {
   return useMutation({
-    mutationFn: (input: DraftReportCommentInput) => api().ai.draftReportComment(input)
+    mutationFn: (input: SuggestCommentPhrasesInput) => api().ai.suggestCommentPhrases(input)
   })
 }
 

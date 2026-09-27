@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@renderer/components/ui/Badge'
 import { letterTone } from '@renderer/lib/grade'
 import { Spinner } from '@renderer/components/ui/EmptyState'
@@ -9,14 +10,29 @@ import {
   useGradeCategories,
   useScoresByStudentClass,
   useSettings,
+  useClassRoster,
   useStudentAttendanceSummary,
   useStudentClassGrade,
   useStudents
 } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 
-export function StudentReportPrintPage(): React.JSX.Element {
-  const { studentId, classId } = useParams<{ studentId: string; classId: string }>()
+/** One student's report card for one class, as printed. `onReady` fires once
+ * everything it shows has loaded, so a print can wait for it. */
+export function ReportCard({
+  studentId,
+  classId,
+  onReady
+}: {
+  studentId: string
+  classId: string
+  onReady: () => void
+}): React.JSX.Element {
+  const { data: comments, isLoading: commentsLoading } = useQuery({
+    queryKey: ['reportComments', classId],
+    queryFn: () => window.api.reportComments.list(classId)
+  })
+  const comment = comments?.find((c) => c.studentId === studentId)?.text
 
   const { data: students, isLoading: studentsLoading } = useStudents(true)
   const { data: classes, isLoading: classesLoading } = useClasses(true)
@@ -49,19 +65,18 @@ export function StudentReportPrintPage(): React.JSX.Element {
     attendanceLoading ||
     assessmentsLoading ||
     scoresLoading ||
-    settingsLoading
+    settingsLoading ||
+    commentsLoading
 
   useEffect(() => {
-    if (!loading && student && classSection) {
-      document.title = 'eduboard-print-ready'
-    }
-  }, [loading, student, classSection])
+    if (!loading) onReady()
+  }, [loading, onReady])
 
   if (loading) return <Spinner />
   if (!student || !classSection) return <p className="p-8">Report not available.</p>
 
   return (
-    <div className="mx-auto max-w-3xl bg-white p-10 text-slate-900">
+    <div className="mx-auto max-w-3xl bg-white p-10 text-slate-900 break-after-page">
       <div className="mb-6 flex items-start justify-between border-b border-slate-300 pb-4">
         <div>
           <h1 className="text-xl font-semibold">{classSection.name}</h1>
@@ -157,6 +172,13 @@ export function StudentReportPrintPage(): React.JSX.Element {
         </table>
       </div>
 
+      {comment && (
+        <div className="mb-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">Comment</h2>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment}</p>
+        </div>
+      )}
+
       <div>
         <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">Attendance summary</h2>
         <table className="w-full text-sm">
@@ -181,5 +203,48 @@ export function StudentReportPrintPage(): React.JSX.Element {
         </table>
       </div>
     </div>
+  )
+}
+
+const markReady = (): void => {
+  document.title = 'eduboard-print-ready'
+}
+
+/** /print/student/:studentId/:classId — one report card, for printing to PDF. */
+export function StudentReportPrintPage(): React.JSX.Element {
+  const { studentId, classId } = useParams<{ studentId: string; classId: string }>()
+  return <ReportCard studentId={studentId!} classId={classId!} onReady={markReady} />
+}
+
+/** /print/class/:classId — every active student's report card, a page each. */
+export function ClassReportsPrintPage(): React.JSX.Element {
+  const { classId } = useParams<{ classId: string }>()
+  const { data: roster, isLoading } = useClassRoster(classId)
+  const students = (roster ?? [])
+    .filter((r) => r.enrollment.status === 'active')
+    .sort((a, b) => a.student.lastName.localeCompare(b.student.lastName))
+  const ready = useRef(new Set<string>())
+  const onReadyFor = useCallback(
+    (id: string) => () => {
+      ready.current.add(id)
+      if (ready.current.size >= students.length) markReady()
+    },
+    [students.length]
+  )
+  useEffect(() => {
+    if (!isLoading && students.length === 0) markReady()
+  }, [isLoading, students.length])
+  if (isLoading) return <Spinner />
+  return (
+    <>
+      {students.map((r) => (
+        <ReportCard
+          key={r.student.id}
+          studentId={r.student.id}
+          classId={classId!}
+          onReady={onReadyFor(r.student.id)}
+        />
+      ))}
+    </>
   )
 }

@@ -5,6 +5,7 @@
 import type { AppSettings, GradeThresholds, LogQuickAdd, StudentField, Term } from './types'
 import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
+import { COMMENT_CATEGORIES, type BankComment } from './commentBank'
 
 export interface SchoolPackTerm {
   name: string
@@ -27,6 +28,7 @@ export interface SchoolPack {
   studentFields?: StudentField[]
   terms?: SchoolPackTerm[]
   customCss?: string
+  commentBank?: BankComment[]
 }
 
 const MAX_LOGO_CHARS = 700_000
@@ -140,6 +142,15 @@ export function parseSchoolPack(json: string): SchoolPack {
       }))
     }
   }
+  if (Array.isArray(raw.commentBank)) {
+    const list = raw.commentBank.filter(
+      (c): c is BankComment =>
+        isString(c?.text, 400) &&
+        !!c.text.trim() &&
+        (COMMENT_CATEGORIES as readonly string[]).includes(c?.category)
+    )
+    if (list.length) pack.commentBank = list.map((c) => ({ category: c.category, text: c.text }))
+  }
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     pack.customCss = sanitizeCss(raw.customCss)
   }
@@ -166,7 +177,8 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
       startDate: t.startDate,
       endDate: t.endDate
     })),
-    ...(settings.customCss ? { customCss: settings.customCss } : {})
+    ...(settings.customCss ? { customCss: settings.customCss } : {}),
+    commentBank: settings.commentBank
   }
 }
 
@@ -231,6 +243,13 @@ export function planSchoolPack(
       patch.studentFields = [...settings.studentFields, ...added]
       changes.push(`Student fields added: ${added.map((f) => f.label).join(', ')}`)
     }
+  }
+  if (
+    pack.commentBank &&
+    JSON.stringify(pack.commentBank) !== JSON.stringify(settings.commentBank)
+  ) {
+    patch.commentBank = pack.commentBank
+    changes.push(`Report comment bank (${pack.commentBank.length} comments)`)
   }
   if (pack.customCss !== undefined && pack.customCss !== settings.customCss) {
     patch.customCss = pack.customCss

@@ -1,5 +1,6 @@
 // Shared domain types used by both the main (Node/Electron) process and the renderer (React) UI.
 // Keep these framework-agnostic — no Electron or DOM types here.
+import { DEFAULT_COMMENT_BANK, type BankComment } from './commentBank'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
@@ -682,6 +683,8 @@ export interface AppSettings {
   /** A school stylesheet (sanitized: nothing it contains can load from the internet),
    * applied after EduBoard's own. '' for none. */
   customCss: string
+  /** Report card sentences with placeholders ({name}, {class}, {grade}, {percent}). */
+  commentBank: BankComment[]
 }
 
 export interface LogQuickAdd {
@@ -824,7 +827,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   reduceMotion: false,
   logQuickAdds: DEFAULT_LOG_QUICK_ADDS,
   studentFields: [],
-  customCss: ''
+  customCss: '',
+  commentBank: DEFAULT_COMMENT_BANK
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------
@@ -1028,4 +1032,25 @@ export interface BehaviourTotal {
   studentId: string
   week: number
   total: number
+}
+
+export interface ReportComment {
+  id: string
+  classId: string
+  studentId: string
+  text: string
+  updatedAt: string
+}
+
+/** What the AI is told when suggesting report comment phrases: the same facts the
+ * teacher sees, and nothing else. */
+export interface SuggestCommentPhrasesInput {
+  studentName: string
+  className: string
+  percent: number | null
+  letter: string | null
+  attendanceRate: number | null
+  recentNotes: string[]
+  trendDirection: GradeTrendDirection | null
+  trendDeltaPoints: number | null
 }

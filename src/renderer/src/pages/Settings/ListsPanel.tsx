@@ -7,6 +7,12 @@ import {
   type StudentField,
   type StudentLogType
 } from '@shared/types'
+import {
+  COMMENT_CATEGORIES,
+  DEFAULT_COMMENT_BANK,
+  type BankComment,
+  type CommentCategory
+} from '@shared/commentBank'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
@@ -27,11 +33,16 @@ export function ListsPanel(): React.JSX.Element | null {
   const update = useUpdateSettings()
   const [quick, setQuick] = useState<LogQuickAdd[] | null>(null)
   const [fields, setFields] = useState<StudentField[] | null>(null)
+  const [bank, setBank] = useState<BankComment[] | null>(null)
   if (!settings) return null
   const q = quick ?? settings.logQuickAdds
   const f = fields ?? settings.studentFields
-  const dirty = quick !== null || fields !== null
-  const valid = q.every((x) => x.label.trim() && x.text.trim()) && f.every((x) => x.label.trim())
+  const b = bank ?? settings.commentBank
+  const dirty = quick !== null || fields !== null || bank !== null
+  const valid =
+    q.every((x) => x.label.trim() && x.text.trim()) &&
+    f.every((x) => x.label.trim()) &&
+    b.every((x) => x.text.trim())
 
   return (
     <Card>
@@ -157,6 +168,68 @@ export function ListsPanel(): React.JSX.Element | null {
           )}
         </section>
 
+        <section>
+          <h3 className="font-medium">Report comment bank</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            Sentences you add to report card comments in one click. {'{name}'}, {'{class}'},{' '}
+            {'{grade}'} and {'{percent}'} are filled in for each student.
+          </p>
+          <div className="max-h-72 space-y-1.5 overflow-auto pr-1">
+            {b.map((c, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <select
+                  aria-label="Category"
+                  className={inputClass}
+                  value={c.category}
+                  onChange={(e) =>
+                    setBank(
+                      b.map((x, j) =>
+                        j === i ? { ...x, category: e.target.value as CommentCategory } : x
+                      )
+                    )
+                  }
+                >
+                  {COMMENT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  aria-label="Comment"
+                  className={`${inputClass} flex-1`}
+                  value={c.text}
+                  onChange={(e) =>
+                    setBank(b.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))
+                  }
+                />
+                <button
+                  aria-label="Remove comment"
+                  className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
+                  onClick={() => setBank(b.filter((_, j) => j !== i))}
+                >
+                  <X size={13} aria-hidden />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex gap-3 text-xs">
+            <button
+              className="flex items-center gap-1 text-[var(--color-primary)] hover:underline"
+              onClick={() => setBank([...b, { category: 'General', text: '' }])}
+            >
+              <Plus size={12} aria-hidden />
+              Add a comment
+            </button>
+            <button
+              className="text-[var(--color-text-muted)] hover:underline"
+              onClick={() => setBank(DEFAULT_COMMENT_BANK)}
+            >
+              Restore EduBoard’s
+            </button>
+          </div>
+        </section>
+
         <div className="flex gap-2">
           <Button
             variant="primary"
@@ -165,10 +238,12 @@ export function ListsPanel(): React.JSX.Element | null {
             onClick={async () => {
               await update.mutateAsync({
                 logQuickAdds: q.map((x) => ({ ...x, label: x.label.trim(), text: x.text.trim() })),
-                studentFields: f.map((x) => ({ ...x, label: x.label.trim() }))
+                studentFields: f.map((x) => ({ ...x, label: x.label.trim() })),
+                commentBank: b.map((x) => ({ ...x, text: x.text.trim() }))
               })
               setQuick(null)
               setFields(null)
+              setBank(null)
             }}
           >
             Save lists
@@ -180,6 +255,7 @@ export function ListsPanel(): React.JSX.Element | null {
               onClick={() => {
                 setQuick(null)
                 setFields(null)
+                setBank(null)
               }}
             >
               Undo changes

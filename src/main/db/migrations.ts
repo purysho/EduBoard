@@ -730,6 +730,23 @@ const migrations: Migration[] = [
         CREATE INDEX behaviour_points_student_idx ON behaviour_points(student_id);
       `)
     }
+  },
+  {
+    id: 32,
+    name: 'report_comments',
+    up: (db) => {
+      // The teacher's report card comment for a student in a class.
+      db.exec(`
+        CREATE TABLE report_comments (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          text TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX report_comments_class_student ON report_comments(class_id, student_id);
+      `)
+    }
   }
 ]
 

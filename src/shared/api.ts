@@ -1,3 +1,4 @@
+import type { PhraseSuggestion } from './commentBank'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -22,6 +23,7 @@ import type {
   SecurityStatus,
   BehaviourPoint,
   BehaviourTotal,
+  ReportComment,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -31,7 +33,7 @@ import type {
   DeviceSyncStatus,
   DraftedLessonPlan,
   DraftLessonPlanInput,
-  DraftReportCommentInput,
+  SuggestCommentPhrasesInput,
   AiConnectionConfig,
   AiConnectionTestResult,
   HomeworkAssignment,
@@ -249,6 +251,11 @@ export interface EduBoardApi {
       classId: string,
       suggestedFileName: string
     ): Promise<{ saved: boolean; filePath?: string }>
+    /** Every active student's report card for the class in one PDF, a page each. */
+    printClassReports(
+      classId: string,
+      suggestedFileName: string
+    ): Promise<{ saved: boolean; filePath?: string }>
   }
   standards: {
     list(): Promise<Standard[]>
@@ -324,6 +331,10 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     openPath(filePath: string): Promise<void>
   }
+  reportComments: {
+    list(classId: string): Promise<ReportComment[]>
+    set(classId: string, studentId: string, text: string): Promise<void>
+  }
   behaviourPoints: {
     add(input: {
       classId: string
@@ -369,7 +380,9 @@ export interface EduBoardApi {
   }
   ai: {
     draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan>
-    draftReportComment(input: DraftReportCommentInput): Promise<string>
+    /** A few short phrases for a report comment, each tied to the data it rests on.
+     * Never a whole comment. Needs the internet. */
+    suggestCommentPhrases(input: SuggestCommentPhrasesInput): Promise<PhraseSuggestion[]>
     testConnection(config: AiConnectionConfig): Promise<AiConnectionTestResult>
   }
   homeworkAssignments: {

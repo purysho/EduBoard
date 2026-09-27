@@ -336,6 +336,10 @@ The **Dashboard** rolls all of this up across every class at once — total stud
 
 ---
 
+
+### Report card comments
+
+At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Your lists**). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.
 ## Your school's look and settings
 
 **Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.

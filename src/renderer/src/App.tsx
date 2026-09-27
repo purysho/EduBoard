@@ -16,7 +16,7 @@ import { ClassroomTab } from './pages/Classes/ClassroomTab'
 import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
 import { SettingsPage } from './pages/Settings/SettingsPage'
-import { StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
+import { ClassReportsPrintPage, StudentReportPrintPage } from './pages/Print/StudentReportPrintPage'
 import { RubricsPage } from './pages/Rubrics/RubricsPage'
 import { ResourcesPage } from './pages/Resources/ResourcesPage'
 import { RubricBuilderPage } from './pages/Rubrics/RubricBuilderPage'
@@ -38,6 +38,7 @@ function App(): React.JSX.Element {
     <SecurityGate>
       <Routes>
         <Route path="/print/student/:studentId/:classId" element={<StudentReportPrintPage />} />
+        <Route path="/print/class/:classId" element={<ClassReportsPrintPage />} />
         <Route path="/print/invite-batch/:batchId" element={<PortalInviteBatchPrintPage />} />
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />

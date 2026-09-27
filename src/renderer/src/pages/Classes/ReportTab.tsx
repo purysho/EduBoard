@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Download,
   FileDown,
+  Printer,
   TrendingUp
 } from 'lucide-react'
 import type { ClassSection } from '@shared/types'
@@ -28,6 +29,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useClassReport, useClassRoster } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
+import { ReportComments } from './ReportComments'
 
 const LETTER_COLOR: Record<string, string> = {
   A: 'var(--color-success)',
@@ -55,6 +57,19 @@ export function ReportTab(): React.JSX.Element {
     }
   }
 
+  const [printingAll, setPrintingAll] = useState(false)
+  async function handlePrintAll(): Promise<void> {
+    setPrintingAll(true)
+    try {
+      await window.api.print.printClassReports(
+        classSection.id,
+        `${classSection.name.replace(/[^\p{L}\p{N} -]/gu, '')} - report cards.pdf`
+      )
+    } finally {
+      setPrintingAll(false)
+    }
+  }
+
   async function handlePrint(studentId: string, name: string): Promise<void> {
     await window.api.print.printStudentReport(studentId, classSection.id, `${name} - report.pdf`)
   }
@@ -66,7 +81,11 @@ export function ReportTab(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={handlePrintAll} disabled={printingAll}>
+          <Printer size={15} className="mr-1 inline" aria-hidden />
+          {printingAll ? 'Preparing…' : 'Print all report cards (PDF)'}
+        </Button>
         <Button variant="secondary" onClick={handleExport} disabled={exporting}>
           <Download size={15} className="mr-1 inline" aria-hidden />
           {exporting ? 'Exporting…' : 'Export gradebook (.xlsx)'}
@@ -253,6 +272,8 @@ export function ReportTab(): React.JSX.Element {
           )}
         </CardBody>
       </Card>
+
+      {roster && <ReportComments classSection={classSection} roster={roster} />}
     </div>
   )
 }

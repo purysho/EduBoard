@@ -5,7 +5,7 @@ import type {
   PortalJoinLink,
   AiConnectionConfig,
   DraftLessonPlanInput,
-  DraftReportCommentInput
+  SuggestCommentPhrasesInput
 } from '@shared/types'
 
 import * as studentsRepo from '../repositories/students'
@@ -87,6 +87,7 @@ import {
 import * as backupService from '../services/backup'
 import * as security from '../services/security'
 import * as behaviourPointsRepo from '../repositories/behaviourPoints'
+import * as reportCommentsRepo from '../repositories/reportComments'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -446,6 +447,27 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+  handle(
+    IpcChannels.print.printClassReports,
+    async (_e, classId: string, suggestedFileName: string) => {
+      const win = createPrintWindow()
+      try {
+        await loadAppRoute(win, `/print/class/${classId}`)
+        // A whole class loads many students' data; allow it longer than one report.
+        await waitForPrintReady(win, 60_000)
+        const pdfBuffer = await win.webContents.printToPDF({ printBackground: true })
+        const { canceled, filePath } = await showSaveDialogOnTop({
+          defaultPath: suggestedFileName,
+          filters: [{ name: 'PDF', extensions: ['pdf'] }]
+        })
+        if (canceled || !filePath) return { saved: false as const }
+        await writeFile(filePath, pdfBuffer)
+        return { saved: true as const, filePath }
+      } finally {
+        win.destroy()
+      }
+    }
+  )
 
   // --- Standards ------------------------------------------------------------------------
   handle(IpcChannels.standards.list, () => standardsRepo.listStandards())
@@ -642,6 +664,19 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Exit tickets -----------------------------------------------------------------------
+  // --- Report card comments ---------------------------------------------------------------
+  handle(IpcChannels.reportComments.list, (_e, classId: string) =>
+    reportCommentsRepo.listReportComments(String(classId))
+  )
+  handle(IpcChannels.reportComments.set, (_e, classId: string, studentId: string, text: string) => {
+    if (
+      !enrollmentsRepo.getRosterForClass(String(classId)).some((r) => r.student.id === studentId)
+    ) {
+      throw new Error('That student isn’t in this class.')
+    }
+    reportCommentsRepo.setReportComment(String(classId), String(studentId), String(text ?? ''))
+  })
+
   // --- Classroom tab: behaviour points ---------------------------------------------------
   handle(IpcChannels.behaviourPoints.add, (_e, input) => {
     const classId = String(input?.classId ?? '')
@@ -752,8 +787,8 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
     aiService.draftLessonPlan(input)
   )
-  handle(IpcChannels.ai.draftReportComment, (_e, input: DraftReportCommentInput) =>
-    aiService.draftReportComment(input)
+  handle(IpcChannels.ai.suggestCommentPhrases, (_e, input: SuggestCommentPhrasesInput) =>
+    aiService.suggestCommentPhrases(input)
   )
   handle(IpcChannels.ai.testConnection, (_e, config: AiConnectionConfig) =>
     aiService.testConnection(config)

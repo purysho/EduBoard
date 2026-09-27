@@ -625,3 +625,21 @@ export const behaviourPoints = sqliteTable(
     studentIdx: index('behaviour_points_student_idx').on(t.studentId)
   })
 )
+
+export const reportComments = sqliteTable(
+  'report_comments',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    text: text('text').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    classStudent: uniqueIndex('report_comments_class_student').on(t.classId, t.studentId)
+  })
+)

@@ -119,7 +119,8 @@ export const IpcChannels = {
     pickExportPath: 'importExport:pickExportPath'
   },
   print: {
-    printStudentReport: 'print:printStudentReport'
+    printStudentReport: 'print:printStudentReport',
+    printClassReports: 'print:printClassReports'
   },
   standards: {
     list: 'standards:list',
@@ -194,6 +195,10 @@ export const IpcChannels = {
     remove: 'assignmentSubmissions:remove',
     openPath: 'assignmentSubmissions:openPath'
   },
+  reportComments: {
+    list: 'reportComments:list',
+    set: 'reportComments:set'
+  },
   behaviourPoints: {
     add: 'behaviourPoints:add',
     totals: 'behaviourPoints:totals',
@@ -226,7 +231,7 @@ export const IpcChannels = {
   },
   ai: {
     draftLessonPlan: 'ai:draftLessonPlan',
-    draftReportComment: 'ai:draftReportComment',
+    suggestCommentPhrases: 'ai:suggestCommentPhrases',
     testConnection: 'ai:testConnection'
   },
   homeworkAssignments: {

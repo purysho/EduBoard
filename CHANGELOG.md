@@ -7,6 +7,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 ### Added
 
 - **Grading scales.** Besides A–F: A–F with + and −, 优秀/良好/合格/待合格, 优秀/良好/中等/及格/不及格, 1–7, 9–1, Pass/Fail, or your own bands, per class (class Settings) and as the default for new classes (Settings). Badges, reports, composite grades and the Portal use the class's own labels.
+- **Report card comments** (a class's Report tab): write each student's comment, add sentences from a comment bank with {name}, {class}, {grade} and {percent} filled in (edit the bank in Settings → Your lists; it travels in school packs), and **Print all report cards** as one PDF, a page each. Comments print on the report card.
 - **Classroom tab** on every class, made for the projector (it stays visible while presenting): a random name picker that gets through everyone before repeating, a group maker (groups of N or N groups), a full-screen timer with a chime, and class points (+1 / −1 with an optional reason, weekly totals, undo). Students marked absent today are left out of the picker and groups.
 - **School pack** (Settings): export the school's name, logo, colour, grading scale, pass mark, terms, log buttons, student fields and stylesheet as one file; colleagues import it (after seeing exactly what it changes) to match. No student data is in it.
 - **School stylesheet** (Settings → Appearance): load a .css file for the school's own background or fonts. It can change EduBoard's colour tokens and use inline images, but nothing in it can load from the internet.
@@ -15,6 +16,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 - **Exit tickets: names from the class list.** Students pick their name instead of typing it, a second answer replaces their first, and the session shows who hasn't answered yet. A session can close itself after 5, 10, 15 or 30 minutes.
 - **Automatic updates.** A new version downloads in the background while you work and installs the next time you open EduBoard, after the usual launch backup; a small window says so and EduBoard reopens by itself. While it waits, a banner says it's ready, and an update icon at the top of the sidebar and a dot on Settings stay until it's installed. **Restart and update now** in Settings installs it straight away. Turn it off in Settings → *Install updates automatically* to update only by hand. If an automatic install ever doesn't finish, EduBoard doesn't retry on every launch; it waits for you to install from Settings.
+
+### Changed
+
+- **AI and report comments:** instead of drafting whole comments, AI now suggests a few short phrases (needs internet), each labelled with what it's based on (grade, trend, attendance or notes), for the teacher to add and edit. Replies that aren't short, grounded phrases are refused rather than shown.
 
 ### Security
 
