@@ -74,7 +74,10 @@ echo "    $DOMAIN goes to the Portal server at $UPSTREAM${WWW:+; $WWW goes to $D
 # ---- 4. Check ---------------------------------------------------------------------------
 say "Checking https://$DOMAIN (the first certificate can take a minute)"
 for _ in $(seq 1 24); do
-  if curl -fsS --max-time 10 "https://$DOMAIN/" 2>/dev/null | grep -q "teacher’s desk"; then
+  # Read the whole page before looking in it: with pipefail, "curl | grep -q" fails when
+  # grep stops reading early, even though the page was there.
+  PAGE="$(curl -fsS --max-time 10 "https://$DOMAIN/" 2>/dev/null || true)"
+  if [[ "$PAGE" == *"teacher’s desk"* ]]; then
     echo
     echo "    Done. https://$DOMAIN shows EduBoard's homepage; the Portal is still https://$PORTAL_HOST"
     exit 0
