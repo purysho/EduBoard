@@ -109,3 +109,21 @@ html.presenting [data-private] {
   filter: blur(6px);
   user-select: none;
 }
+
+/* Settings → Appearance. */
+.high-contrast {
+  --color-text-muted: #334155;
+  --color-border: #94a3b8;
+}
+.dark.high-contrast {
+  --color-text-muted: #cbd5e1;
+  --color-border: #64748b;
+}
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

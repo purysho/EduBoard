@@ -69,10 +69,15 @@ export function StudentReportPrintPage(): React.JSX.Element {
             Student report — {formatDate(new Date().toISOString())}
           </p>
         </div>
-        {(settings?.schoolName || settings?.teacherName) && (
-          <div className="text-right text-sm text-slate-500">
-            {settings.schoolName && <p>{settings.schoolName}</p>}
-            {settings.teacherName && <p>{settings.teacherName}</p>}
+        {(settings?.schoolName || settings?.teacherName || settings?.schoolLogo) && (
+          <div className="flex items-start gap-3 text-right text-sm text-slate-500">
+            <div>
+              {settings.schoolName && <p>{settings.schoolName}</p>}
+              {settings.teacherName && <p>{settings.teacherName}</p>}
+            </div>
+            {settings.schoolLogo && (
+              <img src={settings.schoolLogo} alt="" className="h-14 w-14 object-contain" />
+            )}
           </div>
         )}
       </div>

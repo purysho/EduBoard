@@ -662,6 +662,14 @@ export interface AppSettings {
   /** With password protection on: lock after this many minutes with no keyboard or
    * mouse use (0 = only when locked by hand or the computer locks/sleeps). */
   autoLockMinutes: number
+  /** The school's logo as a small PNG data URL (resized on upload), or '' for none.
+   * Shown in the sidebar and on report cards and other printouts. */
+  schoolLogo: string
+  /** '#rrggbb' to replace EduBoard's indigo with the school's colour; '' keeps it. */
+  accentColor: string
+  textSize: 'small' | 'normal' | 'large' | 'larger'
+  highContrast: boolean
+  reduceMotion: boolean
 }
 
 /** A student whose attendance in a class is under that class's minimum. */
@@ -771,7 +779,12 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   onboardingDismissed: false,
   extraBackupFolder: '',
   autoUpdate: true,
-  autoLockMinutes: 10
+  autoLockMinutes: 10,
+  schoolLogo: '',
+  accentColor: '',
+  textSize: 'normal',
+  highContrast: false,
+  reduceMotion: false
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

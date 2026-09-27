@@ -98,11 +98,26 @@ export function Sidebar(): React.JSX.Element {
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-hover)] text-sm font-bold text-white shadow-sm">
-          EB
-        </div>
-        <span className="text-base font-semibold tracking-tight text-[var(--color-text)]">
-          EduBoard
+        {settings?.schoolLogo ? (
+          <img
+            src={settings.schoolLogo}
+            alt=""
+            className="h-9 w-9 shrink-0 rounded-xl object-contain"
+          />
+        ) : (
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-hover)] text-sm font-bold text-white shadow-sm">
+            EB
+          </div>
+        )}
+        <span className="min-w-0 leading-tight">
+          <span className="block text-base font-semibold tracking-tight text-[var(--color-text)]">
+            EduBoard
+          </span>
+          {settings?.schoolName && (
+            <span className="block truncate text-[11px] text-[var(--color-text-muted)]">
+              {settings.schoolName}
+            </span>
+          )}
         </span>
         <button
           onClick={() => setPresenting(!presenting)}

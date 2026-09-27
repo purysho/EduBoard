@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useSettings } from './queries'
+import { applyAppearance } from './appearance'
 
 export function useThemeEffect(): void {
   const { data: settings } = useSettings()
@@ -23,4 +24,8 @@ export function useThemeEffect(): void {
     apply(theme === 'dark')
     return undefined
   }, [settings?.theme])
+
+  useEffect(() => {
+    if (settings) applyAppearance(settings)
+  }, [settings])
 }
