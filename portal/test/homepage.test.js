@@ -36,3 +36,49 @@ test('the homepage is at /download, and is the front page only for HOMEPAGE_HOST
   const portalFront = await get(portal.url + '/', 'portal.example')
   assert.match(portalFront.body, /<title>EduBoard Portal<\/title>/) // still the student login
 })
+
+test('the homepage’s Log in link reaches the Portal login from either address', async (t) => {
+  const portal = await startPortal({
+    HOMEPAGE_HOSTS: 'edu-board.com',
+    PORTAL_HOST: 'portal.edu-board.com'
+  })
+  t.after(portal.stop)
+  const home = await get(portal.url + '/', 'edu-board.com')
+  assert.match(home.body, /href="\/login"/)
+  // On the homepage's own address, it goes to the Portal's address…
+  const fromHome = await getHead(portal.url + '/login', 'edu-board.com')
+  assert.equal(fromHome.status, 302)
+  assert.equal(fromHome.location, 'https://portal.edu-board.com/')
+  // …and on the Portal's address it's just the front page.
+  const fromPortal = await getHead(portal.url + '/login', 'portal.edu-board.com')
+  assert.equal(fromPortal.location, '/')
+  // The login page asks search engines to leave it out; the homepage doesn't.
+  assert.match(
+    (await get(portal.url + '/', 'portal.edu-board.com')).body,
+    /name="robots" content="noindex"/
+  )
+  assert.doesNotMatch(home.body, /noindex/)
+})
+
+test('without PORTAL_HOST, Log in on the homepage address shows the login there', async (t) => {
+  const portal = await startPortal({ HOMEPAGE_HOSTS: 'edu-board.com' })
+  t.after(portal.stop)
+  const page = await get(portal.url + '/login', 'edu-board.com')
+  assert.equal(page.status, 200)
+  assert.match(page.body, /<title>EduBoard Portal<\/title>/)
+})
+
+function getHead(url, host) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url)
+    http
+      .get(
+        { hostname: u.hostname, port: u.port, path: u.pathname, headers: { Host: host } },
+        (res) => {
+          res.resume()
+          resolve({ status: res.statusCode, location: res.headers.location })
+        }
+      )
+      .on('error', reject)
+  })
+}

@@ -44,9 +44,17 @@ const homepageHosts = (process.env.HOMEPAGE_HOSTS || '')
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean)
 app.get(['/download', '/download/'], (_req, res) => res.sendFile(HOMEPAGE))
-app.get('/', (req, res, next) =>
-  homepageHosts.includes((req.hostname || '').toLowerCase()) ? res.sendFile(HOMEPAGE) : next()
-)
+const onHomepageHost = (req) => homepageHosts.includes((req.hostname || '').toLowerCase())
+app.get('/', (req, res, next) => (onHomepageHost(req) ? res.sendFile(HOMEPAGE) : next()))
+// The homepage's "Log in" links. On a homepage host "/" is the homepage itself, so they go
+// to the Portal's own address (PORTAL_HOST, e.g. portal.edu-board.com), or failing that
+// show the login here.
+const portalHost = (process.env.PORTAL_HOST || '').trim().toLowerCase()
+app.get('/login', (req, res) => {
+  if (!onHomepageHost(req)) return res.redirect('/')
+  if (portalHost) return res.redirect(`https://${portalHost}/`)
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+})
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Request bodies are only read after the caller has proven who they are, and only as

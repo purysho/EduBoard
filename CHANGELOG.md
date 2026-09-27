@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- **edu-board.com as the homepage.** `Set-Up-Homepage.cmd` (double-click, once) updates the Portal and makes edu-board.com and www.edu-board.com show EduBoard's homepage with downloads, while the Portal stays at portal.edu-board.com. The homepage's "Log in" links go to the Portal's address (new `PORTAL_HOST` setting), and the Portal's login and admin pages ask search engines to leave them out of results.
+
 ## [0.5.1] — 2026-09-27
 
 **If you run a Portal, update it** (Update-Live-Portal): the homepage at `/download` and the Portal's PT error codes need the updated Portal.

@@ -70,7 +70,8 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    | `PORTAL_DATA_DIR` | `portal/data` | Where the database and every upload live. Back up this one folder. |
    | `HOST` | all interfaces | Set `127.0.0.1` to accept connections from this machine only (Caddy on the same machine still works). The local test launcher sets this. |
    | `PORTAL_TIMEZONE` | `UTC` | Only used until a teacher's desktop app publishes once. After that, each teacher's own time zone decides when their due dates end (Late/Missing labels). |
-   | `HOMEPAGE_HOSTS` | none | Comma-separated host names (e.g. `edu-board.com,www.edu-board.com`) whose front page is EduBoard's homepage with downloads instead of the student login. The homepage is always at `/download` too. Point those names at this server and add them to the Caddyfile. |
+   | `HOMEPAGE_HOSTS` | none | Comma-separated host names (e.g. `edu-board.com,www.edu-board.com`) whose front page is EduBoard's homepage with downloads instead of the student login. The homepage is always at `/download` too. Point those names at this server and add them to the Caddyfile (Set-Up-Homepage.cmd does both server steps). |
+   | `PORTAL_HOST` | none | The Portal's own address (e.g. `portal.edu-board.com`), where the homepage's "Log in" links send students and parents when it's shown on a `HOMEPAGE_HOSTS` name. |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
    | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |
    | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |
@@ -113,6 +114,16 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
 9. **In the desktop app**, go to Settings → Portal and families → set Portal URL to
    `https://portal.yourdomain.com` and Portal sync secret to the same `SYNC_SECRET` you
    set above. Click "Publish to portal" once to push your first batch of data.
+
+### Showing the homepage on your main domain
+
+To make `yourdomain.com` show EduBoard's homepage while the Portal stays at
+`portal.yourdomain.com`: point `@` and `www` at the Portal server (A records with the same
+address as `portal`), then run `portal/scripts/set-up-homepage.sh` on the server as root
+(`HOMEPAGE_DOMAIN=yourdomain.com` for a domain other than edu-board.com). It checks the DNS,
+sets `HOMEPAGE_HOSTS` and `PORTAL_HOST`, adds the domain to the Caddyfile (keeping a
+`.bak` copy, and putting it back if Caddy rejects the change), and checks the result. On
+Windows, `Set-Up-Homepage.cmd` does all of this for edu-board.com.
 
 ## Multiple teachers on one Portal (a school deployment)
 

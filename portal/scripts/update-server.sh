@@ -190,7 +190,7 @@ if [ -z "$RESTARTED" ] && command -v systemctl >/dev/null && [ -d /run/systemd/s
   # Holds the Portal's secrets: readable by root only, from the moment it's created.
   umask 077
   if [ -n "$RUN_ENV" ]; then
-    echo "$RUN_ENV" | grep -E '^(SESSION_SECRET|SYNC_SECRET|ADMIN_SECRET|PORT|HOST|NODE_ENV|TRUST_PROXY|PORTAL_[A-Z_]*|RATE_[A-Z_]*|SMTP_[A-Z_]*)=' > "$ENV_FILE.new"
+    echo "$RUN_ENV" | grep -E '^(SESSION_SECRET|SYNC_SECRET|ADMIN_SECRET|PORT|HOST|NODE_ENV|TRUST_PROXY|HOMEPAGE_HOSTS|PORTAL_[A-Z_]*|RATE_[A-Z_]*|SMTP_[A-Z_]*)=' > "$ENV_FILE.new"
   elif [ -f "$PORTAL_DIR/.env" ]; then
     cp "$PORTAL_DIR/.env" "$ENV_FILE.new"
   fi
