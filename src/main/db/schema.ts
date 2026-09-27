@@ -583,6 +583,7 @@ export const exitTickets = sqliteTable('exit_tickets', {
   title: text('title').notNull(),
   questions: text('questions', { mode: 'json' }).notNull().$type<ExitTicketQuestion[]>(),
   isOpen: integer('is_open', { mode: 'boolean' }).notNull().default(false),
+  closesAt: text('closes_at'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 })
@@ -595,6 +596,7 @@ export const exitTicketResponses = sqliteTable(
       .notNull()
       .references(() => exitTickets.id, { onDelete: 'cascade' }),
     studentName: text('student_name').notNull(),
+    studentId: text('student_id').references(() => students.id, { onDelete: 'set null' }),
     answers: text('answers', { mode: 'json' }).notNull().$type<Record<string, string>>(),
     submittedAt: text('submitted_at').notNull()
   },

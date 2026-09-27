@@ -320,7 +320,8 @@ export interface EduBoardApi {
   exitTickets: {
     getByClass(classId: string): Promise<ExitTicket | undefined>
     upsert(input: UpsertExitTicketInput): Promise<ExitTicket>
-    setOpen(id: string, isOpen: boolean): Promise<ExitTicket>
+    /** `autoCloseMinutes`: an opened session closes itself after that long (null: never). */
+    setOpen(id: string, isOpen: boolean, autoCloseMinutes?: number | null): Promise<ExitTicket>
     listResponses(exitTicketId: string): Promise<ExitTicketResponse[]>
     clearResponses(exitTicketId: string): Promise<void>
     getServerInfo(): Promise<ExitTicketServerInfo>

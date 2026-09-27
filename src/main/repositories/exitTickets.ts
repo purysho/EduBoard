@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { exitTicketResponses, exitTickets } from '../db/schema'
 import { newId, nowIso } from '../db/util'
@@ -7,9 +7,28 @@ import type { SubmitExitTicketResponseInput, UpsertExitTicketInput } from '@shar
 
 export type { UpsertExitTicketInput, SubmitExitTicketResponseInput }
 
+/** Open and not past its closing time. */
+export function isAcceptingResponses(ticket: ExitTicket, now: Date = new Date()): boolean {
+  return ticket.isOpen && (!ticket.closesAt || new Date(ticket.closesAt) > now)
+}
+
+/** A session past its closing time is closed here, the first time anyone looks, so the
+ * teacher's screen and the students' page agree without a timer running. */
+function closeIfExpired(ticket: ExitTicket | undefined): ExitTicket | undefined {
+  if (!ticket || !ticket.isOpen || isAcceptingResponses(ticket)) return ticket
+  getDb()
+    .update(exitTickets)
+    .set({ isOpen: false, closesAt: null, updatedAt: nowIso() })
+    .where(eq(exitTickets.id, ticket.id))
+    .run()
+  return { ...ticket, isOpen: false, closesAt: null }
+}
+
 export function getExitTicketByClass(classId: string): ExitTicket | undefined {
-  return getDb().select().from(exitTickets).where(eq(exitTickets.classId, classId)).get() as
-    ExitTicket | undefined
+  return closeIfExpired(
+    getDb().select().from(exitTickets).where(eq(exitTickets.classId, classId)).get() as
+      ExitTicket | undefined
+  )
 }
 
 export function getExitTicket(id: string): ExitTicket | undefined {
@@ -38,6 +57,7 @@ export function upsertExitTicket(input: UpsertExitTicketInput): ExitTicket {
     title: input.title,
     questions: input.questions,
     isOpen: false,
+    closesAt: null,
     createdAt: now,
     updatedAt: now
   }
@@ -45,9 +65,22 @@ export function upsertExitTicket(input: UpsertExitTicketInput): ExitTicket {
   return row
 }
 
-export function setExitTicketOpen(id: string, isOpen: boolean): ExitTicket {
+/** Opens or closes a session. `autoCloseMinutes` makes an opened session close itself
+ * that many minutes from now; null or 0 leaves it open until the teacher closes it. */
+export function setExitTicketOpen(
+  id: string,
+  isOpen: boolean,
+  autoCloseMinutes: number | null = null
+): ExitTicket {
   const db = getDb()
-  db.update(exitTickets).set({ isOpen, updatedAt: nowIso() }).where(eq(exitTickets.id, id)).run()
+  const closesAt =
+    isOpen && autoCloseMinutes && autoCloseMinutes > 0
+      ? new Date(Date.now() + autoCloseMinutes * 60_000).toISOString()
+      : null
+  db.update(exitTickets)
+    .set({ isOpen, closesAt, updatedAt: nowIso() })
+    .where(eq(exitTickets.id, id))
+    .run()
   const updated = getExitTicket(id)
   if (!updated) throw new Error(`Exit ticket ${id} not found after update`)
   return updated
@@ -72,13 +105,29 @@ export function clearExitTicketResponses(exitTicketId: string): void {
 /** Called from the local HTTP server (see services/exitTicketServer.ts), not the
  * renderer — a student's device posts directly to the server, which writes here. */
 export function submitExitTicketResponse(input: SubmitExitTicketResponseInput): ExitTicketResponse {
+  const db = getDb()
   const row: ExitTicketResponse = {
     id: newId(),
     exitTicketId: input.exitTicketId,
     studentName: input.studentName,
+    studentId: input.studentId ?? null,
     answers: input.answers,
     submittedAt: nowIso()
   }
-  getDb().insert(exitTicketResponses).values(row).run()
+  db.transaction((tx) => {
+    // One answer per student: a resubmission (a changed mind, or someone else sending
+    // under their name) replaces the earlier one rather than piling up beside it.
+    if (row.studentId) {
+      tx.delete(exitTicketResponses)
+        .where(
+          and(
+            eq(exitTicketResponses.exitTicketId, row.exitTicketId),
+            eq(exitTicketResponses.studentId, row.studentId)
+          )
+        )
+        .run()
+    }
+    tx.insert(exitTicketResponses).values(row).run()
+  })
   return row
 }

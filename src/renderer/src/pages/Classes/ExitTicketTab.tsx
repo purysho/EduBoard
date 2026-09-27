@@ -8,6 +8,7 @@ import { FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
+  useClassRoster,
   useClearExitTicketResponses,
   useExitTicket,
   useExitTicketResponses,
@@ -158,7 +159,10 @@ export function ExitTicketTab(): React.JSX.Element {
           classId={classSection.id}
           ticketId={ticket.id}
           isOpen={ticket.isOpen}
-          onToggleOpen={(open) => setOpen.mutate({ id: ticket.id, isOpen: open })}
+          closesAt={ticket.closesAt}
+          onToggleOpen={(open, autoCloseMinutes) =>
+            setOpen.mutate({ id: ticket.id, isOpen: open, autoCloseMinutes })
+          }
           toggling={setOpen.isPending}
         />
       )}
@@ -170,20 +174,30 @@ function SessionPanel({
   classId,
   ticketId,
   isOpen,
+  closesAt,
   onToggleOpen,
   toggling
 }: {
   classId: string
   ticketId: string
   isOpen: boolean
-  onToggleOpen: (open: boolean) => void
+  closesAt: string | null
+  onToggleOpen: (open: boolean, autoCloseMinutes?: number | null) => void
   toggling: boolean
 }): React.JSX.Element {
+  const [autoClose, setAutoClose] = useState<number>(10)
+  const { data: roster } = useClassRoster(classId)
   const { data: serverInfo } = useExitTicketServerInfo(isOpen)
   const { data: responses } = useExitTicketResponses(ticketId, isOpen)
   const clearResponses = useClearExitTicketResponses(ticketId)
   const [confirmClear, setConfirmClear] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  // Students who haven't answered yet (responses from before names came from the roster
+  // carry no student id, so they can't be matched and don't count).
+  const answered = new Set((responses ?? []).map((r) => r.studentId).filter(Boolean))
+  const notAnswered = (roster ?? [])
+    .filter((r) => r.enrollment.status === 'active' && !answered.has(r.student.id))
+    .map((r) => `${r.student.preferredName?.trim() || r.student.firstName} ${r.student.lastName}`)
 
   // The server's routes are keyed by class id (getExitTicketByClass), not the ticket's
   // own id — a class has at most one ticket, so the class id is the stable, natural key
@@ -208,24 +222,42 @@ function SessionPanel({
           <Wifi size={15} className="text-[var(--color-text-muted)]" aria-hidden />
           Session
         </h2>
-        <Button
-          variant={isOpen ? 'danger' : 'primary'}
-          size="sm"
-          onClick={() => onToggleOpen(!isOpen)}
-          disabled={toggling}
-        >
-          {isOpen ? (
-            <>
-              <Square size={13} className="mr-1 inline" aria-hidden />
-              Stop session
-            </>
-          ) : (
-            <>
-              <Play size={13} className="mr-1 inline" aria-hidden />
-              Start session
-            </>
+        <div className="flex items-center gap-2">
+          {!isOpen && (
+            <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+              Close by itself after
+              <select
+                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-1 text-xs text-[var(--color-text)]"
+                value={autoClose}
+                onChange={(e) => setAutoClose(Number(e.target.value))}
+              >
+                <option value={5}>5 minutes</option>
+                <option value={10}>10 minutes</option>
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={0}>Never</option>
+              </select>
+            </label>
           )}
-        </Button>
+          <Button
+            variant={isOpen ? 'danger' : 'primary'}
+            size="sm"
+            onClick={() => onToggleOpen(!isOpen, isOpen ? null : autoClose || null)}
+            disabled={toggling}
+          >
+            {isOpen ? (
+              <>
+                <Square size={13} className="mr-1 inline" aria-hidden />
+                Stop session
+              </>
+            ) : (
+              <>
+                <Play size={13} className="mr-1 inline" aria-hidden />
+                Start session
+              </>
+            )}
+          </Button>
+        </div>
       </CardHeader>
       <CardBody className="space-y-4">
         {!isOpen ? (
@@ -248,6 +280,11 @@ function SessionPanel({
                   Students on this WiFi go to:
                 </p>
                 <p className="mt-1 break-all text-lg font-semibold">{studentUrl ?? '…'}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  Students choose their name from the class list; answering again replaces their
+                  earlier answer.
+                  {closesAt && ` Closes by itself at ${formatDate(closesAt, 'p')}.`}
+                </p>
                 {!serverInfo?.lanIp && (
                   <p className="mt-2 text-xs text-[var(--color-warning)]">
                     Couldn&apos;t detect a network address — make sure this computer is connected to
@@ -269,6 +306,14 @@ function SessionPanel({
                 Clear
               </button>
             </div>
+            {notAnswered.length > 0 && (
+              <p className="text-xs text-[var(--color-text-muted)]">
+                <span className="font-medium text-[var(--color-text)]">
+                  Not answered yet ({notAnswered.length}):
+                </span>{' '}
+                {notAnswered.join(', ')}
+              </p>
+            )}
             {!responses?.length ? (
               <p className="text-sm text-[var(--color-text-muted)]">
                 No responses yet — they&apos;ll appear here as students submit.

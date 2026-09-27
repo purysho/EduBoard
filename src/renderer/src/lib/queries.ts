@@ -1233,7 +1233,9 @@ export function useDeleteAssignmentSubmission(classId: string, assessmentId: str
 export function useExitTicket(classId: string) {
   return useQuery({
     queryKey: queryKeys.exitTicketByClass(classId),
-    queryFn: () => api().exitTickets.getByClass(classId)
+    queryFn: () => api().exitTickets.getByClass(classId),
+    // An open session can close itself; checking each half minute keeps the button in step.
+    refetchInterval: (query) => (query.state.data?.isOpen ? 30_000 : false)
   })
 }
 
@@ -1248,8 +1250,15 @@ export function useUpsertExitTicket(classId: string) {
 export function useSetExitTicketOpen(classId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, isOpen }: { id: string; isOpen: boolean }) =>
-      api().exitTickets.setOpen(id, isOpen),
+    mutationFn: ({
+      id,
+      isOpen,
+      autoCloseMinutes
+    }: {
+      id: string
+      isOpen: boolean
+      autoCloseMinutes?: number | null
+    }) => api().exitTickets.setOpen(id, isOpen, autoCloseMinutes),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.exitTicketByClass(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.exitTicketServerInfo })

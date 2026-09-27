@@ -623,10 +623,13 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.exitTickets.upsert, (_e, input: exitTicketsRepo.UpsertExitTicketInput) =>
     exitTicketsRepo.upsertExitTicket(input)
   )
-  handle(IpcChannels.exitTickets.setOpen, (_e, id: string, isOpen: boolean) => {
-    if (isOpen) startExitTicketServer()
-    return exitTicketsRepo.setExitTicketOpen(id, isOpen)
-  })
+  handle(
+    IpcChannels.exitTickets.setOpen,
+    (_e, id: string, isOpen: boolean, autoCloseMinutes?: number | null) => {
+      if (isOpen) startExitTicketServer()
+      return exitTicketsRepo.setExitTicketOpen(id, isOpen, autoCloseMinutes ?? null)
+    }
+  )
   handle(IpcChannels.exitTickets.listResponses, (_e, exitTicketId: string) =>
     exitTicketsRepo.listExitTicketResponses(exitTicketId)
   )

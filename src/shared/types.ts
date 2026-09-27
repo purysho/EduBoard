@@ -328,6 +328,8 @@ export interface ExitTicket {
   title: string
   questions: ExitTicketQuestion[]
   isOpen: boolean
+  /** When an open session closes itself; null means it stays open until closed. */
+  closesAt: string | null
   createdAt: string
   updatedAt: string
 }
@@ -336,6 +338,9 @@ export interface ExitTicketResponse {
   id: string
   exitTicketId: string
   studentName: string
+  /** The roster student who answered; null for responses from before names were picked
+   * from the roster, or a student since removed. */
+  studentId: string | null
   answers: Record<string, string>
   submittedAt: string
 }

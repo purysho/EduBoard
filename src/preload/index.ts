@@ -228,7 +228,8 @@ const api: EduBoardApi = {
   exitTickets: {
     getByClass: (classId) => invoke(IpcChannels.exitTickets.getByClass, classId),
     upsert: (input) => invoke(IpcChannels.exitTickets.upsert, input),
-    setOpen: (id, isOpen) => invoke(IpcChannels.exitTickets.setOpen, id, isOpen),
+    setOpen: (id, isOpen, autoCloseMinutes) =>
+      invoke(IpcChannels.exitTickets.setOpen, id, isOpen, autoCloseMinutes),
     listResponses: (exitTicketId) => invoke(IpcChannels.exitTickets.listResponses, exitTicketId),
     clearResponses: (exitTicketId) => invoke(IpcChannels.exitTickets.clearResponses, exitTicketId),
     getServerInfo: () => invoke(IpcChannels.exitTickets.getServerInfo),

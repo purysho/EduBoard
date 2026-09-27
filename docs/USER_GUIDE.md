@@ -223,9 +223,13 @@ The layout is saved per class automatically — no separate save step.
 An exit ticket is a quick 1–3 question check students answer on their own device (phone, tablet, laptop) over the classroom WiFi — no internet connection, app install, or account needed on their end.
 
 1. **Exit ticket** (per class) → write up to 3 questions (short answer or multiple choice) and **Save**.
-2. **Start session** — EduBoard starts a small local server and shows a QR code plus a web address. Students on the same WiFi scan the QR code or type the address into their browser.
-3. Students fill in their name and answers and submit. Responses appear in the **Responses** list live (it polls every few seconds while the session is open).
-4. **Stop session** when you're done; **Clear** wipes the recorded responses if you want to reuse the same questions with another class.
+2. Choose how long it stays open (**Close by itself after** 5, 10, 15 or 30 minutes, or **Never**), then **Start session**. EduBoard starts a small local server and shows a QR code plus a web address. Students on the same WiFi scan the QR code or type the address into their browser.
+3. Students **choose their name from the class list**, answer and submit. If a student submits again, the new answer replaces the old one, so there's one answer per student. Responses appear in the **Responses** list live, and **Not answered yet** lists who's missing.
+4. The session closes by itself at the time you chose, or press **Stop session**. **Clear** wipes the recorded responses if you want to reuse the same questions with another class.
+
+A class with no students enrolled yet falls back to students typing their name. Each device can send about a dozen answers a minute, which is plenty for a real student and stops anyone flooding the list.
+
+**QR attendance check-in** (Attendance tab) works the same way: students scan the code and tap their own name. Each phone can check in one student per session, so nobody can mark a friend present from their phone; they're told to ask you instead. You can still tick anyone present or absent yourself in the attendance grid.
 
 ![Exit tickets](screenshots/exit-tickets.png)
 

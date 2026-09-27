@@ -688,6 +688,21 @@ const migrations: Migration[] = [
       // below it are flagged on the Dashboard.
       db.exec(`ALTER TABLE classes ADD COLUMN min_attendance REAL;`)
     }
+  },
+  {
+    id: 29,
+    name: 'exit_ticket_roster_and_auto_close',
+    up: (db) => {
+      // Students now pick their name from the roster, so a response knows who sent it
+      // (and a second answer replaces the first); a session can close itself at a set time.
+      db.exec(`
+        ALTER TABLE exit_tickets ADD COLUMN closes_at TEXT;
+        ALTER TABLE exit_ticket_responses ADD COLUMN student_id TEXT
+          REFERENCES students(id) ON DELETE SET NULL;
+        CREATE INDEX exit_ticket_responses_student_idx
+          ON exit_ticket_responses(exit_ticket_id, student_id);
+      `)
+    }
   }
 ]
 

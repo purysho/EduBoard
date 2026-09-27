@@ -1,6 +1,11 @@
-import { createServer, type Server } from 'http'
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'http'
+import { randomBytes } from 'crypto'
 import { networkInterfaces } from 'os'
-import { getExitTicketByClass, submitExitTicketResponse } from '../repositories/exitTickets'
+import {
+  getExitTicketByClass,
+  isAcceptingResponses,
+  submitExitTicketResponse
+} from '../repositories/exitTickets'
 import { getRosterForClass } from '../repositories/enrollments'
 import { markAttendance } from '../repositories/attendanceRecords'
 import type { AttendanceCheckInStatus, ExitTicketServerInfo } from '@shared/types'
@@ -23,6 +28,67 @@ function getLanIp(): string | null {
   return null
 }
 
+/** A student's name as it appears on their device's list. */
+function rosterName(student: {
+  firstName: string
+  lastName: string
+  preferredName?: string | null
+}): string {
+  return `${student.preferredName?.trim() || student.firstName} ${student.lastName}`.trim()
+}
+
+function activeRoster(classId: string): { id: string; name: string }[] {
+  return getRosterForClass(classId)
+    .filter((r) => r.enrollment.status === 'active')
+    .map((r) => ({ id: r.student.id, name: rosterName(r.student) }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// These limits only stop one device flooding a session. Per device (its cookie) the
+// limit is tight; per network address it's generous, because on some school networks
+// every phone in the room reaches this computer from the same address.
+const PER_DEVICE_PER_MINUTE = 12
+const PER_ADDRESS_PER_MINUTE = 120
+const recentSubmits = new Map<string, number[]>()
+
+/** Counts one try against `key` and says whether it's over `limit` in the last minute. */
+export function overSubmitLimit(key: string, limit: number, now: number = Date.now()): boolean {
+  const since = now - 60_000
+  const times = (recentSubmits.get(key) ?? []).filter((t) => t > since)
+  const over = times.length >= limit
+  if (!over) times.push(now)
+  recentSubmits.set(key, times)
+  return over
+}
+
+function tooManyTries(req: IncomingMessage): boolean {
+  const device = deviceId(req)
+  const overDevice = device ? overSubmitLimit(`device:${device}`, PER_DEVICE_PER_MINUTE) : false
+  const overAddress = overSubmitLimit(
+    `address:${req.socket.remoteAddress ?? ''}`,
+    PER_ADDRESS_PER_MINUTE
+  )
+  return overDevice || overAddress
+}
+
+const DEVICE_COOKIE = 'eb_device'
+
+/** A random id the check-in page gives each phone, so one phone can't check in the
+ * whole class. Not a login: a student can clear it, which only moves them to the
+ * teacher's attendance grid like before. */
+function deviceId(req: IncomingMessage): string | null {
+  const match = (req.headers.cookie ?? '').match(/(?:^|;\s*)eb_device=([a-f0-9]{32})(?:;|$)/)
+  return match ? match[1] : null
+}
+
+function ensureDeviceCookie(req: IncomingMessage, res: ServerResponse): void {
+  if (deviceId(req)) return
+  res.setHeader(
+    'Set-Cookie',
+    `${DEVICE_COOKIE}=${randomBytes(16).toString('hex')}; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000`
+  )
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -39,13 +105,22 @@ function escapeHtml(value: string): string {
 function renderPage(classId: string): string {
   const ticket = getExitTicketByClass(classId)
 
-  if (!ticket || !ticket.isOpen) {
+  if (!ticket || !isAcceptingResponses(ticket)) {
     return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Exit Ticket</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
 </head><body><p>No exit ticket is open right now. Ask your teacher.</p></body></html>`
   }
+
+  // Students pick themselves from the class list; a class with no roster yet falls back
+  // to typing a name.
+  const roster = activeRoster(classId)
+  const nameField = roster.length
+    ? `<select id="who" name="_student" required><option value="">Choose your name…</option>${roster
+        .map((r) => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`)
+        .join('')}</select>`
+    : '<input id="who" type="text" name="_name" required>'
 
   const questionsHtml = ticket.questions
     .map((q, i) => {
@@ -74,7 +149,7 @@ function renderPage(classId: string): string {
   .q{display:block;font-weight:600;margin-bottom:8px}
   .qn{color:#6366f1}
   textarea{width:100%;min-height:70px;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;resize:vertical}
-  input[type=text]{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+  input[type=text],select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
   .opts{display:flex;flex-direction:column;gap:6px}
   .opt{display:flex;align-items:center;gap:8px;font-weight:400}
   button{width:100%;padding:14px;background:#6366f1;color:#fff;border:none;border-radius:8px;font:inherit;font-weight:600;font-size:1rem}
@@ -85,8 +160,8 @@ function renderPage(classId: string): string {
   <form id="f">
     <h1>${escapeHtml(ticket.title)}</h1>
     <div class="question">
-      <label class="q">Your name</label>
-      <input type="text" name="_name" required>
+      <label class="q" for="who">Your name</label>
+      ${nameField}
     </div>
     ${questionsHtml}
     <button type="submit">Submit</button>
@@ -106,14 +181,14 @@ document.getElementById('f').addEventListener('submit', function (e) {
   fetch(window.location.pathname + '/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ studentName: data.get('_name'), answers: answers })
+    body: JSON.stringify({ studentId: data.get('_student'), studentName: data.get('_name'), answers: answers })
   }).then(function (res) {
     if (res.ok) {
       document.getElementById('f').style.display = 'none'
       document.getElementById('done').style.display = 'block'
     } else {
       btn.disabled = false
-      alert('Something went wrong — please try again.')
+      res.text().then(function (t) { alert(t || 'Something went wrong — please try again.') })
     }
   }).catch(function () {
     btn.disabled = false
@@ -128,10 +203,13 @@ document.getElementById('f').addEventListener('submit', function (e) {
 // checked in so far. In-memory only — like the server itself, a check-in session is a
 // live-class-period concept, not something that needs to survive an app restart; the
 // teacher just starts a new one next period.
-const openCheckIns = new Map<string, { date: string; checkedInStudentIds: Set<string> }>()
+const openCheckIns = new Map<
+  string,
+  { date: string; checkedInStudentIds: Set<string>; studentByDevice: Map<string, string> }
+>()
 
 export function openAttendanceCheckIn(classId: string, date: string): void {
-  openCheckIns.set(classId, { date, checkedInStudentIds: new Set() })
+  openCheckIns.set(classId, { date, checkedInStudentIds: new Set(), studentByDevice: new Map() })
 }
 
 export function closeAttendanceCheckIn(classId: string): void {
@@ -158,7 +236,7 @@ function renderAttendancePage(classId: string): string {
   const roster = getRosterForClass(classId).filter((r) => r.enrollment.status === 'active')
   const studentsHtml = roster
     .map(({ student }) => {
-      const name = escapeHtml(`${student.firstName} ${student.lastName}`)
+      const name = escapeHtml(rosterName(student))
       const checkedIn = session.checkedInStudentIds.has(student.id)
       return `<button class="s${checkedIn ? ' done' : ''}" data-id="${student.id}" ${checkedIn ? 'disabled' : ''}>${name}${checkedIn ? ' ✓' : ''}</button>`
     })
@@ -200,7 +278,7 @@ document.querySelectorAll('.s').forEach(function (btn) {
         document.getElementById('done').style.display = 'block'
       } else {
         btn.disabled = false
-        alert('Something went wrong — please try again.')
+        res.text().then(function (t) { alert(t || 'Something went wrong — please try again.') })
       }
     }).catch(function () {
       btn.disabled = false
@@ -245,6 +323,12 @@ export function startExitTicketServer(): void {
       const isCheckIn = !!checkInMatch[2]
 
       if (isCheckIn && req.method === 'POST') {
+        if (tooManyTries(req)) {
+          res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' })
+          res.end('Too many tries. Wait a minute, then try again.')
+          return
+        }
+        const device = deviceId(req)
         readBody(req)
           .then((raw) => {
             const session = openCheckIns.get(classId)
@@ -268,8 +352,23 @@ export function startExitTicketServer(): void {
               res.end('Unknown student')
               return
             }
+            if (!device) {
+              res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' })
+              res.end('Open the check-in page again from the QR code, then tap your name.')
+              return
+            }
+            const already = session.studentByDevice.get(device)
+            if (already && already !== studentId) {
+              const who = roster.find((r) => r.student.id === already)
+              res.writeHead(409, { 'Content-Type': 'text/plain; charset=utf-8' })
+              res.end(
+                `This device already checked in ${who ? rosterName(who.student) : 'someone'}. Each student checks in on their own device; ask your teacher if that's wrong.`
+              )
+              return
+            }
             markAttendance({ classId, studentId, date: session.date, status: 'present' })
             session.checkedInStudentIds.add(studentId)
+            session.studentByDevice.set(device, studentId)
             res.writeHead(200, { 'Content-Type': 'application/json' })
             res.end('{"ok":true}')
           })
@@ -281,6 +380,7 @@ export function startExitTicketServer(): void {
       }
 
       if (!isCheckIn && req.method === 'GET') {
+        ensureDeviceCookie(req, res)
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(renderAttendancePage(classId))
         return
@@ -303,15 +403,20 @@ export function startExitTicketServer(): void {
     const isSubmit = !!match[2]
 
     if (isSubmit && req.method === 'POST') {
+      if (tooManyTries(req)) {
+        res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' })
+        res.end('Too many tries. Wait a minute, then try again.')
+        return
+      }
       readBody(req)
         .then((raw) => {
           const ticket = getExitTicketByClass(classId)
-          if (!ticket || !ticket.isOpen) {
+          if (!ticket || !isAcceptingResponses(ticket)) {
             res.writeHead(403, { 'Content-Type': 'text/plain' })
             res.end('This exit ticket is closed.')
             return
           }
-          let parsed: { studentName?: unknown; answers?: unknown }
+          let parsed: { studentId?: unknown; studentName?: unknown; answers?: unknown }
           try {
             parsed = JSON.parse(raw)
           } catch {
@@ -319,8 +424,23 @@ export function startExitTicketServer(): void {
             res.end('Bad request')
             return
           }
-          const studentName =
-            typeof parsed.studentName === 'string' ? parsed.studentName.trim().slice(0, 200) : ''
+          // With a roster, the name must be one of its students (the id is checked
+          // against the class, never trusted); without one, a typed name is accepted.
+          const roster = activeRoster(classId)
+          let studentId: string | null = null
+          let studentName = ''
+          if (roster.length) {
+            const picked = roster.find((r) => r.id === parsed.studentId)
+            if (!picked) {
+              res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' })
+              res.end('Choose your name from the list.')
+              return
+            }
+            studentId = picked.id
+            studentName = picked.name
+          } else if (typeof parsed.studentName === 'string') {
+            studentName = parsed.studentName.trim().slice(0, 200)
+          }
           const rawAnswers =
             parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {}
           const answers: Record<string, string> = {}
@@ -332,7 +452,7 @@ export function startExitTicketServer(): void {
             res.end('Missing name or answers')
             return
           }
-          submitExitTicketResponse({ exitTicketId: ticket.id, studentName, answers })
+          submitExitTicketResponse({ exitTicketId: ticket.id, studentName, studentId, answers })
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end('{"ok":true}')
         })
@@ -344,6 +464,7 @@ export function startExitTicketServer(): void {
     }
 
     if (!isSubmit && req.method === 'GET') {
+      ensureDeviceCookie(req, res)
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
       res.end(renderPage(classId))
       return
@@ -398,6 +519,7 @@ export function stopExitTicketServer(): void {
   server = null
   boundPort = null
   openCheckIns.clear()
+  recentSubmits.clear()
 }
 
 export function getExitTicketServerInfo(): ExitTicketServerInfo {

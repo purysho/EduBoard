@@ -201,5 +201,7 @@ export type UpsertExitTicketInput = {
 export type SubmitExitTicketResponseInput = {
   exitTicketId: string
   studentName: string
+  /** The roster student answering. Their earlier answer to the same ticket is replaced. */
+  studentId?: string | null
   answers: Record<string, string>
 }
