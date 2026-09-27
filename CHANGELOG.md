@@ -7,6 +7,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 ### Added
 
 - **Grading scales.** Besides A–F: A–F with + and −, 优秀/良好/合格/待合格, 优秀/良好/中等/及格/不及格, 1–7, 9–1, Pass/Fail, or your own bands, per class (class Settings) and as the default for new classes (Settings). Badges, reports, composite grades and the Portal use the class's own labels.
+- **Your lists** (Settings): edit the one-tap buttons above a student's log, and add your own student fields (house, allergies, support plan…), which appear on the student form and page and are filled by a roster import from columns with the same name. They're never sent to the Portal.
 - **Appearance** (Settings): the school's logo (in the sidebar and on report cards) and colour, text size, higher contrast and reduced motion. The school's name also shows under EduBoard in the sidebar.
 
 - **Exit tickets: names from the class list.** Students pick their name instead of typing it, a second answer replaces their first, and the session shows who hasn't answered yet. A session can close itself after 5, 10, 15 or 30 minutes.

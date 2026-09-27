@@ -11,6 +11,7 @@ import { upsertScore } from '../../repositories/scores'
 import { listStudents } from '../../repositories/students'
 import { getRosterForClass } from '../../repositories/enrollments'
 import { importRoster, exportGradebookXlsx } from '../importExport'
+import { updateSettings } from '../../repositories/settingsRepo'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let tempDir: string
@@ -47,6 +48,19 @@ describe('importRoster', () => {
     expect(students.map((s) => s.lastName).sort()).toEqual(['Hopper', 'Turing'])
     expect(students.find((s) => s.lastName === 'Hopper')?.studentNumber).toBe('S100')
     expect(students.find((s) => s.lastName === 'Hopper')?.email).toBe('grace@example.com')
+  })
+
+  it('fills the teacher’s own student fields from columns with the same name', async () => {
+    updateSettings({
+      studentFields: [
+        { id: 'house', label: 'House' },
+        { id: 'allergy', label: 'Allergies' }
+      ]
+    })
+    const filePath = join(tempDir, 'roster.csv')
+    writeFileSync(filePath, 'First Name,Last Name,house,Allergies\nGrace,Hopper,Blue,\n')
+    await importRoster(filePath)
+    expect(listStudents()[0].customFields).toEqual({ house: 'Blue' })
   })
 
   it('also enrolls imported students when a class id is given', async () => {

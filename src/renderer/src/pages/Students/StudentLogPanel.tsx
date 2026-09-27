@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { NotebookText, Trash2 } from 'lucide-react'
-import type { ContactMethod, StudentLogType } from '@shared/types'
+import { DEFAULT_LOG_QUICK_ADDS, type ContactMethod, type StudentLogType } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
 import { Textarea } from '@renderer/components/ui/Field'
 import type { Tone } from '@renderer/lib/grade'
 import {
+  useSettings,
   useCreateStudentLogEntry,
   useDeleteStudentLogEntry,
   useStudentLogEntries,
@@ -22,25 +23,9 @@ const TYPE_META: Record<StudentLogType, { label: string; tone: Tone }> = {
   contact: { label: 'Contact', tone: 'primary' }
 }
 
-const QUICK_ADD: {
-  label: string
-  type: StudentLogType
-  text: string
-  contactMethod?: ContactMethod
-}[] = [
-  { label: 'Missed homework', type: 'concern', text: 'Missed homework.' },
-  { label: 'Great participation', type: 'positive', text: 'Great participation in class today.' },
-  { label: 'Late to class', type: 'concern', text: 'Arrived late to class.' },
-  {
-    label: 'Called home',
-    type: 'contact',
-    text: 'Called home to discuss progress.',
-    contactMethod: 'phone'
-  },
-  { label: 'Emailed guardian', type: 'contact', text: 'Emailed guardian.', contactMethod: 'email' }
-]
-
 export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX.Element {
+  const { data: settings } = useSettings()
+  const quickAdds = settings?.logQuickAdds ?? DEFAULT_LOG_QUICK_ADDS
   const { data: entries } = useStudentLogEntries(studentId)
   const createEntry = useCreateStudentLogEntry(studentId)
   const deleteEntry = useDeleteStudentLogEntry(studentId)
@@ -81,9 +66,9 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
       </CardHeader>
       <CardBody className="space-y-4">
         <div className="flex flex-wrap gap-1.5">
-          {QUICK_ADD.map((q) => (
+          {quickAdds.map((q, i) => (
             <button
-              key={q.label}
+              key={`${i}-${q.label}`}
               type="button"
               onClick={() => handleAdd(q.text, q.type, q.contactMethod)}
               disabled={createEntry.isPending}

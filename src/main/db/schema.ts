@@ -40,6 +40,7 @@ export const students = sqliteTable('students', {
   guardianContact: text('guardian_contact'),
   email: text('email'),
   notes: text('notes'),
+  customFields: text('custom_fields', { mode: 'json' }).$type<Record<string, string>>(),
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()

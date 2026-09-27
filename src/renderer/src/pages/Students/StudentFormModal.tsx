@@ -3,7 +3,12 @@ import type { Student } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Textarea } from '@renderer/components/ui/Field'
-import { useCreateStudent, useEnrollStudent, useUpdateStudent } from '@renderer/lib/queries'
+import {
+  useCreateStudent,
+  useEnrollStudent,
+  useUpdateStudent,
+  useSettings
+} from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 
 interface StudentFormModalProps {
@@ -34,6 +39,9 @@ export function StudentFormModal({
   const [guardianName, setGuardianName] = useState(student?.guardianName ?? '')
   const [guardianContact, setGuardianContact] = useState(student?.guardianContact ?? '')
   const [notes, setNotes] = useState(student?.notes ?? '')
+  const { data: settings } = useSettings()
+  const fields = settings?.studentFields ?? []
+  const [custom, setCustom] = useState<Record<string, string>>(student?.customFields ?? {})
 
   const saving = createStudent.isPending || updateStudent.isPending
 
@@ -49,7 +57,12 @@ export function StudentFormModal({
       guardianName: guardianName.trim() || null,
       guardianContact: guardianContact.trim() || null,
       email: email.trim() || null,
-      notes: notes.trim() || null
+      notes: notes.trim() || null,
+      customFields: Object.fromEntries(
+        Object.entries(custom)
+          .map(([k, v]) => [k, v.trim()])
+          .filter(([, v]) => v)
+      )
     }
 
     if (isEdit) {
@@ -114,6 +127,14 @@ export function StudentFormModal({
         <FormRow label="Guardian contact">
           <Input value={guardianContact} onChange={(e) => setGuardianContact(e.target.value)} />
         </FormRow>
+        {fields.map((f) => (
+          <FormRow key={f.id} label={f.label}>
+            <Input
+              value={custom[f.id] ?? ''}
+              onChange={(e) => setCustom({ ...custom, [f.id]: e.target.value })}
+            />
+          </FormRow>
+        ))}
         <div className="col-span-2">
           <FormRow label="Notes">
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />

@@ -703,6 +703,14 @@ const migrations: Migration[] = [
           ON exit_ticket_responses(exit_ticket_id, student_id);
       `)
     }
+  },
+  {
+    id: 30,
+    name: 'student_custom_fields',
+    up: (db) => {
+      // The teacher's own student fields (Settings → Lists): JSON keyed by field id.
+      db.exec(`ALTER TABLE students ADD COLUMN custom_fields TEXT;`)
+    }
   }
 ]
 

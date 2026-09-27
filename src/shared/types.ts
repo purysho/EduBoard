@@ -45,6 +45,8 @@ export interface Student {
   guardianContact: string | null
   email: string | null
   notes: string | null
+  /** Answers to the teacher's own student fields (Settings → Lists), keyed by field id. */
+  customFields?: Record<string, string> | null
   archived: boolean
   createdAt: string
   updatedAt: string
@@ -673,7 +675,36 @@ export interface AppSettings {
   textSize: 'small' | 'normal' | 'large' | 'larger'
   highContrast: boolean
   reduceMotion: boolean
+  /** The one-tap buttons above a student's log. */
+  logQuickAdds: LogQuickAdd[]
+  /** Extra things to record about every student (house, allergies, support plan…). */
+  studentFields: StudentField[]
 }
+
+export interface LogQuickAdd {
+  label: string
+  type: StudentLogType
+  text: string
+  contactMethod?: ContactMethod
+}
+
+export interface StudentField {
+  id: string
+  label: string
+}
+
+export const DEFAULT_LOG_QUICK_ADDS: LogQuickAdd[] = [
+  { label: 'Missed homework', type: 'concern', text: 'Missed homework.' },
+  { label: 'Great participation', type: 'positive', text: 'Great participation in class today.' },
+  { label: 'Late to class', type: 'concern', text: 'Arrived late to class.' },
+  {
+    label: 'Called home',
+    type: 'contact',
+    text: 'Called home to discuss progress.',
+    contactMethod: 'phone'
+  },
+  { label: 'Emailed guardian', type: 'contact', text: 'Emailed guardian.', contactMethod: 'email' }
+]
 
 /** A student whose attendance in a class is under that class's minimum. */
 export interface AttendanceWarning {
@@ -787,7 +818,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   accentColor: '',
   textSize: 'normal',
   highContrast: false,
-  reduceMotion: false
+  reduceMotion: false,
+  logQuickAdds: DEFAULT_LOG_QUICK_ADDS,
+  studentFields: []
 }
 
 // --- Derived / computed shapes returned by report & aggregate IPC calls -------------------

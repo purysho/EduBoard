@@ -29,6 +29,7 @@ export function StudentProfilePage(): React.JSX.Element {
   const { data: enrollments } = useEnrollmentsByStudent(studentId)
   const { data: classes } = useClasses(true)
   const deleteStudent = useDeleteStudent()
+  const { data: settings } = useSettings()
 
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -81,6 +82,9 @@ export function StudentProfilePage(): React.JSX.Element {
               <DetailRow label="Email" value={student.email} />
               <DetailRow label="Guardian" value={student.guardianName} />
               <DetailRow label="Guardian contact" value={student.guardianContact} />
+              {(settings?.studentFields ?? []).map((f) => (
+                <DetailRow key={f.id} label={f.label} value={student.customFields?.[f.id]} />
+              ))}
               {student.notes && (
                 <div>
                   <p className="text-xs font-medium text-[var(--color-text-muted)]">Notes</p>

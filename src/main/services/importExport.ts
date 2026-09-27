@@ -11,6 +11,8 @@ import { listAttendanceByClass } from '../repositories/attendanceRecords'
 import { listSubmissionsForAssignment } from '../repositories/homeworkAssignments'
 import { getClassRoster } from './reports'
 import type { RosterImportResult } from '@shared/importExportTypes'
+import { getSettings } from '../repositories/settingsRepo'
+import type { StudentField } from '@shared/types'
 
 // Column name -> accepted header aliases (case-insensitive, matched against row 1).
 const HEADER_ALIASES: Record<string, string[]> = {
@@ -35,7 +37,12 @@ async function loadFirstWorksheet(filePath: string): Promise<ExcelJS.Worksheet> 
   return sheet
 }
 
-function buildHeaderIndex(headerRow: ExcelJS.Row): Map<string, number> {
+/** Column number per built-in field, and per custom field id (as `custom:<id>`) for a
+ * column named like one of the teacher's own student fields. */
+function buildHeaderIndex(
+  headerRow: ExcelJS.Row,
+  customFields: StudentField[] = []
+): Map<string, number> {
   const map = new Map<string, number>()
   headerRow.eachCell((cell, colNumber) => {
     const raw = String(cell.value ?? '')
@@ -44,6 +51,9 @@ function buildHeaderIndex(headerRow: ExcelJS.Row): Map<string, number> {
     if (!raw) return
     for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
       if (aliases.includes(raw)) map.set(field, colNumber)
+    }
+    for (const f of customFields) {
+      if (f.label.trim().toLowerCase() === raw) map.set(`custom:${f.id}`, colNumber)
     }
   })
   return map
@@ -67,7 +77,8 @@ export async function importRoster(
 ): Promise<RosterImportResult> {
   const worksheet = await loadFirstWorksheet(filePath)
   const headerRow = worksheet.getRow(1)
-  const headerIndex = buildHeaderIndex(headerRow)
+  const customFields = getSettings().studentFields
+  const headerIndex = buildHeaderIndex(headerRow, customFields)
 
   if (!headerIndex.has('firstName') || !headerIndex.has('lastName')) {
     throw new Error('The file needs "First Name" and "Last Name" columns.')
@@ -97,7 +108,12 @@ export async function importRoster(
         guardianName: cellText(row, headerIndex.get('guardianName')),
         guardianContact: cellText(row, headerIndex.get('guardianContact')),
         email: cellText(row, headerIndex.get('email')),
-        notes: cellText(row, headerIndex.get('notes'))
+        notes: cellText(row, headerIndex.get('notes')),
+        customFields: Object.fromEntries(
+          customFields
+            .map((f) => [f.id, cellText(row, headerIndex.get(`custom:${f.id}`))])
+            .filter((pair): pair is [string, string] => !!pair[1])
+        )
       })
       if (classId) {
         enrollStudent({ studentId: student.id, classId, enrolledOn: today })
