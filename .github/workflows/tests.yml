@@ -1,11 +1,13 @@
 name: Tests
 
-# Lint, typecheck and both test suites on every push to a working branch (ci.yml only
-# covers main). Separate from the Windows installer build, which skips changes that
+# Lint, typecheck and both test suites (desktop and Portal) on every push to main and
+# every pull request. Separate from the Windows installer build, which skips changes that
 # can't affect it; the tests never skip.
 on:
   push:
-    branches: ['claude/**', 'v0.3-dev']
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

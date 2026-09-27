@@ -3,7 +3,7 @@
 #
 # Run on the Portal server as root (for example in your VPS provider's web console):
 #
-#   curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh | bash
 #
 # What it does, in order, stopping at the first problem:
 #   1. Finds the Portal folder (default /opt/eduboard/portal, or pass another path).
@@ -24,7 +24,7 @@
 #   bash /opt/eduboard/portal/scripts/update-server.sh
 set -euo pipefail
 
-BRANCH="${EDUBOARD_BRANCH:-claude/trusting-goodall-hxsi5s}"
+BRANCH="${EDUBOARD_BRANCH:-main}"
 REPO="purysho/EduBoard"
 PORTAL_DIR="${1:-/opt/eduboard/portal}"
 STAMP="$(date +%Y%m%d-%H%M%S)"

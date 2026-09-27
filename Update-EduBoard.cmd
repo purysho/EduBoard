@@ -15,7 +15,7 @@ if errorlevel 1 (
 )
 echo   When asked, type the server's root password. Nothing shows while you type.
 echo.
-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@portal.edu-board.com "S=/opt/eduboard/portal/scripts/update-server.sh; if [ -f $S ]; then cp $S /tmp/eb-update.sh; else curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh -o /tmp/eb-update.sh; fi && bash /tmp/eb-update.sh"
+ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@portal.edu-board.com "S=/opt/eduboard/portal/scripts/update-server.sh; if [ -f $S ]; then cp $S /tmp/eb-update.sh; else curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh -o /tmp/eb-update.sh; fi && EDUBOARD_BRANCH=main bash /tmp/eb-update.sh"
 if errorlevel 1 (
   echo.
   echo   The server update didn't finish; see the messages above. Carrying on with the app.

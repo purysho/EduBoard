@@ -6,8 +6,9 @@ one blocking issue that testing stalled on.
 
 ## Where things stand
 
-- Branch: `claude/elegant-franklin-938cnf` (kept in sync with `v0.3-dev` —
-  both point at the same commit as of this handoff, `eb42363`).
+- Branch: `main`. All work now lands on `main`; the earlier working branches
+  (`claude/elegant-franklin-938cnf`, `v0.3-dev`, `claude/trusting-goodall-hxsi5s`)
+  were merged into it at v0.3.3.
 - The user's local checkout lives at `C:\Dev\eduboard` (moved out of
   `C:\Users\olive\OneDrive\Desktop\eduboard` mid-session — see "OneDrive"
   below). Portal is a sibling process run from `C:\Dev\eduboard\portal`.

@@ -24,7 +24,7 @@ leaves the app as it is.
 
 ## 1. The desktop app: download a ready-made installer
 
-Every push to a `claude/...` branch (or `v0.3-dev`) builds a Windows installer on
+Every push to `main` builds a Windows installer on
 GitHub. You can also start a build yourself.
 
 1. On GitHub, open the repository → **Actions** → **Test build (Windows installer)**.
@@ -54,14 +54,14 @@ checks it's working.
 2. Paste this and press Enter:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/claude/trusting-goodall-hxsi5s/portal/scripts/update-server.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh | bash
    ```
 
 3. It ends with **Done. The Portal is running the new version.** and the backup's name.
 
 **If the VNC button does nothing**, the browser is blocking its pop-up window: allow
 pop-ups for my.vps.do (in Brave, turn Shields off for the site) or use Edge. **Or skip
-VNC:** download the branch as a ZIP and double-click **Update-Live-Portal.cmd**. It
+VNC:** download the repository as a ZIP and double-click **Update-Live-Portal.cmd**. It
 connects with Windows' built-in SSH, asks for the server's root password and runs the same
 update.
 

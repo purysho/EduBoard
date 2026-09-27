@@ -6,7 +6,7 @@ name: Test build (Windows installer)
 # Tagged releases still go through release.yml.
 on:
   push:
-    branches: ['claude/**', 'v0.3-dev']
+    branches: [main]
     # A private repository has a monthly Actions allowance (Windows minutes count
     # double), so changes that can't affect the desktop installer don't build one.
     paths-ignore:

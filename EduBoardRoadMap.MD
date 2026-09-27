@@ -1,7 +1,7 @@
 # EduBoard Roadmap (Portal era)
 
 Six phases, as scoped with the user. Status notes reflect what's actually been built
-and pushed to `v0.3-dev` as of this file's creation — update as phases progress.
+and pushed (now all on `main`) as of this file's creation — update as phases progress.
 
 ## Phase 1 — Core loop completion ✅ DONE
 
