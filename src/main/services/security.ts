@@ -26,6 +26,7 @@ import {
 } from '../security/keyFile'
 import { getSettings } from '../repositories/settingsRepo'
 import type { SecurityStatus } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 export function keyFilePath(): string {
   return keyFilePathFor(currentDbPath())
@@ -37,7 +38,7 @@ export function isProtected(): boolean {
 
 function readKeyFile(): KeyFile {
   const file = parseKeyFile(readFileSync(keyFilePath(), 'utf-8'))
-  if (!file) throw new Error('EduBoard’s key file is damaged. Restore a backup to continue.')
+  if (!file) throw new Error(tr('EduBoard’s key file is damaged. Restore a backup to continue.'))
   return file
 }
 
@@ -104,14 +105,14 @@ export function lockNow(): void {
 
 function checkPassword(password: string): void {
   if (password.length < MIN_PASSWORD_LENGTH) {
-    throw new Error(`Use at least ${MIN_PASSWORD_LENGTH} characters.`)
+    throw new Error(tr('Use at least {n} characters.', { n: MIN_PASSWORD_LENGTH }))
   }
 }
 
 /** Turns protection on: encrypts the open database with a new random key and writes
  * the key file. Returns the recovery key, which is shown once and never stored. */
 export function enableProtection(password: string): { recoveryKey: string } {
-  if (isProtected()) throw new Error('Password protection is already on.')
+  if (isProtected()) throw new Error(tr('Password protection is already on.'))
   checkPassword(password)
   const dbKey = newDatabaseKey()
   const recoveryKey = newRecoveryKey()
@@ -130,14 +131,14 @@ export function changePassword(current: string, next: string): void {
   checkPassword(next)
   const file = readKeyFile()
   const key = unlockKeyFile(file, current)
-  if (!key) throw new Error('That isn’t your current password or recovery key.')
+  if (!key) throw new Error(tr('That isn’t your current password or recovery key.'))
   writeKeyFile(withNewPassword(file, key, next))
 }
 
 /** Turns protection off: decrypts the database and removes the key file. */
 export function disableProtection(password: string): void {
   if (!unlockKeyFile(readKeyFile(), password)) {
-    throw new Error('That isn’t your current password or recovery key.')
+    throw new Error(tr('That isn’t your current password or recovery key.'))
   }
   setDatabaseKey(null)
   rmSync(keyFilePath(), { force: true })

@@ -12,12 +12,13 @@ import {
   useSendPortalMessage,
   useTranslatePortalMessage
 } from '@renderer/lib/queries'
+import { tr, uiLanguage } from '@shared/i18n'
 
 // Fixed target — the app's own UI is English, so "translate" for a teacher always
 // means "show me this in English." (The student/family side of the same feature, on
 // the Portal itself, offers the reverse: translate the teacher's message into whatever
 // language the family picked.)
-const TARGET_LANG = 'English'
+const TARGET_LANG = uiLanguage() === 'zh' ? 'Chinese' : 'English'
 
 export function MessagesPage(): React.JSX.Element {
   const { data: threads, isLoading, isError, error } = usePortalMessageThreads()
@@ -34,21 +35,23 @@ export function MessagesPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Messages"
-        description="Direct messages with families through the Portal."
+        title={tr('Messages')}
+        description={tr('Direct messages with families through the Portal.')}
       />
 
       {isLoading ? (
         <Spinner />
       ) : isError ? (
         <p className="text-sm text-[var(--color-danger)]">
-          {ipcErrorMessage(error, 'Could not load messages.')}
+          {ipcErrorMessage(error, tr('Could not load messages.'))}
         </p>
       ) : !threads?.length ? (
         <EmptyState
           icon={MessageSquare}
-          title="No messages yet"
-          description="Once families are on the Portal, their messages to you will show up here."
+          title={tr('No messages yet')}
+          description={tr(
+            'Once families are on the Portal, their messages to you will show up here.'
+          )}
         />
       ) : (
         <div className="grid grid-cols-[260px_1fr] gap-4" style={{ minHeight: 480 }}>
@@ -84,7 +87,7 @@ export function MessagesPage(): React.JSX.Element {
             />
           ) : (
             <Card className="flex items-center justify-center text-sm text-[var(--color-text-muted)]">
-              Select a conversation
+              {tr('Select a conversation')}
             </Card>
           )}
         </div>
@@ -171,10 +174,10 @@ function ThreadPanel({
                 >
                   <Languages size={10} aria-hidden />
                   {translatingId === m.id
-                    ? 'Translating…'
+                    ? tr('Translating…')
                     : translations[m.id] !== undefined
-                      ? 'Show original'
-                      : 'Translate'}
+                      ? tr('Show original')
+                      : tr('Translate')}
                 </button>
               </div>
             </div>
@@ -188,7 +191,7 @@ function ThreadPanel({
         <input
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Type a message…"
+          placeholder={tr('Type a message…')}
           className="flex-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
         />
         <Button

@@ -18,6 +18,7 @@ import type {
   SetHomeworkSubmissionStatusInput,
   UpdateHomeworkAssignmentInput
 } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type {
   CreateHomeworkAssignmentInput,
@@ -67,7 +68,7 @@ export function createHomeworkAssignment(input: CreateHomeworkAssignmentInput): 
     entityType: 'homeworkAssignment',
     entityId: row.id,
     action: 'create',
-    summary: `Created assignment "${row.title}"`,
+    summary: tr('Created assignment “{title}”', { title: row.title }),
     classId: row.classId
   })
   return row
@@ -98,9 +99,9 @@ export function updateHomeworkAssignment(
   const summary =
     before && before.status !== updated.status
       ? updated.status === 'published'
-        ? `Published assignment "${updated.title}" to students`
-        : `Unpublished assignment "${updated.title}"`
-      : `Updated assignment "${updated.title}"`
+        ? tr('Published assignment “{title}” to students', { title: updated.title })
+        : tr('Unpublished assignment “{title}”', { title: updated.title })
+      : tr('Updated assignment “{title}”', { title: updated.title })
   recordAudit({
     entityType: 'homeworkAssignment',
     entityId: id,
@@ -123,7 +124,7 @@ export function deleteHomeworkAssignment(id: string): void {
       entityType: 'homeworkAssignment',
       entityId: id,
       action: 'delete',
-      summary: `Deleted assignment "${existing.title}"`,
+      summary: tr('Deleted assignment “{title}”', { title: existing.title }),
       classId: existing.classId
     })
   }
@@ -228,7 +229,10 @@ export function setSubmissionGrade(input: SetHomeworkSubmissionGradeInput): Home
     entityType: 'homeworkSubmission',
     entityId: `${input.homeworkAssignmentId}:${input.studentId}`,
     action: existing ? 'update' : 'create',
-    summary: `Graded "${assignment?.title ?? 'assignment'}": ${input.grade ?? 'no grade'}`,
+    summary: tr('Graded “{title}”: {grade}', {
+      title: assignment?.title ?? tr('assignment'),
+      grade: input.grade ?? tr('no grade')
+    }),
     studentId: input.studentId,
     classId: assignment?.classId ?? null
   })

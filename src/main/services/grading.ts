@@ -1,3 +1,4 @@
+import { tr } from '@shared/i18n'
 export interface AssessmentLike {
   id: string
   categoryId: string | null
@@ -23,8 +24,6 @@ export interface CategoryPercentResult {
   pointsEarned: number
   pointsPossible: number
 }
-
-const UNCATEGORIZED_NAME = 'General'
 
 /**
  * Points-based average within one category: sum of earned points over sum of possible
@@ -77,7 +76,7 @@ export function computeClassGrade(
   const categoryList: CategoryLike[] =
     categories.length > 0
       ? categories
-      : [{ id: '__uncategorized__', name: UNCATEGORIZED_NAME, weightPercent: 100 }]
+      : [{ id: '__uncategorized__', name: tr('General'), weightPercent: 100 }]
 
   const breakdown: CategoryPercentResult[] = []
   let weightedSum = 0
@@ -116,7 +115,7 @@ export function computeClassGrade(
       )
       breakdown.push({
         categoryId: null,
-        categoryName: 'Uncategorized',
+        categoryName: tr('Uncategorized'),
         percent,
         pointsEarned,
         pointsPossible

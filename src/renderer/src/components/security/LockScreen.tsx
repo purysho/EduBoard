@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 /** Shown instead of the whole app while password protection has it locked: when
  * EduBoard opens, after the teacher's chosen idle time, or when the computer locks. */
@@ -28,14 +29,16 @@ export function LockScreen({ retryInSeconds }: { retryInSeconds: number }): Reac
       } else {
         setError(
           result.retryInSeconds
-            ? `Too many wrong tries. Wait ${result.retryInSeconds} seconds, then try again.`
+            ? tr('Too many wrong tries. Wait {seconds} seconds, then try again.', {
+                seconds: result.retryInSeconds
+              })
             : useRecovery
-              ? 'That recovery key doesn’t match.'
-              : 'That password isn’t right.'
+              ? tr('That recovery key doesn’t match.')
+              : tr('That password isn’t right.')
         )
       }
     } catch (err) {
-      setError(ipcErrorMessage(err, 'EduBoard couldn’t be unlocked.'))
+      setError(ipcErrorMessage(err, tr('EduBoard couldn’t be unlocked.')))
     } finally {
       setBusy(false)
     }
@@ -52,33 +55,33 @@ export function LockScreen({ retryInSeconds }: { retryInSeconds: number }): Reac
             <Lock size={17} aria-hidden />
           </div>
           <div>
-            <h1 className="text-base font-semibold">EduBoard is locked</h1>
+            <h1 className="text-base font-semibold">{tr('EduBoard is locked')}</h1>
             <p className="text-xs text-[var(--color-text-muted)]">
-              Your class data is protected with a password.
+              {tr('Your class data is protected with a password.')}
             </p>
           </div>
         </div>
         <label className="block text-sm">
           <span className="mb-1 block font-medium">
-            {useRecovery ? 'Recovery key' : 'Password'}
+            {useRecovery ? tr('Recovery key') : tr('Password')}
           </span>
           <Input
             type={useRecovery ? 'text' : 'password'}
             autoFocus
             autoComplete="off"
             spellCheck={false}
-            placeholder={useRecovery ? 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX' : undefined}
+            placeholder={useRecovery ? tr('XXXXX-XXXXX-XXXXX-XXXXX-XXXXX') : undefined}
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
           />
         </label>
         {(error || retryInSeconds > 0) && (
           <p className="text-sm text-[var(--color-danger)]" role="alert">
-            {error ?? `Wait ${retryInSeconds} seconds, then try again.`}
+            {error ?? tr('Wait {retryInSeconds} seconds, then try again.', { retryInSeconds })}
           </p>
         )}
         <Button type="submit" variant="primary" className="w-full" disabled={!secret || busy}>
-          {busy ? 'Unlocking…' : 'Unlock'}
+          {busy ? tr('Unlocking…') : tr('Unlock')}
         </Button>
         <button
           type="button"
@@ -89,7 +92,9 @@ export function LockScreen({ retryInSeconds }: { retryInSeconds: number }): Reac
             setError(null)
           }}
         >
-          {useRecovery ? 'Use my password instead' : 'Forgot your password? Use your recovery key'}
+          {useRecovery
+            ? tr('Use my password instead')
+            : tr('Forgot your password? Use your recovery key')}
         </button>
       </form>
     </div>

@@ -10,6 +10,7 @@ import {
   UserSearch
 } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
+import { tr, trn } from '@shared/i18n'
 
 /** Today's lessons from the timetable: is attendance taken, is there a plan. */
 export function TodayCard(): React.JSX.Element | null {
@@ -26,7 +27,7 @@ export function TodayCard(): React.JSX.Element | null {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Sun size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Today
+          {tr('Today')}
         </h2>
         {today.followUpsDue > 0 && (
           <Link
@@ -34,7 +35,12 @@ export function TodayCard(): React.JSX.Element | null {
             className="flex items-center gap-1 text-xs font-medium text-[var(--color-primary)] hover:underline"
           >
             <PhoneCall size={12} aria-hidden />
-            {today.followUpsDue} parent follow-up{today.followUpsDue === 1 ? '' : 's'} due
+            {trn(
+              '{followUpsDue} parent follow-up due',
+              '{followUpsDue} parent follow-ups due',
+              today.followUpsDue,
+              { followUpsDue: today.followUpsDue }
+            )}
           </Link>
         )}
       </CardHeader>
@@ -70,7 +76,7 @@ export function TodayCard(): React.JSX.Element | null {
                   className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                 >
                   <NotebookPen size={12} aria-hidden />
-                  {l.lessonPlanTitle ?? 'No plan yet'}
+                  {l.lessonPlanTitle ?? tr('No plan yet')}
                 </Link>
                 <Link
                   to={`/classes/${l.classId}/attendance`}
@@ -85,14 +91,14 @@ export function TodayCard(): React.JSX.Element | null {
                   ) : (
                     <Circle size={12} aria-hidden />
                   )}
-                  {l.attendanceTaken ? 'Attendance taken' : 'Take attendance'}
+                  {l.attendanceTaken ? tr('Attendance taken') : tr('Take attendance')}
                 </Link>
               </li>
             ))}
           </ul>
         ) : (
           <p className="px-5 py-3 text-sm text-[var(--color-text-muted)]">
-            No lessons on your timetable today.
+            {tr('No lessons on your timetable today.')}
           </p>
         )}
       </CardBody>
@@ -113,7 +119,7 @@ export function WatchListCard(): React.JSX.Element | null {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <UserSearch size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Students to check on ({list.length})
+          {tr('Students to check on ({length})', { length: list.length })}
         </h2>
       </CardHeader>
       <CardBody className="p-0">

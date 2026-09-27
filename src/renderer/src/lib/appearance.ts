@@ -1,19 +1,20 @@
 import type { AppSettings } from '@shared/types'
 import { sanitizeCss } from '@shared/schoolPack'
+import { tr } from '@shared/i18n'
 
 // The school's colour, text size and contrast, applied on top of styles.css's tokens.
 
 export const ACCENT_PRESETS: { name: string; hex: string }[] = [
-  { name: 'Indigo (EduBoard)', hex: '' },
-  { name: 'Blue', hex: '#1d4ed8' },
-  { name: 'Teal', hex: '#0f766e' },
-  { name: 'Green', hex: '#15803d' },
-  { name: 'Red', hex: '#b91c1c' },
-  { name: 'Maroon', hex: '#7f1d1d' },
-  { name: 'Orange', hex: '#c2410c' },
-  { name: 'Purple', hex: '#7e22ce' },
-  { name: 'Navy', hex: '#1e3a8a' },
-  { name: 'Slate', hex: '#334155' }
+  { name: tr('Indigo (EduBoard)'), hex: '' },
+  { name: tr('Blue'), hex: '#1d4ed8' },
+  { name: tr('Teal'), hex: '#0f766e' },
+  { name: tr('Green'), hex: '#15803d' },
+  { name: tr('Red'), hex: '#b91c1c' },
+  { name: tr('Maroon'), hex: '#7f1d1d' },
+  { name: tr('Orange'), hex: '#c2410c' },
+  { name: tr('Purple'), hex: '#7e22ce' },
+  { name: tr('Navy'), hex: '#1e3a8a' },
+  { name: tr('Slate'), hex: '#334155' }
 ]
 
 export function isHexColour(value: string): boolean {

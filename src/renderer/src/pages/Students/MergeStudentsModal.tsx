@@ -6,6 +6,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { Select } from '@renderer/components/ui/Field'
 import { useMergeStudents, useStudents } from '@renderer/lib/queries'
 import { ipcErrorMessage, studentFullName } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 /**
  * Folds a duplicate student into the one being kept (e.g. someone who joined through a
@@ -41,14 +42,14 @@ export function MergeStudentsModal({
     <Modal
       open
       onClose={onClose}
-      title="Merge duplicate students"
+      title={tr('Merge duplicate students')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button variant="primary" onClick={handleMerge} disabled={!duplicate || merge.isPending}>
-            {merge.isPending ? 'Merging…' : 'Merge'}
+            {merge.isPending ? tr('Merging…') : tr('Merge')}
           </Button>
         </>
       }
@@ -56,14 +57,14 @@ export function MergeStudentsModal({
       <div className="space-y-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] p-3">
-            <p className="text-xs text-[var(--color-text-muted)]">Keep</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{tr('Keep')}</p>
             <p className="font-medium">{studentFullName(keep)}</p>
           </div>
           <button
             type="button"
             className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)] disabled:opacity-40"
-            title="Swap which one is kept"
-            aria-label="Swap which one is kept"
+            title={tr('Swap which one is kept')}
+            aria-label={tr('Swap which one is kept')}
             disabled={!duplicate}
             onClick={() => {
               if (!duplicate) return
@@ -75,12 +76,12 @@ export function MergeStudentsModal({
             <ArrowLeftRight size={16} aria-hidden />
           </button>
           <div className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] p-3">
-            <p className="text-xs text-[var(--color-text-muted)]">Merge in and remove</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{tr('Merge in and remove')}</p>
             {initialDuplicate ? (
               <p className="font-medium">{duplicate ? studentFullName(duplicate) : '—'}</p>
             ) : (
               <Select value={duplicateId} onChange={(e) => setDuplicateId(e.target.value)}>
-                <option value="">Choose a student…</option>
+                <option value="">{tr('Choose a student…')}</option>
                 {others.map((s) => (
                   <option key={s.id} value={s.id}>
                     {studentFullName(s)}
@@ -93,20 +94,26 @@ export function MergeStudentsModal({
         </div>
         <ul className="list-disc space-y-1 pl-5 text-[var(--color-text-muted)]">
           <li>
-            Classes, scores, attendance, submissions, notes and Portal links all move to{' '}
-            {studentFullName(keep)}. Where both have something for the same thing (a score for the
-            same test, say), {studentFullName(keep)}&apos;s stays.
+            {tr(
+              "Classes, scores, attendance, submissions, notes and Portal links all move to {name}. Where both have something for the same thing (a score for the same test, say), {name}'s stays.",
+              { name: studentFullName(keep) }
+            )}
           </li>
-          <li>Details {studentFullName(keep)} is missing (birth date, email…) are filled in.</li>
           <li>
-            On the Portal, the duplicate&apos;s login moves across too: the student keeps signing in
-            with the same username and password.
+            {tr('Details {name} is missing (birth date, email…) are filled in.', {
+              name: studentFullName(keep)
+            })}
           </li>
-          <li>A backup is taken first.</li>
+          <li>
+            {tr(
+              "On the Portal, the duplicate's login moves across too: the student keeps signing in with the same username and password."
+            )}
+          </li>
+          <li>{tr('A backup is taken first.')}</li>
         </ul>
         {merge.isError && (
           <p className="text-[var(--color-danger)]">
-            {ipcErrorMessage(merge.error, 'Couldn’t merge. Nothing was changed; try again.')}
+            {ipcErrorMessage(merge.error, tr('Couldn’t merge. Nothing was changed; try again.'))}
           </p>
         )}
       </div>

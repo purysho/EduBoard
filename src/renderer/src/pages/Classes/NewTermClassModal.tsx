@@ -6,6 +6,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { useClassRoster, useDuplicateClassForNewTerm, useTerms } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 /**
  * Starts the next term of a class: same setup, a term of the teacher's choice and,
@@ -51,11 +52,11 @@ export function NewTermClassModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Start the next term"
+      title={tr('Start the next term')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -63,29 +64,31 @@ export function NewTermClassModal({
             form="new-term-class"
             disabled={duplicate.isPending}
           >
-            {duplicate.isPending ? 'Creating…' : 'Create class'}
+            {duplicate.isPending ? tr('Creating…') : tr('Create class')}
           </Button>
         </>
       }
     >
       <form id="new-term-class" onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-[var(--color-text-muted)]">
-          Makes a new class with this one&apos;s grading scale, categories and course group. Grades,
-          attendance and homework stay with {classSection.name}.
+          {tr(
+            "Makes a new class with this one's grading scale, categories and course group. Grades, attendance and homework stay with {name}.",
+            { name: classSection.name }
+          )}
         </p>
-        <FormRow label="Class name">
+        <FormRow label={tr('Class name')}>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </FormRow>
         <FormRow
-          label="Term"
+          label={tr('Term')}
           hint={
             terms?.length
               ? undefined
-              : 'No terms yet. Add them in Settings → Terms, or set one on the new class later.'
+              : tr('No terms yet. Add them in Settings → Terms, or set one on the new class later.')
           }
         >
           <Select value={chosenTerm} onChange={(e) => setTermId(e.target.value)}>
-            <option value="">No term</option>
+            <option value="">{tr('No term')}</option>
             {(terms ?? []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -103,16 +106,17 @@ export function NewTermClassModal({
             disabled={activeCount === 0}
           />
           <span>
-            Bring the students across ({activeCount})
+            {tr('Bring the students across ({activeCount})', { activeCount })}
             <span className="block text-xs text-[var(--color-text-muted)]">
-              They keep their Portal logins: the new class shows up for them after you publish, with
-              no new invite or sign-up.
+              {tr(
+                'They keep their Portal logins: the new class shows up for them after you publish, with no new invite or sign-up.'
+              )}
             </span>
           </span>
         </label>
         {duplicate.isError && (
           <p className="text-sm text-[var(--color-danger)]">
-            {ipcErrorMessage(duplicate.error, 'Couldn’t create the class.')}
+            {ipcErrorMessage(duplicate.error, tr('Couldn’t create the class.'))}
           </p>
         )}
       </form>

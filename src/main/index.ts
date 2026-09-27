@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { initDb } from './db/client'
 import { registerIpcHandlers } from './ipc/register'
+import { initUiLanguage } from './i18n'
 import { createMainWindow } from './windows'
 import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
@@ -17,6 +18,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  initUiLanguage()
   registerIpcHandlers()
 
   // Everything that needs the database open.

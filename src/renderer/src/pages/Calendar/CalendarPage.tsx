@@ -13,6 +13,7 @@ import {
   startOfWeek,
   subMonths
 } from 'date-fns'
+import { formatLocal } from '@renderer/lib/format'
 import { ChevronLeft, ChevronRight, ClipboardList } from 'lucide-react'
 import { PageHeader } from '@renderer/components/ui/PageHeader'
 import { Card, CardBody } from '@renderer/components/ui/Card'
@@ -20,8 +21,9 @@ import { Button } from '@renderer/components/ui/Button'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useAllHomeworkAssignments } from '@renderer/lib/queries'
 import type { HomeworkAssignmentWithClass } from '@shared/types'
+import { tr } from '@shared/i18n'
 
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => tr(d))
 
 export function CalendarPage(): React.JSX.Element {
   const navigate = useNavigate()
@@ -51,15 +53,15 @@ export function CalendarPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Calendar"
-        description="Homework due dates across every class, in one place."
+        title={tr('Calendar')}
+        description={tr('Homework due dates across every class, in one place.')}
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={() => setMonth(subMonths(month, 1))}>
               <ChevronLeft size={15} aria-hidden />
             </Button>
             <span className="min-w-[9rem] text-center text-sm font-medium">
-              {format(month, 'MMMM yyyy')}
+              {formatLocal(month, 'MMMM yyyy')}
             </span>
             <Button variant="secondary" size="sm" onClick={() => setMonth(addMonths(month, 1))}>
               <ChevronRight size={15} aria-hidden />
@@ -109,7 +111,7 @@ export function CalendarPage(): React.JSX.Element {
                 ))}
                 {dueToday.length > 3 && (
                   <span className="text-[10px] text-[var(--color-text-muted)]">
-                    +{dueToday.length - 3} more
+                    {tr('+{n} more', { n: dueToday.length - 3 })}
                   </span>
                 )}
               </div>
@@ -123,15 +125,17 @@ export function CalendarPage(): React.JSX.Element {
           !assignments?.length && (
             <EmptyState
               icon={ClipboardList}
-              title="No homework due dates yet"
-              description="Add due dates to assignments from a class's Homework tab and they'll show up here."
+              title={tr('No homework due dates yet')}
+              description={tr(
+                "Add due dates to assignments from a class's Homework tab and they'll show up here."
+              )}
             />
           )
         ) : (
           <Card>
             <CardBody>
               <h2 className="mb-3 text-sm font-semibold">
-                {format(parseISO(selectedDay), 'EEEE, MMMM d')}
+                {formatLocal(parseISO(selectedDay), 'EEEE, MMMM d')}
               </h2>
               <div className="space-y-2">
                 {selectedAssignments.map((a) => (
@@ -157,7 +161,7 @@ export function CalendarPage(): React.JSX.Element {
                       size="sm"
                       onClick={() => navigate(`/classes/${a.classId}/homework`)}
                     >
-                      Open
+                      {tr('Open')}
                     </Button>
                   </div>
                 ))}

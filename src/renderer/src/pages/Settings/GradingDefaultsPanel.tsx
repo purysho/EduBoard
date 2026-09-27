@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { GradeScaleEditor } from '@renderer/components/GradeScaleEditor'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 /** The grading scale new classes start with (each class can change its own). */
 export function GradingDefaultsPanel(): React.JSX.Element | null {
@@ -23,7 +24,7 @@ export function GradingDefaultsPanel(): React.JSX.Element | null {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Scale size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Grading scale for new classes
+          {tr('Grading scale for new classes')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-3">
@@ -34,10 +35,10 @@ export function GradingDefaultsPanel(): React.JSX.Element | null {
           disabled={!changed || !gradeScaleIsValid(draft) || update.isPending}
           onClick={() => update.mutate({ defaultGradeThresholds: draft })}
         >
-          Save
+          {tr('Save')}
         </Button>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Existing classes keep their own scale; change one in its Settings tab.
+          {tr('Existing classes keep their own scale; change one in its Settings tab.')}
         </p>
       </CardBody>
     </Card>

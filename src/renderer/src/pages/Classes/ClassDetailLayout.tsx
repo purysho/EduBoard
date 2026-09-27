@@ -17,21 +17,22 @@ import {
 import { useClass, useTerms } from '@renderer/lib/queries'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 const TABS = [
   // Day-to-day tabs first; occasional ones (exit tickets, seating, reports) further right.
-  { to: '', label: 'Roster', icon: Users, end: true },
-  { to: 'gradebook', label: 'Gradebook', icon: ClipboardList },
-  { to: 'homework', label: 'Homework', icon: FileCheck2 },
-  { to: 'attendance', label: 'Attendance', icon: CalendarCheck },
-  { to: 'lessons', label: 'Lesson plans', icon: NotebookPen },
-  { to: 'story', label: 'Class Story', icon: Newspaper },
-  { to: 'portal', label: 'Portal', icon: Ticket },
-  { to: 'classroom', label: 'Classroom', icon: Presentation },
-  { to: 'exit-ticket', label: 'Exit ticket', icon: MonitorSmartphone },
-  { to: 'seating', label: 'Seating chart', icon: LayoutGrid },
-  { to: 'report', label: 'Report', icon: BarChart3 },
-  { to: 'settings', label: 'Settings', icon: Settings2 }
+  { to: '', label: tr('Roster'), icon: Users, end: true },
+  { to: 'gradebook', label: tr('Gradebook'), icon: ClipboardList },
+  { to: 'homework', label: tr('Homework'), icon: FileCheck2 },
+  { to: 'attendance', label: tr('Attendance'), icon: CalendarCheck },
+  { to: 'lessons', label: tr('Lesson plans'), icon: NotebookPen },
+  { to: 'story', label: tr('Class Story'), icon: Newspaper },
+  { to: 'portal', label: tr('Portal'), icon: Ticket },
+  { to: 'classroom', label: tr('Classroom'), icon: Presentation },
+  { to: 'exit-ticket', label: tr('Exit ticket'), icon: MonitorSmartphone },
+  { to: 'seating', label: tr('Seating chart'), icon: LayoutGrid },
+  { to: 'report', label: tr('Report'), icon: BarChart3 },
+  { to: 'settings', label: tr('Settings'), icon: Settings2 }
 ]
 
 export function ClassDetailLayout(): React.JSX.Element {
@@ -40,7 +41,7 @@ export function ClassDetailLayout(): React.JSX.Element {
   const { data: terms } = useTerms()
 
   if (isLoading) return <Spinner />
-  if (!classSection) return <EmptyState title="Class not found" />
+  if (!classSection) return <EmptyState title={tr('Class not found')} />
 
   const term = terms?.find((t) => t.id === classSection.termId)
 
@@ -51,7 +52,7 @@ export function ClassDetailLayout(): React.JSX.Element {
         className="inline-flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
       >
         <ArrowLeft size={14} aria-hidden />
-        All classes
+        {tr('All classes')}
       </Link>
 
       <div className="mb-6 mt-2 flex flex-wrap items-baseline justify-between gap-2">
@@ -60,7 +61,7 @@ export function ClassDetailLayout(): React.JSX.Element {
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             {[classSection.subject, classSection.gradeLevel, term?.name, classSection.schedule]
               .filter(Boolean)
-              .join(' · ') || 'No details yet'}
+              .join(' · ') || tr('No details yet')}
           </p>
         </div>
       </div>

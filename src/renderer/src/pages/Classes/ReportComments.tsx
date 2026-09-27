@@ -16,6 +16,7 @@ import { useSettings } from '@renderer/lib/queries'
 import { formatPercent, ipcErrorMessage } from '@renderer/lib/format'
 import { classifyTrend } from '@renderer/lib/trend'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 /** Report card comments for every student in the class: write each one, add sentences
  * from the comment bank, or take short AI-suggested phrases (with what they're based on)
@@ -43,9 +44,9 @@ export function ReportComments({
   return (
     <Card id="comments">
       <CardHeader className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Report card comments</h2>
+        <h2 className="text-sm font-semibold">{tr('Report card comments')}</h2>
         <span className="text-xs text-[var(--color-text-muted)]">
-          {written} of {students.length} written
+          {tr('{written} of {length} written', { written, length: students.length })}
         </span>
       </CardHeader>
       <CardBody className="space-y-4">
@@ -137,7 +138,7 @@ function CommentRow({
         })
       )
     } catch (err) {
-      setAiError(ipcErrorMessage(err, 'No suggestions right now.'))
+      setAiError(ipcErrorMessage(err, tr('No suggestions right now.')))
     } finally {
       setSuggesting(false)
     }
@@ -153,33 +154,35 @@ function CommentRow({
         <span className="ml-auto flex items-center gap-2">
           {status === 'saved' && (
             <span className="flex items-center gap-1 text-xs text-[var(--color-success)]">
-              <Check size={12} aria-hidden /> Saved
+              <Check size={12} aria-hidden /> {tr('Saved')}
             </span>
           )}
           <Button variant="ghost" size="sm" onClick={() => setBankOpen(true)}>
             <BookOpen size={13} className="mr-1 inline" aria-hidden />
-            Comment bank
+            {tr('Comment bank')}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={suggest}
             disabled={suggesting}
-            title="Uses your AI provider (Settings), so it needs an internet connection"
+            title={tr('Uses your AI provider (Settings), so it needs an internet connection')}
           >
             <Sparkles size={13} className="mr-1 inline" aria-hidden />
-            {suggesting ? 'Thinking…' : 'Suggest phrases'}
+            {suggesting ? tr('Thinking…') : tr('Suggest phrases')}
           </Button>
-          <span className="text-[10px] text-[var(--color-text-muted)]">needs internet</span>
+          <span className="text-[10px] text-[var(--color-text-muted)]">{tr('needs internet')}</span>
         </span>
       </div>
       <textarea
         id={`comment-${row.student.id}`}
-        aria-label={`Report comment for ${fullName}`}
+        aria-label={tr('Report comment for {fullName}', { fullName })}
         autoFocus={autoFocus}
         className="min-h-20 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-2 text-sm"
         value={text}
-        placeholder={`Write ${name}'s comment, or add sentences from the comment bank.`}
+        placeholder={tr("Write {name}'s comment, or add sentences from the comment bank.", {
+          name
+        })}
         onChange={(e) => {
           setText(e.target.value)
           setStatus('idle')
@@ -188,7 +191,7 @@ function CommentRow({
       />
       {text.includes('{') && (
         <p className="mt-1 text-xs text-[var(--color-warning)]">
-          A placeholder like {'{grade}'} couldn’t be filled yet; edit it before printing.
+          {tr('A placeholder like {grade} couldn’t be filled yet; edit it before printing.')}
         </p>
       )}
       {aiError && (
@@ -199,8 +202,9 @@ function CommentRow({
       {suggestions && (
         <div className="mt-2 space-y-1">
           <p className="text-xs text-[var(--color-text-muted)]">
-            AI suggestions (needs internet). Each says what it’s based on; check it before adding.
-            Click one to add it.
+            {tr(
+              'AI suggestions (needs internet). Each says what it’s based on; check it before adding. Click one to add it.'
+            )}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {suggestions.map((s) => (
@@ -222,7 +226,7 @@ function CommentRow({
       <Modal
         open={bankOpen}
         onClose={() => setBankOpen(false)}
-        title={`Comment bank — ${name}`}
+        title={tr('Comment bank — {name}', { name })}
         wide
       >
         <div className="max-h-[60vh] space-y-4 overflow-auto">
@@ -232,7 +236,7 @@ function CommentRow({
             return (
               <section key={cat}>
                 <h3 className="mb-1 text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                  {cat}
+                  {tr(cat)}
                 </h3>
                 <div className="space-y-1">
                   {items.map((c, i) => (
@@ -255,7 +259,7 @@ function CommentRow({
             )
           })}
           <p className="text-xs text-[var(--color-text-muted)]">
-            Edit these in Settings → Your lists.
+            {tr('Edit these in Settings → Your lists.')}
           </p>
         </div>
       </Modal>

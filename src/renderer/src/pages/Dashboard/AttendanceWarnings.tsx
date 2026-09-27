@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { UserX } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { useAttendanceWarnings } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 /** Students under their class's minimum attendance (set in each class's Settings). */
 export function AttendanceWarnings(): React.JSX.Element | null {
@@ -12,7 +13,7 @@ export function AttendanceWarnings(): React.JSX.Element | null {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <UserX size={15} className="text-[var(--color-danger)]" aria-hidden />
-          Below the attendance requirement
+          {tr('Below the attendance requirement')}
         </h2>
       </CardHeader>
       <CardBody className="p-0">
@@ -37,7 +38,10 @@ export function AttendanceWarnings(): React.JSX.Element | null {
               <span className="w-40 text-right">
                 <strong className="text-[var(--color-danger)]">{Math.round(w.rate * 100)}%</strong>{' '}
                 <span className="text-[var(--color-text-muted)]">
-                  of {w.sessions} (needs {w.minAttendance}%)
+                  {tr('of {sessions} (needs {minAttendance}%)', {
+                    sessions: w.sessions,
+                    minAttendance: w.minAttendance
+                  })}
                 </span>
               </span>
             </li>

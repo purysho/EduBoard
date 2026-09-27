@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { settings } from '../db/schema'
 import type { DeviceSyncStatus } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 const SETTINGS_KEY = 'device_sync'
 
@@ -70,7 +71,7 @@ let cachedStatus: DeviceSyncStatus = { openedOnAnotherDevice: false }
 export function checkAndRecordDeviceSync(): void {
   try {
     const thisDeviceId = getOrCreateDeviceId()
-    const thisDeviceLabel = hostname() || 'This computer'
+    const thisDeviceLabel = hostname() || tr('This computer')
     const previous = readRecord()
 
     writeRecord({

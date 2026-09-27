@@ -1,6 +1,7 @@
 import type { AttendanceRecord, AttendanceStatus } from '@shared/types'
 import { useMarkAttendance } from '@renderer/lib/queries'
 import { cn } from '@renderer/lib/cn'
+import { tr, uiLanguage } from '@shared/i18n'
 
 const CYCLE: AttendanceStatus[] = ['present', 'late', 'absent', 'excused']
 
@@ -11,12 +12,19 @@ const STYLES: Record<AttendanceStatus, string> = {
   excused: 'bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]'
 }
 
-const LETTER: Record<AttendanceStatus, string> = {
-  present: 'P',
-  late: 'L',
-  absent: 'A',
-  excused: 'E'
+const STATUS_NAME: Record<AttendanceStatus, string> = {
+  present: tr('Present'),
+  late: tr('Late'),
+  absent: tr('Absent'),
+  excused: tr('Excused')
 }
+
+// One letter (or character) per status. Not through tr(): single letters like 'A' are
+// too easily keys for something else.
+const LETTER: Record<AttendanceStatus, string> =
+  uiLanguage() === 'zh'
+    ? { present: '到', late: '迟', absent: '缺', excused: '假' }
+    : { present: 'P', late: 'L', absent: 'A', excused: 'E' }
 
 export function AttendanceCell({
   classId,
@@ -40,7 +48,7 @@ export function AttendanceCell({
   return (
     <button
       onClick={handleClick}
-      title={record ? record.status : 'Not marked — click to mark present'}
+      title={record ? STATUS_NAME[record.status] : tr('Not marked — click to mark present')}
       className={cn(
         'flex h-7 w-7 items-center justify-center rounded text-xs font-semibold transition-colors',
         record

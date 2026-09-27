@@ -91,6 +91,7 @@ import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
 import { getTodayOverview, getWatchList } from '../services/today'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
+import { saveUiLanguage } from '../i18n'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -99,13 +100,14 @@ import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { getSetupProgress } from '../services/setupProgress'
 import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
+import { tr } from '@shared/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
   ipcMain.handle(channel, (event, ...args) => {
     // Behind the lock screen the window may only ask about, and try to open, the lock.
     if (!channel.startsWith('security:') && security.isLocked()) {
-      throw new Error('EduBoard is locked.')
+      throw new Error(tr('EduBoard is locked.'))
     }
     return fn(event, ...args)
   })
@@ -230,7 +232,7 @@ export function registerIpcHandlers(): void {
         !Array.isArray(input?.classIds) ||
         !input.classIds.every((id) => typeof id === 'string')
       ) {
-        throw new Error('Choose the classes to carry on.')
+        throw new Error(tr('Choose the classes to carry on.'))
       }
       // Makes many classes at once, so the same recovery point as other big changes.
       backupService.createBackup()
@@ -354,7 +356,7 @@ export function registerIpcHandlers(): void {
     IpcChannels.lessonPlans.copyWeek,
     (_e, classId: string, fromMonday: string, toMonday: string) => {
       const iso = /^\d{4}-\d{2}-\d{2}$/
-      if (!iso.test(fromMonday) || !iso.test(toMonday)) throw new Error('Invalid week')
+      if (!iso.test(fromMonday) || !iso.test(toMonday)) throw new Error(tr('Invalid week'))
       return lessonPlansRepo.copyWeekOfPlans(String(classId), fromMonday, toMonday)
     }
   )
@@ -402,7 +404,11 @@ export function registerIpcHandlers(): void {
 
   // --- Settings -----------------------------------------------------------------------------
   handle(IpcChannels.settings.get, () => settingsRepo.getSettings())
-  handle(IpcChannels.settings.update, (_e, patch) => settingsRepo.updateSettings(patch))
+  handle(IpcChannels.settings.update, (_e, patch) => {
+    if (patch && 'uiLanguage' in patch)
+      saveUiLanguage(patch.uiLanguage === 'zh' || patch.uiLanguage === 'en' ? patch.uiLanguage : '')
+    return settingsRepo.updateSettings(patch)
+  })
   handle(IpcChannels.settings.appUpdateInfo, () => getAppUpdateInfo())
   handle(IpcChannels.settings.installAppUpdate, () => installAppUpdate())
   handle(IpcChannels.settings.appUpdateProgress, () => getAppUpdateProgress())
@@ -421,7 +427,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.backup.extraStatus, () => backupService.getExtraBackupStatus())
   handle(IpcChannels.backup.chooseExtraFolder, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
-      title: 'Choose a second place for backups',
+      title: tr('Choose a second place for backups'),
       properties: ['openDirectory', 'createDirectory']
     })
     if (canceled || !filePaths[0]) return null
@@ -440,7 +446,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.importExport.pickImportFile, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: 'Roster (Excel or CSV)', extensions: ['xlsx', 'csv'] }]
+      filters: [{ name: tr('Roster (Excel or CSV)'), extensions: ['xlsx', 'csv'] }]
     })
     return canceled ? null : filePaths[0]
   })
@@ -450,8 +456,8 @@ export function registerIpcHandlers(): void {
       defaultPath: defaultFileName,
       filters: [
         isCsv
-          ? { name: 'CSV file', extensions: ['csv'] }
-          : { name: 'Excel Workbook', extensions: ['xlsx'] }
+          ? { name: tr('CSV file'), extensions: ['csv'] }
+          : { name: tr('Excel Workbook'), extensions: ['xlsx'] }
       ]
     })
     return canceled ? null : filePath
@@ -543,7 +549,7 @@ export function registerIpcHandlers(): void {
     IpcChannels.homeworkRubricScores.save,
     async (_e, input: homeworkRubricScoresRepo.SaveHomeworkRubricScoresInput) => {
       const assignment = homeworkRepo.getHomeworkAssignment(input.homeworkAssignmentId)
-      if (!assignment?.rubricId) throw new Error('This assignment has no rubric linked.')
+      if (!assignment?.rubricId) throw new Error(tr('This assignment has no rubric linked.'))
       const result = homeworkRubricScoresRepo.saveHomeworkRubricScores(input, assignment.rubricId)
       await pushSubmissionGrade({
         homeworkAssignmentId: input.homeworkAssignmentId,
@@ -724,7 +730,7 @@ export function registerIpcHandlers(): void {
     if (
       !enrollmentsRepo.getRosterForClass(String(classId)).some((r) => r.student.id === studentId)
     ) {
-      throw new Error('That student isn’t in this class.')
+      throw new Error(tr('That student isn’t in this class.'))
     }
     reportCommentsRepo.setReportComment(String(classId), String(studentId), String(text ?? ''))
   })
@@ -735,7 +741,7 @@ export function registerIpcHandlers(): void {
     const studentId = String(input?.studentId ?? '')
     // Only a student in this class can get points in it.
     if (!enrollmentsRepo.getRosterForClass(classId).some((r) => r.student.id === studentId)) {
-      throw new Error('That student isn’t in this class.')
+      throw new Error(tr('That student isn’t in this class.'))
     }
     return behaviourPointsRepo.addBehaviourPoint({
       classId,
@@ -757,7 +763,7 @@ export function registerIpcHandlers(): void {
     const name = (pack.schoolName || 'school').replace(/[^\p{L}\p{N}-]+/gu, '_')
     const { canceled, filePath } = await showSaveDialogOnTop({
       defaultPath: `${name}.eduboard-school.json`,
-      filters: [{ name: 'EduBoard school pack', extensions: ['json'] }]
+      filters: [{ name: tr('EduBoard school pack'), extensions: ['json'] }]
     })
     if (canceled || !filePath) return { saved: false }
     await writeFile(filePath, JSON.stringify(pack, null, 2))
@@ -766,7 +772,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.schoolPack.preview, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: 'EduBoard school pack', extensions: ['json'] }]
+      filters: [{ name: tr('EduBoard school pack'), extensions: ['json'] }]
     })
     if (canceled || !filePaths[0]) return null
     const pack = parseSchoolPack(await readFile(filePaths[0], 'utf-8'))
@@ -785,7 +791,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.schoolPack.importCss, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: 'Stylesheet', extensions: ['css'] }]
+      filters: [{ name: tr('Stylesheet'), extensions: ['css'] }]
     })
     if (canceled || !filePaths[0]) return false
     settingsRepo.updateSettings({ customCss: sanitizeCss(await readFile(filePaths[0], 'utf-8')) })
@@ -1002,7 +1008,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.classPosts.pickImage, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] }]
+      filters: [{ name: tr('Images'), extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] }]
     })
     return canceled || !filePaths[0] ? null : filePaths[0]
   })

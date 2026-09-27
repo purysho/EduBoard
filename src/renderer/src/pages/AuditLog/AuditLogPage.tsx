@@ -8,6 +8,7 @@ import { Select } from '@renderer/components/ui/Field'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useAuditLog, useClasses, useStudents } from '@renderer/lib/queries'
 import { formatDate, studentFullName } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const ACTION_TONE: Record<AuditLogEntry['action'], 'neutral' | 'success' | 'warning' | 'danger'> = {
   create: 'success',
@@ -16,13 +17,13 @@ const ACTION_TONE: Record<AuditLogEntry['action'], 'neutral' | 'success' | 'warn
 }
 
 const ENTITY_LABEL: Record<string, string> = {
-  student: 'Student',
-  class: 'Class',
-  enrollment: 'Enrollment',
-  score: 'Grade',
-  attendance: 'Attendance',
-  homeworkAssignment: 'Homework',
-  homeworkSubmission: 'Submission'
+  student: tr('Student'),
+  class: tr('Class'),
+  enrollment: tr('Enrollment'),
+  score: tr('Grade'),
+  attendance: tr('Attendance'),
+  homeworkAssignment: tr('Homework'),
+  homeworkSubmission: tr('Submission')
 }
 
 export function AuditLogPage(): React.JSX.Element {
@@ -41,13 +42,15 @@ export function AuditLogPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Audit Log"
-        description="Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Backups) before being permanently purged."
+        title={tr('Audit Log')}
+        description={tr(
+          "Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Backups) before being permanently purged."
+        )}
       />
 
       <div className="mb-4 flex flex-wrap gap-3">
         <Select value={studentId} onChange={(e) => setStudentId(e.target.value)} className="w-56">
-          <option value="">All students</option>
+          <option value="">{tr('All students')}</option>
           {(students ?? []).map((s) => (
             <option key={s.id} value={s.id}>
               {studentFullName(s)}
@@ -55,7 +58,7 @@ export function AuditLogPage(): React.JSX.Element {
           ))}
         </Select>
         <Select value={classId} onChange={(e) => setClassId(e.target.value)} className="w-56">
-          <option value="">All classes</option>
+          <option value="">{tr('All classes')}</option>
           {(classes ?? []).map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -69,8 +72,10 @@ export function AuditLogPage(): React.JSX.Element {
       ) : !entries?.length ? (
         <EmptyState
           icon={History}
-          title="No activity yet"
-          description="Grade, attendance, and homework changes will show up here as they happen."
+          title={tr('No activity yet')}
+          description={tr(
+            'Grade, attendance, and homework changes will show up here as they happen.'
+          )}
         />
       ) : (
         <Card>

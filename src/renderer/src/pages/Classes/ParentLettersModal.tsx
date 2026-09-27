@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { ClassSection } from '@shared/types'
-import { DEFAULT_LETTER_TEMPLATE } from '@shared/letters'
+import { defaultLetterTemplate } from '@shared/letters'
 import { Button } from '@renderer/components/ui/Button'
 import { Modal } from '@renderer/components/ui/Modal'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 /** Edit the parent letter and print a copy for every student in the class. */
 export function ParentLettersModal({
@@ -20,7 +21,7 @@ export function ParentLettersModal({
   const [draft, setDraft] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const text = draft ?? settings?.letterTemplate ?? DEFAULT_LETTER_TEMPLATE
+  const text = draft ?? settings?.letterTemplate ?? defaultLetterTemplate()
 
   async function print(): Promise<void> {
     setBusy(true)
@@ -31,7 +32,7 @@ export function ParentLettersModal({
         classSection.id,
         `${classSection.name.replace(/[^\p{L}\p{N} -]/gu, '')} - parent letters.pdf`
       )
-      if (r.saved) setMessage(`Saved to ${r.filePath}`)
+      if (r.saved) setMessage(tr('Saved to {path}', { path: r.filePath }))
     } finally {
       setBusy(false)
     }
@@ -41,30 +42,30 @@ export function ParentLettersModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={`Parent letters — ${classSection.name}`}
+      title={tr('Parent letters — {name}', { name: classSection.name })}
       wide
       footer={
         <>
-          <Button variant="ghost" onClick={() => setDraft(DEFAULT_LETTER_TEMPLATE)}>
-            Restore EduBoard’s letter
+          <Button variant="ghost" onClick={() => setDraft(defaultLetterTemplate())}>
+            {tr('Restore EduBoard’s letter')}
           </Button>
           <Button variant="secondary" onClick={onClose}>
-            Close
+            {tr('Close')}
           </Button>
           <Button variant="primary" onClick={print} disabled={busy || !text.trim()}>
-            {busy ? 'Preparing…' : 'Print letters (PDF)'}
+            {busy ? tr('Preparing…') : tr('Print letters (PDF)')}
           </Button>
         </>
       }
     >
       <div className="space-y-2 text-sm">
         <p className="text-[var(--color-text-muted)]">
-          One letter per student, filled in for each: {'{guardian}'}, {'{name}'}, {'{class}'},{' '}
-          {'{grade}'}, {'{percent}'}, {'{attendance}'}, {'{teacher}'}, {'{school}'}, {'{date}'}. The
-          school logo and name go at the top. Your letter is kept for next time.
+          {tr(
+            'One letter per student, filled in for each: {guardian}, {name}, {class}, {grade}, {percent}, {attendance}, {teacher}, {school}, {date}. The school logo and name go at the top. Your letter is kept for next time.'
+          )}
         </p>
         <textarea
-          aria-label="Letter"
+          aria-label={tr('Letter')}
           className="h-72 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 font-mono text-sm"
           value={text}
           onChange={(e) => setDraft(e.target.value)}

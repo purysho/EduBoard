@@ -9,6 +9,7 @@ import {
 import { getRosterForClass } from '../repositories/enrollments'
 import { markAttendance } from '../repositories/attendanceRecords'
 import type { AttendanceCheckInStatus, ExitTicketServerInfo } from '@shared/types'
+import { tr, uiLanguage } from '@shared/i18n'
 
 // Fixed port with a few fallbacks in case something else on the machine already holds
 // it. Never anything but a plain loopback-adjacent LAN port — this server is meant to
@@ -107,17 +108,17 @@ function renderPage(classId: string): string {
 
   if (!ticket || !isAcceptingResponses(ticket)) {
     return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exit Ticket</title>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(tr('Exit Ticket'))}</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
-</head><body><p>No exit ticket is open right now. Ask your teacher.</p></body></html>`
+</head><body><p>${escapeHtml(tr('No exit ticket is open right now. Ask your teacher.'))}</p></body></html>`
   }
 
   // Students pick themselves from the class list; a class with no roster yet falls back
   // to typing a name.
   const roster = activeRoster(classId)
   const nameField = roster.length
-    ? `<select id="who" name="_student" required><option value="">Choose your name…</option>${roster
+    ? `<select id="who" name="_student" required><option value="">${escapeHtml(tr('Choose your name…'))}</option>${roster
         .map((r) => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}</option>`)
         .join('')}</select>`
     : '<input id="who" type="text" name="_name" required>'
@@ -139,7 +140,7 @@ function renderPage(classId: string): string {
     .join('')
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(ticket.title)}</title>
 <style>
   body{font-family:system-ui,sans-serif;margin:0;background:#f8fafc;color:#0f172a}
@@ -160,13 +161,13 @@ function renderPage(classId: string): string {
   <form id="f">
     <h1>${escapeHtml(ticket.title)}</h1>
     <div class="question">
-      <label class="q" for="who">Your name</label>
+      <label class="q" for="who">${escapeHtml(tr('Your name'))}</label>
       ${nameField}
     </div>
     ${questionsHtml}
-    <button type="submit">Submit</button>
+    <button type="submit">${escapeHtml(tr('Submit'))}</button>
   </form>
-  <div id="done">Thanks — your answers were submitted.</div>
+  <div id="done">${escapeHtml(tr('Thanks — your answers were submitted.'))}</div>
 </div>
 <script>
 document.getElementById('f').addEventListener('submit', function (e) {
@@ -188,11 +189,11 @@ document.getElementById('f').addEventListener('submit', function (e) {
       document.getElementById('done').style.display = 'block'
     } else {
       btn.disabled = false
-      res.text().then(function (t) { alert(t || 'Something went wrong — please try again.') })
+      res.text().then(function (t) { alert(t || ${JSON.stringify(tr('Something went wrong — please try again.'))}) })
     }
   }).catch(function () {
     btn.disabled = false
-    alert('Could not submit — check you are still on the classroom WiFi and try again.')
+    alert(${JSON.stringify(tr('Could not submit — check you are still on the classroom WiFi and try again.'))})
   })
 })
 </script>
@@ -227,10 +228,10 @@ function renderAttendancePage(classId: string): string {
 
   if (!session) {
     return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Attendance</title>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(tr('Attendance'))}</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
-</head><body><p>No attendance check-in is open right now. Ask your teacher.</p></body></html>`
+</head><body><p>${escapeHtml(tr('No attendance check-in is open right now. Ask your teacher.'))}</p></body></html>`
   }
 
   const roster = getRosterForClass(classId).filter((r) => r.enrollment.status === 'active')
@@ -243,8 +244,8 @@ function renderAttendancePage(classId: string): string {
     .join('')
 
   return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Attendance</title>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(tr('Attendance'))}</title>
 <style>
   body{font-family:system-ui,sans-serif;margin:0;background:#f8fafc;color:#0f172a}
   .wrap{max-width:480px;margin:0 auto;padding:24px 16px}
@@ -258,11 +259,11 @@ function renderAttendancePage(classId: string): string {
 </style></head>
 <body><div class="wrap">
   <div id="list">
-    <h1>Attendance check-in</h1>
-    <p class="hint">Tap your name to mark yourself present.</p>
+    <h1>${escapeHtml(tr('Attendance check-in'))}</h1>
+    <p class="hint">${escapeHtml(tr('Tap your name to mark yourself present.'))}</p>
     <div class="grid">${studentsHtml}</div>
   </div>
-  <div id="done">You're checked in — thanks!</div>
+  <div id="done">${escapeHtml(tr('You’re checked in — thanks!'))}</div>
 </div>
 <script>
 document.querySelectorAll('.s').forEach(function (btn) {
@@ -278,11 +279,11 @@ document.querySelectorAll('.s').forEach(function (btn) {
         document.getElementById('done').style.display = 'block'
       } else {
         btn.disabled = false
-        res.text().then(function (t) { alert(t || 'Something went wrong — please try again.') })
+        res.text().then(function (t) { alert(t || ${JSON.stringify(tr('Something went wrong — please try again.'))}) })
       }
     }).catch(function () {
       btn.disabled = false
-      alert('Could not check in — check you are still on the classroom WiFi and try again.')
+      alert(${JSON.stringify(tr('Could not check in — check you are still on the classroom WiFi and try again.'))})
     })
   })
 })
@@ -325,7 +326,7 @@ export function startExitTicketServer(): void {
       if (isCheckIn && req.method === 'POST') {
         if (tooManyTries(req)) {
           res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' })
-          res.end('Too many tries. Wait a minute, then try again.')
+          res.end(tr('Too many tries. Wait a minute, then try again.'))
           return
         }
         const device = deviceId(req)
@@ -334,7 +335,7 @@ export function startExitTicketServer(): void {
             const session = openCheckIns.get(classId)
             if (!session) {
               res.writeHead(403, { 'Content-Type': 'text/plain' })
-              res.end('This check-in session is closed.')
+              res.end(tr('This check-in session is closed.'))
               return
             }
             let parsed: { studentId?: unknown }
@@ -354,7 +355,7 @@ export function startExitTicketServer(): void {
             }
             if (!device) {
               res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' })
-              res.end('Open the check-in page again from the QR code, then tap your name.')
+              res.end(tr('Open the check-in page again from the QR code, then tap your name.'))
               return
             }
             const already = session.studentByDevice.get(device)
@@ -362,7 +363,10 @@ export function startExitTicketServer(): void {
               const who = roster.find((r) => r.student.id === already)
               res.writeHead(409, { 'Content-Type': 'text/plain; charset=utf-8' })
               res.end(
-                `This device already checked in ${who ? rosterName(who.student) : 'someone'}. Each student checks in on their own device; ask your teacher if that's wrong.`
+                tr(
+                  'This device already checked in {name}. Each student checks in on their own device; ask your teacher if that’s wrong.',
+                  { name: who ? rosterName(who.student) : tr('someone') }
+                )
               )
               return
             }
@@ -405,7 +409,7 @@ export function startExitTicketServer(): void {
     if (isSubmit && req.method === 'POST') {
       if (tooManyTries(req)) {
         res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' })
-        res.end('Too many tries. Wait a minute, then try again.')
+        res.end(tr('Too many tries. Wait a minute, then try again.'))
         return
       }
       readBody(req)
@@ -413,7 +417,7 @@ export function startExitTicketServer(): void {
           const ticket = getExitTicketByClass(classId)
           if (!ticket || !isAcceptingResponses(ticket)) {
             res.writeHead(403, { 'Content-Type': 'text/plain' })
-            res.end('This exit ticket is closed.')
+            res.end(tr('This exit ticket is closed.'))
             return
           }
           let parsed: { studentId?: unknown; studentName?: unknown; answers?: unknown }
@@ -433,7 +437,7 @@ export function startExitTicketServer(): void {
             const picked = roster.find((r) => r.id === parsed.studentId)
             if (!picked) {
               res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' })
-              res.end('Choose your name from the list.')
+              res.end(tr('Choose your name from the list.'))
               return
             }
             studentId = picked.id

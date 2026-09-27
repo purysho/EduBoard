@@ -4,6 +4,7 @@
 import { createWriteStream, statSync } from 'fs'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
+import { tr } from '@shared/i18n'
 
 export const REPO = 'purysho/EduBoard'
 
@@ -56,7 +57,10 @@ export async function fetchLatestRelease(
     const res = await fetchImpl(`${portalUrl}/api/app-release`, {
       signal: AbortSignal.timeout(20_000)
     })
-    if (!res.ok) throw new Error(`Your Portal couldn’t check for updates (${res.status}).`)
+    if (!res.ok)
+      throw new Error(
+        tr('Your Portal couldn’t check for updates ({status}).', { status: res.status })
+      )
     const body = (await res.json()) as { version: string; assets: { name: string; size: number }[] }
     return {
       version: body.version,
@@ -71,7 +75,8 @@ export async function fetchLatestRelease(
     headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'EduBoard-Updater' },
     signal: AbortSignal.timeout(20_000)
   })
-  if (!res.ok) throw new Error(`GitHub couldn’t be asked for updates (${res.status}).`)
+  if (!res.ok)
+    throw new Error(tr('GitHub couldn’t be asked for updates ({status}).', { status: res.status }))
   const body = (await res.json()) as {
     tag_name: string
     assets: { name: string; size: number; browser_download_url: string }[]
@@ -90,7 +95,8 @@ export async function downloadAsset(
   fetchImpl: typeof fetch = fetch
 ): Promise<void> {
   const res = await fetchImpl(asset.url, { headers: { 'User-Agent': 'EduBoard-Updater' } })
-  if (!res.ok || !res.body) throw new Error(`The download failed (${res.status}).`)
+  if (!res.ok || !res.body)
+    throw new Error(tr('The download failed ({status}).', { status: res.status }))
   let received = 0
   const total = asset.size || Number(res.headers.get('content-length')) || 0
   const body = Readable.fromWeb(res.body as never)
@@ -100,6 +106,6 @@ export async function downloadAsset(
   })
   await pipeline(body, createWriteStream(destination))
   if (asset.size && statSync(destination).size !== asset.size) {
-    throw new Error('The download was incomplete. Try again.')
+    throw new Error(tr('The download was incomplete. Try again.'))
   }
 }

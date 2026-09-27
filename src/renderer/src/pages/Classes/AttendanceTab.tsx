@@ -20,6 +20,7 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate, formatRate, studentFullName, todayIso } from '@renderer/lib/format'
 import { AttendanceCell } from './AttendanceCell'
+import { tr } from '@shared/i18n'
 
 export function AttendanceTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -79,8 +80,8 @@ export function AttendanceTab(): React.JSX.Element {
     return (
       <EmptyState
         icon={CalendarCheck}
-        title="No students enrolled"
-        description="Enroll students from the Roster tab first."
+        title={tr('No students enrolled')}
+        description={tr('Enroll students from the Roster tab first.')}
       />
     )
   }
@@ -91,7 +92,7 @@ export function AttendanceTab(): React.JSX.Element {
 
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-muted)]">
-          Click a cell to cycle Present → Late → Absent → Excused.
+          {tr('Click a cell to cycle Present → Late → Absent → Excused.')}
         </p>
         <div className="flex items-center gap-2">
           <div className="w-80">
@@ -99,11 +100,11 @@ export function AttendanceTab(): React.JSX.Element {
           </div>
           <Button variant="secondary" onClick={addDate}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
-            Add date
+            {tr('Add date')}
           </Button>
           <Button variant="secondary" onClick={handleExportCsv} disabled={exporting}>
             <Download size={15} className="mr-1 inline" aria-hidden />
-            {exporting ? 'Exporting…' : 'Export .csv'}
+            {exporting ? tr('Exporting…') : tr('Export .csv')}
           </Button>
         </div>
       </div>
@@ -113,20 +114,20 @@ export function AttendanceTab(): React.JSX.Element {
           <thead className="bg-[var(--color-surface-muted)] text-xs text-[var(--color-text-muted)]">
             <tr>
               <th className="sticky left-0 z-10 min-w-48 border-r border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2.5 text-left font-medium">
-                Student
+                {tr('Student')}
               </th>
               {dates.map((date) => (
                 <th key={date} className="px-1.5 py-2 text-center font-medium">
                   <button
                     onClick={() => setPendingMarkAllDate(date)}
                     className="hover:text-[var(--color-primary)]"
-                    title="Mark everyone present for this date"
+                    title={tr('Mark everyone present for this date')}
                   >
                     {formatDate(date, 'MMM d')}
                   </button>
                 </th>
               ))}
-              <th className="min-w-20 px-3 py-2 text-center font-medium">Rate</th>
+              <th className="min-w-20 px-3 py-2 text-center font-medium">{tr('Rate')}</th>
             </tr>
           </thead>
           <tbody>
@@ -161,9 +162,12 @@ export function AttendanceTab(): React.JSX.Element {
 
       <ConfirmDialog
         open={!!pendingMarkAllDate}
-        title="Mark everyone present"
-        message={`Mark every enrolled student present on ${pendingMarkAllDate ? formatDate(pendingMarkAllDate, 'MMM d') : ''}? This overwrites any statuses already set for that date.`}
-        confirmLabel="Mark all present"
+        title={tr('Mark everyone present')}
+        message={tr(
+          'Mark every enrolled student present on {date}? This overwrites any statuses already set for that date.',
+          { date: pendingMarkAllDate ? formatDate(pendingMarkAllDate, 'MMM d') : '' }
+        )}
+        confirmLabel={tr('Mark all present')}
         onConfirm={() => pendingMarkAllDate && handleMarkAllPresent(pendingMarkAllDate)}
         onCancel={() => setPendingMarkAllDate(null)}
       />
@@ -209,7 +213,7 @@ function QrCheckInPanel({ classId }: { classId: string }): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <QrCode size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          QR check-in
+          {tr('QR check-in')}
         </h2>
         <Button
           variant={isOpen ? 'danger' : 'primary'}
@@ -220,12 +224,12 @@ function QrCheckInPanel({ classId }: { classId: string }): React.JSX.Element {
           {isOpen ? (
             <>
               <Square size={13} className="mr-1 inline" aria-hidden />
-              Stop
+              {tr('Stop')}
             </>
           ) : (
             <>
               <Play size={13} className="mr-1 inline" aria-hidden />
-              Start
+              {tr('Start')}
             </>
           )}
         </Button>
@@ -235,20 +239,24 @@ function QrCheckInPanel({ classId }: { classId: string }): React.JSX.Element {
           {qrDataUrl && (
             <img
               src={qrDataUrl}
-              alt="QR code for attendance check-in"
+              alt={tr('QR code for attendance check-in')}
               className="h-28 w-28 rounded-lg border border-[var(--color-border)]"
             />
           )}
           <div>
-            <p className="text-sm text-[var(--color-text-muted)]">Students on this WiFi go to:</p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {tr('Students on this WiFi go to:')}
+            </p>
             <p className="mt-1 break-all text-lg font-semibold">{studentUrl ?? '…'}</p>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-              {status?.checkedInStudentIds.length ?? 0} checked in for {formatDate(todayIso())}
+              {status?.checkedInStudentIds.length ?? 0}{' '}
+              {tr('checked in for {date}', { date: formatDate(todayIso()) })}
             </p>
             {!serverInfo?.lanIp && (
               <p className="mt-2 text-xs text-[var(--color-warning)]">
-                Couldn&apos;t detect a network address — make sure this computer is connected to the
-                classroom WiFi (not just powered on).
+                {tr(
+                  "Couldn't detect a network address — make sure this computer is connected to the classroom WiFi (not just powered on)."
+                )}
               </p>
             )}
           </div>

@@ -15,6 +15,7 @@ import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useAnalyticsOverview } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const chartTooltipStyle = {
   background: 'var(--color-surface)',
@@ -33,23 +34,25 @@ export function AnalyticsPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Analytics"
-        description="Grades and attendance compared across every active class."
+        title={tr('Analytics')}
+        description={tr('Grades and attendance compared across every active class.')}
       />
 
       {!hasClasses ? (
         <EmptyState
           icon={BarChart3}
-          title="Not enough data yet"
-          description="Add classes, enroll students, and enter some grades to see analytics here."
+          title={tr('Not enough data yet')}
+          description={tr(
+            'Add classes, enroll students, and enter some grades to see analytics here.'
+          )}
         />
       ) : (
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold">Class comparison</h2>
+              <h2 className="text-sm font-semibold">{tr('Class comparison')}</h2>
               <p className="text-xs text-[var(--color-text-muted)]">
-                Average grade, pass rate, and attendance rate side by side.
+                {tr('Average grade, pass rate, and attendance rate side by side.')}
               </p>
             </CardHeader>
             <CardBody className="h-72">
@@ -88,9 +91,11 @@ export function AnalyticsPage(): React.JSX.Element {
             {!overview.categoryComparison.length ? null : (
               <Card>
                 <CardHeader>
-                  <h2 className="text-sm font-semibold">Category performance, school-wide</h2>
+                  <h2 className="text-sm font-semibold">
+                    {tr('Category performance, school-wide')}
+                  </h2>
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    Averaged across every class that has a category of that name.
+                    {tr('Averaged across every class that has a category of that name.')}
                   </p>
                 </CardHeader>
                 <CardBody className="h-64">
@@ -139,9 +144,9 @@ export function AnalyticsPage(): React.JSX.Element {
             {overview.attendanceTrend.length <= 1 ? null : (
               <Card>
                 <CardHeader>
-                  <h2 className="text-sm font-semibold">Attendance trend, school-wide</h2>
+                  <h2 className="text-sm font-semibold">{tr('Attendance trend, school-wide')}</h2>
                   <p className="text-xs text-[var(--color-text-muted)]">
-                    Every class&apos;s attendance rate, averaged per day.
+                    {tr("Every class's attendance rate, averaged per day.")}
                   </p>
                 </CardHeader>
                 <CardBody className="h-64">
@@ -166,7 +171,7 @@ export function AnalyticsPage(): React.JSX.Element {
                       <YAxis domain={[0, 100]} stroke="var(--color-text-muted)" fontSize={12} />
                       <Tooltip
                         labelFormatter={(d) => formatDate(d as string)}
-                        formatter={(value: number) => [`${value.toFixed(0)}%`, 'Attendance']}
+                        formatter={(value: number) => [`${value.toFixed(0)}%`, tr('Attendance')]}
                         contentStyle={chartTooltipStyle}
                       />
                       <Line

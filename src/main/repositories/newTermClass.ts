@@ -10,6 +10,7 @@ import type {
   StartNextTermForClassesInput,
   StartNextTermForClassesResult
 } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { DuplicateClassForNewTermInput, StartNextTermForClassesInput }
 
@@ -25,7 +26,7 @@ export function duplicateClassForNewTerm(
   input: DuplicateClassForNewTermInput
 ): ClassSection {
   const source = getClass(classId)
-  if (!source) throw new Error('That class no longer exists.')
+  if (!source) throw new Error(tr('That class no longer exists.'))
   return getDb().transaction(() => {
     const created = createClass({
       name: input.name.trim() || source.name,

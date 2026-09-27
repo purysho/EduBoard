@@ -14,7 +14,7 @@ describe('describePortalFailure', () => {
 
   it('explains a rejected sync secret', () => {
     expect(describePortalFailure('Portal sync failed', 401, '{"error":"Bad sync secret"}')).toMatch(
-      /didn't accept the sync secret/
+      /didn.t accept the sync secret/
     )
   })
 

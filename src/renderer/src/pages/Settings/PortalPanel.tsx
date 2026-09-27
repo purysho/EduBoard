@@ -11,6 +11,7 @@ import {
   useSendDigestNow
 } from '@renderer/lib/queries'
 import { PublishSummary } from '@renderer/components/portal/PublishSummary'
+import { tr, trn } from '@shared/i18n'
 
 // No 0/O/1/l/I, so a temporary password read aloud or copied off a screen can't be
 // mistyped. 10 characters from 56 symbols is about 58 bits: plenty for a password the
@@ -41,7 +42,7 @@ export function PortalPanel(): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Wifi size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Portal sync
+          {tr('Portal sync')}
         </h2>
         <div className="flex gap-2">
           <Button
@@ -50,7 +51,7 @@ export function PortalPanel(): React.JSX.Element {
             onClick={() => pull.mutate()}
             disabled={pull.isPending}
           >
-            {pull.isPending ? 'Pulling…' : 'Pull homework status'}
+            {pull.isPending ? tr('Pulling…') : tr('Pull homework status')}
           </Button>
           <Button
             variant="primary"
@@ -59,35 +60,37 @@ export function PortalPanel(): React.JSX.Element {
             disabled={publish.isPending}
           >
             <UploadCloud size={14} className="mr-1 inline" aria-hidden />
-            {publish.isPending ? 'Publishing…' : 'Publish to portal'}
+            {publish.isPending ? tr('Publishing…') : tr('Publish to portal')}
           </Button>
         </div>
       </CardHeader>
       <CardBody className="space-y-2 text-sm text-[var(--color-text-muted)]">
         <p>
-          Publish pushes your current roster, grades, attendance, homework, and invite codes to the
-          Portal URL above. Pull brings back homework status students have set themselves — nothing
-          else ever flows back into this app.
+          {tr(
+            'Publish pushes your current roster, grades, attendance, homework, and invite codes to the Portal URL above. Pull brings back homework status students have set themselves — nothing else ever flows back into this app.'
+          )}
         </p>
         <p>
-          This also happens automatically a couple seconds after you edit anything that shows on the
-          Portal — grades, attendance, roster changes, homework — so this button is mainly for
-          forcing an immediate sync or double-checking it&apos;s working.
+          {tr(
+            "This also happens automatically a couple seconds after you edit anything that shows on the Portal — grades, attendance, roster changes, homework — so this button is mainly for forcing an immediate sync or double-checking it's working."
+          )}
         </p>
         {publish.isError && (
           <p className="text-[var(--color-danger)]">
-            {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}
+            {ipcErrorMessage(publish.error, tr('Could not publish to the portal.'))}
           </p>
         )}
         {publish.isSuccess && <PublishSummary result={publish.data} />}
         {pull.isError && (
           <p className="text-[var(--color-danger)]">
-            {ipcErrorMessage(pull.error, 'Could not pull from the portal.')}
+            {ipcErrorMessage(pull.error, tr('Could not pull from the portal.'))}
           </p>
         )}
         {pull.isSuccess && (
           <p className="text-[var(--color-success)]">
-            Pulled {pull.data} submission{pull.data === 1 ? '' : 's'}.
+            {trn('Pulled {data} submission.', 'Pulled {data} submissions.', pull.data, {
+              data: pull.data
+            })}
           </p>
         )}
         <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-3">
@@ -98,17 +101,19 @@ export function PortalPanel(): React.JSX.Element {
             disabled={sendDigest.isPending}
           >
             <Mail size={14} className="mr-1 inline" aria-hidden />
-            {sendDigest.isPending ? 'Sending…' : 'Send weekly digest now'}
+            {sendDigest.isPending ? tr('Sending…') : tr('Send weekly digest now')}
           </Button>
           {sendDigest.isError && (
             <span className="text-[var(--color-danger)]">
-              {ipcErrorMessage(sendDigest.error, 'Could not send the digest.')}
+              {ipcErrorMessage(sendDigest.error, tr('Could not send the digest.'))}
             </span>
           )}
           {sendDigest.isSuccess && (
             <span className="text-[var(--color-success)]">
-              Sent to {sendDigest.data.sent} of {sendDigest.data.total} families with an email on
-              file.
+              {tr('Sent to {sent} of {total} families with an email on file.', {
+                sent: sendDigest.data.sent,
+                total: sendDigest.data.total
+              })}
             </span>
           )}
         </div>
@@ -118,24 +123,24 @@ export function PortalPanel(): React.JSX.Element {
         >
           <p className="flex items-center gap-1.5 font-medium text-[var(--color-text)]">
             <KeyRound size={14} aria-hidden />
-            Reset a student&apos;s Portal password
+            {tr("Reset a student's Portal password")}
           </p>
           <p>
-            For a student or family who is locked out. This signs them out everywhere and cancels
-            their quick-login QR codes. Give them the new password, and they can change it under
-            Account on the Portal.
+            {tr(
+              'For a student or family who is locked out. This signs them out everywhere and cancels their quick-login QR codes. Give them the new password, and they can change it under Account on the Portal.'
+            )}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Input
               className="w-48"
-              placeholder="Portal username"
+              placeholder={tr('Portal username')}
               value={resetUsername}
               onChange={(e) => setResetUsername(e.target.value)}
               required
             />
             <Input
               className="w-48"
-              placeholder="New password (8+ characters)"
+              placeholder={tr('New password (8+ characters)')}
               value={resetNewPassword}
               onChange={(e) => setResetNewPassword(e.target.value)}
               minLength={8}
@@ -147,21 +152,22 @@ export function PortalPanel(): React.JSX.Element {
               size="sm"
               onClick={() => setResetNewPassword(generateTempPassword())}
             >
-              Generate
+              {tr('Generate')}
             </Button>
             <Button type="submit" size="sm" disabled={resetPassword.isPending}>
-              {resetPassword.isPending ? 'Resetting…' : 'Reset password'}
+              {resetPassword.isPending ? tr('Resetting…') : tr('Reset password')}
             </Button>
           </div>
           {resetPassword.isError && (
             <p className="text-[var(--color-danger)]">
-              {ipcErrorMessage(resetPassword.error, 'Could not reset the password.')}
+              {ipcErrorMessage(resetPassword.error, tr('Could not reset the password.'))}
             </p>
           )}
           {resetPassword.isSuccess && (
             <p className="text-[var(--color-success)]">
-              Password reset for {resetPassword.variables.username}. Their other sessions are signed
-              out.
+              {tr('Password reset for {username}. Their other sessions are signed out.', {
+                username: resetPassword.variables.username
+              })}
             </p>
           )}
         </form>

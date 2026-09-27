@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpCircle } from 'lucide-react'
 import { useAppUpdateStatus } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 /** Across the top of every page once an update has downloaded: it installs next time
  * EduBoard opens, or now from Settings. "Later" hides the banner for this session only;
@@ -17,13 +18,13 @@ export function UpdateBanner(): React.JSX.Element | null {
       <span className="min-w-0 flex-1">
         {status.autoInstallFailed ? (
           <>
-            <strong>EduBoard {version} is ready,</strong> but installing it automatically didn’t
-            finish. Install it from Settings.
+            <strong>{tr('EduBoard {version} is ready,', { version })}</strong>{' '}
+            {tr('but installing it automatically didn’t finish. Install it from Settings.')}
           </>
         ) : (
           <>
-            <strong>EduBoard {version} is ready.</strong> It installs the next time you open
-            EduBoard.
+            <strong>{tr('EduBoard {version} is ready.', { version })}</strong>{' '}
+            {tr('It installs the next time you open EduBoard.')}
           </>
         )}
       </span>
@@ -31,13 +32,13 @@ export function UpdateBanner(): React.JSX.Element | null {
         to="/settings?section=updates"
         className="font-medium text-[var(--color-primary)] hover:underline"
       >
-        {status.autoInstallFailed ? 'Install now' : 'Restart and update now'}
+        {status.autoInstallFailed ? tr('Install now') : tr('Restart and update now')}
       </Link>
       <button
         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
         onClick={() => setHiddenFor(version)}
       >
-        Later
+        {tr('Later')}
       </button>
     </div>
   )

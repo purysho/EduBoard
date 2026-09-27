@@ -23,6 +23,7 @@ import type {
   Score,
   StudentClassGrade
 } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 function groupBy<T, K>(items: T[], keyFn: (item: T) => K): Map<K, T[]> {
   const map = new Map<K, T[]>()
@@ -166,7 +167,7 @@ export function getClassReport(classId: string): ClassReport | null {
   const categoryAverages = (
     categories.length > 0
       ? categories.map((c) => ({ categoryId: c.id as string | null, categoryName: c.name }))
-      : [{ categoryId: null, categoryName: 'General' }]
+      : [{ categoryId: null, categoryName: tr('General') }]
   ).map(({ categoryId, categoryName }) => {
     const values = roster
       .map(

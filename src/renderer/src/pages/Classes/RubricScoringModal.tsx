@@ -5,6 +5,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { Spinner } from '@renderer/components/ui/EmptyState'
 import { cn } from '@renderer/lib/cn'
 import { useRubricScores, useSaveRubricScores } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 export function RubricScoringModal({
   open,
@@ -78,14 +79,16 @@ export function RubricScoringModal({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
             onClick={handleSave}
             disabled={!allScored || saveScores.isPending}
           >
-            {saveScores.isPending ? 'Saving…' : `Save (${total}/${rubric.maxPoints})`}
+            {saveScores.isPending
+              ? tr('Saving…')
+              : tr('Save ({total}/{maxPoints})', { total, maxPoints: rubric.maxPoints })}
           </Button>
         </>
       }
@@ -128,12 +131,12 @@ export function RubricScoringModal({
             </div>
           ))}
           <div>
-            <p className="mb-1.5 text-sm font-semibold">Comment (optional)</p>
+            <p className="mb-1.5 text-sm font-semibold">{tr('Comment (optional)')}</p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={2}
-              placeholder="A note for yourself about this grade…"
+              placeholder={tr('A note for yourself about this grade…')}
               className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
             />
           </div>

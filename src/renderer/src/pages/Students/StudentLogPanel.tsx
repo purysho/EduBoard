@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NotebookText, Trash2 } from 'lucide-react'
-import { DEFAULT_LOG_QUICK_ADDS, type ContactMethod, type StudentLogType } from '@shared/types'
+import { defaultLogQuickAdds, type ContactMethod, type StudentLogType } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -15,17 +15,18 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 import { CONTACT_METHOD_LABELS } from '@renderer/lib/parentComms'
+import { tr } from '@shared/i18n'
 
 const TYPE_META: Record<StudentLogType, { label: string; tone: Tone }> = {
-  note: { label: 'Note', tone: 'neutral' },
-  positive: { label: 'Positive', tone: 'success' },
-  concern: { label: 'Concern', tone: 'warning' },
-  contact: { label: 'Contact', tone: 'primary' }
+  note: { label: tr('Note'), tone: 'neutral' },
+  positive: { label: tr('Positive'), tone: 'success' },
+  concern: { label: tr('Concern'), tone: 'warning' },
+  contact: { label: tr('Contact'), tone: 'primary' }
 }
 
 export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX.Element {
   const { data: settings } = useSettings()
-  const quickAdds = settings?.logQuickAdds ?? DEFAULT_LOG_QUICK_ADDS
+  const quickAdds = settings?.logQuickAdds ?? defaultLogQuickAdds()
   const { data: entries } = useStudentLogEntries(studentId)
   const createEntry = useCreateStudentLogEntry(studentId)
   const deleteEntry = useDeleteStudentLogEntry(studentId)
@@ -61,7 +62,7 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <NotebookText size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Log
+          {tr('Log')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-4">
@@ -108,7 +109,7 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={2}
-            placeholder="Add a note about this student…"
+            placeholder={tr('Add a note about this student…')}
             className="flex-1"
           />
           <Button
@@ -116,7 +117,7 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
             onClick={() => handleAdd()}
             disabled={createEntry.isPending || !text.trim()}
           >
-            Add
+            {tr('Add')}
           </Button>
         </div>
         {type === 'contact' && (
@@ -126,12 +127,12 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
               checked={followUpNeeded}
               onChange={(e) => setFollowUpNeeded(e.target.checked)}
             />
-            Needs follow-up
+            {tr('Needs follow-up')}
           </label>
         )}
 
         {!entries?.length ? (
-          <p className="text-sm text-[var(--color-text-muted)]">No log entries yet.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">{tr('No log entries yet.')}</p>
         ) : (
           <ul className="divide-y divide-[var(--color-border)]">
             {entries.map((entry) => (
@@ -143,7 +144,7 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
                       <Badge tone="neutral">{CONTACT_METHOD_LABELS[entry.contactMethod]}</Badge>
                     )}
                     {entry.followUpNeeded && !entry.followUpDone && (
-                      <Badge tone="warning">Follow-up needed</Badge>
+                      <Badge tone="warning">{tr('Follow-up needed')}</Badge>
                     )}
                     <span className="text-xs text-[var(--color-text-muted)]">
                       {formatDate(entry.createdAt, 'MMM d, yyyy p')}
@@ -161,14 +162,14 @@ export function StudentLogPanel({ studentId }: { studentId: string }): React.JSX
                         })
                       }
                     >
-                      Mark follow-up {entry.followUpDone ? 'needed' : 'done'}
+                      {entry.followUpDone ? tr('Mark follow-up needed') : tr('Mark follow-up done')}
                     </button>
                   )}
                 </div>
                 <button
                   className="shrink-0 rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-danger)]"
                   onClick={() => deleteEntry.mutate(entry.id)}
-                  aria-label="Delete entry"
+                  aria-label={tr('Delete entry')}
                 >
                   <Trash2 size={13} aria-hidden />
                 </button>

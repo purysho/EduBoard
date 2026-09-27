@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 // The teacher's "Getting started" checklist. Every step is ticked from real data (see
 // main/services/setupProgress.ts), never by the teacher clicking a box, so it can't
 // claim a step is done when it isn't, and it keeps up as the teacher works.
@@ -32,68 +33,72 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
   return [
     {
       id: 'class',
-      title: 'Create your first class',
-      description: 'Name it, pick the level, and set how it’s graded.',
+      title: tr('Create your first class'),
+      description: tr('Name it, pick the level, and set how it’s graded.'),
       done: p.classCount > 0,
       optional: false,
       to: '/classes',
-      actionLabel: 'Go to Classes'
+      actionLabel: tr('Go to Classes')
     },
     {
       id: 'students',
-      title: 'Add your students',
-      description: 'Add them one by one, or import a roster from a spreadsheet.',
+      title: tr('Add your students'),
+      description: tr('Add them one by one, or import a roster from a spreadsheet.'),
       done: p.activeEnrollmentCount > 0,
       optional: false,
       to: cls ?? '/classes',
-      actionLabel: 'Open roster'
+      actionLabel: tr('Open roster')
     },
     {
       id: 'homework',
-      title: 'Publish an assignment',
-      description: 'Drafts stay private. Publishing puts it on the Portal for students.',
+      title: tr('Publish an assignment'),
+      description: tr('Drafts stay private. Publishing puts it on the Portal for students.'),
       done: p.publishedHomeworkCount > 0,
       optional: false,
       to: cls ? `${cls}/homework` : '/classes',
-      actionLabel: 'Open Homework'
+      actionLabel: tr('Open Homework')
     },
     {
       id: 'portal',
-      title: 'Connect the student Portal',
-      description: 'Paste your Portal address and sync secret in Settings.',
+      title: tr('Connect the student Portal'),
+      description: tr('Paste your Portal address and sync secret in Settings.'),
       done: p.portalConnected,
       optional: false,
       to: '/settings',
-      actionLabel: 'Open Settings'
+      actionLabel: tr('Open Settings')
     },
     {
       id: 'invites',
-      title: 'Invite your students',
-      description:
-        'Share a class join link (or QR code), or give a student their own link. Students sign up in a minute.',
+      title: tr('Invite your students'),
+      description: tr(
+        'Share a class join link (or QR code), or give a student their own link. Students sign up in a minute.'
+      ),
       done: p.inviteBatchCount > 0,
       optional: false,
       to: cls ? `${cls}/portal` : '/classes',
-      actionLabel: 'Get a join link'
+      actionLabel: tr('Get a join link')
     },
     {
       id: 'materials',
-      title: 'Share study material',
-      description:
-        'Add a reading to Resources and share it with a class. Students get study guides, flashcards and quizzes.',
+      title: tr('Share study material'),
+      description: tr(
+        'Add a reading to Resources and share it with a class. Students get study guides, flashcards and quizzes.'
+      ),
       done: p.sharedResourceCount > 0,
       optional: true,
       to: '/resources',
-      actionLabel: 'Open Resources'
+      actionLabel: tr('Open Resources')
     },
     {
       id: 'ai',
-      title: 'Add an AI key',
-      description: 'Powers feedback drafts, study guides, flashcards and the student Study Helper.',
+      title: tr('Add an AI key'),
+      description: tr(
+        'Powers feedback drafts, study guides, flashcards and the student Study Helper.'
+      ),
       done: p.aiConfigured,
       optional: true,
       to: '/settings',
-      actionLabel: 'Open Settings'
+      actionLabel: tr('Open Settings')
     }
   ]
 }

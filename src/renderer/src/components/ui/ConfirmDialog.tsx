@@ -1,5 +1,6 @@
 import { Modal } from './Modal'
 import { Button } from './Button'
+import { tr } from '@shared/i18n'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -15,7 +16,7 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = 'Confirm',
+  confirmLabel = tr('Confirm'),
   danger,
   onConfirm,
   onCancel
@@ -28,7 +29,7 @@ export function ConfirmDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onCancel}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm}>
             {confirmLabel}

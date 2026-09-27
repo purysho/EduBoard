@@ -5,6 +5,7 @@ import { newId, nowIso } from '../db/util'
 import { recordAudit } from './auditLog'
 import type { Score, ScoreHistoryEntry } from '@shared/types'
 import type { UpsertScoreInput } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { UpsertScoreInput }
 
@@ -100,7 +101,10 @@ function logScoreAudit(assessmentId: string, studentId: string, action: 'create'
     entityType: 'score',
     entityId: `${assessmentId}:${studentId}`,
     action,
-    summary: `Grade ${action === 'create' ? 'set' : 'changed'} for "${assessment?.name ?? 'assessment'}"`,
+    summary:
+      action === 'create'
+        ? tr('Grade set for “{name}”', { name: assessment?.name ?? tr('assessment') })
+        : tr('Grade changed for “{name}”', { name: assessment?.name ?? tr('assessment') }),
     studentId,
     classId: assessment?.classId ?? null
   })

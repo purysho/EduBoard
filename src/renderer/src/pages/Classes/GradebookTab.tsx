@@ -20,6 +20,7 @@ import { formatDate, formatPercent, studentFullName } from '@renderer/lib/format
 import { AssessmentFormModal } from './AssessmentFormModal'
 import { ScoreCell } from './ScoreCell'
 import { RubricScoreCell } from './RubricScoreCell'
+import { tr } from '@shared/i18n'
 
 export function GradebookTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -58,27 +59,27 @@ export function GradebookTab(): React.JSX.Element {
       <div className="mb-4 flex justify-end">
         <Button variant="primary" onClick={() => setShowAdd(true)}>
           <Plus size={15} className="mr-1 inline" aria-hidden />
-          Assessment
+          {tr('Assessment')}
         </Button>
       </div>
 
       {!assessments?.length ? (
         <EmptyState
           icon={ClipboardList}
-          title="No assessments yet"
-          description="Add an assessment (quiz, homework, exam…) to start entering grades."
+          title={tr('No assessments yet')}
+          description={tr('Add an assessment (quiz, homework, exam…) to start entering grades.')}
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              Assessment
+              {tr('Assessment')}
             </Button>
           }
         />
       ) : !roster?.length ? (
         <EmptyState
           icon={ClipboardList}
-          title="No students enrolled"
-          description="Enroll students from the Roster tab before entering grades."
+          title={tr('No students enrolled')}
+          description={tr('Enroll students from the Roster tab before entering grades.')}
         />
       ) : (
         <div className="overflow-auto rounded-xl border border-[var(--color-border)]">
@@ -86,7 +87,7 @@ export function GradebookTab(): React.JSX.Element {
             <thead className="bg-[var(--color-surface-muted)] text-xs text-[var(--color-text-muted)]">
               <tr>
                 <th className="sticky left-0 z-10 min-w-48 border-r border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2.5 text-left font-medium">
-                  Student
+                  {tr('Student')}
                 </th>
                 {assessments.map((a) => (
                   <th key={a.id} className="min-w-24 px-2 py-2 text-center font-medium">
@@ -109,12 +110,12 @@ export function GradebookTab(): React.JSX.Element {
                         className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                         onClick={() => setPendingDelete(a)}
                       >
-                        remove
+                        {tr('remove')}
                       </button>
                     </div>
                   </th>
                 ))}
-                <th className="min-w-20 px-3 py-2 text-center font-medium">Grade</th>
+                <th className="min-w-20 px-3 py-2 text-center font-medium">{tr('Grade')}</th>
               </tr>
             </thead>
             <tbody>
@@ -192,9 +193,11 @@ export function GradebookTab(): React.JSX.Element {
       )}
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete assessment"
-        message={`Delete "${pendingDelete?.name}"? All recorded scores for it will be deleted too.`}
-        confirmLabel="Delete"
+        title={tr('Delete assessment')}
+        message={tr('Delete "{name}"? All recorded scores for it will be deleted too.', {
+          name: pendingDelete?.name
+        })}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deleteAssessment.mutateAsync(pendingDelete.id)

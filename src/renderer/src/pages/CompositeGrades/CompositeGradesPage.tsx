@@ -9,6 +9,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { letterTone } from '@renderer/lib/grade'
 import { formatPercent, ipcErrorMessage } from '@renderer/lib/format'
 import { useCourseGroupComposite, useCourseGroups } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 export function CompositeGradesPage(): React.JSX.Element {
   const { data: courseGroups, isLoading: loadingGroups } = useCourseGroups()
@@ -32,17 +33,19 @@ export function CompositeGradesPage(): React.JSX.Element {
     setExportState({ busy: true, message: null })
     try {
       await window.api.importExport.exportCourseGradeSheet(selectedGroup.id, path)
-      setExportState({ busy: false, message: 'Saved.' })
+      setExportState({ busy: false, message: tr('Saved.') })
     } catch (err) {
-      setExportState({ busy: false, message: ipcErrorMessage(err, 'Couldn’t save the file.') })
+      setExportState({ busy: false, message: ipcErrorMessage(err, tr('Couldn’t save the file.')) })
     }
   }
 
   return (
     <div>
       <PageHeader
-        title="Composite Grades"
-        description="A student's combined grade across a course's terms — link classes to a course group from each class's Settings tab."
+        title={tr('Composite Grades')}
+        description={tr(
+          "A student's combined grade across a course's terms — link classes to a course group from each class's Settings tab."
+        )}
       />
 
       {loadingGroups ? (
@@ -50,15 +53,17 @@ export function CompositeGradesPage(): React.JSX.Element {
       ) : !courseGroups?.length ? (
         <EmptyState
           icon={Layers}
-          title="No course groups yet"
-          description="From a class's Settings tab, set its course group to link it with the same course's other terms."
+          title={tr('No course groups yet')}
+          description={tr(
+            "From a class's Settings tab, set its course group to link it with the same course's other terms."
+          )}
         />
       ) : (
         <>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="w-full max-w-xs">
               <Select value={selectedGroupId} onChange={(e) => setSelectedGroupId(e.target.value)}>
-                <option value="">Select a course…</option>
+                <option value="">{tr('Select a course…')}</option>
                 {courseGroups.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.name}
@@ -71,10 +76,12 @@ export function CompositeGradesPage(): React.JSX.Element {
                 variant="secondary"
                 onClick={handleExport}
                 disabled={exportState.busy}
-                title="An Excel file with every term's grade, the final grade and attendance, plus each term's gradebook"
+                title={tr(
+                  "An Excel file with every term's grade, the final grade and attendance, plus each term's gradebook"
+                )}
               >
                 <FileSpreadsheet size={14} className="mr-1 inline" aria-hidden />
-                {exportState.busy ? 'Saving…' : 'Export grade sheet'}
+                {exportState.busy ? tr('Saving…') : tr('Export grade sheet')}
               </Button>
             )}
             {exportState.message && (
@@ -87,21 +94,23 @@ export function CompositeGradesPage(): React.JSX.Element {
           ) : !composites?.length ? (
             <EmptyState
               icon={Layers}
-              title="No students yet"
-              description={`No class in "${selectedGroup?.name ?? 'this course'}" has any students enrolled.`}
+              title={tr('No students yet')}
+              description={tr('No class in “{course}” has any students enrolled.', {
+                course: selectedGroup?.name ?? tr('this course')
+              })}
             />
           ) : (
             <div className="overflow-auto rounded-xl border border-[var(--color-border)]">
               <table className="w-full text-sm">
                 <thead className="bg-[var(--color-surface-muted)] text-xs text-[var(--color-text-muted)]">
                   <tr>
-                    <th className="px-4 py-2.5 text-left font-medium">Student</th>
+                    <th className="px-4 py-2.5 text-left font-medium">{tr('Student')}</th>
                     {composites[0].classes.map((c) => (
                       <th key={c.classId} className="px-3 py-2.5 text-center font-medium">
                         {c.termName ?? c.className}
                       </th>
                     ))}
-                    <th className="px-3 py-2.5 text-center font-medium">Composite</th>
+                    <th className="px-3 py-2.5 text-center font-medium">{tr('Composite')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,8 +144,9 @@ export function CompositeGradesPage(): React.JSX.Element {
       {selectedGroup && (
         <Card className="mt-4">
           <CardBody className="text-xs text-[var(--color-text-muted)]">
-            Composite is a weighted average of each term&apos;s grade (weight set per class in its
-            Settings tab), renormalized across whichever terms have a grade so far.
+            {tr(
+              "Composite is a weighted average of each term's grade (weight set per class in its Settings tab), renormalized across whichever terms have a grade so far."
+            )}
           </CardBody>
         </Card>
       )}

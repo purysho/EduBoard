@@ -50,15 +50,16 @@ import { formatDate, formatDueDate, ipcErrorMessage } from '@renderer/lib/format
 import { submissionTiming, type SubmissionTiming } from '@shared/deadlines'
 import { aiUsageReasons } from '@shared/aiUsage'
 import { AiActivityModal } from './AiActivityModal'
+import { tr } from '@shared/i18n'
 
 // Due dates end at midnight where the teacher is. The desktop app runs on the teacher's
 // own computer, so its local zone is that zone (and it's what publish sends the Portal).
 const TEACHER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 const STATUS_LABEL: Record<HomeworkSubmissionStatus, string> = {
-  not_started: 'Not started',
-  submitted: 'Submitted',
-  done: 'Done'
+  not_started: tr('Not started'),
+  submitted: tr('Submitted'),
+  done: tr('Done')
 }
 const STATUS_TONE: Record<HomeworkSubmissionStatus, 'neutral' | 'warning' | 'success'> = {
   not_started: 'neutral',
@@ -72,7 +73,7 @@ const STATUS_TONE: Record<HomeworkSubmissionStatus, 'neutral' | 'warning' | 'suc
 function groupByTopic(assignments: HomeworkAssignment[]): [string, HomeworkAssignment[]][] {
   const groups = new Map<string, HomeworkAssignment[]>()
   for (const a of assignments) {
-    const key = a.topic?.trim() || 'Other'
+    const key = a.topic?.trim() || tr('Other')
     const list = groups.get(key) ?? []
     list.push(a)
     groups.set(key, list)
@@ -110,24 +111,26 @@ export function HomeworkTab(): React.JSX.Element {
       <div className="mb-4 flex justify-end gap-2">
         {draftCount > 1 && (
           <Button variant="secondary" onClick={handlePublishAllDrafts}>
-            Publish all {draftCount} drafts
+            {tr('Publish all {draftCount} drafts', { draftCount })}
           </Button>
         )}
         <Button variant="primary" onClick={() => setShowAdd(true)}>
           <Plus size={15} className="mr-1 inline" aria-hidden />
-          Assignment
+          {tr('Assignment')}
         </Button>
       </div>
 
       {!assignments?.length ? (
         <EmptyState
           icon={ClipboardList}
-          title="No homework assignments yet"
-          description="Students see these on the Portal and can turn in their work right there."
+          title={tr('No homework assignments yet')}
+          description={tr(
+            'Students see these on the Portal and can turn in their work right there.'
+          )}
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              Assignment
+              {tr('Assignment')}
             </Button>
           }
         />
@@ -147,11 +150,11 @@ export function HomeworkTab(): React.JSX.Element {
                           {a.title}
                         </h3>
                         <Badge tone={a.status === 'published' ? 'success' : 'neutral'}>
-                          {a.status === 'published' ? 'Published' : 'Draft'}
+                          {a.status === 'published' ? tr('Published') : tr('Draft')}
                         </Badge>
                         {a.dueDate && (
                           <span className="text-xs text-[var(--color-text-muted)]">
-                            Due {formatDueDate(a.dueDate)}
+                            {tr('Due {date}', { date: formatDueDate(a.dueDate) })}
                           </span>
                         )}
                       </div>
@@ -175,7 +178,7 @@ export function HomeworkTab(): React.JSX.Element {
                           onClick={() => window.api.homeworkAssignments.openPath(a.filePath!)}
                         >
                           <Paperclip size={13} className="mr-1 inline" aria-hidden />
-                          Open file
+                          {tr('Open file')}
                         </Button>
                       )}
                       <Button
@@ -189,11 +192,11 @@ export function HomeworkTab(): React.JSX.Element {
                           })
                         }
                       >
-                        {a.status === 'published' ? 'Unpublish' : 'Publish to students'}
+                        {a.status === 'published' ? tr('Unpublish') : tr('Publish to students')}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setEditingQuestions(a)}>
                         <ListChecks size={13} className="mr-1 inline" aria-hidden />
-                        Quick check
+                        {tr('Quick check')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -204,11 +207,11 @@ export function HomeworkTab(): React.JSX.Element {
                         }}
                       >
                         <Copy size={13} className="mr-1 inline" aria-hidden />
-                        Reuse
+                        {tr('Reuse')}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
                         <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                        Delete
+                        {tr('Delete')}
                       </Button>
                     </div>
                   </CardBody>
@@ -243,9 +246,11 @@ export function HomeworkTab(): React.JSX.Element {
       )}
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete assignment"
-        message={`Delete "${pendingDelete?.title}"? This also removes everyone's submission status.`}
-        confirmLabel="Delete"
+        title={tr('Delete assignment')}
+        message={tr('Delete "{title}"? This also removes everyone\'s submission status.', {
+          title: pendingDelete?.title
+        })}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deleteAssignment.mutateAsync(pendingDelete.id)
@@ -333,7 +338,7 @@ function NewAssignmentModal({
         resetForm()
         onClose()
       }}
-      title={reuseFrom ? 'Reuse assignment' : 'New assignment'}
+      title={reuseFrom ? tr('Reuse assignment') : tr('New assignment')}
       footer={
         <>
           <Button
@@ -343,7 +348,7 @@ function NewAssignmentModal({
               onClose()
             }}
           >
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -351,25 +356,29 @@ function NewAssignmentModal({
             form="homework-form"
             disabled={!title.trim() || createAssignment.isPending}
           >
-            {createAssignment.isPending ? 'Saving…' : 'Save'}
+            {createAssignment.isPending ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="homework-form" onSubmit={handleSubmit} className="space-y-4">
         <p className="text-xs text-[var(--color-text-muted)]">
-          Saves as a draft, visible only to you. Use &quot;Publish to students&quot; on the
-          assignment afterward when it&apos;s ready to go out.
+          {tr(
+            'Saves as a draft, visible only to you. Use "Publish to students" on the assignment afterward when it\'s ready to go out.'
+          )}
         </p>
-        <FormRow label="Title">
+        <FormRow label={tr('Title')}>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </FormRow>
-        <FormRow label="Topic / unit" hint="Optional — groups this with related assignments">
+        <FormRow
+          label={tr('Topic / unit')}
+          hint={tr('Optional — groups this with related assignments')}
+        >
           <Input
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             list="topic-suggestions"
-            placeholder="e.g. Unit 1: Ecosystems"
+            placeholder={tr('e.g. Unit 1: Ecosystems')}
           />
           <datalist id="topic-suggestions">
             {existingTopics.map((t) => (
@@ -377,18 +386,18 @@ function NewAssignmentModal({
             ))}
           </datalist>
         </FormRow>
-        <FormRow label="Due date" hint="Optional">
+        <FormRow label={tr('Due date')} hint={tr('Optional')}>
           <DateSelect value={dueDate} onChange={setDueDate} />
         </FormRow>
-        <FormRow label="Description" hint="Optional">
+        <FormRow label={tr('Description')} hint={tr('Optional')}>
           <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
         </FormRow>
         <FormRow
-          label="Rubric"
-          hint="Optional — score submissions criterion-by-criterion instead of a plain grade"
+          label={tr('Rubric')}
+          hint={tr('Optional — score submissions criterion-by-criterion instead of a plain grade')}
         >
           <Select value={rubricId} onChange={(e) => setRubricId(e.target.value)}>
-            <option value="">No rubric</option>
+            <option value="">{tr('No rubric')}</option>
             {rubrics?.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
@@ -396,11 +405,11 @@ function NewAssignmentModal({
             ))}
           </Select>
         </FormRow>
-        <FormRow label="Attachment" hint="Optional — a worksheet or instructions file">
+        <FormRow label={tr('Attachment')} hint={tr('Optional — a worksheet or instructions file')}>
           <div className="flex items-center gap-2">
             <Button type="button" variant="secondary" size="sm" onClick={handlePickFile}>
               <Paperclip size={13} className="mr-1 inline" aria-hidden />
-              {filePath ? 'Change file' : 'Choose file'}
+              {filePath ? tr('Change file') : tr('Choose file')}
             </Button>
             {filePath && (
               <span className="truncate text-xs text-[var(--color-text-muted)]">
@@ -468,30 +477,35 @@ function SubmissionsModal({
       wide
       footer={
         <Button variant="secondary" size="sm" onClick={handleExportCsv} disabled={exporting}>
-          {exporting ? 'Exporting…' : 'Export .csv'}
+          {exporting ? tr('Exporting…') : tr('Export .csv')}
         </Button>
       }
     >
       {isLoading ? (
         <Spinner />
       ) : !submissions?.length ? (
-        <p className="text-sm text-[var(--color-text-muted)]">No students enrolled.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">{tr('No students enrolled.')}</p>
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
             <span>
               {assignment.dueDate
-                ? `Due ${formatDueDate(assignment.dueDate)} (midnight your time) · ${missingCount} missing · ${lateCount} late`
-                : 'No due date'}
+                ? tr(
+                    'Due {date} (midnight your time) · {missingCount} missing · {lateCount} late',
+                    { date: formatDueDate(assignment.dueDate), missingCount, lateCount }
+                  )
+                : tr('No due date')}
             </span>
             {portalConfigured && (
               <span className="flex items-center gap-2">
                 {pull.isPending
-                  ? 'Checking the Portal…'
+                  ? tr('Checking the Portal…')
                   : pull.isError
-                    ? `Couldn't reach the Portal: ${ipcErrorMessage(pull.error, 'unknown error')}`
+                    ? tr("Couldn't reach the Portal: {ipcErrorMessage}", {
+                        ipcErrorMessage: ipcErrorMessage(pull.error, tr('unknown error'))
+                      })
                     : pull.isSuccess
-                      ? 'Up to date with the Portal'
+                      ? tr('Up to date with the Portal')
                       : null}
                 <Button
                   variant="ghost"
@@ -499,7 +513,7 @@ function SubmissionsModal({
                   disabled={pull.isPending}
                   onClick={() => pullNow()}
                 >
-                  Refresh
+                  {tr('Refresh')}
                 </Button>
               </span>
             )}
@@ -549,7 +563,7 @@ function SubmissionRow({
         submission.fileName
       )
     } catch (e) {
-      setOpenError(ipcErrorMessage(e, 'Could not open the file.'))
+      setOpenError(ipcErrorMessage(e, tr('Could not open the file.')))
     } finally {
       setOpening(false)
     }
@@ -562,7 +576,9 @@ function SubmissionRow({
         <div className="flex items-center gap-2">
           {submission.status === 'done' && (
             <button
-              title={submission.portfolio ? 'Remove from Portfolio' : 'Add to student Portfolio'}
+              title={
+                submission.portfolio ? tr('Remove from Portfolio') : tr('Add to student Portfolio')
+              }
               onClick={() =>
                 setPortfolio.mutate({
                   homeworkAssignmentId: assignmentId,
@@ -582,18 +598,23 @@ function SubmissionRow({
           )}
           {timing === 'late' && (
             <Badge tone="warning">
-              Late
-              {submission.submittedAt ? ` · ${formatDate(submission.submittedAt, 'MMM d, p')}` : ''}
+              {tr('Late{when}', {
+                when: submission.submittedAt
+                  ? ` · ${formatDate(submission.submittedAt, 'MMM d, p')}`
+                  : ''
+              })}
             </Badge>
           )}
-          {timing === 'missing' && <Badge tone="danger">Missing</Badge>}
+          {timing === 'missing' && <Badge tone="danger">{tr('Missing')}</Badge>}
           {aiReasons.length > 0 && (
             <button
               type="button"
-              title={`${aiReasons.join('. ')}. Click to see the AI conversation.`}
+              title={tr('{reasons}. Click to see the AI conversation.', {
+                reasons: aiReasons.join('. ')
+              })}
               onClick={() => setShowAi(true)}
             >
-              <Badge tone="primary">Used AI</Badge>
+              <Badge tone="primary">{tr('Used AI')}</Badge>
             </button>
           )}
           <Badge tone={STATUS_TONE[submission.status]}>{STATUS_LABEL[submission.status]}</Badge>
@@ -620,26 +641,28 @@ function SubmissionRow({
           disabled={opening}
         >
           <Paperclip size={13} className="mr-1 inline" aria-hidden />
-          {opening ? 'Opening…' : submission.fileName}
+          {opening ? tr('Opening…') : submission.fileName}
         </Button>
       )}
       {openError && <p className="mt-1 text-xs text-[var(--color-danger)]">{openError}</p>}
       {submission.status !== 'not_started' && assignment.rubricId && (
         <div className="mt-3">
           <Button variant="secondary" size="sm" onClick={() => setScoringRubric(true)}>
-            {submission.grade ? `Rubric score: ${submission.grade}` : 'Score with rubric'}
+            {submission.grade
+              ? tr('Rubric score: {grade}', { grade: submission.grade })
+              : tr('Score with rubric')}
           </Button>
         </div>
       )}
       {submission.status !== 'not_started' && !assignment.rubricId && (
         <div className="mt-3 grid grid-cols-[100px_1fr] gap-2">
           <Input
-            placeholder="Grade"
+            placeholder={tr('Grade')}
             value={grade}
             onChange={(e) => setGradeValue(e.target.value)}
           />
           <Textarea
-            placeholder="Feedback"
+            placeholder={tr('Feedback')}
             rows={2}
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
@@ -658,7 +681,7 @@ function SubmissionRow({
                 })
               }
             >
-              {setGrade.isPending ? 'Saving…' : 'Save grade'}
+              {setGrade.isPending ? tr('Saving…') : tr('Save grade')}
             </Button>
             <AiDraftButton
               homeworkAssignmentId={assignmentId}
@@ -711,12 +734,21 @@ function AiDraftButton({
         }
       >
         <Sparkles size={13} className="mr-1 inline" aria-hidden />
-        {draft.isPending ? 'Drafting…' : 'Draft with AI'}
+        {draft.isPending ? tr('Drafting…') : tr('Draft with AI')}
       </Button>
       {draft.isSuccess && (
         <div className="rounded-md bg-[var(--color-surface-muted)] px-2.5 py-1.5 text-xs text-[var(--color-text-muted)]">
-          AI draft filled in below. Review and edit it; nothing is saved until you click Save.
-          {draft.data.suggestedGrade && <> Suggested grade: {draft.data.suggestedGrade}.</>}
+          {tr(
+            'AI draft filled in below. Review and edit it; nothing is saved until you click Save.'
+          )}
+          {draft.data.suggestedGrade && (
+            <>
+              {' '}
+              {tr('Suggested grade: {suggestedGrade}.', {
+                suggestedGrade: draft.data.suggestedGrade
+              })}
+            </>
+          )}
           {draft.data.flags.length > 0 && (
             <ul className="mt-1 list-disc pl-4 text-[var(--color-warning)]">
               {draft.data.flags.map((f) => (
@@ -728,7 +760,7 @@ function AiDraftButton({
       )}
       {draft.isError && (
         <p className="text-xs text-[var(--color-danger)]">
-          {ipcErrorMessage(draft.error, 'Could not draft feedback.')}
+          {ipcErrorMessage(draft.error, tr('Could not draft feedback.'))}
         </p>
       )}
     </div>
@@ -797,14 +829,16 @@ function HomeworkRubricScoringModal({
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
             onClick={handleSave}
             disabled={!allScored || saveScores.isPending}
           >
-            {saveScores.isPending ? 'Saving…' : `Save (${total}/${rubric?.maxPoints ?? 0})`}
+            {saveScores.isPending
+              ? tr('Saving…')
+              : tr('Save ({total}/{max})', { total, max: rubric?.maxPoints ?? 0 })}
           </Button>
         </>
       }
@@ -848,7 +882,7 @@ function HomeworkRubricScoringModal({
           ))}
           <div>
             <div className="mb-1.5 flex items-start justify-between gap-2">
-              <p className="text-sm font-semibold">Feedback (optional)</p>
+              <p className="text-sm font-semibold">{tr('Feedback (optional)')}</p>
               <AiDraftButton
                 homeworkAssignmentId={homeworkAssignmentId}
                 studentId={studentId}
@@ -859,7 +893,7 @@ function HomeworkRubricScoringModal({
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               rows={4}
-              placeholder="A note for the student…"
+              placeholder={tr('A note for the student…')}
               className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary)]"
             />
           </div>
@@ -870,8 +904,8 @@ function HomeworkRubricScoringModal({
 }
 
 const QUESTION_TYPE_LABEL: Record<HomeworkQuestionType, string> = {
-  multiple_choice: 'Multiple choice',
-  short_answer: 'Short answer'
+  multiple_choice: tr('Multiple choice'),
+  short_answer: tr('Short answer')
 }
 
 function emptyQuestion(): DraftHomeworkQuestion {
@@ -944,19 +978,19 @@ function QuestionsEditorModal({
     <Modal
       open
       onClose={onClose}
-      title={`Quick check — ${assignment.title}`}
+      title={tr('Quick check — {title}', { title: assignment.title })}
       wide
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
             onClick={handleSave}
             disabled={!canSave || replaceQuestions.isPending}
           >
-            {replaceQuestions.isPending ? 'Saving…' : 'Save'}
+            {replaceQuestions.isPending ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
@@ -966,9 +1000,9 @@ function QuestionsEditorModal({
       ) : (
         <div className="space-y-4">
           <p className="text-xs text-[var(--color-text-muted)]">
-            Optional auto-graded questions students answer on the Portal when they submit — graded
-            instantly, no review needed from you. Leave empty for a normal text/file-only
-            assignment.
+            {tr(
+              'Optional auto-graded questions students answer on the Portal when they submit — graded instantly, no review needed from you. Leave empty for a normal text/file-only assignment.'
+            )}
           </p>
           {questions.map((q, i) => (
             <div key={i} className="rounded-lg border border-[var(--color-border)] p-3">
@@ -995,7 +1029,7 @@ function QuestionsEditorModal({
                   type="button"
                   onClick={() => setQuestions((prev) => prev!.filter((_, j) => j !== i))}
                   className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
-                  aria-label="Remove question"
+                  aria-label={tr('Remove question')}
                 >
                   <X size={15} aria-hidden />
                 </button>
@@ -1003,7 +1037,7 @@ function QuestionsEditorModal({
               <Input
                 value={q.prompt}
                 onChange={(e) => updateQuestion(i, { prompt: e.target.value })}
-                placeholder="Question prompt"
+                placeholder={tr('Question prompt')}
                 className="mb-2"
               />
               {q.type === 'multiple_choice' ? (
@@ -1015,12 +1049,12 @@ function QuestionsEditorModal({
                         name={`correct-${i}`}
                         checked={q.correctAnswer === String(oIndex)}
                         onChange={() => updateQuestion(i, { correctAnswer: String(oIndex) })}
-                        aria-label={`Correct answer is option ${oIndex + 1}`}
+                        aria-label={tr('Correct answer is option {n}', { n: oIndex + 1 })}
                       />
                       <Input
                         value={option}
                         onChange={(e) => updateOption(i, oIndex, e.target.value)}
-                        placeholder={`Option ${oIndex + 1}`}
+                        placeholder={tr('Option {n}', { n: oIndex + 1 })}
                         className="flex-1"
                       />
                       {(q.options ?? []).length > 2 && (
@@ -1038,7 +1072,7 @@ function QuestionsEditorModal({
                             })
                           }
                           className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
-                          aria-label="Remove option"
+                          aria-label={tr('Remove option')}
                         >
                           <X size={13} aria-hidden />
                         </button>
@@ -1050,17 +1084,17 @@ function QuestionsEditorModal({
                     onClick={() => updateQuestion(i, { options: [...(q.options ?? []), ''] })}
                     className="text-xs text-[var(--color-primary)]"
                   >
-                    + Add option
+                    {tr('+ Add option')}
                   </button>
                   <p className="text-[11px] text-[var(--color-text-muted)]">
-                    Select the radio button next to the correct option.
+                    {tr('Select the radio button next to the correct option.')}
                   </p>
                 </div>
               ) : (
                 <Input
                   value={q.correctAnswer}
                   onChange={(e) => updateQuestion(i, { correctAnswer: e.target.value })}
-                  placeholder="Correct answer (matched ignoring case/spacing)"
+                  placeholder={tr('Correct answer (matched ignoring case/spacing)')}
                 />
               )}
             </div>
@@ -1071,7 +1105,7 @@ function QuestionsEditorModal({
             onClick={() => setQuestions((prev) => [...prev!, emptyQuestion()])}
           >
             <Plus size={13} className="mr-1 inline" aria-hidden />
-            Add question
+            {tr('Add question')}
           </Button>
         </div>
       )}

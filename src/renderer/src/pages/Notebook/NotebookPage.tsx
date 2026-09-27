@@ -9,6 +9,7 @@ import { Badge } from '@renderer/components/ui/Badge'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useAskNotebook, useIndexAllResources, useLessonResources } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr, trn } from '@shared/i18n'
 
 export function NotebookPage(): React.JSX.Element {
   const { data: resources, isLoading } = useLessonResources()
@@ -43,8 +44,10 @@ export function NotebookPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Notebook"
-        description="Ask questions grounded in your indexed Resources — answers cite exactly which resource they came from."
+        title={tr('Notebook')}
+        description={tr(
+          'Ask questions grounded in your indexed Resources — answers cite exactly which resource they came from.'
+        )}
         actions={
           <Button
             variant="secondary"
@@ -52,7 +55,7 @@ export function NotebookPage(): React.JSX.Element {
             disabled={indexAll.isPending}
           >
             <Sparkles size={15} className="mr-1 inline" aria-hidden />
-            {indexAll.isPending ? 'Indexing…' : 'Index all resources'}
+            {indexAll.isPending ? tr('Indexing…') : tr('Index all resources')}
           </Button>
         }
       />
@@ -60,20 +63,26 @@ export function NotebookPage(): React.JSX.Element {
       {!indexedResources.length ? (
         <EmptyState
           icon={BookOpenText}
-          title="Nothing indexed yet"
-          description='Index a resource from the Resources page (or click "Index all resources" above) before asking questions here.'
+          title={tr('Nothing indexed yet')}
+          description={tr(
+            'Index a resource from the Resources page (or click "Index all resources" above) before asking questions here.'
+          )}
         />
       ) : (
         <div className="grid grid-cols-3 gap-4">
           <Card className="col-span-1 h-fit">
             <CardHeader>
-              <h2 className="text-sm font-semibold">Search scope</h2>
+              <h2 className="text-sm font-semibold">{tr('Search scope')}</h2>
             </CardHeader>
             <CardBody className="space-y-2">
               <p className="text-xs text-[var(--color-text-muted)]">
                 {selectedIds === null
-                  ? 'Searching all indexed resources.'
-                  : `Searching ${selectedIds.size} selected resource${selectedIds.size === 1 ? '' : 's'}.`}
+                  ? tr('Searching all indexed resources.')
+                  : trn(
+                      'Searching {n} selected resource.',
+                      'Searching {n} selected resources.',
+                      selectedIds.size
+                    )}
               </p>
               <ul className="space-y-1.5">
                 {indexedResources.map((r) => {
@@ -97,7 +106,7 @@ export function NotebookPage(): React.JSX.Element {
                   className="text-xs text-[var(--color-primary)] hover:underline"
                   onClick={() => setSelectedIds(null)}
                 >
-                  Reset to all
+                  {tr('Reset to all')}
                 </button>
               )}
             </CardBody>
@@ -109,7 +118,7 @@ export function NotebookPage(): React.JSX.Element {
                 <Textarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="e.g. What does the reading say about photosynthesis?"
+                  placeholder={tr('e.g. What does the reading say about photosynthesis?')}
                   rows={3}
                 />
                 <Button
@@ -117,11 +126,11 @@ export function NotebookPage(): React.JSX.Element {
                   onClick={handleAsk}
                   disabled={!question.trim() || ask.isPending}
                 >
-                  {ask.isPending ? 'Thinking…' : 'Ask'}
+                  {ask.isPending ? tr('Thinking…') : tr('Ask')}
                 </Button>
                 {ask.isError && (
                   <p className="text-sm text-[var(--color-danger)]">
-                    {ipcErrorMessage(ask.error, 'Could not answer that question.')}
+                    {ipcErrorMessage(ask.error, tr('Could not answer that question.'))}
                   </p>
                 )}
               </CardBody>
@@ -130,14 +139,14 @@ export function NotebookPage(): React.JSX.Element {
             {answer && (
               <Card>
                 <CardHeader>
-                  <h2 className="text-sm font-semibold">Answer</h2>
+                  <h2 className="text-sm font-semibold">{tr('Answer')}</h2>
                 </CardHeader>
                 <CardBody className="space-y-4">
                   <p className="whitespace-pre-wrap text-sm">{answer.answer}</p>
                   {answer.citations.length > 0 && (
                     <div className="space-y-2 border-t border-[var(--color-border)] pt-3">
                       <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">
-                        Sources
+                        {tr('Sources')}
                       </h3>
                       {answer.citations.map((c, i) => (
                         <div key={`${c.resourceId}-${c.chunkIndex}`} className="text-xs">

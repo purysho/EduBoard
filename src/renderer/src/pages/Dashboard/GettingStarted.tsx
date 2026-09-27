@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useSetupProgress, useUpdateSettings } from '@renderer/lib/queries'
 import { setupComplete, setupSteps } from '@shared/setupChecklist'
+import { tr } from '@shared/i18n'
 
 /** First-run guide on the Dashboard. Each step ticks itself from real data (see
  * setupChecklist.ts), links straight to where it's done, and the whole card can be
@@ -29,23 +30,28 @@ export function GettingStarted(): React.JSX.Element | null {
         <div>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <Sparkles size={15} className="text-[var(--color-primary)]" aria-hidden />
-            {complete ? "You're all set up" : 'Getting started'}
+            {complete ? tr("You're all set up") : tr('Getting started')}
           </h2>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
             {complete
-              ? 'Your class is live on the Portal. The optional extras below are there when you want them.'
-              : `${doneCount} of ${essentials.length} essentials done. Each step ticks itself once it's done.`}
+              ? tr(
+                  'Your class is live on the Portal. The optional extras below are there when you want them.'
+                )
+              : tr(
+                  "{doneCount} of {length} essentials done. Each step ticks itself once it's done.",
+                  { doneCount, length: essentials.length }
+                )}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={hide}>
-          {complete ? 'Hide' : "I'll do this later"}
+          {complete ? tr('Hide') : tr("I'll do this later")}
         </Button>
       </CardHeader>
       <CardBody className="pt-0">
         <div
           className="mb-3 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-muted)]"
           role="progressbar"
-          aria-label="Setup progress"
+          aria-label={tr('Setup progress')}
           aria-valuemin={0}
           aria-valuemax={essentials.length}
           aria-valuenow={doneCount}
@@ -62,13 +68,13 @@ export function GettingStarted(): React.JSX.Element | null {
                 <CheckCircle2
                   size={18}
                   className="shrink-0 text-[var(--color-success)]"
-                  aria-label="Done"
+                  aria-label={tr('Done')}
                 />
               ) : (
                 <Circle
                   size={18}
                   className="shrink-0 text-[var(--color-text-muted)]"
-                  aria-label="Not done yet"
+                  aria-label={tr('Not done yet')}
                 />
               )}
               <div className="min-w-0 flex-1">
@@ -82,7 +88,7 @@ export function GettingStarted(): React.JSX.Element | null {
                   {step.title}
                   {step.optional && (
                     <span className="ml-1.5 text-xs font-normal text-[var(--color-text-muted)]">
-                      optional
+                      {tr('optional')}
                     </span>
                   )}
                 </p>

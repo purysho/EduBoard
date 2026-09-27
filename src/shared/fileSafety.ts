@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 // Is an uploaded file really what its name says, and is it free of anything that runs?
 //
 // The extension decides which program opens a file, so an allowlist of extensions stops
@@ -64,8 +65,8 @@ function contains(b: Uint8Array, needle: number[]): boolean {
 const utf16le = (s: string): number[] => Array.from(s).flatMap((c) => [c.charCodeAt(0), 0])
 
 function executableSignature(b: Uint8Array): string | null {
-  if (startsWith(b, ascii('MZ'))) return 'a Windows program'
-  if (startsWith(b, [0x7f, 0x45, 0x4c, 0x46])) return 'a Linux program'
+  if (startsWith(b, ascii('MZ'))) return tr('a Windows program')
+  if (startsWith(b, [0x7f, 0x45, 0x4c, 0x46])) return tr('a Linux program')
   if (
     startsWith(b, [0xfe, 0xed, 0xfa, 0xce]) ||
     startsWith(b, [0xfe, 0xed, 0xfa, 0xcf]) ||
@@ -73,10 +74,11 @@ function executableSignature(b: Uint8Array): string | null {
     startsWith(b, [0xce, 0xfa, 0xed, 0xfe]) ||
     startsWith(b, [0xca, 0xfe, 0xba, 0xbe])
   ) {
-    return 'a macOS program'
+    return tr('a macOS program')
   }
-  if (startsWith(b, ascii('#!'))) return 'a script'
-  if (startsWith(b, [0x4c, 0x00, 0x00, 0x00, 0x01, 0x14, 0x02, 0x00])) return 'a Windows shortcut'
+  if (startsWith(b, ascii('#!'))) return tr('a script')
+  if (startsWith(b, [0x4c, 0x00, 0x00, 0x00, 0x01, 0x14, 0x02, 0x00]))
+    return tr('a Windows shortcut')
   return null
 }
 
@@ -96,14 +98,17 @@ function isFtyp(b: Uint8Array, brands: string[]): boolean {
 export function checkUpload(fileName: string, bytes: Uint8Array): FileCheck {
   const ext = (/\.([a-z0-9]+)$/i.exec(fileName)?.[1] ?? '').toLowerCase()
   if (!(SUBMISSION_EXTENSIONS as readonly string[]).includes(ext)) {
-    return { ok: false, reason: `".${ext || '?'}" files can't be submitted` }
+    return { ok: false, reason: tr('“.{ext}” files can’t be submitted', { ext: ext || '?' }) }
   }
-  if (bytes.length === 0) return { ok: false, reason: 'the file is empty' }
+  if (bytes.length === 0) return { ok: false, reason: tr('the file is empty') }
 
   const exe = executableSignature(bytes)
-  if (exe) return { ok: false, reason: `this is ${exe}, not a .${ext} file` }
+  if (exe) return { ok: false, reason: tr('this is {kind}, not a .{ext} file', { kind: exe, ext }) }
 
-  const mismatch: FileCheck = { ok: false, reason: `the file's contents don't match ".${ext}"` }
+  const mismatch: FileCheck = {
+    ok: false,
+    reason: tr('the file’s contents don’t match “.{ext}”', { ext })
+  }
 
   if (ext === 'pdf') return startsWith(bytes, ascii('%PDF-')) ? { ok: true, kind: 'pdf' } : mismatch
 
@@ -116,7 +121,7 @@ export function checkUpload(fileName: string, bytes: Uint8Array): FileCheck {
       ? contains(bytes, ascii('Basic/'))
       : contains(bytes, ascii('vbaProject.bin'))
     if (hasMacros) {
-      return { ok: false, reason: 'the document contains macros' }
+      return { ok: false, reason: tr('the document contains macros') }
     }
     return { ok: true, kind: ext }
   }
@@ -124,7 +129,7 @@ export function checkUpload(fileName: string, bytes: Uint8Array): FileCheck {
   if (OLE_OFFICE.has(ext)) {
     if (!startsWith(bytes, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])) return mismatch
     if (contains(bytes, utf16le('_VBA_PROJECT')) || contains(bytes, utf16le('Macros'))) {
-      return { ok: false, reason: 'the document contains macros' }
+      return { ok: false, reason: tr('the document contains macros') }
     }
     return { ok: true, kind: ext }
   }
@@ -133,7 +138,7 @@ export function checkUpload(fileName: string, bytes: Uint8Array): FileCheck {
     if (!startsWith(bytes, ascii('{\\rtf'))) return mismatch
     // Embedded OLE objects are how RTF files deliver exploits; ordinary essays have none.
     if (contains(bytes, ascii('\\objdata')) || contains(bytes, ascii('\\objupdate'))) {
-      return { ok: false, reason: 'the document contains embedded objects' }
+      return { ok: false, reason: tr('the document contains embedded objects') }
     }
     return { ok: true, kind: 'rtf' }
   }

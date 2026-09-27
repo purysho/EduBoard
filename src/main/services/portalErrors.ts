@@ -1,3 +1,4 @@
+import { tr } from '@shared/i18n'
 // Turns a failed Portal response into a sentence a teacher can act on. Servers (and
 // proxies in front of them) often answer errors with an HTML page; showing that raw
 // made "Portal sync failed: 413 <!DOCTYPE html>…" the whole message.
@@ -30,19 +31,27 @@ export function describePortalFailure(action: string, status: number, bodyText: 
   switch (status) {
     case 401:
     case 403:
-      return `${action}: the Portal didn't accept the sync secret. In Settings, it must be exactly the SYNC_SECRET set on the Portal server.`
+      return tr(
+        '{action}: the Portal didn’t accept the sync secret. In Settings, it must be exactly the SYNC_SECRET set on the Portal server.',
+        { action }
+      )
     case 413:
       return withDetail(
-        `${action}: the Portal server refused it as too large. Update the Portal server to the latest version, which accepts attachments one at a time.`
+        tr(
+          '{action}: the Portal server refused it as too large. Update the Portal server to the latest version, which accepts attachments one at a time.',
+          { action }
+        )
       )
     case 502:
     case 503:
     case 504:
       return withDetail(
-        `${action}: the Portal server isn't responding right now. Try again in a minute.`
+        tr('{action}: the Portal server isn’t responding right now. Try again in a minute.', {
+          action
+        })
       )
   }
-  return withDetail(`${action} (error ${status})`)
+  return withDetail(tr('{action} (error {status})', { action, status }))
 }
 
 export async function portalFailure(action: string, res: Response): Promise<Error> {

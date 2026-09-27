@@ -18,13 +18,15 @@ import { AppearancePanel } from './AppearancePanel'
 import { GradingDefaultsPanel } from './GradingDefaultsPanel'
 import { ListsPanel } from './ListsPanel'
 import { SchoolPackPanel } from './SchoolPackPanel'
+import { tr } from '@shared/i18n'
+import { trNodes } from '@renderer/lib/trNodes'
 
 const PROVIDER_LABEL: Record<AppSettings['aiProvider'], string> = {
   deepseek: 'DeepSeek',
-  qwen: 'Qwen',
-  zhipu: 'Zhipu (GLM)',
+  qwen: tr('Qwen'),
+  zhipu: tr('Zhipu (GLM)'),
   anthropic: 'Anthropic',
-  custom: 'API'
+  custom: tr('API')
 }
 
 /** Sends one tiny request with what's in the form right now, saved or not. The result
@@ -48,11 +50,11 @@ function TestAiButton({ config }: { config: AiConnectionConfig }): React.JSX.Ele
   return (
     <div className="col-span-2 -mt-1 flex flex-wrap items-center gap-3">
       <Button type="button" variant="secondary" onClick={run} disabled={testing}>
-        {testing ? 'Testing…' : 'Test connection'}
+        {testing ? tr('Testing…') : tr('Test connection')}
       </Button>
       {shown?.ok === true && (
         <span role="status" className="text-xs text-[var(--color-success)]">
-          Works. {shown.model} replied.
+          {tr('Works. {model} replied.', { model: shown.model })}
         </span>
       )}
       {shown?.ok === false && (
@@ -91,8 +93,8 @@ export function SettingsPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Settings"
-        description="App-wide defaults, terms, import, and backups."
+        title={tr('Settings')}
+        description={tr('App-wide defaults, terms, import, and backups.')}
         actions={
           settings?.onboardingDismissed ? (
             <Button
@@ -100,7 +102,7 @@ export function SettingsPage(): React.JSX.Element {
               size="sm"
               onClick={() => updateSettings.mutate({ onboardingDismissed: false })}
             >
-              Show getting-started checklist
+              {tr('Show getting-started checklist')}
             </Button>
           ) : null
         }
@@ -111,36 +113,55 @@ export function SettingsPage(): React.JSX.Element {
           <CardHeader>
             <h2 className="flex items-center gap-1.5 text-sm font-semibold">
               <SlidersHorizontal size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-              General
+              {tr('General settings')}
             </h2>
           </CardHeader>
           <CardBody>
             <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-              <FormRow label="Your name">
+              <FormRow label={tr('Your name')}>
                 <Input
                   value={form.teacherName}
                   onChange={(e) => setForm({ ...form, teacherName: e.target.value })}
                 />
               </FormRow>
-              <FormRow label="School / organization">
+              <FormRow label={tr('School / organization')}>
                 <Input
                   value={form.schoolName}
                   onChange={(e) => setForm({ ...form, schoolName: e.target.value })}
                 />
               </FormRow>
-              <FormRow label="Theme">
+              <FormRow label={tr('Theme')}>
                 <Select
                   value={form.theme}
                   onChange={(e) =>
                     setForm({ ...form, theme: e.target.value as AppSettings['theme'] })
                   }
                 >
-                  <option value="system">Match system</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
+                  <option value="system">{tr('Match system')}</option>
+                  <option value="light">{tr('Light')}</option>
+                  <option value="dark">{tr('Dark')}</option>
                 </Select>
               </FormRow>
-              <FormRow label="Default pass mark (%)" hint="Used when you create a new class">
+              <FormRow label={tr('Language')} hint={tr('Changes straight away.')}>
+                <Select
+                  value={settings?.uiLanguage ?? ''}
+                  onChange={async (e) => {
+                    await updateSettings.mutateAsync({
+                      uiLanguage: e.target.value as AppSettings['uiLanguage']
+                    })
+                    // Labels are worked out when a screen's code loads, so reload.
+                    location.reload()
+                  }}
+                >
+                  <option value="">{tr('Match this computer')}</option>
+                  <option value="en">{tr('English')}</option>
+                  <option value="zh">中文（简体）</option>
+                </Select>
+              </FormRow>
+              <FormRow
+                label={tr('Default pass mark (%)')}
+                hint={tr('Used when you create a new class')}
+              >
                 <Input
                   type="number"
                   value={form.defaultPassMark}
@@ -148,8 +169,10 @@ export function SettingsPage(): React.JSX.Element {
                 />
               </FormRow>
               <FormRow
-                label="AI provider"
-                hint="DeepSeek/Qwen work without a VPN in mainland China. Custom accepts any OpenAI-compatible endpoint."
+                label={tr('AI provider')}
+                hint={tr(
+                  'DeepSeek/Qwen work without a VPN in mainland China. Custom accepts any OpenAI-compatible endpoint.'
+                )}
               >
                 <Select
                   value={form.aiProvider}
@@ -157,18 +180,18 @@ export function SettingsPage(): React.JSX.Element {
                     setForm({ ...form, aiProvider: e.target.value as AppSettings['aiProvider'] })
                   }
                 >
-                  <option value="deepseek">DeepSeek</option>
-                  <option value="qwen">Qwen (Alibaba)</option>
-                  <option value="zhipu">Zhipu (GLM) — free tier</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="custom">Custom (OpenAI-compatible)</option>
+                  <option value="deepseek">{tr('DeepSeek')}</option>
+                  <option value="qwen">{tr('Qwen (Alibaba)')}</option>
+                  <option value="zhipu">{tr('Zhipu (GLM) — free tier')}</option>
+                  <option value="anthropic">{tr('Anthropic')}</option>
+                  <option value="custom">{tr('Custom (OpenAI-compatible)')}</option>
                 </Select>
               </FormRow>
               {form.aiProvider === 'custom' && (
                 <>
                   <FormRow
-                    label="Custom base URL"
-                    hint="e.g. http://localhost:11434/v1 for a local Ollama server"
+                    label={tr('Custom base URL')}
+                    hint={tr('e.g. http://localhost:11434/v1 for a local Ollama server')}
                   >
                     <Input
                       value={form.aiCustomBaseUrl}
@@ -176,28 +199,32 @@ export function SettingsPage(): React.JSX.Element {
                       placeholder="https://api.example.com/v1"
                     />
                   </FormRow>
-                  <FormRow label="Custom model name">
+                  <FormRow label={tr('Custom model name')}>
                     <Input
                       value={form.aiCustomModel}
                       onChange={(e) => setForm({ ...form, aiCustomModel: e.target.value })}
-                      placeholder="e.g. llama3.1"
+                      placeholder={tr('e.g. llama3.1')}
                     />
                   </FormRow>
                 </>
               )}
               <FormRow
-                label={`${PROVIDER_LABEL[form.aiProvider]} key`}
+                label={tr('{provider} key', { provider: PROVIDER_LABEL[form.aiProvider] })}
                 hint={
                   form.aiProvider === 'custom'
-                    ? 'Optional — leave blank for a server that needs no key, like local Ollama.'
-                    : 'Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else.'
+                    ? tr(
+                        'Optional — leave blank for a server that needs no key, like local Ollama.'
+                      )
+                    : tr(
+                        'Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else.'
+                      )
                 }
               >
                 <Input
                   type="password"
                   value={form.aiApiKey}
                   onChange={(e) => setForm({ ...form, aiApiKey: e.target.value })}
-                  placeholder={form.aiProvider === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+                  placeholder={form.aiProvider === 'anthropic' ? tr('sk-ant-…') : tr('sk-…')}
                 />
               </FormRow>
               <TestAiButton
@@ -208,7 +235,10 @@ export function SettingsPage(): React.JSX.Element {
                   customModel: form.aiCustomModel
                 }}
               />
-              <FormRow label="Portal URL" hint="Where your deployed Portal server lives">
+              <FormRow
+                label={tr('Portal URL')}
+                hint={tr('Where your deployed Portal server lives')}
+              >
                 <Input
                   value={form.portalUrl}
                   onChange={(e) => setForm({ ...form, portalUrl: e.target.value })}
@@ -222,13 +252,17 @@ export function SettingsPage(): React.JSX.Element {
                   form.portalUrl.trim() &&
                   normalizePortalUrl(form.portalUrl) !== form.portalUrl.trim() && (
                     <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      Will connect to {normalizePortalUrl(form.portalUrl)}
+                      {tr('Will connect to {normalizePortalUrl}', {
+                        normalizePortalUrl: normalizePortalUrl(form.portalUrl)
+                      })}
                     </p>
                   )}
               </FormRow>
               <FormRow
-                label="Portal sync secret"
-                hint="The SYNC_SECRET you set on the Portal, or the secret your school's Portal admin gave you"
+                label={tr('Portal sync secret')}
+                hint={tr(
+                  "The SYNC_SECRET you set on the Portal, or the secret your school's Portal admin gave you"
+                )}
               >
                 <Input
                   type="password"
@@ -237,16 +271,14 @@ export function SettingsPage(): React.JSX.Element {
                 />
               </FormRow>
               <div className="col-span-2 mt-2 border-t border-[var(--color-border)] pt-4">
-                <h3 className="mb-1 text-sm font-semibold">Student AI (Portal)</h3>
+                <h3 className="mb-1 text-sm font-semibold">{tr('Student AI (Portal)')}</h3>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  One shared key every student can use for AI features on the Portal — chatting
-                  about their materials, study help. Never sent to students&apos; browsers; the
-                  Portal server calls the provider on their behalf. Zhipu&apos;s GLM-4-Flash is free
-                  (sign up at open.bigmodel.cn), so it&apos;s the default. The test below runs from
-                  this computer; the Portal server makes the same call.
+                  {tr(
+                    "One shared key every student can use for AI features on the Portal — chatting about their materials, study help. Never sent to students' browsers; the Portal server calls the provider on their behalf. Zhipu's GLM-4-Flash is free (sign up at open.bigmodel.cn), so it's the default. The test below runs from this computer; the Portal server makes the same call."
+                  )}
                 </p>
               </div>
-              <FormRow label="Student AI provider">
+              <FormRow label={tr('Student AI provider')}>
                 <Select
                   value={form.portalAiProvider}
                   onChange={(e) =>
@@ -256,40 +288,44 @@ export function SettingsPage(): React.JSX.Element {
                     })
                   }
                 >
-                  <option value="zhipu">Zhipu (GLM) — free tier</option>
-                  <option value="deepseek">DeepSeek</option>
-                  <option value="qwen">Qwen (Alibaba)</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="custom">Custom (OpenAI-compatible)</option>
+                  <option value="zhipu">{tr('Zhipu (GLM) — free tier')}</option>
+                  <option value="deepseek">{tr('DeepSeek')}</option>
+                  <option value="qwen">{tr('Qwen (Alibaba)')}</option>
+                  <option value="anthropic">{tr('Anthropic')}</option>
+                  <option value="custom">{tr('Custom (OpenAI-compatible)')}</option>
                 </Select>
               </FormRow>
               {form.portalAiProvider === 'custom' && (
                 <>
-                  <FormRow label="Custom base URL">
+                  <FormRow label={tr('Custom base URL')}>
                     <Input
                       value={form.portalAiCustomBaseUrl}
                       onChange={(e) => setForm({ ...form, portalAiCustomBaseUrl: e.target.value })}
                       placeholder="https://api.example.com/v1"
                     />
                   </FormRow>
-                  <FormRow label="Custom model name">
+                  <FormRow label={tr('Custom model name')}>
                     <Input
                       value={form.portalAiCustomModel}
                       onChange={(e) => setForm({ ...form, portalAiCustomModel: e.target.value })}
-                      placeholder="e.g. glm-4-flash-250414"
+                      placeholder={tr('e.g. glm-4-flash-250414')}
                     />
                   </FormRow>
                 </>
               )}
               <FormRow
-                label={`${PROVIDER_LABEL[form.portalAiProvider]} key (students)`}
-                hint="Optional — leave blank to keep the Portal's AI features turned off for students."
+                label={tr('{provider} key (students)', {
+                  provider: PROVIDER_LABEL[form.portalAiProvider]
+                })}
+                hint={tr(
+                  "Optional — leave blank to keep the Portal's AI features turned off for students."
+                )}
               >
                 <Input
                   type="password"
                   value={form.portalAiApiKey}
                   onChange={(e) => setForm({ ...form, portalAiApiKey: e.target.value })}
-                  placeholder="sk-…"
+                  placeholder={tr('sk-…')}
                 />
               </FormRow>
               <TestAiButton
@@ -301,24 +337,27 @@ export function SettingsPage(): React.JSX.Element {
                 }}
               />
               <div className="col-span-2 mt-2 border-t border-[var(--color-border)] pt-4">
-                <h3 className="mb-1 text-sm font-semibold">Weekly parent digest email</h3>
+                <h3 className="mb-1 text-sm font-semibold">{tr('Weekly parent digest email')}</h3>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Sends a weekly grades/attendance/homework/Class Story summary to any family who
-                  adds their email on the Portal. Sent from the Portal server itself, every Monday
-                  morning — a Gmail address with an{' '}
-                  <a
-                    className="text-[var(--color-primary)] underline"
-                    href="https://support.google.com/accounts/answer/185833"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      window.api.lessonResources.openExternal(
-                        'https://support.google.com/accounts/answer/185833'
+                  {trNodes(
+                    'Sends a weekly grades/attendance/homework/Class Story summary to any family who adds their email on the Portal. Sent from the Portal server itself, every Monday morning — a Gmail address with an {appPassword} works fine for this.',
+                    {
+                      appPassword: (
+                        <a
+                          className="text-[var(--color-primary)] underline"
+                          href="https://support.google.com/accounts/answer/185833"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            window.api.lessonResources.openExternal(
+                              'https://support.google.com/accounts/answer/185833'
+                            )
+                          }}
+                        >
+                          {tr('app password')}
+                        </a>
                       )
-                    }}
-                  >
-                    app password
-                  </a>{' '}
-                  works fine for this.
+                    }
+                  )}
                 </p>
               </div>
               <label className="col-span-2 flex items-center gap-2 text-sm">
@@ -327,39 +366,39 @@ export function SettingsPage(): React.JSX.Element {
                   checked={form.digestEnabled}
                   onChange={(e) => setForm({ ...form, digestEnabled: e.target.checked })}
                 />
-                Enable weekly digest emails
+                {tr('Enable weekly digest emails')}
               </label>
               {form.digestEnabled && (
                 <>
-                  <FormRow label="SMTP host">
+                  <FormRow label={tr('SMTP host')}>
                     <Input
                       value={form.digestSmtpHost}
                       onChange={(e) => setForm({ ...form, digestSmtpHost: e.target.value })}
                       placeholder="smtp.gmail.com"
                     />
                   </FormRow>
-                  <FormRow label="SMTP port">
+                  <FormRow label={tr('SMTP port')}>
                     <Input
                       type="number"
                       value={form.digestSmtpPort}
                       onChange={(e) => setForm({ ...form, digestSmtpPort: Number(e.target.value) })}
                     />
                   </FormRow>
-                  <FormRow label="SMTP username">
+                  <FormRow label={tr('SMTP username')}>
                     <Input
                       value={form.digestSmtpUser}
                       onChange={(e) => setForm({ ...form, digestSmtpUser: e.target.value })}
                       placeholder="you@gmail.com"
                     />
                   </FormRow>
-                  <FormRow label="SMTP password">
+                  <FormRow label={tr('SMTP password')}>
                     <Input
                       type="password"
                       value={form.digestSmtpPass}
                       onChange={(e) => setForm({ ...form, digestSmtpPass: e.target.value })}
                     />
                   </FormRow>
-                  <FormRow label="From email">
+                  <FormRow label={tr('From email')}>
                     <Input
                       type="email"
                       value={form.digestFromEmail}
@@ -367,18 +406,18 @@ export function SettingsPage(): React.JSX.Element {
                       placeholder="you@gmail.com"
                     />
                   </FormRow>
-                  <FormRow label="From name" hint="Optional">
+                  <FormRow label={tr('From name')} hint={tr('Optional')}>
                     <Input
                       value={form.digestFromName}
                       onChange={(e) => setForm({ ...form, digestFromName: e.target.value })}
-                      placeholder="Ms. Smith"
+                      placeholder={tr('Ms. Smith')}
                     />
                   </FormRow>
                 </>
               )}
               <div className="col-span-2">
                 <Button variant="primary" type="submit" disabled={updateSettings.isPending}>
-                  {updateSettings.isPending ? 'Saving…' : 'Save'}
+                  {updateSettings.isPending ? tr('Saving…') : tr('Save')}
                 </Button>
               </div>
             </form>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CloudUpload } from 'lucide-react'
 import { useExtraBackupStatus } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const SNOOZE_KEY = 'eduboard.backupReminderSnoozedUntil'
 const SNOOZE_DAYS = 14
@@ -23,19 +24,21 @@ export function BackupReminder({ hasData }: { hasData: boolean }): React.JSX.Ele
   if (!status?.needsAttention || !hasData || hidden) return null
 
   const message = !status.folder
-    ? 'Your backups are only on this computer. If it’s lost or breaks, they go with it.'
+    ? tr('Your backups are only on this computer. If it’s lost or breaks, they go with it.')
     : !status.reachable
-      ? 'Your second backup folder can’t be reached, so nothing has been copied there lately.'
+      ? tr('Your second backup folder can’t be reached, so nothing has been copied there lately.')
       : status.lastCopiedAt
-        ? `The last backup copied to your second folder was on ${formatDate(status.lastCopiedAt)}.`
-        : 'Nothing has been copied to your second backup folder yet.'
+        ? tr('The last backup copied to your second folder was on {date}.', {
+            date: formatDate(status.lastCopiedAt)
+          })
+        : tr('Nothing has been copied to your second backup folder yet.')
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-surface)] px-4 py-3 text-sm">
       <CloudUpload size={16} className="shrink-0 text-[var(--color-warning)]" aria-hidden />
       <span className="min-w-0 flex-1">{message}</span>
       <Link to="/settings" className="font-medium text-[var(--color-primary)] hover:underline">
-        {status.folder ? 'Check backups' : 'Set up a second copy'}
+        {status.folder ? tr('Check backups') : tr('Set up a second copy')}
       </Link>
       <button
         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
@@ -48,7 +51,7 @@ export function BackupReminder({ hasData }: { hasData: boolean }): React.JSX.Ele
           setHidden(true)
         }}
       >
-        Remind me later
+        {tr('Remind me later')}
       </button>
     </div>
   )

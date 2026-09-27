@@ -11,6 +11,7 @@ import {
   useStandards,
   useUpdateStandard
 } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 export function StandardsPanel(): React.JSX.Element {
   const { data: standards } = useStandards()
@@ -61,13 +62,14 @@ export function StandardsPanel(): React.JSX.Element {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <BookMarked size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Standards
+          {tr('Standards')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-4">
         <p className="text-sm text-[var(--color-text-muted)]">
-          Your own list of standards (Common Core, state, or anything you define) — tag them onto
-          rubric criteria to track coverage.
+          {tr(
+            'Your own list of standards (Common Core, state, or anything you define) — tag them onto rubric criteria to track coverage.'
+          )}
         </p>
 
         {!!standards?.length && (
@@ -88,13 +90,13 @@ export function StandardsPanel(): React.JSX.Element {
                     className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                     onClick={() => startEdit(s)}
                   >
-                    Edit
+                    {tr('Edit')}
                   </button>
                   <button
                     className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                     onClick={() => setPendingDelete(s)}
                   >
-                    Delete
+                    {tr('Delete')}
                   </button>
                 </div>
               </li>
@@ -104,40 +106,40 @@ export function StandardsPanel(): React.JSX.Element {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-6 gap-3">
           <div className="col-span-2">
-            <FormRow label="Code">
+            <FormRow label={tr('Code')}>
               <Input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="CCSS.W.5.1"
+                placeholder={tr('CCSS.W.5.1')}
               />
             </FormRow>
           </div>
           <div className="col-span-3">
-            <FormRow label="Description">
+            <FormRow label={tr('Description')}>
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Write opinion pieces on topics..."
+                placeholder={tr('Write opinion pieces on topics...')}
               />
             </FormRow>
           </div>
           <div className="col-span-1">
-            <FormRow label="Subject">
+            <FormRow label={tr('Subject')}>
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="ELA"
+                placeholder={tr('e.g. ELA')}
               />
             </FormRow>
           </div>
           <div className="col-span-6 flex gap-2">
             <Button variant="secondary" type="submit" disabled={saving}>
               <Plus size={14} className="mr-1 inline" aria-hidden />
-              {editingId ? 'Save changes' : 'Add standard'}
+              {editingId ? tr('Save changes') : tr('Add standard')}
             </Button>
             {editingId && (
               <Button variant="ghost" type="button" onClick={resetForm}>
-                Cancel
+                {tr('Cancel')}
               </Button>
             )}
           </div>
@@ -146,9 +148,12 @@ export function StandardsPanel(): React.JSX.Element {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete standard"
-        message={`Delete "${pendingDelete?.code}"? Rubric criteria tagged with it will keep their text but lose the link.`}
-        confirmLabel="Delete"
+        title={tr('Delete standard')}
+        message={tr(
+          'Delete "{code}"? Rubric criteria tagged with it will keep their text but lose the link.',
+          { code: pendingDelete?.code }
+        )}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deleteStandard.mutateAsync(pendingDelete.id)

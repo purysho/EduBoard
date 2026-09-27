@@ -2,6 +2,7 @@
 // band (highest cut-off first) the percent reaches. EduBoard's own A–F uses the A/B/C/D
 // cut-offs in GradeThresholds; any other scale lists its bands in `scale`.
 import type { GradeThresholds } from './types'
+import { tr } from './i18n'
 
 export interface GradeBand {
   label: string
@@ -21,7 +22,7 @@ export const GRADE_SCALE_PRESETS: GradeScalePreset[] = [
   { id: 'af', name: 'A–F', bands: null },
   {
     id: 'af-plus-minus',
-    name: 'A–F with + and −',
+    name: tr('A–F with + and −'),
     bands: [
       { label: 'A+', min: 97 },
       { label: 'A', min: 93 },
@@ -61,8 +62,8 @@ export const GRADE_SCALE_PRESETS: GradeScalePreset[] = [
   },
   {
     id: 'one-to-seven',
-    name: '1–7 (IB style)',
-    note: 'Cut-offs vary by school and subject; adjust them to yours.',
+    name: tr('1–7 (IB style)'),
+    note: tr('Cut-offs vary by school and subject; adjust them to yours.'),
     bands: [
       { label: '7', min: 80 },
       { label: '6', min: 70 },
@@ -75,8 +76,8 @@ export const GRADE_SCALE_PRESETS: GradeScalePreset[] = [
   },
   {
     id: 'nine-to-one',
-    name: '9–1 (GCSE style)',
-    note: 'Cut-offs change every year; adjust them to yours.',
+    name: tr('9–1 (GCSE style)'),
+    note: tr('Cut-offs change every year; adjust them to yours.'),
     bands: [
       { label: '9', min: 90 },
       { label: '8', min: 80 },
@@ -92,10 +93,10 @@ export const GRADE_SCALE_PRESETS: GradeScalePreset[] = [
   },
   {
     id: 'pass-fail',
-    name: 'Pass / Fail',
+    name: tr('Pass / Fail'),
     bands: [
-      { label: 'Pass', min: 60 },
-      { label: 'Fail', min: 0 }
+      { label: tr('Pass'), min: 60 },
+      { label: tr('Fail'), min: 0 }
     ]
   }
 ]
@@ -135,15 +136,15 @@ export function bandTone(label: string, thresholds: GradeThresholds): BandTone |
 
 /** Problems with a scale the teacher is editing, in plain words, or null if it's fine. */
 export function scaleProblem(bands: GradeBand[]): string | null {
-  if (bands.length < 2) return 'A scale needs at least two bands.'
-  if (bands.some((b) => !b.label.trim())) return 'Every band needs a name.'
+  if (bands.length < 2) return tr('A scale needs at least two bands.')
+  if (bands.some((b) => !b.label.trim())) return tr('Every band needs a name.')
   if (new Set(bands.map((b) => b.label.trim())).size !== bands.length)
-    return 'Two bands have the same name.'
+    return tr('Two bands have the same name.')
   if (bands.some((b) => !Number.isFinite(b.min) || b.min < 0 || b.min > 100))
-    return 'Cut-offs must be between 0 and 100.'
+    return tr('Cut-offs must be between 0 and 100.')
   if (new Set(bands.map((b) => b.min)).size !== bands.length)
-    return 'Two bands have the same cut-off.'
-  if (!bands.some((b) => b.min === 0)) return 'The lowest band should start at 0.'
+    return tr('Two bands have the same cut-off.')
+  if (!bands.some((b) => b.min === 0)) return tr('The lowest band should start at 0.')
   return null
 }
 

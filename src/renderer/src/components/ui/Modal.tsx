@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { tr } from '@shared/i18n'
 
 interface ModalProps {
   open: boolean
@@ -64,7 +65,7 @@ export function Modal({
           <button
             onClick={onClose}
             className="rounded-md p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
-            aria-label="Close"
+            aria-label={tr('Close')}
           >
             <X size={16} aria-hidden />
           </button>

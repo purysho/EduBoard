@@ -9,6 +9,8 @@ import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Field'
 import { Modal } from '@renderer/components/ui/Modal'
 import { ipcErrorMessage, studentFullName } from '@renderer/lib/format'
+import { tr, trn } from '@shared/i18n'
+import { trNodes } from '@renderer/lib/trNodes'
 
 /** For a student's or family's data request: a copy of everything held about them, and
  * erasing it all for good. */
@@ -21,13 +23,14 @@ export function PrivacyCard({ student }: { student: Student }): React.JSX.Elemen
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <ShieldAlert size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Their data
+          {tr('Their data')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-3 text-sm">
         <p className="text-[var(--color-text-muted)]">
-          If a student or their family asks what EduBoard holds about them, or asks for it to be
-          removed.
+          {tr(
+            'If a student or their family asks what EduBoard holds about them, or asks for it to be removed.'
+          )}
         </p>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -36,18 +39,18 @@ export function PrivacyCard({ student }: { student: Student }): React.JSX.Elemen
             onClick={async () => {
               try {
                 const r = await window.api.students.exportData(student.id)
-                setMessage(r.saved ? `Saved to ${r.filePath}` : null)
+                setMessage(r.saved ? tr('Saved to {path}', { path: r.filePath }) : null)
               } catch (err) {
-                setMessage(ipcErrorMessage(err, 'Their data couldn’t be saved.'))
+                setMessage(ipcErrorMessage(err, tr('Their data couldn’t be saved.')))
               }
             }}
           >
             <Download size={13} className="mr-1 inline" aria-hidden />
-            Download their data
+            {tr('Download their data')}
           </Button>
           <Button variant="danger" size="sm" onClick={() => setEraseOpen(true)}>
             <Eraser size={13} className="mr-1 inline" aria-hidden />
-            Erase all their data…
+            {tr('Erase all their data…')}
           </Button>
         </div>
         {message && <p className="text-[var(--color-text-muted)]">{message}</p>}
@@ -90,16 +93,16 @@ function EraseStudentModal({
     <Modal
       open={open}
       onClose={close}
-      title={done ? 'Erased' : `Erase all of ${name}’s data?`}
+      title={done ? tr('Erased') : tr('Erase all of {name}’s data?', { name })}
       footer={
         done ? (
           <Button variant="primary" onClick={close}>
-            Done
+            {tr('Done')}
           </Button>
         ) : (
           <>
             <Button variant="secondary" onClick={close}>
-              Cancel
+              {tr('Cancel')}
             </Button>
             <Button
               variant="danger"
@@ -111,13 +114,13 @@ function EraseStudentModal({
                   const r = await window.api.students.erase(student.id)
                   setDone({ olderBackups: r.olderBackups, portal: r.portal })
                 } catch (err) {
-                  setError(ipcErrorMessage(err, 'Nothing was erased.'))
+                  setError(ipcErrorMessage(err, tr('Nothing was erased.')))
                 } finally {
                   setBusy(false)
                 }
               }}
             >
-              {busy ? 'Erasing…' : 'Erase for good'}
+              {busy ? tr('Erasing…') : tr('Erase for good')}
             </Button>
           </>
         )
@@ -125,40 +128,47 @@ function EraseStudentModal({
     >
       {done ? (
         <div className="space-y-2 text-sm">
-          <p>Everything EduBoard held about {name} on this computer has been erased.</p>
+          <p>
+            {tr('Everything EduBoard held about {name} on this computer has been erased.', {
+              name
+            })}
+          </p>
           {done.portal === 'removed' && (
-            <p>Their Portal login, handed-in work and profile have been removed too.</p>
+            <p>{tr('Their Portal login, handed-in work and profile have been removed too.')}</p>
           )}
           {done.portal === 'queued' && (
             <p className="text-[var(--color-warning)]">
-              The Portal couldn’t be reached, so their Portal login and work will be removed the
-              next time you publish.
+              {tr(
+                'The Portal couldn’t be reached, so their Portal login and work will be removed the next time you publish.'
+              )}
             </p>
           )}
           {done.olderBackups > 0 && (
             <p className="text-[var(--color-text-muted)]">
-              {done.olderBackups} {done.olderBackups === 1 ? 'backup' : 'backups'} made before now
-              still include them. Automatic backups are replaced over time; delete the others from
-              the backups folder (Settings → Backups → Open folder) if they must go now.
+              {trn(
+                '{olderBackups} backup made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Backups → Open folder) if they must go now.',
+                '{olderBackups} backups made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Backups → Open folder) if they must go now.',
+                done.olderBackups,
+                { olderBackups: done.olderBackups }
+              )}
             </p>
           )}
         </div>
       ) : (
         <div className="space-y-3 text-sm">
           <p>
-            This removes {name} and every record about them: enrollments, grades, attendance, notes,
-            parent contacts, exit ticket answers, seats and their history in the audit log, and on
-            the Portal their login, handed-in work, profile and Study Helper history.{' '}
-            <strong>No backup is taken and it can’t be undone.</strong> Use{' '}
-            <em>Download their data</em> first if they asked for a copy.
-          </p>
-          <p className="text-[var(--color-text-muted)]">
-            If they had a Portal account, it and the work they handed in there stay on the Portal
-            server; this erases what’s on this computer.
+            {tr(
+              'This removes {name} and every record about them: enrollments, grades, attendance, notes, parent contacts, exit ticket answers, seats and their history in the audit log, and on the Portal their login, handed-in work, profile and Study Helper history.',
+              { name }
+            )}{' '}
+            <strong>{tr('No backup is taken and it can’t be undone.')}</strong>{' '}
+            {trNodes('Use {download} first if they asked for a copy.', {
+              download: <em>{tr('Download their data')}</em>
+            })}
           </p>
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--color-text-muted)]">
-              Type their name, {name}, to confirm
+              {tr('Type their name, {name}, to confirm', { name })}
             </span>
             <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus />
           </label>

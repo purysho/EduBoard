@@ -6,6 +6,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
 import { ACCENT_PRESETS, isHexColour, whiteTextContrast } from '@renderer/lib/appearance'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 const MAX_LOGO_PX = 256
 
@@ -41,18 +42,18 @@ export function AppearancePanel(): React.JSX.Element | null {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Palette size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Appearance
+          {tr('Appearance')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-5 text-sm">
         <section>
-          <h3 className="mb-2 font-medium">School logo</h3>
+          <h3 className="mb-2 font-medium">{tr('School logo')}</h3>
           <div className="flex items-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-muted)]">
               {settings.schoolLogo ? (
                 <img
                   src={settings.schoolLogo}
-                  alt="School logo"
+                  alt={tr('School logo')}
                   className="max-h-full max-w-full"
                 />
               ) : (
@@ -60,12 +61,12 @@ export function AppearancePanel(): React.JSX.Element | null {
               )}
             </div>
             <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
-              {settings.schoolLogo ? 'Change logo' : 'Add logo'}
+              {settings.schoolLogo ? tr('Change logo') : tr('Add logo')}
             </Button>
             {settings.schoolLogo && (
               <Button variant="ghost" size="sm" onClick={() => set({ schoolLogo: '' })}>
                 <X size={13} className="mr-1 inline" aria-hidden />
-                Remove
+                {tr('Remove')}
               </Button>
             )}
             <input
@@ -81,19 +82,19 @@ export function AppearancePanel(): React.JSX.Element | null {
                 try {
                   set({ schoolLogo: await logoDataUrl(file) })
                 } catch {
-                  setLogoError('That file couldn’t be read as an image. Try a PNG or JPEG.')
+                  setLogoError(tr('That file couldn’t be read as an image. Try a PNG or JPEG.'))
                 }
               }}
             />
           </div>
           <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">
-            Shown in the sidebar and on report cards and other printouts.
+            {tr('Shown in the sidebar and on report cards and other printouts.')}
           </p>
           {logoError && <p className="mt-1 text-xs text-[var(--color-danger)]">{logoError}</p>}
         </section>
 
         <section>
-          <h3 className="mb-2 font-medium">School colour</h3>
+          <h3 className="mb-2 font-medium">{tr('School colour')}</h3>
           <div className="flex flex-wrap items-center gap-2">
             {ACCENT_PRESETS.map((p) => (
               <button
@@ -110,7 +111,7 @@ export function AppearancePanel(): React.JSX.Element | null {
               />
             ))}
             <label className="ml-2 flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-              Other
+              {tr('Other')}
               <input
                 type="color"
                 value={isHexColour(accent) ? accent : '#4f46e5'}
@@ -131,18 +132,19 @@ export function AppearancePanel(): React.JSX.Element | null {
           </div>
           {lowContrast && (
             <p className="mt-1.5 text-xs text-[var(--color-warning)]">
-              This colour is light, so white text on buttons may be hard to read. A darker shade
-              works better.
+              {tr(
+                'This colour is light, so white text on buttons may be hard to read. A darker shade works better.'
+              )}
             </p>
           )}
         </section>
 
         <section>
-          <h3 className="mb-1 font-medium">School stylesheet</h3>
+          <h3 className="mb-1 font-medium">{tr('School stylesheet')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
-            For a school that wants its own background or fonts: a .css file applied on top of
-            EduBoard’s look. It can change the colour tokens (such as --color-bg, --color-surface,
-            --color-primary) and use inline images, but can’t load anything from the internet.
+            {tr(
+              'For a school that wants its own background or fonts: a .css file applied on top of EduBoard’s look. It can change the colour tokens (such as --color-bg, --color-surface, --color-primary) and use inline images, but can’t load anything from the internet.'
+            )}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -154,12 +156,12 @@ export function AppearancePanel(): React.JSX.Element | null {
                 }
               }}
             >
-              {settings.customCss ? 'Replace stylesheet' : 'Load .css file'}
+              {settings.customCss ? tr('Replace stylesheet') : tr('Load .css file')}
             </Button>
             {settings.customCss && (
               <Button variant="ghost" size="sm" onClick={() => set({ customCss: '' })}>
                 <X size={13} className="mr-1 inline" aria-hidden />
-                Remove
+                {tr('Remove')}
               </Button>
             )}
           </div>
@@ -167,16 +169,16 @@ export function AppearancePanel(): React.JSX.Element | null {
 
         <section className="grid grid-cols-2 gap-4">
           <label className="block">
-            <span className="mb-1 block font-medium">Text size</span>
+            <span className="mb-1 block font-medium">{tr('Text size')}</span>
             <select
               className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5"
               value={settings.textSize}
               onChange={(e) => set({ textSize: e.target.value as AppSettings['textSize'] })}
             >
-              <option value="small">Small</option>
-              <option value="normal">Normal</option>
-              <option value="large">Large</option>
-              <option value="larger">Larger</option>
+              <option value="small">{tr('Small')}</option>
+              <option value="normal">{tr('Normal')}</option>
+              <option value="large">{tr('Large')}</option>
+              <option value="larger">{tr('Larger')}</option>
             </select>
           </label>
           <div className="space-y-2 pt-6">
@@ -186,7 +188,7 @@ export function AppearancePanel(): React.JSX.Element | null {
                 checked={settings.highContrast}
                 onChange={(e) => set({ highContrast: e.target.checked })}
               />
-              Higher contrast
+              {tr('Higher contrast')}
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -194,7 +196,7 @@ export function AppearancePanel(): React.JSX.Element | null {
                 checked={settings.reduceMotion}
                 onChange={(e) => set({ reduceMotion: e.target.checked })}
               />
-              Reduce motion
+              {tr('Reduce motion')}
             </label>
           </div>
         </section>

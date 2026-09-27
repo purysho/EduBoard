@@ -16,6 +16,7 @@ import {
   useStudents
 } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 /** One student's report card for one class, as printed. `onReady` fires once
  * everything it shows has loaded, so a print can wait for it. */
@@ -73,7 +74,7 @@ export function ReportCard({
   }, [loading, onReady])
 
   if (loading) return <Spinner />
-  if (!student || !classSection) return <p className="p-8">Report not available.</p>
+  if (!student || !classSection) return <p className="p-8">{tr('Report not available.')}</p>
 
   return (
     <div className="mx-auto max-w-3xl bg-white p-10 text-slate-900 break-after-page">
@@ -81,7 +82,7 @@ export function ReportCard({
         <div>
           <h1 className="text-xl font-semibold">{classSection.name}</h1>
           <p className="text-sm text-slate-500">
-            Student report — {formatDate(new Date().toISOString())}
+            {tr('Student report — {date}', { date: formatDate(new Date().toISOString()) })}
           </p>
         </div>
         {(settings?.schoolName || settings?.teacherName || settings?.schoolLogo) && (
@@ -99,11 +100,11 @@ export function ReportCard({
 
       <div className="mb-6 grid grid-cols-3 gap-4">
         <div>
-          <p className="text-xs uppercase text-slate-500">Student</p>
+          <p className="text-xs uppercase text-slate-500">{tr('Student')}</p>
           <p className="text-base font-medium">{studentFullName(student)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase text-slate-500">Overall grade</p>
+          <p className="text-xs uppercase text-slate-500">{tr('Overall grade')}</p>
           <p className="text-base font-medium">
             {formatPercent(grade?.percent ?? null)}{' '}
             {grade?.letter && (
@@ -114,7 +115,7 @@ export function ReportCard({
           </p>
         </div>
         <div>
-          <p className="text-xs uppercase text-slate-500">Attendance</p>
+          <p className="text-xs uppercase text-slate-500">{tr('Attendance')}</p>
           <p className="text-base font-medium">{formatRate(attendance?.rate ?? null)}</p>
         </div>
       </div>
@@ -122,7 +123,7 @@ export function ReportCard({
       {!!grade?.categoryBreakdown.length && (
         <div className="mb-6">
           <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
-            Category breakdown
+            {tr('Category breakdown')}
           </h2>
           <table className="w-full text-sm">
             <tbody>
@@ -138,14 +139,14 @@ export function ReportCard({
       )}
 
       <div className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">Assessments</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">{tr('Assessments')}</h2>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-300 text-left text-xs uppercase text-slate-500">
-              <th className="py-1.5">Assessment</th>
-              <th className="py-1.5">Category</th>
-              <th className="py-1.5">Date</th>
-              <th className="py-1.5 text-right">Score</th>
+              <th className="py-1.5">{tr('Assessment')}</th>
+              <th className="py-1.5">{tr('Category')}</th>
+              <th className="py-1.5">{tr('Date')}</th>
+              <th className="py-1.5 text-right">{tr('Score')}</th>
             </tr>
           </thead>
           <tbody>
@@ -160,7 +161,7 @@ export function ReportCard({
                   <td className="py-1.5 text-slate-500">{formatDate(a.assessmentDate)}</td>
                   <td className="py-1.5 text-right">
                     {score?.excused
-                      ? 'Excused'
+                      ? tr('Excused')
                       : score?.pointsEarned != null
                         ? `${score.pointsEarned}/${a.maxScore}`
                         : '—'}
@@ -174,29 +175,31 @@ export function ReportCard({
 
       {comment && (
         <div className="mb-6">
-          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">Comment</h2>
+          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">{tr('Comment')}</h2>
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{comment}</p>
         </div>
       )}
 
       <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">Attendance summary</h2>
+        <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
+          {tr('Attendance summary')}
+        </h2>
         <table className="w-full text-sm">
           <tbody>
             <tr>
-              <td className="py-1">Present</td>
+              <td className="py-1">{tr('Present')}</td>
               <td className="py-1 text-right">{attendance?.present ?? 0}</td>
             </tr>
             <tr>
-              <td className="py-1">Late</td>
+              <td className="py-1">{tr('Late')}</td>
               <td className="py-1 text-right">{attendance?.late ?? 0}</td>
             </tr>
             <tr>
-              <td className="py-1">Absent</td>
+              <td className="py-1">{tr('Absent')}</td>
               <td className="py-1 text-right">{attendance?.absent ?? 0}</td>
             </tr>
             <tr>
-              <td className="py-1">Excused</td>
+              <td className="py-1">{tr('Excused')}</td>
               <td className="py-1 text-right">{attendance?.excused ?? 0}</td>
             </tr>
           </tbody>

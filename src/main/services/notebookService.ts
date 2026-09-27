@@ -22,6 +22,7 @@ import {
   type PracticeKind
 } from './practicePrompt'
 import type { LessonResource, NotebookAnswer } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 const CHUNK_TARGET_CHARS = 800
 const MAX_CONTEXT_CHUNKS = 8
@@ -57,14 +58,17 @@ async function extractText(resource: LessonResource): Promise<string> {
   }
 
   if (resource.type === 'link') {
-    if (!resource.url) throw new NotebookExtractionError('This resource has no URL.')
+    if (!resource.url) throw new NotebookExtractionError(tr('This resource has no URL.'))
     const res = await fetch(resource.url)
-    if (!res.ok) throw new NotebookExtractionError(`Could not fetch the URL (${res.status}).`)
+    if (!res.ok)
+      throw new NotebookExtractionError(
+        tr('Could not fetch the URL ({status}).', { status: res.status })
+      )
     return htmlToText(await res.text())
   }
 
   // type === 'file'
-  if (!resource.filePath) throw new NotebookExtractionError('This resource has no file.')
+  if (!resource.filePath) throw new NotebookExtractionError(tr('This resource has no file.'))
   return extractFileText(resource.filePath)
 }
 
@@ -97,10 +101,14 @@ export async function extractFileText(filePath: string): Promise<string> {
   }
   const hint =
     ext === '.doc' || ext === '.ppt'
-      ? ` Open it in Word or PowerPoint and save it as ${ext}x, then add that copy.`
+      ? ' ' +
+        tr('Open it in Word or PowerPoint and save it as {ext}x, then add that copy.', { ext })
       : ''
   throw new NotebookExtractionError(
-    `Can't read text from a "${ext || 'unknown'}" file. PDF, Word (.docx), PowerPoint (.pptx), OpenDocument, .txt and .md work.${hint}`
+    tr(
+      'Can’t read text from a “{ext}” file. PDF, Word (.docx), PowerPoint (.pptx), OpenDocument, .txt and .md work.',
+      { ext: ext || tr('unknown') }
+    ) + hint
   )
 }
 
@@ -194,7 +202,9 @@ async function textForAi(resourceId: string): Promise<string> {
   }
   if (!text.trim()) {
     throw new NotebookExtractionError(
-      'This resource has no readable text. If it is a scanned PDF (pictures of pages), there is no text in it for the AI to read.'
+      tr(
+        'This resource has no readable text. If it is a scanned PDF (pictures of pages), there is no text in it for the AI to read.'
+      )
     )
   }
   return text
@@ -234,8 +244,9 @@ export async function askNotebook(
   const matches = searchResourceChunks(question, resourceIds, MAX_CONTEXT_CHUNKS)
   if (!matches.length) {
     return {
-      answer:
-        "I couldn't find anything relevant in your indexed resources. Try indexing more resources, or rephrasing the question.",
+      answer: tr(
+        'I couldn’t find anything relevant in your indexed resources. Try indexing more resources, or rephrasing the question.'
+      ),
       citations: []
     }
   }
@@ -244,7 +255,7 @@ export async function askNotebook(
   for (const match of matches) {
     if (!resourceTitles.has(match.resourceId)) {
       const resource = getLessonResource(match.resourceId)
-      resourceTitles.set(match.resourceId, resource?.title ?? 'Untitled resource')
+      resourceTitles.set(match.resourceId, resource?.title ?? tr('Untitled resource'))
     }
   }
 
@@ -264,7 +275,7 @@ export async function askNotebook(
     answer,
     citations: matches.map((m) => ({
       resourceId: m.resourceId,
-      resourceTitle: resourceTitles.get(m.resourceId) ?? 'Untitled resource',
+      resourceTitle: resourceTitles.get(m.resourceId) ?? tr('Untitled resource'),
       chunkIndex: m.chunkIndex,
       snippet: m.text.length > 220 ? `${m.text.slice(0, 220)}…` : m.text
     }))

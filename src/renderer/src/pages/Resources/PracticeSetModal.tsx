@@ -3,6 +3,7 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { useClearPracticeSet, useDraftPracticeSet } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 type Kind = 'flashcards' | 'quiz'
 
@@ -20,7 +21,7 @@ export function PracticeSetModal({
 }): React.JSX.Element {
   const draft = useDraftPracticeSet()
   const clear = useClearPracticeSet()
-  const label = kind === 'flashcards' ? 'Flashcards' : 'Practice quiz'
+  const label = kind === 'flashcards' ? tr('Flashcards') : tr('Practice quiz')
   const cards = kind === 'flashcards' ? resource.flashcards : null
   const questions = kind === 'quiz' ? resource.practiceQuiz : null
   const count = (cards ?? questions ?? []).length
@@ -41,7 +42,7 @@ export function PracticeSetModal({
                 clear.mutate({ resourceId: resource.id, kind }, { onSuccess: onClose })
               }
             >
-              Remove
+              {tr('Remove')}
             </Button>
           )}
           <Button
@@ -49,28 +50,35 @@ export function PracticeSetModal({
             disabled={draft.isPending}
             onClick={() => draft.mutate({ resourceId: resource.id, kind })}
           >
-            {draft.isPending ? 'Generating…' : count ? 'Regenerate' : 'Generate'}
+            {draft.isPending ? tr('Generating…') : count ? tr('Regenerate') : tr('Generate')}
           </Button>
           <Button variant="primary" onClick={onClose}>
-            Done
+            {tr('Done')}
           </Button>
         </>
       }
     >
       <div className="space-y-3 text-sm">
         <p className="text-xs text-[var(--color-text-muted)]">
-          Drafted by AI from this resource&apos;s text. Check it before students rely on it.
-          {resource.shareWithStudents
-            ? ' It is published to students with this resource.'
-            : ' Students only see it once the resource is shared with a class.'}
+          {tr(
+            'Drafted by AI from this resource’s text. Check it before students rely on it.{visibility}',
+            {
+              visibility: resource.shareWithStudents
+                ? ' ' + tr('It is published to students with this resource.')
+                : ' ' + tr('Students only see it once the resource is shared with a class.')
+            }
+          )}
         </p>
         {draft.isError && (
           <p className="text-[var(--color-danger)]">
-            {ipcErrorMessage(draft.error, `Could not generate ${label.toLowerCase()}.`)}
+            {ipcErrorMessage(
+              draft.error,
+              tr('Could not generate {lowerCase}.', { lowerCase: label.toLowerCase() })
+            )}
           </p>
         )}
         {count === 0 && !draft.isPending && (
-          <p className="text-[var(--color-text-muted)]">Nothing generated yet.</p>
+          <p className="text-[var(--color-text-muted)]">{tr('Nothing generated yet.')}</p>
         )}
         {cards?.map((c, i) => (
           <div key={i} className="rounded-lg border border-[var(--color-border)] p-2.5">

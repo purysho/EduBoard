@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 // The Portal address receives the teacher's sync secret and every student's data, so it
 // must be encrypted in transit. Plain http:// is allowed only for a Portal on this same
 // computer (local testing), where nothing crosses a network.
@@ -29,12 +30,14 @@ export function portalUrlProblem(value: string): string | null {
   try {
     url = new URL(trimmed)
   } catch {
-    return 'That isn’t a web address. It should look like https://portal.yourschool.edu'
+    return tr('That isn’t a web address. It should look like https://portal.yourschool.edu')
   }
   if (url.protocol === 'https:') return null
   if (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname)) return null
   if (url.protocol === 'http:') {
-    return 'Use https:// — over plain http:// your sync secret and students’ data travel unencrypted.'
+    return tr(
+      'Use https:// — over plain http:// your sync secret and students’ data travel unencrypted.'
+    )
   }
-  return 'The Portal address must start with https://'
+  return tr('The Portal address must start with https://')
 }

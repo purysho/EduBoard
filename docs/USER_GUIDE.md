@@ -70,6 +70,7 @@ A good first stop is **Settings**:
 
 - **Your name** / **School / organization** — shown on printed report cards.
 - **Theme** — light, dark, or match your system.
+- **Language** — English or 中文 (Simplified Chinese). **中文 / EN** at the bottom of the sidebar switches in one click. Until you choose, EduBoard follows the computer's language. Everything changes: screens, printouts, the pages students open for exit tickets and check-in, and the built-in comment bank and parent letter (unless you've edited them).
 - **Default pass mark** — pre-fills new classes; you can still override it per class.
 - **Terms** (further down the Settings page) — optional. Add a term (e.g. "Term 1", school year "2026-2027") if you want to tag classes by term. Dates are optional too, and **Edit** changes a term's name or dates any time, so you can add Term 2 before its dates are fixed and fill them in later. Skip this if you don't need it — a class works fine with no term set.
 
@@ -352,7 +353,7 @@ At the bottom of a class's **Report** tab, **Report card comments** has a box fo
 
 **Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.
 
-**Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. These fields stay on your computer; the Portal never receives them.
+**Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. Imports also read Chinese headings (姓名, 学号, 家长姓名, 家长电话…); a single 姓名 column is split into family name and given name. These fields stay on your computer; the Portal never receives them.
 
 **Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields, comment bank, parent letter) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
 

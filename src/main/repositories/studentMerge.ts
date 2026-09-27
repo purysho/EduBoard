@@ -2,6 +2,7 @@ import { getSqlite } from '../db/client'
 import { getStudent, updateStudent } from './students'
 import { recordAudit } from './auditLog'
 import type { Student } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 /** Every table that points at a student, found from the database itself so a table
  * added later is never forgotten by a merge. */
@@ -38,10 +39,10 @@ const FILLABLE: (keyof Student)[] = [
  * test, say), the kept student's own entry wins. The duplicate is then removed.
  */
 export function mergeStudents(keepId: string, duplicateId: string): Student {
-  if (keepId === duplicateId) throw new Error('Pick two different students to merge.')
+  if (keepId === duplicateId) throw new Error(tr('Pick two different students to merge.'))
   const keep = getStudent(keepId)
   const dup = getStudent(duplicateId)
-  if (!keep || !dup) throw new Error('One of those students no longer exists.')
+  if (!keep || !dup) throw new Error(tr('One of those students no longer exists.'))
   const db = getSqlite()
 
   db.transaction(() => {
@@ -68,7 +69,10 @@ export function mergeStudents(keepId: string, duplicateId: string): Student {
     entityType: 'student',
     entityId: keepId,
     action: 'update',
-    summary: `Merged duplicate ${dup.firstName} ${dup.lastName} into ${keep.firstName} ${keep.lastName}`,
+    summary: tr('Merged duplicate {duplicate} into {kept}', {
+      duplicate: `${dup.firstName} ${dup.lastName}`,
+      kept: `${keep.firstName} ${keep.lastName}`
+    }),
     studentId: keepId
   })
   return getStudent(keepId)!

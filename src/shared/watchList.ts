@@ -1,3 +1,4 @@
+import { tr } from './i18n'
 // Who to check on this month: the reasons a student stands out in a class, from facts
 // the teacher already has. Kept to a few plain signals so each one can be acted on.
 
@@ -16,14 +17,19 @@ export interface WatchFacts {
 export function watchReasons(f: WatchFacts): string[] {
   const reasons: string[] = []
   if (f.percent !== null && f.percent < f.passMark) {
-    reasons.push(`Below the pass mark (${Math.round(f.percent)}% vs ${f.passMark}%)`)
+    reasons.push(
+      tr('Below the pass mark ({percent}% vs {passMark}%)', {
+        percent: Math.round(f.percent),
+        passMark: f.passMark
+      })
+    )
   }
   if (f.trend.length >= 3) {
     const drop = f.trend[0] - f.trend[f.trend.length - 1]
-    if (drop >= DECLINE_POINTS) reasons.push(`Grades down ${Math.round(drop)} points`)
+    if (drop >= DECLINE_POINTS) reasons.push(tr('Grades down {n} points', { n: Math.round(drop) }))
   }
   if (f.recentConcerns >= CONCERNS_TO_FLAG) {
-    reasons.push(`${f.recentConcerns} concerns logged in 30 days`)
+    reasons.push(tr('{n} concerns logged in 30 days', { n: f.recentConcerns }))
   }
   return reasons
 }

@@ -5,6 +5,7 @@ import { newId, nowIso } from '../db/util'
 import { recordAudit, softDeleteAuditForStudent } from './auditLog'
 import type { Student } from '@shared/types'
 import type { CreateStudentInput, UpdateStudentInput } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { CreateStudentInput, UpdateStudentInput }
 
@@ -30,7 +31,7 @@ export function createStudent(input: CreateStudentInput): Student {
     entityType: 'student',
     entityId: row.id,
     action: 'create',
-    summary: `Added student ${row.firstName} ${row.lastName}`,
+    summary: tr('Added student {name}', { name: `${row.firstName} ${row.lastName}` }),
     studentId: row.id
   })
   return row
@@ -68,7 +69,9 @@ export function importStudentFromPortal(input: {
     entityType: 'student',
     entityId: row.id,
     action: 'create',
-    summary: `${row.firstName} ${row.lastName} joined through the Portal class link`,
+    summary: tr('{name} joined through the Portal class link', {
+      name: `${row.firstName} ${row.lastName}`
+    }),
     studentId: row.id
   })
   return true
@@ -86,7 +89,7 @@ export function updateStudent(id: string, patch: UpdateStudentInput): Student {
     entityType: 'student',
     entityId: id,
     action: 'update',
-    summary: `Updated student ${updated.firstName} ${updated.lastName}`,
+    summary: tr('Updated student {name}', { name: `${updated.firstName} ${updated.lastName}` }),
     studentId: id
   })
   return updated
@@ -105,7 +108,7 @@ export function deleteStudent(id: string): void {
       entityType: 'student',
       entityId: id,
       action: 'delete',
-      summary: `Removed student ${existing.firstName} ${existing.lastName}`,
+      summary: tr('Removed student {name}', { name: `${existing.firstName} ${existing.lastName}` }),
       studentId: id
     })
   }

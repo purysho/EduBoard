@@ -11,19 +11,22 @@ import {
   useCreateScheduleSlot,
   useDeleteScheduleSlot
 } from '@renderer/lib/queries'
+import { tr, uiLanguage } from '@shared/i18n'
 
 const DAYS = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 0, label: 'Sunday' }
+  { value: 1, label: tr('Monday') },
+  { value: 2, label: tr('Tuesday') },
+  { value: 3, label: tr('Wednesday') },
+  { value: 4, label: tr('Thursday') },
+  { value: 5, label: tr('Friday') },
+  { value: 6, label: tr('Saturday') },
+  { value: 0, label: tr('Sunday') }
 ]
 
 function formatTime(t: string): string {
   const [h, m] = t.split(':').map(Number)
+  // Chinese timetables use the 24-hour clock.
+  if (uiLanguage() === 'zh') return `${h}:${String(m).padStart(2, '0')}`
   const period = h < 12 ? 'AM' : 'PM'
   const hour12 = h % 12 === 0 ? 12 : h % 12
   return `${hour12}:${String(m).padStart(2, '0')} ${period}`
@@ -67,17 +70,17 @@ export function TimetablePage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Timetable"
-        description="Every class's weekly meeting times, at a glance."
+        title={tr('Timetable')}
+        description={tr("Every class's weekly meeting times, at a glance.")}
       />
 
       <Card className="mb-4">
         <CardBody>
           <div className="flex flex-wrap items-end gap-3">
             <div className="w-48">
-              <Label>Class</Label>
+              <Label>{tr('Class')}</Label>
               <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
-                <option value="">Select a class…</option>
+                <option value="">{tr('Select a class…')}</option>
                 {(classes ?? []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -86,7 +89,7 @@ export function TimetablePage(): React.JSX.Element {
               </Select>
             </div>
             <div className="w-36">
-              <Label>Day</Label>
+              <Label>{tr('Day')}</Label>
               <Select value={dayOfWeek} onChange={(e) => setDayOfWeek(Number(e.target.value))}>
                 {DAYS.map((d) => (
                   <option key={d.value} value={d.value}>
@@ -96,24 +99,24 @@ export function TimetablePage(): React.JSX.Element {
               </Select>
             </div>
             <div className="w-28">
-              <Label>Start</Label>
+              <Label>{tr('Start')}</Label>
               <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </div>
             <div className="w-28">
-              <Label>End</Label>
+              <Label>{tr('End')}</Label>
               <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
             <div className="w-32">
-              <Label>Room</Label>
+              <Label>{tr('Room')}</Label>
               <Input
                 value={room}
                 onChange={(e) => setRoom(e.target.value)}
-                placeholder="Optional"
+                placeholder={tr('Optional')}
               />
             </div>
             <Button onClick={handleAdd} disabled={!classId || createSlot.isPending}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              Add
+              {tr('Add')}
             </Button>
           </div>
         </CardBody>
@@ -122,8 +125,8 @@ export function TimetablePage(): React.JSX.Element {
       {!slots?.length ? (
         <EmptyState
           icon={CalendarDays}
-          title="No scheduled classes yet"
-          description="Add a class's weekly meeting time above to build out the timetable."
+          title={tr('No scheduled classes yet')}
+          description={tr("Add a class's weekly meeting time above to build out the timetable.")}
         />
       ) : (
         <div className="grid grid-cols-7 gap-3">
@@ -147,7 +150,7 @@ export function TimetablePage(): React.JSX.Element {
                           <button
                             className="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                             onClick={() => deleteSlot.mutate(slot.id)}
-                            aria-label="Remove slot"
+                            aria-label={tr('Remove slot')}
                           >
                             <Trash2 size={12} aria-hidden />
                           </button>

@@ -10,6 +10,7 @@ import {
   useExtraBackupStatus
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const AUTO_BACKUP_RETENTION_HINT = '10'
 
@@ -27,27 +28,34 @@ function ExtraBackupFolder(): React.JSX.Element {
   return (
     <div className="mb-4 rounded-lg border border-[var(--color-border)] p-3 text-sm">
       <p className="flex items-center gap-1.5 font-medium">
-        <CloudUpload size={14} aria-hidden /> Second copy
+        <CloudUpload size={14} aria-hidden /> {tr('Second copy')}
       </p>
       {!status.folder ? (
         <p className="mt-1 text-[var(--color-text-muted)]">
-          Backups are only on this computer. Choose a second place, such as a OneDrive or Baidu
-          Netdisk folder, or a USB stick, and every backup is copied there too.
+          {tr(
+            'Backups are only on this computer. Choose a second place, such as a OneDrive or Baidu Netdisk folder, or a USB stick, and every backup is copied there too.'
+          )}
         </p>
       ) : (
         <p className="mt-1 text-[var(--color-text-muted)]">
-          Copying to <span className="break-all font-mono text-xs">{status.folder}</span>
+          {tr('Copying to')} <span className="break-all font-mono text-xs">{status.folder}</span>
           {status.reachable ? (
             status.lastCopiedAt ? (
-              <> · last copy {formatDate(status.lastCopiedAt, 'MMM d, yyyy p')}</>
+              <>
+                {' '}
+                {tr('· last copy {date}', {
+                  date: formatDate(status.lastCopiedAt, 'MMM d, yyyy p')
+                })}
+              </>
             ) : (
-              <> · no copies yet</>
+              <> {tr('· no copies yet')}</>
             )
           ) : (
             <span className="text-[var(--color-warning)]">
               {' '}
-              · can&apos;t reach it (is the USB stick plugged in?). Backups carry on here and are
-              copied again once it&apos;s back.
+              {tr(
+                "· can't reach it (is the USB stick plugged in?). Backups carry on here and are copied again once it's back."
+              )}
             </span>
           )}
         </p>
@@ -59,7 +67,7 @@ function ExtraBackupFolder(): React.JSX.Element {
           onClick={() => change.mutate('choose')}
           disabled={change.isPending}
         >
-          {status.folder ? 'Change folder' : 'Choose folder'}
+          {status.folder ? tr('Change folder') : tr('Choose folder')}
         </Button>
         {status.folder && (
           <Button
@@ -68,7 +76,7 @@ function ExtraBackupFolder(): React.JSX.Element {
             onClick={() => change.mutate('clear')}
             disabled={change.isPending}
           >
-            Stop copying
+            {tr('Stop copying')}
           </Button>
         )}
       </div>
@@ -87,24 +95,30 @@ export function BackupPanel(): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <ShieldCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Backups
+          {tr('Backups')}
         </h2>
         <div className="flex gap-2">
           <Button
             variant="secondary"
             size="sm"
-            title="Everything (except settings) as one Excel file, a sheet per kind of data, for handing over. It isn't a backup: EduBoard can't restore from it."
+            title={tr(
+              "Everything (except settings) as one Excel file, a sheet per kind of data, for handing over. It isn't a backup: EduBoard can't restore from it."
+            )}
             onClick={async () => {
               const r = await window.api.importExport.exportEverything()
-              setExported(r.saved ? `Exported ${r.sheets} sheets to ${r.filePath}` : null)
+              setExported(
+                r.saved
+                  ? tr('Exported {sheets} sheets to {path}', { sheets: r.sheets, path: r.filePath })
+                  : null
+              )
             }}
           >
             <Sheet size={14} className="mr-1 inline" aria-hidden />
-            Export everything (Excel)
+            {tr('Export everything (Excel)')}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => window.api.backup.revealFolder()}>
             <FolderOpen size={14} className="mr-1 inline" aria-hidden />
-            Open folder
+            {tr('Open folder')}
           </Button>
           <Button
             variant="primary"
@@ -113,7 +127,7 @@ export function BackupPanel(): React.JSX.Element {
             disabled={createBackup.isPending}
           >
             <HardDriveDownload size={14} className="mr-1 inline" aria-hidden />
-            {createBackup.isPending ? 'Backing up…' : 'Back up now'}
+            {createBackup.isPending ? tr('Backing up…') : tr('Back up now')}
           </Button>
         </div>
       </CardHeader>
@@ -121,12 +135,13 @@ export function BackupPanel(): React.JSX.Element {
         {exported && <p className="mb-3 text-sm text-[var(--color-text-muted)]">{exported}</p>}
         <ExtraBackupFolder />
         <p className="mb-3 text-sm text-[var(--color-text-muted)]">
-          EduBoard automatically backs up your database every time it starts (the last{' '}
-          {AUTO_BACKUP_RETENTION_HINT} are kept) and once a day while it stays open, on top of
-          anything you back up manually here.
+          {tr(
+            'EduBoard automatically backs up your database every time it starts (the last {AUTOBACKUPRETENTIONHINT} are kept) and once a day while it stays open, on top of anything you back up manually here.',
+            { AUTOBACKUPRETENTIONHINT: AUTO_BACKUP_RETENTION_HINT }
+          )}
         </p>
         {!backups?.length ? (
-          <p className="text-sm text-[var(--color-text-muted)]">No backups yet.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">{tr('No backups yet.')}</p>
         ) : (
           <ul className="divide-y divide-[var(--color-border)]">
             {backups.map((b) => (
@@ -138,7 +153,7 @@ export function BackupPanel(): React.JSX.Element {
                   </span>
                   {b.automatic && (
                     <span className="ml-1.5 rounded-full bg-[var(--color-surface-muted)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
-                      Auto
+                      {tr('Auto')}
                     </span>
                   )}
                 </span>
@@ -146,7 +161,7 @@ export function BackupPanel(): React.JSX.Element {
                   className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                   onClick={() => setRestoreTarget(b.filePath)}
                 >
-                  Restore
+                  {tr('Restore')}
                 </button>
               </li>
             ))}

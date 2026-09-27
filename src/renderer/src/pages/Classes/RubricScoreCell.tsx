@@ -2,6 +2,7 @@ import { KeyboardEvent, useState } from 'react'
 import type { RubricWithCriteria, Score } from '@shared/types'
 import { RubricScoringModal } from './RubricScoringModal'
 import { focusGradebookCell } from './gradebookNav'
+import { tr } from '@shared/i18n'
 
 export function RubricScoreCell({
   classId,
@@ -60,7 +61,9 @@ export function RubricScoreCell({
         onKeyDown={handleKeyDown}
         className="relative w-16 rounded border border-transparent px-1.5 py-1 text-center text-sm hover:border-[var(--color-border)] hover:bg-[var(--color-surface-muted)]"
         title={
-          score?.comment ? `Grade with ${rubric.name} — has a comment` : `Grade with ${rubric.name}`
+          score?.comment
+            ? tr('Grade with {name} — has a comment', { name: rubric.name })
+            : tr('Grade with {name}', { name: rubric.name })
         }
       >
         {score?.pointsEarned ?? <span className="text-[var(--color-text-muted)]">—</span>}

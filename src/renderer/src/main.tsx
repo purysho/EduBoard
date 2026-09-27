@@ -1,3 +1,4 @@
+import './i18nInit'
 import './assets/styles.css'
 
 import { StrictMode } from 'react'

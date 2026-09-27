@@ -5,6 +5,7 @@ import { ScoreHistoryPopover } from './ScoreHistoryPopover'
 import { CommentPopover } from './CommentPopover'
 import { SubmissionPopover } from './SubmissionPopover'
 import { focusGradebookCell } from './gradebookNav'
+import { tr } from '@shared/i18n'
 
 export function ScoreCell({
   classId,
@@ -87,7 +88,7 @@ export function ScoreCell({
         data-row={row}
         data-col={col}
         value={isExcused ? '' : value}
-        placeholder={isExcused ? 'Exc.' : ''}
+        placeholder={isExcused ? tr('Exc.') : ''}
         disabled={isExcused}
         onChange={(e) => setValue(e.target.value)}
         onBlur={commit}

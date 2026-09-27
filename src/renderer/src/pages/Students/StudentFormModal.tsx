@@ -10,6 +10,7 @@ import {
   useSettings
 } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 interface StudentFormModalProps {
   open: boolean
@@ -84,21 +85,21 @@ export function StudentFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit student' : 'Add student'}
+      title={isEdit ? tr('Edit student') : tr('Add student')}
       wide
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button variant="primary" type="submit" form="student-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="student-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-        <FormRow label="First name">
+        <FormRow label={tr('First name')}>
           <Input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
@@ -106,25 +107,28 @@ export function StudentFormModal({
             autoFocus
           />
         </FormRow>
-        <FormRow label="Last name">
+        <FormRow label={tr('Last name')}>
           <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required />
         </FormRow>
-        <FormRow label="Preferred name" hint="Optional, shown instead of first name">
+        <FormRow label={tr('Preferred name')} hint={tr('Optional, shown instead of first name')}>
           <Input value={preferredName} onChange={(e) => setPreferredName(e.target.value)} />
         </FormRow>
-        <FormRow label="Student number / ID">
+        <FormRow label={tr('Student number / ID')}>
           <Input value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} />
         </FormRow>
-        <FormRow label="Grade level / cohort" hint='e.g. "Grade 5", "Sophomore", "Chess Club"'>
+        <FormRow
+          label={tr('Grade level / cohort')}
+          hint={tr('e.g. "Grade 5", "Sophomore", "Chess Club"')}
+        >
           <Input value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} />
         </FormRow>
-        <FormRow label="Email">
+        <FormRow label={tr('Email')}>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </FormRow>
-        <FormRow label="Guardian name">
+        <FormRow label={tr('Guardian name')}>
           <Input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
         </FormRow>
-        <FormRow label="Guardian contact">
+        <FormRow label={tr('Guardian contact')}>
           <Input value={guardianContact} onChange={(e) => setGuardianContact(e.target.value)} />
         </FormRow>
         {fields.map((f) => (
@@ -136,7 +140,7 @@ export function StudentFormModal({
           </FormRow>
         ))}
         <div className="col-span-2">
-          <FormRow label="Notes">
+          <FormRow label={tr('Notes')}>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
           </FormRow>
         </div>

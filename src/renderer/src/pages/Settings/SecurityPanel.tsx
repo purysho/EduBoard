@@ -12,6 +12,8 @@ import {
   useUpdateSettings
 } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr, trn } from '@shared/i18n'
+import { trNodes } from '@renderer/lib/trNodes'
 
 const MIN_LENGTH = 8
 type Dialog = 'enable' | 'change' | 'disable' | null
@@ -40,12 +42,12 @@ export function SecurityPanel(): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <ShieldCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Password protection
+          {tr('Password protection')}
         </h2>
         {isOn && (
           <Button variant="secondary" size="sm" onClick={() => void window.api.security.lock()}>
             <Lock size={13} className="mr-1 inline" aria-hidden />
-            Lock now
+            {tr('Lock now')}
           </Button>
         )}
       </CardHeader>
@@ -53,23 +55,23 @@ export function SecurityPanel(): React.JSX.Element {
         {!isOn ? (
           <>
             <p className="text-[var(--color-text-muted)]">
-              Encrypts your class data on this computer (or USB stick) so nobody can read it without
-              your password, and asks for the password when EduBoard opens and after it has been
-              left alone. Recommended if this computer is shared or leaves school.
+              {tr(
+                'Encrypts your class data on this computer (or USB stick) so nobody can read it without your password, and asks for the password when EduBoard opens and after it has been left alone. Recommended if this computer is shared or leaves school.'
+              )}
             </p>
             <Button variant="primary" onClick={() => setDialog('enable')}>
               <KeyRound size={14} className="mr-1 inline" aria-hidden />
-              Turn on password protection
+              {tr('Turn on password protection')}
             </Button>
           </>
         ) : (
           <>
             <p className="text-[var(--color-text-muted)]">
-              On. Your data is encrypted, and EduBoard asks for your password when it opens.
+              {tr('On. Your data is encrypted, and EduBoard asks for your password when it opens.')}
             </p>
             {settings && (
               <label className="flex items-center gap-2">
-                Lock after
+                {tr('Lock after')}
                 <select
                   className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1"
                   value={settings.autoLockMinutes}
@@ -77,32 +79,35 @@ export function SecurityPanel(): React.JSX.Element {
                     updateSettings.mutate({ autoLockMinutes: Number(e.target.value) })
                   }
                 >
-                  <option value={5}>5 minutes</option>
-                  <option value={10}>10 minutes</option>
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={60}>1 hour</option>
-                  <option value={0}>never</option>
+                  <option value={5}>{tr('5 minutes')}</option>
+                  <option value={10}>{tr('10 minutes')}</option>
+                  <option value={15}>{tr('15 minutes')}</option>
+                  <option value={30}>{tr('30 minutes')}</option>
+                  <option value={60}>{tr('1 hour')}</option>
+                  <option value={0}>{tr('never')}</option>
                 </select>
                 <span className="text-[var(--color-text-muted)]">
-                  without the keyboard or mouse, and whenever the computer locks or sleeps.
+                  {tr('without the keyboard or mouse, and whenever the computer locks or sleeps.')}
                 </span>
               </label>
             )}
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" size="sm" onClick={() => setDialog('change')}>
-                Change password
+                {tr('Change password')}
               </Button>
               <Button variant="secondary" size="sm" onClick={() => setDialog('disable')}>
-                Turn off
+                {tr('Turn off')}
               </Button>
             </div>
             {!!unprotected?.length && (
               <div className="rounded-lg border border-[var(--color-warning)] p-3">
                 <p className="mb-2">
-                  {unprotected.length} older{' '}
-                  {unprotected.length === 1 ? 'backup was' : 'backups were'} made before protection
-                  was on and can be read without your password.
+                  {trn(
+                    '{length} older backup was made before protection was on and can be read without your password.',
+                    '{length} older backups were made before protection was on and can be read without your password.',
+                    unprotected.length,
+                    { length: unprotected.length }
+                  )}
                 </p>
                 <Button
                   variant="danger"
@@ -113,13 +118,18 @@ export function SecurityPanel(): React.JSX.Element {
                   }}
                 >
                   <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                  Delete unprotected backups
+                  {tr('Delete unprotected backups')}
                 </Button>
               </div>
             )}
             {deleted !== null && (
               <p className="text-[var(--color-text-muted)]">
-                Deleted {deleted} unprotected {deleted === 1 ? 'backup' : 'backups'}.
+                {trn(
+                  'Deleted {deleted} unprotected backup.',
+                  'Deleted {deleted} unprotected backups.',
+                  deleted,
+                  { deleted }
+                )}
               </p>
             )}
           </>
@@ -159,9 +169,9 @@ function PasswordDialog({
   const needsCurrent = mode === 'change' || mode === 'disable'
   const problem = needsNew
     ? next.length < MIN_LENGTH
-      ? `Use at least ${MIN_LENGTH} characters.`
+      ? tr('Use at least {n} characters.', { n: MIN_LENGTH })
       : next !== again
-        ? 'The two passwords don’t match.'
+        ? tr('The two passwords don’t match.')
         : null
     : null
   const ready = !problem && (!needsCurrent || current.length > 0)
@@ -192,7 +202,7 @@ function PasswordDialog({
         onDone()
       }
     } catch (err) {
-      setError(ipcErrorMessage(err, 'That didn’t work. Nothing was changed.'))
+      setError(ipcErrorMessage(err, tr('That didn’t work. Nothing was changed.')))
     } finally {
       setBusy(false)
     }
@@ -200,10 +210,10 @@ function PasswordDialog({
 
   const title =
     mode === 'enable'
-      ? 'Turn on password protection'
+      ? tr('Turn on password protection')
       : mode === 'change'
-        ? 'Change password'
-        : 'Turn off password protection'
+        ? tr('Change password')
+        : tr('Turn off password protection')
 
   return (
     <Modal
@@ -213,7 +223,7 @@ function PasswordDialog({
       footer={
         <>
           <Button variant="secondary" onClick={close}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant={mode === 'disable' ? 'danger' : 'primary'}
@@ -221,12 +231,12 @@ function PasswordDialog({
             onClick={submit}
           >
             {busy
-              ? 'Working…'
+              ? tr('Working…')
               : mode === 'disable'
-                ? 'Turn off'
+                ? tr('Turn off')
                 : mode === 'enable'
-                  ? 'Turn on'
-                  : 'Change password'}
+                  ? tr('Turn on')
+                  : tr('Change password')}
           </Button>
         </>
       }
@@ -240,18 +250,20 @@ function PasswordDialog({
       >
         {mode === 'enable' && (
           <p className="text-sm text-[var(--color-text-muted)]">
-            EduBoard backs up first, then encrypts your data. Next you’ll get a recovery key: the
-            only way in if you forget this password.
+            {tr(
+              'EduBoard backs up first, then encrypts your data. Next you’ll get a recovery key: the only way in if you forget this password.'
+            )}
           </p>
         )}
         {mode === 'disable' && (
           <p className="text-sm text-[var(--color-text-muted)]">
-            Your data will be stored without encryption again, and EduBoard won’t ask for a
-            password.
+            {tr(
+              'Your data will be stored without encryption again, and EduBoard won’t ask for a password.'
+            )}
           </p>
         )}
         {needsCurrent && (
-          <FormRow label="Current password (or recovery key)">
+          <FormRow label={tr('Current password (or recovery key)')}>
             <Input
               type="password"
               autoFocus
@@ -262,7 +274,10 @@ function PasswordDialog({
         )}
         {needsNew && (
           <>
-            <FormRow label="New password" hint={`At least ${MIN_LENGTH} characters.`}>
+            <FormRow
+              label={tr('New password')}
+              hint={tr('At least {MINLENGTH} characters.', { MINLENGTH: MIN_LENGTH })}
+            >
               <Input
                 type="password"
                 autoFocus={!needsCurrent}
@@ -270,7 +285,7 @@ function PasswordDialog({
                 onChange={(e) => setNext(e.target.value)}
               />
             </FormRow>
-            <FormRow label="Type it again">
+            <FormRow label={tr('Type it again')}>
               <Input type="password" value={again} onChange={(e) => setAgain(e.target.value)} />
             </FormRow>
             {next.length > 0 && again.length > 0 && problem && (
@@ -304,7 +319,7 @@ function RecoveryKeyDialog({
       onClose={() => {
         if (saved) onClose()
       }}
-      title="Your recovery key"
+      title={tr('Your recovery key')}
       footer={
         <Button
           variant="primary"
@@ -315,15 +330,16 @@ function RecoveryKeyDialog({
             onClose()
           }}
         >
-          Done
+          {tr('Done')}
         </Button>
       }
     >
       <div className="space-y-3 text-sm">
         <p>
-          Password protection is on. If you forget your password, this key is the{' '}
-          <strong>only</strong> way to open your data. Nobody, including EduBoard, can recover it
-          for you.
+          {trNodes(
+            'Password protection is on. If you forget your password, this key is the {only} way to open your data. Nobody, including EduBoard, can recover it for you.',
+            { only: <strong>{tr('only')}</strong> }
+          )}
         </p>
         <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
           <code className="flex-1 font-mono text-base tracking-wide select-all">{recoveryKey}</code>
@@ -336,16 +352,17 @@ function RecoveryKeyDialog({
             }}
           >
             <Copy size={13} className="mr-1 inline" aria-hidden />
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? tr('Copied') : tr('Copy')}
           </Button>
         </div>
         <p className="text-[var(--color-text-muted)]">
-          Write it down or print it and keep it somewhere safe, away from this computer. It won’t be
-          shown again.
+          {tr(
+            'Write it down or print it and keep it somewhere safe, away from this computer. It won’t be shown again.'
+          )}
         </p>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
-          I’ve saved my recovery key somewhere safe
+          {tr('I’ve saved my recovery key somewhere safe')}
         </label>
       </div>
     </Modal>

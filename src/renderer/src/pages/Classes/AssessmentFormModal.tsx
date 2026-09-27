@@ -6,6 +6,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { DateSelect, FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { useCreateAssessment, useRubrics, useUpdateAssessment } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 export function AssessmentFormModal({
   open,
@@ -72,11 +73,11 @@ export function AssessmentFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit assessment' : 'New assessment'}
+      title={isEdit ? tr('Edit assessment') : tr('New assessment')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -84,19 +85,19 @@ export function AssessmentFormModal({
             form="assessment-form"
             disabled={saving || rubricPending}
           >
-            {saving ? 'Saving…' : rubricPending ? 'Loading rubric…' : 'Save'}
+            {saving ? tr('Saving…') : rubricPending ? tr('Loading rubric…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="assessment-form" onSubmit={handleSubmit} className="space-y-4">
-        <FormRow label="Name" hint='e.g. "Unit 3 Quiz", "Midterm Exam"'>
+        <FormRow label={tr('Name')} hint={tr('e.g. "Unit 3 Quiz", "Midterm Exam"')}>
           <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </FormRow>
         <div className="grid grid-cols-2 gap-4">
-          <FormRow label="Category">
+          <FormRow label={tr('Category')}>
             <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-              <option value="">Uncategorized</option>
+              <option value="">{tr('Uncategorized')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -104,7 +105,7 @@ export function AssessmentFormModal({
               ))}
             </Select>
           </FormRow>
-          <FormRow label="Max score">
+          <FormRow label={tr('Max score')}>
             <Input
               type="number"
               min={1}
@@ -113,33 +114,35 @@ export function AssessmentFormModal({
               disabled={!!selectedRubric}
             />
           </FormRow>
-          <FormRow label="Date">
+          <FormRow label={tr('Date')}>
             <DateSelect value={assessmentDate} onChange={setAssessmentDate} />
           </FormRow>
-          <FormRow label="Final?">
+          <FormRow label={tr('Final?')}>
             <label className="mt-2 flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={isFinal}
                 onChange={(e) => setIsFinal(e.target.checked)}
               />
-              Counts as a final/summative assessment
+              {tr('Counts as a final/summative assessment')}
             </label>
           </FormRow>
         </div>
         <FormRow
-          label="Grade with a rubric (optional)"
+          label={tr('Grade with a rubric (optional)')}
           hint={
             selectedRubric
-              ? `Max score is set from the rubric (${selectedRubric.maxPoints} pts).`
+              ? tr('Max score is set from the rubric ({maxPoints} pts).', {
+                  maxPoints: selectedRubric.maxPoints
+                })
               : undefined
           }
         >
           <Select value={rubricId} onChange={(e) => handleRubricChange(e.target.value)}>
-            <option value="">None — enter a plain score</option>
+            <option value="">{tr('None — enter a plain score')}</option>
             {rubrics?.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.name} ({r.maxPoints} pts)
+                {tr('{name} ({maxPoints} pts)', { name: r.name, maxPoints: r.maxPoints })}
               </option>
             ))}
           </Select>
@@ -147,7 +150,7 @@ export function AssessmentFormModal({
             to="/rubrics/new"
             className="mt-1 inline-block text-xs text-[var(--color-primary)] hover:underline"
           >
-            + Build a new rubric
+            {tr('+ Build a new rubric')}
           </Link>
         </FormRow>
       </form>

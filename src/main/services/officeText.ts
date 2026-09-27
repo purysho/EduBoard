@@ -1,4 +1,5 @@
 import JSZip from 'jszip'
+import { tr } from '@shared/i18n'
 
 // Plain text from Word, PowerPoint and OpenDocument files, so teachers' usual lesson
 // materials can be indexed for the Notebook and turned into study guides, flashcards and
@@ -77,7 +78,10 @@ export async function extractOfficeText(bytes: Uint8Array, ext: string): Promise
     zip = await JSZip.loadAsync(bytes)
   } catch {
     throw new OfficeTextError(
-      `This ${ext} file couldn't be opened. It may be damaged, or an older format (.doc/.ppt): save it as ${ext} and try again.`
+      tr(
+        'This {ext} file couldn’t be opened. It may be damaged, or an older format (.doc/.ppt): save it as {ext} and try again.',
+        { ext }
+      )
     )
   }
 
@@ -90,7 +94,7 @@ export async function extractOfficeText(bytes: Uint8Array, ext: string): Promise
       ?.uncompressedSize
     unpacked += size ?? 0
     if (unpacked > MAX_UNPACKED_BYTES) {
-      throw new OfficeTextError('This file is too large to read.')
+      throw new OfficeTextError(tr('This file is too large to read.'))
     }
     return entry.async('string')
   }
@@ -119,5 +123,5 @@ export async function extractOfficeText(bytes: Uint8Array, ext: string): Promise
   if (ext === '.odt' || ext === '.odp') {
     return odfText(await read('content.xml'))
   }
-  throw new OfficeTextError(`Can't read ${ext} files.`)
+  throw new OfficeTextError(tr('Can’t read {ext} files.', { ext }))
 }

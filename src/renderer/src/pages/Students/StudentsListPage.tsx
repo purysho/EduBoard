@@ -12,6 +12,8 @@ import { useStudents } from '@renderer/lib/queries'
 import { studentFullName } from '@renderer/lib/format'
 import { StudentFormModal } from './StudentFormModal'
 import { MergeStudentsModal } from './MergeStudentsModal'
+import { tr } from '@shared/i18n'
+import { trNodes } from '@renderer/lib/trNodes'
 
 export function StudentsListPage(): React.JSX.Element {
   const [search, setSearch] = useState('')
@@ -34,12 +36,12 @@ export function StudentsListPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Students"
-        description="Your full student directory, across every class and club."
+        title={tr('Students')}
+        description={tr('Your full student directory, across every class and club.')}
         actions={
           <Button variant="primary" onClick={() => setShowAddModal(true)}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
-            Add student
+            {tr('Add student')}
           </Button>
         }
       />
@@ -47,21 +49,25 @@ export function StudentsListPage(): React.JSX.Element {
       {duplicates.length > 0 && (
         <div className="mb-4 rounded-lg border border-[var(--color-warning)] px-4 py-3 text-sm">
           <p className="flex items-center gap-1.5 font-medium">
-            <Copy size={14} aria-hidden /> Possible duplicates
+            <Copy size={14} aria-hidden /> {tr('Possible duplicates')}
           </p>
           <p className="mb-2 text-[var(--color-text-muted)]">
-            These have the same name (allowing for family-name-first). If one person is listed
-            twice, merge them so their work and Portal login are in one place.
+            {tr(
+              'These have the same name (allowing for family-name-first). If one person is listed twice, merge them so their work and Portal login are in one place.'
+            )}
           </p>
           <ul className="space-y-1">
             {duplicates.map(([a, b]) => (
               <li key={`${a.id}-${b.id}`} className="flex flex-wrap items-center gap-2">
                 <span>
-                  {studentFullName(a)} <span className="text-[var(--color-text-muted)]">and</span>{' '}
-                  {studentFullName(b)}
+                  {trNodes('{a} {and} {b}', {
+                    a: studentFullName(a),
+                    and: <span className="text-[var(--color-text-muted)]">{tr('and')}</span>,
+                    b: studentFullName(b)
+                  })}
                 </span>
                 <Button size="sm" variant="secondary" onClick={() => setMerging([a, b])}>
-                  Review and merge
+                  {tr('Review and merge')}
                 </Button>
               </li>
             ))}
@@ -76,7 +82,7 @@ export function StudentsListPage(): React.JSX.Element {
           aria-hidden
         />
         <Input
-          placeholder="Search by name, ID, or grade level…"
+          placeholder={tr('Search by name, ID, or grade level…')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-8"
@@ -88,17 +94,17 @@ export function StudentsListPage(): React.JSX.Element {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={students?.length ? 'No students match your search' : 'No students yet'}
+          title={students?.length ? tr('No students match your search') : tr('No students yet')}
           description={
             students?.length
               ? undefined
-              : 'Add your first student, or import a roster from Settings.'
+              : tr('Add your first student, or import a roster from Settings.')
           }
           action={
             !students?.length ? (
               <Button variant="primary" onClick={() => setShowAddModal(true)}>
                 <Plus size={15} className="mr-1 inline" aria-hidden />
-                Add student
+                {tr('Add student')}
               </Button>
             ) : undefined
           }
@@ -108,10 +114,10 @@ export function StudentsListPage(): React.JSX.Element {
           <table className="w-full text-sm">
             <thead className="bg-[var(--color-surface-muted)] text-left text-xs uppercase text-[var(--color-text-muted)]">
               <tr>
-                <th className="px-4 py-2.5 font-medium">Name</th>
-                <th className="px-4 py-2.5 font-medium">Grade / cohort</th>
-                <th className="px-4 py-2.5 font-medium">Student #</th>
-                <th className="px-4 py-2.5 font-medium">Guardian</th>
+                <th className="px-4 py-2.5 font-medium">{tr('Name')}</th>
+                <th className="px-4 py-2.5 font-medium">{tr('Grade / cohort')}</th>
+                <th className="px-4 py-2.5 font-medium">{tr('Student #')}</th>
+                <th className="px-4 py-2.5 font-medium">{tr('Guardian')}</th>
               </tr>
             </thead>
             <tbody>

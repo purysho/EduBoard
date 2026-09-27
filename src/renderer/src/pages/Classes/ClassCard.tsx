@@ -6,12 +6,13 @@ import { Badge } from '@renderer/components/ui/Badge'
 import { formatPercent } from '@renderer/lib/format'
 import { useClassReport, useClassRoster } from '@renderer/lib/queries'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 const LEVEL_META: Record<LevelType, { label: string; icon: typeof GraduationCap; bar: string }> = {
-  k12: { label: 'K-12', icon: BookOpen, bar: 'bg-[var(--color-primary)]' },
-  university: { label: 'University', icon: GraduationCap, bar: 'bg-violet-500' },
-  club: { label: 'Club', icon: Sparkles, bar: 'bg-amber-500' },
-  other: { label: 'Other', icon: Award, bar: 'bg-slate-400' }
+  k12: { label: tr('K-12'), icon: BookOpen, bar: 'bg-[var(--color-primary)]' },
+  university: { label: tr('University'), icon: GraduationCap, bar: 'bg-violet-500' },
+  club: { label: tr('Club'), icon: Sparkles, bar: 'bg-amber-500' },
+  other: { label: tr('Other'), icon: Award, bar: 'bg-slate-400' }
 }
 
 export function ClassCard({ classSection }: { classSection: ClassSection }): React.JSX.Element {
@@ -29,7 +30,7 @@ export function ClassCard({ classSection }: { classSection: ClassSection }): Rea
               <meta.icon size={12} className="mr-1 inline" aria-hidden />
               {meta.label}
             </Badge>
-            {classSection.archived && <Badge>Archived</Badge>}
+            {classSection.archived && <Badge>{tr('Archived')}</Badge>}
           </div>
           <h3 className="text-base font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)]">
             {classSection.name}
@@ -42,7 +43,7 @@ export function ClassCard({ classSection }: { classSection: ClassSection }): Rea
               <Users size={14} aria-hidden />
               {roster?.length ?? 0}
             </span>
-            <span>Avg {formatPercent(report?.averagePercent)}</span>
+            <span>{tr('Avg {percent}', { percent: formatPercent(report?.averagePercent) })}</span>
           </div>
         </CardBody>
       </Card>

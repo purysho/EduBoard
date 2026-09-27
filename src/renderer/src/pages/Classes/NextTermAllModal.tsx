@@ -6,10 +6,11 @@ import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Select } from '@renderer/components/ui/Field'
 import { useStartNextTerm, useTerms } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr, trn } from '@shared/i18n'
 
 const NO_TERM = ''
 const termLabel = (t: Term | undefined): string =>
-  t ? `${t.name}${t.schoolYear ? ` · ${t.schoolYear}` : ''}` : 'No term'
+  t ? `${t.name}${t.schoolYear ? ` · ${t.schoolYear}` : ''}` : tr('No term')
 
 /** The term most current classes are in: the likely one that's ending. */
 function busiestTerm(classes: ClassSection[]): string {
@@ -59,17 +60,17 @@ export function NextTermAllModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Start the next term for your classes"
+      title={tr('Start the next term for your classes')}
       wide
       footer={
         result ? (
           <Button variant="primary" onClick={onClose}>
-            Done
+            {tr('Done')}
           </Button>
         ) : (
           <>
             <Button variant="ghost" onClick={onClose}>
-              Cancel
+              {tr('Cancel')}
             </Button>
             <Button
               variant="primary"
@@ -87,8 +88,8 @@ export function NextTermAllModal({
               }}
             >
               {start.isPending
-                ? 'Creating…'
-                : `Create ${chosen.length} ${chosen.length === 1 ? 'class' : 'classes'}`}
+                ? tr('Creating…')
+                : trn('Create {n} class', 'Create {n} classes', chosen.length)}
             </Button>
           </>
         )
@@ -97,25 +98,31 @@ export function NextTermAllModal({
       {result ? (
         <div className="space-y-2 text-sm">
           <p>
-            Made {result.created} {result.created === 1 ? 'class' : 'classes'} for{' '}
-            {termLabel(terms?.find((t) => t.id === to))}.
-            {archiveOld && result.created > 0 && ' The old classes are archived.'}
+            {trn(
+              'Made {created} class for {termLabel}.',
+              'Made {created} classes for {termLabel}.',
+              result.created,
+              { created: result.created, termLabel: termLabel(terms?.find((t) => t.id === to)) }
+            )}
+            {archiveOld && result.created > 0 && ' ' + tr('The old classes are archived.')}
           </p>
           {result.skipped.length > 0 && (
             <p className="text-[var(--color-text-muted)]">
-              Already there, so left alone: {result.skipped.join(', ')}.
+              {tr('Already there, so left alone: {join}.', { join: result.skipped.join(', ') })}
             </p>
           )}
           {copyStudents && result.created > 0 && (
             <p className="text-[var(--color-text-muted)]">
-              Students keep their Portal logins; the new classes appear for them after you publish.
+              {tr(
+                'Students keep their Portal logins; the new classes appear for them after you publish.'
+              )}
             </p>
           )}
         </div>
       ) : (
         <div className="space-y-4 text-sm">
           <div className="grid grid-cols-2 gap-4">
-            <FormRow label="Ending term">
+            <FormRow label={tr('Ending term')}>
               <Select
                 value={from}
                 onChange={(e) => {
@@ -132,17 +139,17 @@ export function NextTermAllModal({
               </Select>
             </FormRow>
             <FormRow
-              label="Next term"
+              label={tr('Next term')}
               hint={
                 sameTerm
-                  ? 'Choose a different term from the one ending.'
+                  ? tr('Choose a different term from the one ending.')
                   : terms?.length
                     ? undefined
-                    : 'No terms yet. Add them in Settings → Terms.'
+                    : tr('No terms yet. Add them in Settings → Terms.')
               }
             >
               <Select value={to} onChange={(e) => setToTerm(e.target.value)}>
-                <option value={NO_TERM}>No term</option>
+                <option value={NO_TERM}>{tr('No term')}</option>
                 {(terms ?? []).map((t) => (
                   <option key={t.id} value={t.id}>
                     {termLabel(t)}
@@ -153,7 +160,7 @@ export function NextTermAllModal({
           </div>
 
           <fieldset>
-            <legend className="mb-1 font-medium">Classes that carry on</legend>
+            <legend className="mb-1 font-medium">{tr('Classes that carry on')}</legend>
             <div className="max-h-56 space-y-1 overflow-auto rounded-md border border-[var(--color-border)] p-2">
               {inFrom.map((c) => (
                 <label key={c.id} className="flex items-center gap-2">
@@ -171,7 +178,9 @@ export function NextTermAllModal({
                 </label>
               ))}
               {!inFrom.length && (
-                <p className="text-[var(--color-text-muted)]">No current classes in this term.</p>
+                <p className="text-[var(--color-text-muted)]">
+                  {tr('No current classes in this term.')}
+                </p>
               )}
             </div>
           </fieldset>
@@ -185,9 +194,9 @@ export function NextTermAllModal({
                 onChange={(e) => setCopyStudents(e.target.checked)}
               />
               <span>
-                Bring the students across
+                {tr('Bring the students across')}
                 <span className="block text-xs text-[var(--color-text-muted)]">
-                  Same student records, so Portal logins keep working.
+                  {tr('Same student records, so Portal logins keep working.')}
                 </span>
               </span>
             </label>
@@ -197,7 +206,7 @@ export function NextTermAllModal({
                 checked={copyTimetable}
                 onChange={(e) => setCopyTimetable(e.target.checked)}
               />
-              Keep the same timetable
+              {tr('Keep the same timetable')}
             </label>
             <label className="flex items-start gap-2">
               <input
@@ -207,21 +216,23 @@ export function NextTermAllModal({
                 onChange={(e) => setArchiveOld(e.target.checked)}
               />
               <span>
-                Archive the old classes
+                {tr('Archive the old classes')}
                 <span className="block text-xs text-[var(--color-text-muted)]">
-                  Their grades and attendance stay (Classes → Show archived), and students still see
-                  them read-only on the Portal.
+                  {tr(
+                    'Their grades and attendance stay (Classes → Show archived), and students still see them read-only on the Portal.'
+                  )}
                 </span>
               </span>
             </label>
           </div>
           <p className="text-xs text-[var(--color-text-muted)]">
-            Each new class gets the old one&apos;s name, grading scale and categories. Grades,
-            attendance and homework stay with the old class. A backup is taken first.
+            {tr(
+              "Each new class gets the old one's name, grading scale and categories. Grades, attendance and homework stay with the old class. A backup is taken first."
+            )}
           </p>
           {start.isError && (
             <p className="text-[var(--color-danger)]">
-              {ipcErrorMessage(start.error, 'No classes were created.')}
+              {ipcErrorMessage(start.error, tr('No classes were created.'))}
             </p>
           )}
         </div>

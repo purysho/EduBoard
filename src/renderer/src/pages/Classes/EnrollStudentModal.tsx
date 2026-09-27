@@ -5,6 +5,7 @@ import { Input } from '@renderer/components/ui/Field'
 import { useClassRoster, useEnrollStudent, useStudents } from '@renderer/lib/queries'
 import { studentFullName, todayIso } from '@renderer/lib/format'
 import { StudentFormModal } from '@renderer/pages/Students/StudentFormModal'
+import { tr } from '@shared/i18n'
 
 export function EnrollStudentModal({
   open,
@@ -53,18 +54,18 @@ export function EnrollStudentModal({
       <Modal
         open={open && !showNewStudent}
         onClose={onClose}
-        title="Enroll students"
+        title={tr('Enroll students')}
         footer={
           <>
             <Button variant="secondary" onClick={onClose}>
-              Cancel
+              {tr('Cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={handleEnroll}
               disabled={selected.size === 0 || enrollStudent.isPending}
             >
-              Enroll {selected.size > 0 ? `(${selected.size})` : ''}
+              {tr('Enroll {count}', { count: selected.size > 0 ? `(${selected.size})` : '' })}
             </Button>
           </>
         }
@@ -72,18 +73,18 @@ export function EnrollStudentModal({
         <div className="space-y-3">
           <div className="flex gap-2">
             <Input
-              placeholder="Search students…"
+              placeholder={tr('Search students…')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <Button variant="secondary" onClick={() => setShowNewStudent(true)}>
-              + New
+              {tr('+ New')}
             </Button>
           </div>
           <div className="max-h-72 overflow-y-auto rounded-md border border-[var(--color-border)]">
             {candidates.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-[var(--color-text-muted)]">
-                No students to enroll. Everyone already in this class, or add a new student.
+                {tr('No students to enroll. Everyone already in this class, or add a new student.')}
               </p>
             ) : (
               candidates.map((s) => (

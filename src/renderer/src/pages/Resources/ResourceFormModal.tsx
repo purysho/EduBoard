@@ -9,11 +9,12 @@ import {
   useStandards,
   useUpdateLessonResource
 } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 const TYPE_LABELS: Record<LessonResourceType, string> = {
-  link: 'Link',
-  file: 'File',
-  note: 'Note'
+  link: tr('Link'),
+  file: tr('File'),
+  note: tr('Note')
 }
 
 export function ResourceFormModal({
@@ -111,11 +112,11 @@ export function ResourceFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit resource' : 'New resource'}
+      title={isEdit ? tr('Edit resource') : tr('New resource')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -123,18 +124,21 @@ export function ResourceFormModal({
             form="resource-form"
             disabled={!canSave || saving}
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="resource-form" onSubmit={handleSubmit} className="space-y-4">
-        <FormRow label="Title" hint='e.g. "Fractions worksheet", "Photosynthesis slides"'>
+        <FormRow
+          label={tr('Title')}
+          hint={tr('e.g. "Fractions worksheet", "Photosynthesis slides"')}
+        >
           <Input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </FormRow>
 
         <div className="grid grid-cols-2 gap-4">
-          <FormRow label="Type">
+          <FormRow label={tr('Type')}>
             <Select value={type} onChange={(e) => setType(e.target.value as LessonResourceType)}>
               {Object.entries(TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -143,9 +147,9 @@ export function ResourceFormModal({
               ))}
             </Select>
           </FormRow>
-          <FormRow label="Standard (optional)">
+          <FormRow label={tr('Standard (optional)')}>
             <Select value={standardId} onChange={(e) => setStandardId(e.target.value)}>
-              <option value="">None</option>
+              <option value="">{tr('None')}</option>
               {standards?.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.code}
@@ -156,7 +160,7 @@ export function ResourceFormModal({
         </div>
 
         {type === 'link' && (
-          <FormRow label="URL">
+          <FormRow label={tr('Web address (URL)')}>
             <Input
               type="url"
               value={url}
@@ -167,30 +171,37 @@ export function ResourceFormModal({
         )}
 
         {type === 'file' && (
-          <FormRow label="File">
+          <FormRow label={tr('File')}>
             <div className="flex items-center gap-2">
-              <Input value={filePath} readOnly placeholder="No file selected" className="flex-1" />
+              <Input
+                value={filePath}
+                readOnly
+                placeholder={tr('No file selected')}
+                className="flex-1"
+              />
               <Button variant="secondary" type="button" onClick={handlePickFile} disabled={picking}>
-                {picking ? 'Picking…' : 'Choose file'}
+                {picking ? tr('Picking…') : tr('Choose file')}
               </Button>
             </div>
           </FormRow>
         )}
 
-        <FormRow label={type === 'note' ? 'Note' : 'Notes (optional)'}>
+        <FormRow label={type === 'note' ? tr('Note') : tr('Notes (optional)')}>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
         </FormRow>
 
-        <FormRow label="Tags" hint="Comma-separated, e.g. fractions, unit 3, grade 5">
+        <FormRow label={tr('Tags')} hint={tr('Comma-separated, e.g. fractions, unit 3, grade 5')}>
           <Input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
         </FormRow>
 
         <FormRow
-          label="Class (optional)"
-          hint="Link this to a class to make it eligible for sharing with students on the Portal"
+          label={tr('Class (optional)')}
+          hint={tr(
+            'Link this to a class to make it eligible for sharing with students on the Portal'
+          )}
         >
           <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
-            <option value="">Personal library only</option>
+            <option value="">{tr('Personal library only')}</option>
             {classes?.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -206,8 +217,9 @@ export function ResourceFormModal({
               checked={shareWithStudents}
               onChange={(e) => setShareWithStudents(e.target.checked)}
             />
-            Share with this class&apos;s students on the Portal (index it first in Notebook so it
-            has searchable content)
+            {tr(
+              "Share with this class's students on the Portal (index it first in Notebook so it has searchable content)"
+            )}
           </label>
         )}
       </form>

@@ -20,6 +20,7 @@ import { Button } from '@renderer/components/ui/Button'
 import { useAttendanceByClass, useClassRoster } from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 interface Kid {
   id: string
@@ -65,7 +66,7 @@ export function ClassroomTab(): React.JSX.Element {
           checked={skipAbsent}
           onChange={(e) => setSkipAbsent(e.target.checked)}
         />
-        Leave out students marked absent today
+        {tr('Leave out students marked absent today')}
         {skipAbsent && awayToday.size > 0 && ` (${awayToday.size})`}
       </label>
       <div className="grid grid-cols-2 gap-4">
@@ -110,10 +111,12 @@ function PickerCard({ kids }: { kids: Kid[] }): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Dices size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Random name
+          {tr('Random name')}
         </h2>
         <span className="text-xs text-[var(--color-text-muted)]">
-          {kids.length ? `${left} of ${kids.length} not picked yet` : ''}
+          {kids.length
+            ? tr('{left} of {length} not picked yet', { left, length: kids.length })
+            : ''}
         </span>
       </CardHeader>
       <CardBody className="flex flex-col items-center gap-4 py-8">
@@ -124,11 +127,11 @@ function PickerCard({ kids }: { kids: Kid[] }): React.JSX.Element {
           )}
           aria-live="polite"
         >
-          {current ? byId.get(current) : kids.length ? '—' : 'No students here'}
+          {current ? byId.get(current) : kids.length ? '—' : tr('No students here')}
         </p>
         <div className="flex gap-2">
           <Button variant="primary" onClick={pick} disabled={!kids.length || rolling}>
-            Pick a name
+            {tr('Pick a name')}
           </Button>
           <Button
             variant="ghost"
@@ -138,11 +141,11 @@ function PickerCard({ kids }: { kids: Kid[] }): React.JSX.Element {
             }}
             disabled={!picked.length}
           >
-            Start again
+            {tr('Start again')}
           </Button>
         </div>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Nobody is picked twice until everyone has had a turn.
+          {tr('Nobody is picked twice until everyone has had a turn.')}
         </p>
       </CardBody>
     </Card>
@@ -160,20 +163,20 @@ function GroupsCard({ kids }: { kids: Kid[] }): React.JSX.Element {
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Users size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Groups
+          {tr('Groups')}
         </h2>
         <div className="flex items-center gap-1.5 text-sm">
           <select
-            aria-label="Group by"
+            aria-label={tr('Group by')}
             className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-1"
             value={mode}
             onChange={(e) => setMode(e.target.value as 'size' | 'count')}
           >
-            <option value="size">Groups of</option>
-            <option value="count">Number of groups</option>
+            <option value="size">{tr('Groups of')}</option>
+            <option value="count">{tr('Number of groups')}</option>
           </select>
           <input
-            aria-label="How many"
+            aria-label={tr('How many')}
             type="number"
             min={1}
             max={40}
@@ -183,7 +186,7 @@ function GroupsCard({ kids }: { kids: Kid[] }): React.JSX.Element {
           />
           <Button variant="primary" size="sm" onClick={make} disabled={!kids.length}>
             <Shuffle size={13} className="mr-1 inline" aria-hidden />
-            {groups.length ? 'Shuffle' : 'Make groups'}
+            {groups.length ? tr('Shuffle') : tr('Make groups')}
           </Button>
         </div>
       </CardHeader>
@@ -193,7 +196,7 @@ function GroupsCard({ kids }: { kids: Kid[] }): React.JSX.Element {
             {groups.map((g, i) => (
               <div key={i} className="rounded-lg border border-[var(--color-border)] p-2">
                 <p className="mb-1 text-xs font-semibold text-[var(--color-primary)]">
-                  Group {i + 1}
+                  {tr('Group {n}', { n: i + 1 })}
                 </p>
                 <ul className="text-sm">
                   {g.map((k) => (
@@ -205,7 +208,7 @@ function GroupsCard({ kids }: { kids: Kid[] }): React.JSX.Element {
           </div>
         ) : (
           <p className="text-sm text-[var(--color-text-muted)]">
-            Random groups from the students here today. Shuffle until you like them.
+            {tr('Random groups from the students here today. Shuffle until you like them.')}
           </p>
         )}
       </CardBody>
@@ -268,11 +271,11 @@ function TimerCard(): React.JSX.Element {
         <CardHeader className="flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <Timer size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-            Timer
+            {tr('Timer')}
           </h2>
           <button
-            aria-label="Full screen"
-            title="Full screen"
+            aria-label={tr('Full screen')}
+            title={tr('Full screen')}
             className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             onClick={() =>
               document.fullscreenElement
@@ -291,7 +294,7 @@ function TimerCard(): React.JSX.Element {
             )}
             aria-live="polite"
           >
-            {done ? "Time's up" : `${mm}:${ss}`}
+            {done ? tr("Time's up") : `${mm}:${ss}`}
           </p>
           <div className="flex flex-wrap justify-center gap-1.5">
             {PRESETS.map((m) => (
@@ -305,7 +308,7 @@ function TimerCard(): React.JSX.Element {
                 )}
                 onClick={() => set(m * 60)}
               >
-                {m} min
+                {tr('{m} min', { m })}
               </button>
             ))}
           </div>
@@ -328,11 +331,11 @@ function TimerCard(): React.JSX.Element {
               ) : (
                 <Play size={14} className="mr-1 inline" aria-hidden />
               )}
-              {running ? 'Pause' : left < total && left > 0 ? 'Resume' : 'Start'}
+              {running ? tr('Pause') : left < total && left > 0 ? tr('Resume') : tr('Start')}
             </Button>
             <Button variant="ghost" onClick={() => set(total)}>
               <RotateCcw size={14} className="mr-1 inline" aria-hidden />
-              Reset
+              {tr('Reset')}
             </Button>
           </div>
         </CardBody>
@@ -341,7 +344,9 @@ function TimerCard(): React.JSX.Element {
   )
 }
 
-const REASONS = ['Helping others', 'On task', 'Great answer', 'Kindness', 'Teamwork']
+const REASONS = ['Helping others', 'On task', 'Great answer', 'Kindness', 'Teamwork'].map((r) =>
+  tr(r)
+)
 
 function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.JSX.Element {
   const qc = useQueryClient()
@@ -365,7 +370,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Star size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Class points this week
+          {tr('Class points this week')}
         </h2>
         <Button
           variant="ghost"
@@ -376,12 +381,12 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
           }}
         >
           <Undo2 size={13} className="mr-1 inline" aria-hidden />
-          Undo last
+          {tr('Undo last')}
         </Button>
       </CardHeader>
       <CardBody className="space-y-3">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-[var(--color-text-muted)]">For:</span>
+          <span className="text-[var(--color-text-muted)]">{tr('For:')}</span>
           {[null, ...REASONS].map((r) => (
             <button
               key={r ?? 'none'}
@@ -393,7 +398,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
               )}
               onClick={() => setReason(r)}
             >
-              {r ?? 'No reason'}
+              {r ?? tr('No reason')}
             </button>
           ))}
         </div>
@@ -408,7 +413,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
                 <button
                   className="flex min-w-0 flex-1 items-center justify-between gap-1 px-2 py-2 text-left text-sm hover:bg-[var(--color-primary-soft)]"
                   onClick={() => give(k.id, 1)}
-                  title={`+1 for ${k.name}`}
+                  title={tr('+1 for {name}', { name: k.name })}
                 >
                   <span className="truncate">{k.name}</span>
                   <span
@@ -423,8 +428,8 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
                   </span>
                 </button>
                 <button
-                  aria-label={`−1 for ${k.name}`}
-                  title={`−1 for ${k.name}`}
+                  aria-label={tr('−1 for {name}', { name: k.name })}
+                  title={tr('−1 for {name}', { name: k.name })}
                   className="border-l border-[var(--color-border)] px-2 py-2 text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]"
                   onClick={() => give(k.id, -1)}
                 >
@@ -435,8 +440,9 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
           })}
         </div>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time
-          total is kept.
+          {tr(
+            'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept.'
+          )}
         </p>
       </CardBody>
     </Card>

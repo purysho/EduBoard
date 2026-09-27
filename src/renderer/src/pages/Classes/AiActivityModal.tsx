@@ -4,6 +4,7 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { Spinner } from '@renderer/components/ui/EmptyState'
 import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 /** What a student asked the Portal's Study Helper about one assignment, and what it
  * answered: the evidence behind a "Used AI" badge, fetched live from the Portal. */
@@ -28,7 +29,7 @@ export function AiActivityModal({
     window.api.portalSync
       .aiActivity(studentId, homeworkId)
       .then((rows) => !cancelled && setItems(rows))
-      .catch((e) => !cancelled && setError(ipcErrorMessage(e, 'Could not load AI activity.')))
+      .catch((e) => !cancelled && setError(ipcErrorMessage(e, tr('Could not load AI activity.'))))
     return () => {
       cancelled = true
     }
@@ -38,10 +39,10 @@ export function AiActivityModal({
     <Modal
       open
       onClose={onClose}
-      title={`AI use: ${studentName}`}
+      title={tr('AI use: {studentName}', { studentName })}
       footer={
         <Button variant="primary" onClick={onClose}>
-          Close
+          {tr('Close')}
         </Button>
       }
     >
@@ -51,15 +52,15 @@ export function AiActivityModal({
         ))}
       </ul>
       <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-        EduBoard only sees the Portal&apos;s own Study Helper. Use of outside tools like ChatGPT
-        shows up only if the student ticked &quot;I used AI&quot;. A text match means wording was
-        reused from AI answers; it isn&apos;t proof of anything by itself.
+        {tr(
+          'EduBoard only sees the Portal\'s own Study Helper. Use of outside tools like ChatGPT shows up only if the student ticked "I used AI". A text match means wording was reused from AI answers; it isn\'t proof of anything by itself.'
+        )}
       </p>
       {error && <p className="text-sm text-[var(--color-danger)]">{error}</p>}
       {!items && !error && <Spinner />}
       {items && items.length === 0 && (
         <p className="text-sm text-[var(--color-text-muted)]">
-          No Study Helper questions were asked from this assignment.
+          {tr('No Study Helper questions were asked from this assignment.')}
         </p>
       )}
       {items && items.length > 0 && (
@@ -70,11 +71,11 @@ export function AiActivityModal({
                 {formatDate(item.createdAt, 'MMM d, p')}
               </p>
               <p className="mt-1 text-sm">
-                <span className="font-semibold">Student: </span>
+                <span className="font-semibold">{tr('Student:')} </span>
                 {item.question}
               </p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--color-text-muted)]">
-                <span className="font-semibold text-[var(--color-text)]">AI: </span>
+                <span className="font-semibold text-[var(--color-text)]">{tr('AI:')} </span>
                 {item.reply}
               </p>
             </li>

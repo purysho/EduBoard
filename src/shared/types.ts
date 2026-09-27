@@ -1,7 +1,17 @@
 // Shared domain types used by both the main (Node/Electron) process and the renderer (React) UI.
 // Keep these framework-agnostic — no Electron or DOM types here.
-import { DEFAULT_COMMENT_BANK, type BankComment } from './commentBank'
-import { DEFAULT_LETTER_TEMPLATE } from './letters'
+import {
+  DEFAULT_COMMENT_BANK,
+  DEFAULT_COMMENT_BANK_ZH,
+  defaultCommentBank,
+  type BankComment
+} from './commentBank'
+import {
+  DEFAULT_LETTER_TEMPLATE,
+  DEFAULT_LETTER_TEMPLATE_ZH,
+  defaultLetterTemplate
+} from './letters'
+import { uiLanguage } from './i18n'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
 export type LevelType = 'k12' | 'university' | 'club' | 'other'
@@ -674,6 +684,8 @@ export interface AppSettings {
   schoolLogo: string
   /** '#rrggbb' to replace EduBoard's indigo with the school's colour; '' keeps it. */
   accentColor: string
+  /** Interface language; '' follows the computer's language. */
+  uiLanguage: 'en' | 'zh' | ''
   textSize: 'small' | 'normal' | 'large' | 'larger'
   highContrast: boolean
   reduceMotion: boolean
@@ -714,6 +726,19 @@ export const DEFAULT_LOG_QUICK_ADDS: LogQuickAdd[] = [
   },
   { label: 'Emailed guardian', type: 'contact', text: 'Emailed guardian.', contactMethod: 'email' }
 ]
+
+export const DEFAULT_LOG_QUICK_ADDS_ZH: LogQuickAdd[] = [
+  { label: '未交作业', type: 'concern', text: '未交作业。' },
+  { label: '课堂表现积极', type: 'positive', text: '今天课堂参与非常积极。' },
+  { label: '上课迟到', type: 'concern', text: '上课迟到。' },
+  { label: '电话家访', type: 'contact', text: '致电家长沟通学习情况。', contactMethod: 'phone' },
+  { label: '邮件联系家长', type: 'contact', text: '已发邮件联系家长。', contactMethod: 'email' }
+]
+
+/** The built-in quick-add buttons in the interface language. */
+export function defaultLogQuickAdds(): LogQuickAdd[] {
+  return uiLanguage() === 'zh' ? DEFAULT_LOG_QUICK_ADDS_ZH : DEFAULT_LOG_QUICK_ADDS
+}
 
 /** A student whose attendance in a class is under that class's minimum. */
 export interface AttendanceWarning {
@@ -825,6 +850,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   autoLockMinutes: 10,
   schoolLogo: '',
   accentColor: '',
+  uiLanguage: '',
   textSize: 'normal',
   highContrast: false,
   reduceMotion: false,
@@ -1084,4 +1110,33 @@ export interface WatchListEntry {
   classId: string
   className: string
   reasons: string[]
+}
+
+/** Settings whose built-in value has a version in each language. A value that is still
+ * one of the built-in versions (in either language) hasn't been changed by the teacher,
+ * so it's shown in the interface language; anything the teacher edited stays as is. */
+export function withLocalDefaults(settings: AppSettings): AppSettings {
+  const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b)
+  const untouched = (value: unknown, en: unknown, zh: unknown): boolean =>
+    same(value, en) || same(value, zh)
+  return {
+    ...settings,
+    logQuickAdds: untouched(
+      settings.logQuickAdds,
+      DEFAULT_LOG_QUICK_ADDS,
+      DEFAULT_LOG_QUICK_ADDS_ZH
+    )
+      ? defaultLogQuickAdds()
+      : settings.logQuickAdds,
+    commentBank: untouched(settings.commentBank, DEFAULT_COMMENT_BANK, DEFAULT_COMMENT_BANK_ZH)
+      ? defaultCommentBank()
+      : settings.commentBank,
+    letterTemplate: untouched(
+      settings.letterTemplate,
+      DEFAULT_LETTER_TEMPLATE,
+      DEFAULT_LETTER_TEMPLATE_ZH
+    )
+      ? defaultLetterTemplate()
+      : settings.letterTemplate
+  }
 }

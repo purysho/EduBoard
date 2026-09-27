@@ -4,6 +4,7 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { Spinner } from '@renderer/components/ui/EmptyState'
 import { useBackupPreview } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 const CONFIRM_WORD = 'RESTORE'
 
@@ -27,9 +28,9 @@ function Row({
     <div className="flex items-center justify-between py-1 text-sm">
       <span className="text-[var(--color-text-muted)]">{label}</span>
       <span className={changed ? 'font-medium text-[var(--color-danger)]' : 'font-medium'}>
-        {current} <span className="text-[var(--color-text-muted)]">now</span>
+        {current} <span className="text-[var(--color-text-muted)]">{tr('now')}</span>
         {' -> '}
-        {backup ?? '?'} <span className="text-[var(--color-text-muted)]">in backup</span>
+        {backup ?? '?'} <span className="text-[var(--color-text-muted)]">{tr('in backup')}</span>
       </span>
     </div>
   )
@@ -54,11 +55,11 @@ export function RestoreDialog({
     <Modal
       open={open}
       onClose={handleCancel}
-      title="Restore backup"
+      title={tr('Restore backup')}
       footer={
         <>
           <Button variant="secondary" onClick={handleCancel}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="danger"
@@ -68,7 +69,7 @@ export function RestoreDialog({
               onConfirm()
             }}
           >
-            Restore &amp; restart
+            {tr('Restore & restart')}
           </Button>
         </>
       }
@@ -80,8 +81,9 @@ export function RestoreDialog({
             className="mt-0.5 shrink-0 text-[var(--color-danger)]"
             aria-hidden
           />
-          This replaces everything currently in EduBoard with this backup, then restarts the app.
-          Anything added or changed since this backup was taken will be permanently lost.
+          {tr(
+            'This replaces everything currently in EduBoard with this backup, then restarts the app. Anything added or changed since this backup was taken will be permanently lost.'
+          )}
         </p>
 
         {isLoading ? (
@@ -89,22 +91,22 @@ export function RestoreDialog({
         ) : preview ? (
           <div className="rounded-lg border border-[var(--color-border)] p-3">
             <Row
-              label="Students"
+              label={tr('Students')}
               current={preview.current.students}
               backup={preview.backup?.students ?? null}
             />
             <Row
-              label="Classes"
+              label={tr('Classes')}
               current={preview.current.classes}
               backup={preview.backup?.classes ?? null}
             />
             <Row
-              label="Scores recorded"
+              label={tr('Scores recorded')}
               current={preview.current.scores}
               backup={preview.backup?.scores ?? null}
             />
             <Row
-              label="Attendance records"
+              label={tr('Attendance records')}
               current={preview.current.attendanceRecords}
               backup={preview.backup?.attendanceRecords ?? null}
             />
@@ -112,14 +114,15 @@ export function RestoreDialog({
         ) : null}
         {preview?.protectedBackup && (
           <p className="text-sm text-[var(--color-text-muted)]">
-            This backup is password-protected. After restoring, EduBoard asks for the password you
-            had when it was made, or the recovery key from then.
+            {tr(
+              'This backup is password-protected. After restoring, EduBoard asks for the password you had when it was made, or the recovery key from then.'
+            )}
           </p>
         )}
 
         <div>
           <label className="mb-1 block text-xs font-medium text-[var(--color-text-muted)]">
-            Type {CONFIRM_WORD} to confirm
+            {tr('Type {CONFIRMWORD} to confirm', { CONFIRMWORD: CONFIRM_WORD })}
           </label>
           <input
             className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-sm"

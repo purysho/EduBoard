@@ -11,6 +11,7 @@ import {
   useStudentClassGrade,
   useStudentGradeTrend
 } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 // A flat 8-point swing from the first to the most recent scored assessment is treated
 // as a real trend rather than noise — small enough to catch a student sliding before a
@@ -39,9 +40,9 @@ export function StudentClassRow({
       </td>
       <td className="px-4 py-2.5 text-[var(--color-text-muted)]">
         {enrollment.status === 'active' ? (
-          <Badge tone="primary">Active</Badge>
+          <Badge tone="primary">{tr('Active')}</Badge>
         ) : (
-          <Badge>{enrollment.status}</Badge>
+          <Badge>{tr(enrollment.status)}</Badge>
         )}
       </td>
       <td className="px-4 py-2.5">{formatPercent(grade?.percent)}</td>
@@ -68,11 +69,11 @@ export function StudentClassRow({
             </ResponsiveContainer>
           </div>
         ) : (
-          <span className="text-xs text-[var(--color-text-muted)]">Not enough data</span>
+          <span className="text-xs text-[var(--color-text-muted)]">{tr('Not enough data')}</span>
         )}
         {trendInfo && trendInfo.direction !== 'steady' && (
           <Badge tone={trendInfo.direction === 'declining' ? 'danger' : 'success'} className="ml-2">
-            {trendInfo.direction === 'declining' ? 'Declining' : 'Improving'}
+            {trendInfo.direction === 'declining' ? tr('Declining') : tr('Improving')}
           </Badge>
         )}
       </td>
@@ -90,7 +91,7 @@ export function StudentClassRow({
           className="flex items-center gap-1 text-xs font-medium text-[var(--color-primary)] hover:underline"
         >
           <MessageSquareText size={13} aria-hidden />
-          Report comment
+          {tr('Report comment')}
         </Link>
       </td>
     </tr>

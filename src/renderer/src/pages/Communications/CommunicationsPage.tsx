@@ -18,6 +18,7 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 import { CONTACT_METHOD_LABELS } from '@renderer/lib/parentComms'
+import { tr } from '@shared/i18n'
 
 export function CommunicationsPage(): React.JSX.Element {
   const { data: entries, isLoading } = useParentCommunications()
@@ -41,12 +42,14 @@ export function CommunicationsPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Communications"
-        description="Every logged call, email, or in-person conversation with a guardian, across all students."
+        title={tr('Communications')}
+        description={tr(
+          'Every logged call, email, or in-person conversation with a guardian, across all students.'
+        )}
         actions={
           <Button variant="primary" onClick={() => setShowAdd(true)}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
-            Log communication
+            {tr('Log communication')}
           </Button>
         }
       />
@@ -55,7 +58,7 @@ export function CommunicationsPage(): React.JSX.Element {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by student or note…"
+          placeholder={tr('Search by student or note…')}
           className="max-w-xs"
         />
         <label className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
@@ -64,7 +67,7 @@ export function CommunicationsPage(): React.JSX.Element {
             checked={followUpOnly}
             onChange={(e) => setFollowUpOnly(e.target.checked)}
           />
-          Needs follow-up only
+          {tr('Needs follow-up only')}
           {openFollowUps > 0 && <Badge tone="warning">{openFollowUps}</Badge>}
         </label>
       </div>
@@ -74,14 +77,16 @@ export function CommunicationsPage(): React.JSX.Element {
       ) : !entries?.length ? (
         <EmptyState
           icon={MessageCircle}
-          title="No parent communications logged yet"
-          description="Click “Log communication” above to record your first call, email, or in-person conversation."
+          title={tr('No parent communications logged yet')}
+          description={tr(
+            'Click “Log communication” above to record your first call, email, or in-person conversation.'
+          )}
         />
       ) : !filtered.length ? (
         <EmptyState
           icon={MessageCircle}
-          title="No matches"
-          description="Try a different search or filter."
+          title={tr('No matches')}
+          description={tr('Try a different search or filter.')}
         />
       ) : (
         <ul className="space-y-2">
@@ -101,7 +106,7 @@ export function CommunicationsPage(): React.JSX.Element {
                         <Badge tone="primary">{CONTACT_METHOD_LABELS[entry.contactMethod]}</Badge>
                       )}
                       {entry.followUpNeeded && !entry.followUpDone && (
-                        <Badge tone="warning">Follow-up needed</Badge>
+                        <Badge tone="warning">{tr('Follow-up needed')}</Badge>
                       )}
                       <span className="text-xs text-[var(--color-text-muted)]">
                         {formatDate(entry.createdAt, 'MMM d, yyyy p')}
@@ -120,7 +125,7 @@ export function CommunicationsPage(): React.JSX.Element {
                         })
                       }
                     >
-                      Mark follow-up {entry.followUpDone ? 'needed' : 'done'}
+                      {entry.followUpDone ? tr('Mark follow-up needed') : tr('Mark follow-up done')}
                     </button>
                   )}
                 </div>
@@ -170,11 +175,11 @@ function LogCommunicationModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Log communication"
+      title={tr('Log communication')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -182,15 +187,15 @@ function LogCommunicationModal({
             form="log-comm-form"
             disabled={!studentId || !text.trim() || createEntry.isPending}
           >
-            {createEntry.isPending ? 'Saving…' : 'Save'}
+            {createEntry.isPending ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="log-comm-form" onSubmit={handleSubmit} className="space-y-4">
-        <FormRow label="Student">
+        <FormRow label={tr('Student')}>
           <Select value={studentId} onChange={(e) => setStudentId(e.target.value)} required>
-            <option value="">Select a student…</option>
+            <option value="">{tr('Select a student…')}</option>
             {(students ?? []).map((s) => (
               <option key={s.id} value={s.id}>
                 {s.firstName} {s.lastName}
@@ -198,7 +203,7 @@ function LogCommunicationModal({
             ))}
           </Select>
         </FormRow>
-        <FormRow label="Contact method">
+        <FormRow label={tr('Contact method')}>
           <Select
             value={contactMethod}
             onChange={(e) => setContactMethod(e.target.value as ContactMethod)}
@@ -210,13 +215,13 @@ function LogCommunicationModal({
             ))}
           </Select>
         </FormRow>
-        <FormRow label="Notes">
+        <FormRow label={tr('Notes')}>
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             required
             autoFocus
-            placeholder="What was discussed…"
+            placeholder={tr('What was discussed…')}
           />
         </FormRow>
         <label className="flex items-center gap-2 text-sm">
@@ -225,7 +230,7 @@ function LogCommunicationModal({
             checked={followUpNeeded}
             onChange={(e) => setFollowUpNeeded(e.target.checked)}
           />
-          Needs follow-up
+          {tr('Needs follow-up')}
         </label>
       </form>
     </Modal>

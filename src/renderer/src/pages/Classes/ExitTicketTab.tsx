@@ -17,6 +17,7 @@ import {
   useUpsertExitTicket
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const MAX_QUESTIONS = 3
 
@@ -30,7 +31,7 @@ export function ExitTicketTab(): React.JSX.Element {
   const upsertTicket = useUpsertExitTicket(classSection.id)
   const setOpen = useSetExitTicketOpen(classSection.id)
 
-  const [title, setTitle] = useState(ticket?.title ?? 'Exit Ticket')
+  const [title, setTitle] = useState(ticket?.title ?? tr('Exit Ticket'))
   const [questions, setQuestions] = useState<ExitTicketQuestion[]>(
     ticket?.questions.length ? ticket.questions : [newQuestion()]
   )
@@ -60,7 +61,7 @@ export function ExitTicketTab(): React.JSX.Element {
   async function handleSave(): Promise<void> {
     await upsertTicket.mutateAsync({
       classId: classSection.id,
-      title: title.trim() || 'Exit Ticket',
+      title: title.trim() || tr('Exit Ticket'),
       questions: questions
         .filter((q) => q.prompt.trim())
         .map((q) => ({
@@ -79,10 +80,10 @@ export function ExitTicketTab(): React.JSX.Element {
     <div className="max-w-2xl space-y-4">
       <Card>
         <CardHeader>
-          <h2 className="text-sm font-semibold">Questions</h2>
+          <h2 className="text-sm font-semibold">{tr('Questions')}</h2>
         </CardHeader>
         <CardBody className="space-y-4">
-          <FormRow label="Title">
+          <FormRow label={tr('Title')}>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </FormRow>
 
@@ -90,13 +91,13 @@ export function ExitTicketTab(): React.JSX.Element {
             <div key={q.id} className="rounded-lg border border-[var(--color-border)] p-3">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-[var(--color-text-muted)]">
-                  Question {i + 1}
+                  {tr('Question')} {i + 1}
                 </span>
                 <button
                   className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)] disabled:opacity-30"
                   onClick={() => removeQuestion(i)}
                   disabled={questions.length === 1}
-                  aria-label="Remove question"
+                  aria-label={tr('Remove question')}
                 >
                   <Trash2 size={13} aria-hidden />
                 </button>
@@ -106,7 +107,7 @@ export function ExitTicketTab(): React.JSX.Element {
                   <Input
                     value={q.prompt}
                     onChange={(e) => updateQuestion(i, { prompt: e.target.value })}
-                    placeholder="e.g. What's one thing you learned today?"
+                    placeholder={tr("e.g. What's one thing you learned today?")}
                   />
                 </div>
                 <Select
@@ -115,8 +116,8 @@ export function ExitTicketTab(): React.JSX.Element {
                     updateQuestion(i, { type: e.target.value as ExitTicketQuestionType })
                   }
                 >
-                  <option value="text">Short answer</option>
-                  <option value="choice">Multiple choice</option>
+                  <option value="text">{tr('Short answer')}</option>
+                  <option value="choice">{tr('Multiple choice')}</option>
                 </Select>
               </div>
               {q.type === 'choice' && (
@@ -126,7 +127,7 @@ export function ExitTicketTab(): React.JSX.Element {
                   onChange={(e) =>
                     updateQuestion(i, { options: e.target.value.split(',').map((o) => o.trim()) })
                   }
-                  placeholder="Options, comma-separated (e.g. Yes, No, Not sure)"
+                  placeholder={tr('Options, comma-separated (e.g. Yes, No, Not sure)')}
                 />
               )}
             </div>
@@ -140,7 +141,7 @@ export function ExitTicketTab(): React.JSX.Element {
               disabled={questions.length >= MAX_QUESTIONS}
             >
               <Plus size={13} className="mr-1 inline" aria-hidden />
-              Question
+              {tr('Question')}
             </Button>
             <Button
               variant="primary"
@@ -148,7 +149,7 @@ export function ExitTicketTab(): React.JSX.Element {
               onClick={handleSave}
               disabled={!canSave || upsertTicket.isPending}
             >
-              {upsertTicket.isPending ? 'Saving…' : 'Save'}
+              {upsertTicket.isPending ? tr('Saving…') : tr('Save')}
             </Button>
           </div>
         </CardBody>
@@ -220,22 +221,22 @@ function SessionPanel({
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <Wifi size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Session
+          {tr('Session')}
         </h2>
         <div className="flex items-center gap-2">
           {!isOpen && (
             <label className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-              Close by itself after
+              {tr('Close by itself after')}
               <select
                 className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-1 text-xs text-[var(--color-text)]"
                 value={autoClose}
                 onChange={(e) => setAutoClose(Number(e.target.value))}
               >
-                <option value={5}>5 minutes</option>
-                <option value={10}>10 minutes</option>
-                <option value={15}>15 minutes</option>
-                <option value={30}>30 minutes</option>
-                <option value={0}>Never</option>
+                <option value={5}>{tr('5 minutes')}</option>
+                <option value={10}>{tr('10 minutes')}</option>
+                <option value={15}>{tr('15 minutes')}</option>
+                <option value={30}>{tr('30 minutes')}</option>
+                <option value={0}>{tr('Never')}</option>
               </select>
             </label>
           )}
@@ -248,12 +249,12 @@ function SessionPanel({
             {isOpen ? (
               <>
                 <Square size={13} className="mr-1 inline" aria-hidden />
-                Stop session
+                {tr('Stop session')}
               </>
             ) : (
               <>
                 <Play size={13} className="mr-1 inline" aria-hidden />
-                Start session
+                {tr('Start session')}
               </>
             )}
           </Button>
@@ -262,8 +263,9 @@ function SessionPanel({
       <CardBody className="space-y-4">
         {!isOpen ? (
           <p className="text-sm text-[var(--color-text-muted)]">
-            Start a session to let students submit answers from their own devices on this
-            classroom&apos;s WiFi — no internet, no app to install, nothing to sign in to.
+            {tr(
+              "Start a session to let students submit answers from their own devices on this classroom's WiFi — no internet, no app to install, nothing to sign in to."
+            )}
           </p>
         ) : (
           <>
@@ -271,24 +273,27 @@ function SessionPanel({
               {qrDataUrl && (
                 <img
                   src={qrDataUrl}
-                  alt="QR code to the exit ticket"
+                  alt={tr('QR code to the exit ticket')}
                   className="h-32 w-32 rounded-lg border border-[var(--color-border)]"
                 />
               )}
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  Students on this WiFi go to:
+                  {tr('Students on this WiFi go to:')}
                 </p>
                 <p className="mt-1 break-all text-lg font-semibold">{studentUrl ?? '…'}</p>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  Students choose their name from the class list; answering again replaces their
-                  earlier answer.
-                  {closesAt && ` Closes by itself at ${formatDate(closesAt, 'p')}.`}
+                  {tr(
+                    'Students choose their name from the class list; answering again replaces their earlier answer.'
+                  )}
+                  {closesAt &&
+                    tr(' Closes by itself at {date}.', { date: formatDate(closesAt, 'p') })}
                 </p>
                 {!serverInfo?.lanIp && (
                   <p className="mt-2 text-xs text-[var(--color-warning)]">
-                    Couldn&apos;t detect a network address — make sure this computer is connected to
-                    the classroom WiFi (not just powered on).
+                    {tr(
+                      "Couldn't detect a network address — make sure this computer is connected to the classroom WiFi (not just powered on)."
+                    )}
                   </p>
                 )}
               </div>
@@ -296,27 +301,27 @@ function SessionPanel({
 
             <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">
               <h3 className="text-sm font-semibold">
-                Responses {responses ? `(${responses.length})` : ''}
+                {tr('Responses {count}', { count: responses ? `(${responses.length})` : '' })}
               </h3>
               <button
                 className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                 onClick={() => setConfirmClear(true)}
               >
                 <RotateCcw size={12} aria-hidden />
-                Clear
+                {tr('Clear')}
               </button>
             </div>
             {notAnswered.length > 0 && (
               <p className="text-xs text-[var(--color-text-muted)]">
                 <span className="font-medium text-[var(--color-text)]">
-                  Not answered yet ({notAnswered.length}):
+                  {tr('Not answered yet ({length}):', { length: notAnswered.length })}
                 </span>{' '}
                 {notAnswered.join(', ')}
               </p>
             )}
             {!responses?.length ? (
               <p className="text-sm text-[var(--color-text-muted)]">
-                No responses yet — they&apos;ll appear here as students submit.
+                {tr("No responses yet — they'll appear here as students submit.")}
               </p>
             ) : (
               <ul className="max-h-96 space-y-3 overflow-auto">
@@ -343,9 +348,9 @@ function SessionPanel({
 
       <ConfirmDialog
         open={confirmClear}
-        title="Clear responses"
-        message="Delete all responses for this session? This can't be undone."
-        confirmLabel="Clear"
+        title={tr('Clear responses')}
+        message={tr("Delete all responses for this session? This can't be undone.")}
+        confirmLabel={tr('Clear')}
         danger
         onConfirm={async () => {
           await clearResponses.mutateAsync()

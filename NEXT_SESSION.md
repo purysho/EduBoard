@@ -43,24 +43,26 @@ built since 0.3.3).
 
 ## The user's next requests (in their order)
 
-1. **Desktop app fully in Chinese or English**, with a switch like the Portal's
-   (`portal/public/i18n.js` is the model). The desktop UI is English-only
-   strings in JSX today: add a small `t()` layer with `en`/`zh-CN` dictionaries,
-   a Settings language choice (also usable on first launch), and translate every
-   page, print pages (report cards, letters) included. Dates and numbers per locale.
+1. ~~Desktop app in Chinese or English~~ **done.** How it works, for new screens:
+   - Wrap every piece of interface text: `tr('English text', { vars })`, `trn(one,
+     other, n)` for counts, `trNodes('Text with {link}', { link: <a/> })` when a
+     sentence contains an element (all from `@shared/i18n`; trNodes from
+     `@renderer/lib/trNodes`). The English is the key.
+   - Add the Chinese to `src/shared/i18n/zh/<area>.ts`. `npm test` fails
+     (coverage.test.ts) if any `tr` string has no translation or a translation
+     drops a `{placeholder}`. Text reaching tr() through a variable goes in
+     `dynamicKeys.ts`.
+   - `node tools/i18n/untranslated.cjs "$PWD"` lists English not yet wrapped.
+   - Language is set before any screen code runs (preload → i18nInit.ts) and a
+     switch reloads the window, so module-level `tr()` is fine. The main process
+     uses the same `tr` (set in `src/main/i18n.ts`).
 2. **Own attendance codes** (and a comment on a code if needed), and **renaming
    terms** such as "class" and "assessment". Attendance statuses are currently
    fixed (present/absent/late/excused); make a list in settings (code, label,
    colour, counts-as present/absent) and keep reports/attendance % right. Terminology
    renames should go through the same `t()` layer as item 1. Both go in school packs.
-3. **Portal: delete one student.** Works in the desktop app, not on the Portal.
-   The Portal only deletes in bulk (`portal/routes/admin.js` ~line 110). Add a
-   single-student delete (grades, enrollments, profiles, account links, then the
-   account if unlinked), and have the desktop's erase/delete send it on next sync
-   (`src/main/services/portalSyncService.ts`). Test it.
-4. **"Start next term for every class at once"** button. Per-class version exists
-   (class Settings → Start next term); build a Settings/Classes screen that lists
-   this term's classes with checkboxes and runs the same service for each.
+3. ~~Portal: delete one student~~ **done** (`POST /api/sync/delete-student`).
+4. ~~Start next term for every class at once~~ **done** (Classes page).
 5. **Templates for each section**: report cards, comment bank sets, parent
    letters, class story, lesson plans, newsletters. A template picker with
    several built-in styles plus the user's own saved ones; school packs carry them.
@@ -72,9 +74,10 @@ built since 0.3.3).
    AI suggests and formats; the teacher approves. Say "needs internet"
    next to AI features (the user's standing rule: AI suggests, never writes the
    whole thing unchecked, to avoid made-up content).
-7. **Competitor website**: the user said "see this website for features we can
-   implement and look toward VC funding" but **no link came through**. Ask for
-   the URL first.
+7. **Competitor website**: https://www.educationtek.com/en-US/en-solution/smart-school-system.html
+   (HappyClass Smart School System: homework guide videos, flipped classroom,
+   IoT smart classroom, vocabulary system, SPOC live/on-demand courses). Fold
+   into the competitor research doc.
 8. **Connect to other apps**:
    - Now: Word (.docx), PowerPoint (.pptx) and Excel (.xlsx) export/import for
      reports, letters, lesson plans, gradebook (Excel export already exists).

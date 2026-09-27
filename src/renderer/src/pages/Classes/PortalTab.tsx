@@ -17,6 +17,7 @@ import {
 import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
 import { PublishSummary } from '@renderer/components/portal/PublishSummary'
 import { JoinLinksCard } from './JoinLinksCard'
+import { tr } from '@shared/i18n'
 
 export function PortalTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -48,26 +49,27 @@ export function PortalTab(): React.JSX.Element {
     <div>
       <Card className="mb-4">
         <CardHeader>
-          <h2 className="text-sm font-semibold">Publish to Portal</h2>
+          <h2 className="text-sm font-semibold">{tr('Publish to Portal')}</h2>
           <p className="text-xs text-[var(--color-text-muted)]">
-            Pushes your current roster, grades, attendance, and homework for every class to the
-            Portal — not just this one. Do this after making changes you want families to see.
+            {tr(
+              'Pushes your current roster, grades, attendance, and homework for every class to the Portal — not just this one. Do this after making changes you want families to see.'
+            )}
           </p>
         </CardHeader>
         <CardBody className="flex items-center gap-3">
           <Button variant="primary" onClick={() => publish.mutate()} disabled={publish.isPending}>
-            {publish.isPending ? 'Publishing…' : 'Publish to portal'}
+            {publish.isPending ? tr('Publishing…') : tr('Publish to portal')}
           </Button>
           {publishStatus?.configured && !publish.isPending && (
             <span className="text-xs text-[var(--color-text-muted)]">
               {publishStatus.upToDate
-                ? 'Students see everything.'
-                : 'You have changes students can’t see yet.'}
+                ? tr('Students see everything.')
+                : tr('You have changes students can’t see yet.')}
             </span>
           )}
           {publish.isError && (
             <p className="text-xs text-[var(--color-danger)]">
-              {ipcErrorMessage(publish.error, 'Could not publish to the portal.')}
+              {ipcErrorMessage(publish.error, tr('Could not publish to the portal.'))}
             </p>
           )}
           {publish.isSuccess && <PublishSummary result={publish.data} />}
@@ -78,10 +80,11 @@ export function PortalTab(): React.JSX.Element {
 
       {batches && batches.length > 0 && (
         <>
-          <h3 className="mb-1 mt-6 text-sm font-semibold">Older printed invite strips</h3>
+          <h3 className="mb-1 mt-6 text-sm font-semibold">{tr('Older printed invite strips')}</h3>
           <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-            Codes from before join links. They still work once each, and now show a fill-in form
-            instead of the class list. Revoke any you no longer need.
+            {tr(
+              'Codes from before join links. They still work once each, and now show a fill-in form instead of the class list. Revoke any you no longer need.'
+            )}
           </p>
           <div className="space-y-3">
             {batches.map((batch) => {
@@ -94,16 +97,22 @@ export function PortalTab(): React.JSX.Element {
                   <CardBody className="flex items-center justify-between">
                     <div>
                       <p className="flex items-center gap-2 text-sm font-medium">
-                        {batch.count} invites — {formatDate(batch.createdAt)}
+                        {tr('{count} invites — {date}', {
+                          count: batch.count,
+                          date: formatDate(batch.createdAt)
+                        })}
                         {batch.printedAt && (
                           <Badge tone="success">
                             <Check size={11} className="mr-0.5 inline" aria-hidden />
-                            Printed {formatDate(batch.printedAt)}
+                            {tr('Printed {date}', { date: formatDate(batch.printedAt) })}
                           </Badge>
                         )}
                       </p>
                       <p className="text-xs text-[var(--color-text-muted)]">
-                        {active.length} active, {batch.invites.length - active.length} revoked
+                        {tr('{active} active, {revoked} revoked', {
+                          active: active.length,
+                          revoked: batch.invites.length - active.length
+                        })}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -115,10 +124,10 @@ export function PortalTab(): React.JSX.Element {
                       >
                         <Printer size={13} className="mr-1 inline" aria-hidden />
                         {printing === batch.id
-                          ? 'Printing…'
+                          ? tr('Printing…')
                           : batch.printedAt
-                            ? 'Print again'
-                            : 'Print strips'}
+                            ? tr('Print again')
+                            : tr('Print strips')}
                       </Button>
                       {active.length > 0 && (
                         <Button
@@ -127,7 +136,7 @@ export function PortalTab(): React.JSX.Element {
                           onClick={() => active.forEach((i) => revokeInvite.mutate(i.id))}
                         >
                           <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                          Revoke all
+                          {tr('Revoke all')}
                         </Button>
                       )}
                     </div>

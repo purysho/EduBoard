@@ -32,6 +32,7 @@ import { useClassReport, useClassRoster } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 import { ReportComments } from './ReportComments'
 import { ParentLettersModal } from './ParentLettersModal'
+import { tr } from '@shared/i18n'
 
 const LETTER_COLOR: Record<string, string> = {
   A: 'var(--color-success)',
@@ -78,7 +79,7 @@ export function ReportTab(): React.JSX.Element {
   }
 
   if (isLoading) return <Spinner />
-  if (!report) return <EmptyState icon={BarChart3} title="No report available" />
+  if (!report) return <EmptyState icon={BarChart3} title={tr('No report available')} />
 
   const hasData = report.gradeDistribution.some((d) => d.count > 0)
 
@@ -87,33 +88,33 @@ export function ReportTab(): React.JSX.Element {
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={() => setLettersOpen(true)}>
           <Mail size={15} className="mr-1 inline" aria-hidden />
-          Parent letters
+          {tr('Parent letters')}
         </Button>
         <Button variant="secondary" onClick={handlePrintAll} disabled={printingAll}>
           <Printer size={15} className="mr-1 inline" aria-hidden />
-          {printingAll ? 'Preparing…' : 'Print all report cards (PDF)'}
+          {printingAll ? tr('Preparing…') : tr('Print all report cards (PDF)')}
         </Button>
         <Button variant="secondary" onClick={handleExport} disabled={exporting}>
           <Download size={15} className="mr-1 inline" aria-hidden />
-          {exporting ? 'Exporting…' : 'Export gradebook (.xlsx)'}
+          {exporting ? tr('Exporting…') : tr('Export gradebook (.xlsx)')}
         </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <StatCard
-          label="Class average"
+          label={tr('Class average')}
           value={formatPercent(report.averagePercent)}
           icon={TrendingUp}
           tone="success"
         />
         <StatCard
-          label="Pass rate"
+          label={tr('Pass rate')}
           value={formatRate(report.passRate)}
           icon={CheckCircle2}
           tone="success"
         />
         <StatCard
-          label="Average attendance"
+          label={tr('Average attendance')}
           value={formatRate(report.averageAttendanceRate)}
           icon={CalendarCheck}
           tone="warning"
@@ -122,14 +123,14 @@ export function ReportTab(): React.JSX.Element {
 
       {!hasData ? (
         <EmptyState
-          title="Not enough data yet"
-          description="Enter some grades to see charts here."
+          title={tr('Not enough data yet')}
+          description={tr('Enter some grades to see charts here.')}
         />
       ) : (
         <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold">Grade distribution</h2>
+              <h2 className="text-sm font-semibold">{tr('Grade distribution')}</h2>
             </CardHeader>
             <CardBody className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -164,7 +165,7 @@ export function ReportTab(): React.JSX.Element {
 
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold">Category averages</h2>
+              <h2 className="text-sm font-semibold">{tr('Category averages')}</h2>
             </CardHeader>
             <CardBody className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -205,7 +206,7 @@ export function ReportTab(): React.JSX.Element {
           {report.attendanceTrend.length > 1 && (
             <Card className="col-span-2">
               <CardHeader>
-                <h2 className="text-sm font-semibold">Attendance trend</h2>
+                <h2 className="text-sm font-semibold">{tr('Attendance trend')}</h2>
               </CardHeader>
               <CardBody className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
@@ -229,7 +230,7 @@ export function ReportTab(): React.JSX.Element {
                     <YAxis domain={[0, 100]} stroke="var(--color-text-muted)" fontSize={12} />
                     <Tooltip
                       labelFormatter={(d) => formatDate(d as string)}
-                      formatter={(value: number) => [`${value.toFixed(0)}%`, 'Attendance']}
+                      formatter={(value: number) => [`${value.toFixed(0)}%`, tr('Attendance')]}
                       contentStyle={{
                         background: 'var(--color-surface)',
                         border: '1px solid var(--color-border)',
@@ -254,11 +255,11 @@ export function ReportTab(): React.JSX.Element {
 
       <Card>
         <CardHeader>
-          <h2 className="text-sm font-semibold">Student report cards</h2>
+          <h2 className="text-sm font-semibold">{tr('Student report cards')}</h2>
         </CardHeader>
         <CardBody className="space-y-2">
           {!roster?.length ? (
-            <p className="text-sm text-[var(--color-text-muted)]">No students enrolled.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{tr('No students enrolled.')}</p>
           ) : (
             roster.map((row) => (
               <div key={row.student.id} className="flex items-center justify-between text-sm">
@@ -272,7 +273,7 @@ export function ReportTab(): React.JSX.Element {
                   onClick={() => handlePrint(row.student.id, studentFullName(row.student))}
                 >
                   <FileDown size={14} className="mr-1 inline" aria-hidden />
-                  Print PDF
+                  {tr('Print PDF')}
                 </Button>
               </div>
             ))

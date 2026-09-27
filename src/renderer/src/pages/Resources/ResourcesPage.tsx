@@ -28,6 +28,7 @@ import { ipcErrorMessage } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { ResourceFormModal } from './ResourceFormModal'
 import { PracticeSetModal } from './PracticeSetModal'
+import { tr } from '@shared/i18n'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
 
@@ -55,7 +56,7 @@ export function ResourcesPage(): React.JSX.Element {
     try {
       await indexResource.mutateAsync(resource.id)
     } catch (e) {
-      setIndexError(ipcErrorMessage(e, `Could not index "${resource.title}".`))
+      setIndexError(ipcErrorMessage(e, tr('Could not index "{title}".', { title: resource.title })))
     } finally {
       setIndexingId(null)
     }
@@ -67,7 +68,12 @@ export function ResourcesPage(): React.JSX.Element {
     try {
       await draftStudyGuide.mutateAsync(resource.id)
     } catch (e) {
-      setIndexError(ipcErrorMessage(e, `Could not generate a study guide for "${resource.title}".`))
+      setIndexError(
+        ipcErrorMessage(
+          e,
+          tr('Could not generate a study guide for "{title}".', { title: resource.title })
+        )
+      )
     } finally {
       setGuideId(null)
     }
@@ -118,12 +124,14 @@ export function ResourcesPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Resources"
-        description="A searchable library of worksheets, slides, and links — tagged by topic and standard."
+        title={tr('Resources')}
+        description={tr(
+          'A searchable library of worksheets, slides, and links — tagged by topic and standard.'
+        )}
         actions={
           <Button variant="primary" onClick={() => setShowAdd(true)}>
             <Plus size={15} className="mr-1 inline" aria-hidden />
-            New resource
+            {tr('New resource')}
           </Button>
         }
       />
@@ -132,7 +140,7 @@ export function ResourcesPage(): React.JSX.Element {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search title, notes, tags…"
+          placeholder={tr('Search title, notes, tags…')}
           className="max-w-xs"
         />
         {allTags.length > 0 && (
@@ -162,20 +170,22 @@ export function ResourcesPage(): React.JSX.Element {
       ) : !resources?.length ? (
         <EmptyState
           icon={FolderOpen}
-          title="No resources yet"
-          description="Save links, files, and notes here as you build lessons — searchable by title, tag, or standard next time you need them."
+          title={tr('No resources yet')}
+          description={tr(
+            'Save links, files, and notes here as you build lessons — searchable by title, tag, or standard next time you need them.'
+          )}
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              New resource
+              {tr('New resource')}
             </Button>
           }
         />
       ) : !filtered.length ? (
         <EmptyState
           icon={FolderOpen}
-          title="No matches"
-          description="Try a different search or tag."
+          title={tr('No matches')}
+          description={tr('Try a different search or tag.')}
         />
       ) : (
         <div className="grid grid-cols-3 gap-4">
@@ -207,7 +217,7 @@ export function ResourcesPage(): React.JSX.Element {
                         <button
                           className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
                           onClick={() => handleOpen(resource)}
-                          aria-label="Open"
+                          aria-label={tr('Open')}
                         >
                           <ExternalLink size={13} aria-hidden />
                         </button>
@@ -215,7 +225,7 @@ export function ResourcesPage(): React.JSX.Element {
                       <button
                         className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-danger)]"
                         onClick={() => setPendingDelete(resource)}
-                        aria-label="Delete"
+                        aria-label={tr('Delete')}
                       >
                         <Trash2 size={13} aria-hidden />
                       </button>
@@ -230,7 +240,7 @@ export function ResourcesPage(): React.JSX.Element {
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {standard && <Badge tone="primary">{standard.code}</Badge>}
                       {resource.shareWithStudents && (
-                        <Badge tone="success">Shared with students</Badge>
+                        <Badge tone="success">{tr('Shared with students')}</Badge>
                       )}
                       {resource.tags.map((tag) => (
                         <Badge key={tag}>{tag}</Badge>
@@ -242,7 +252,7 @@ export function ResourcesPage(): React.JSX.Element {
                       className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                       onClick={() => setEditingResource(resource)}
                     >
-                      Edit
+                      {tr('Edit')}
                     </button>
                     <div className="flex items-center gap-3">
                       <button
@@ -252,10 +262,10 @@ export function ResourcesPage(): React.JSX.Element {
                       >
                         <Sparkles size={12} aria-hidden />
                         {indexingId === resource.id
-                          ? 'Indexing…'
+                          ? tr('Indexing…')
                           : resource.indexedAt
-                            ? 'Re-index'
-                            : 'Index for Notebook'}
+                            ? tr('Re-index')
+                            : tr('Index for Notebook')}
                       </button>
                       {canUseAi(resource) && (
                         <button
@@ -265,10 +275,10 @@ export function ResourcesPage(): React.JSX.Element {
                         >
                           <Sparkles size={12} aria-hidden />
                           {guideId === resource.id
-                            ? 'Writing…'
+                            ? tr('Writing…')
                             : resource.studyGuide
-                              ? 'Regenerate study guide'
-                              : 'Study guide'}
+                              ? tr('Regenerate study guide')
+                              : tr('Study guide')}
                         </button>
                       )}
                       {canUseAi(resource) && (
@@ -279,7 +289,9 @@ export function ResourcesPage(): React.JSX.Element {
                           }
                         >
                           <Sparkles size={12} aria-hidden />
-                          Flashcards{resource.flashcards ? ` (${resource.flashcards.length})` : ''}
+                          {tr('Flashcards{count}', {
+                            count: resource.flashcards ? ` (${resource.flashcards.length})` : ''
+                          })}
                         </button>
                       )}
                       {canUseAi(resource) && (
@@ -288,8 +300,9 @@ export function ResourcesPage(): React.JSX.Element {
                           onClick={() => setPractice({ resourceId: resource.id, kind: 'quiz' })}
                         >
                           <Sparkles size={12} aria-hidden />
-                          Practice quiz
-                          {resource.practiceQuiz ? ` (${resource.practiceQuiz.length})` : ''}
+                          {tr('Practice quiz{count}', {
+                            count: resource.practiceQuiz ? ` (${resource.practiceQuiz.length})` : ''
+                          })}
                         </button>
                       )}
                     </div>
@@ -318,9 +331,9 @@ export function ResourcesPage(): React.JSX.Element {
       )}
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete resource"
-        message={`Delete "${pendingDelete?.title}"?`}
-        confirmLabel="Delete"
+        title={tr('Delete resource')}
+        message={tr('Delete "{title}"?', { title: pendingDelete?.title })}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deleteResource.mutateAsync(pendingDelete.id)

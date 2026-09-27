@@ -3,10 +3,11 @@ import { createPortal } from 'react-dom'
 import { History } from 'lucide-react'
 import { useScoreHistory } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 function describe(points: number | null, excused: boolean): string {
-  if (excused) return 'Excused'
-  if (points === null) return 'blank'
+  if (excused) return tr('Excused')
+  if (points === null) return tr('blank')
   return String(points)
 }
 
@@ -44,8 +45,8 @@ export function ScoreHistoryPopover({
       <button
         ref={anchorRef}
         type="button"
-        title="Score history"
-        aria-label="Score history"
+        title={tr('Score history')}
+        aria-label={tr('Score history')}
         onClick={handleToggle}
         className="rounded p-0.5 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
       >
@@ -58,11 +59,13 @@ export function ScoreHistoryPopover({
             className="fixed z-50 w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
             style={{ top: position.top, left: position.left }}
           >
-            <p className="mb-1.5 text-xs font-semibold">Change history</p>
+            <p className="mb-1.5 text-xs font-semibold">{tr('Change history')}</p>
             {history === undefined ? (
-              <p className="text-xs text-[var(--color-text-muted)]">Loading…</p>
+              <p className="text-xs text-[var(--color-text-muted)]">{tr('Loading…')}</p>
             ) : history.length === 0 ? (
-              <p className="text-xs text-[var(--color-text-muted)]">No changes recorded yet.</p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {tr('No changes recorded yet.')}
+              </p>
             ) : (
               <ul className="max-h-48 space-y-1.5 overflow-auto">
                 {history.map((h) => (

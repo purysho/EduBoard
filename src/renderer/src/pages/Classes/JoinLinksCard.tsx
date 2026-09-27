@@ -9,13 +9,14 @@ import { Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useChangeJoinLink, useClassRoster, usePortalJoinLinks } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr, trn } from '@shared/i18n'
 
 const linkUrl = (portalUrl: string, link: PortalJoinLink): string =>
   `${portalUrl || 'https://your-portal'}/?code=${link.code}`
 
 function CopyButton({
   text,
-  label = 'Copy link'
+  label = tr('Copy link')
 }: {
   text: string
   label?: string
@@ -36,7 +37,7 @@ function CopyButton({
       ) : (
         <Copy size={13} className="mr-1 inline" aria-hidden />
       )}
-      {copied ? 'Copied' : label}
+      {copied ? tr('Copied') : label}
     </Button>
   )
 }
@@ -76,25 +77,28 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
       <Card className="mb-4">
         <CardHeader>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
-            <Link2 size={15} aria-hidden /> Class join link
+            <Link2 size={15} aria-hidden /> {tr('Class join link')}
           </h2>
           <p className="text-xs text-[var(--color-text-muted)]">
-            One link for the whole class. Students open it, type their own name and date of birth,
-            and choose a password. Nobody sees who else is in the class. If their name matches
-            someone already on your roster, they&apos;re matched to that student; otherwise
-            they&apos;re added to this class here the next time EduBoard syncs.
+            {tr(
+              "One link for the whole class. Students open it, type their own name and date of birth, and choose a password. Nobody sees who else is in the class. If their name matches someone already on your roster, they're matched to that student; otherwise they're added to this class here the next time EduBoard syncs."
+            )}
           </p>
         </CardHeader>
         <CardBody>
           {!overview.portalUrl && (
             <p className="mb-2 text-xs text-[var(--color-warning)]">
-              Set your Portal URL in Settings first, so links point to the right place.
+              {tr('Set your Portal URL in Settings first, so links point to the right place.')}
             </p>
           )}
           {overview.classLink && classUrl ? (
             <div className="flex flex-wrap items-start gap-4">
               {qr && (
-                <img src={qr} alt="QR code for the class join link" className="h-28 w-28 rounded" />
+                <img
+                  src={qr}
+                  alt={tr('QR code for the class join link')}
+                  className="h-28 w-28 rounded"
+                />
               )}
               <div className="min-w-0 flex-1 space-y-2">
                 <Input readOnly value={classUrl} onFocus={(e) => e.target.select()} />
@@ -106,7 +110,7 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
                     onClick={() => setConfirmReset(true)}
                     disabled={change.isPending}
                   >
-                    <RefreshCw size={13} className="mr-1 inline" aria-hidden /> New link
+                    <RefreshCw size={13} className="mr-1 inline" aria-hidden /> {tr('New link')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -114,12 +118,13 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
                     onClick={() => change.mutate({ type: 'turnOffClassLink' })}
                     disabled={change.isPending}
                   >
-                    Turn off
+                    {tr('Turn off')}
                   </Button>
                 </div>
                 <p className="text-xs text-[var(--color-text-muted)]">
-                  Anyone with this link can join, so share it with your class only. Use New link if
-                  it spreads further; the old one stops working.
+                  {tr(
+                    'Anyone with this link can join, so share it with your class only. Use New link if it spreads further; the old one stops working.'
+                  )}
                 </p>
               </div>
             </div>
@@ -129,25 +134,29 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
               onClick={() => change.mutate({ type: 'createClassLink' })}
               disabled={change.isPending}
             >
-              Create class join link
+              {tr('Create class join link')}
             </Button>
           )}
           {change.isPending && (
-            <p className="mt-2 text-xs text-[var(--color-text-muted)]">Updating the Portal…</p>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+              {tr('Updating the Portal…')}
+            </p>
           )}
           {change.isError && (
             <p className="mt-2 text-xs text-[var(--color-danger)]">
               {ipcErrorMessage(
                 change.error,
-                'Saved here, but the Portal couldn’t be updated. Publish to try again.'
+                tr('Saved here, but the Portal couldn’t be updated. Publish to try again.')
               )}
             </p>
           )}
           {change.isSuccess && change.data.studentsJoined > 0 && (
             <p className="mt-2 text-xs text-[var(--color-success)]">
-              {change.data.studentsJoined} new student{change.data.studentsJoined === 1 ? '' : 's'}{' '}
-              joined through the class link and {change.data.studentsJoined === 1 ? 'was' : 'were'}{' '}
-              added to your roster.
+              {trn(
+                '{n} new student joined through the class link and was added to your roster.',
+                '{n} new students joined through the class link and were added to your roster.',
+                change.data.studentsJoined
+              )}
             </p>
           )}
         </CardBody>
@@ -156,17 +165,18 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
       <Card className="mb-4">
         <CardHeader>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
-            <UserPlus size={15} aria-hidden /> Personal invite links
+            <UserPlus size={15} aria-hidden /> {tr('Personal invite links')}
           </h2>
           <p className="text-xs text-[var(--color-text-muted)]">
-            A link for one student on your roster. It greets them by name and works once. If you
-            recorded their date of birth, they must enter the same one.
+            {tr(
+              'A link for one student on your roster. It greets them by name and works once. If you recorded their date of birth, they must enter the same one.'
+            )}
           </p>
         </CardHeader>
         <CardBody className="p-0">
           {activeRoster.length === 0 ? (
             <p className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
-              No students in this class yet. Add students, or share the class join link.
+              {tr('No students in this class yet. Add students, or share the class join link.')}
             </p>
           ) : (
             <ul className="divide-y divide-[var(--color-border)]">
@@ -179,7 +189,7 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
                       {student.firstName} {student.lastName}
                     </span>
                     {joined ? (
-                      <Badge tone="success">Has an account</Badge>
+                      <Badge tone="success">{tr('Has an account')}</Badge>
                     ) : link ? (
                       <>
                         <span className="font-mono text-xs text-[var(--color-text-muted)]">
@@ -196,7 +206,7 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
                         }
                         disabled={change.isPending}
                       >
-                        Create link
+                        {tr('Create link')}
                       </Button>
                     )}
                   </li>
@@ -206,7 +216,7 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
           )}
           {accounts === null && (
             <p className="px-4 pb-3 text-xs text-[var(--color-text-muted)]">
-              Couldn&apos;t check who already has an account (Portal not reachable).
+              {tr("Couldn't check who already has an account (Portal not reachable).")}
             </p>
           )}
         </CardBody>
@@ -214,9 +224,11 @@ export function JoinLinksCard({ classSection }: { classSection: ClassSection }):
 
       <ConfirmDialog
         open={confirmReset}
-        title="Make a new class link?"
-        message="The current link will stop working. Students who already joined aren't affected."
-        confirmLabel="New link"
+        title={tr('Make a new class link?')}
+        message={tr(
+          "The current link will stop working. Students who already joined aren't affected."
+        )}
+        confirmLabel={tr('New link')}
         onConfirm={() => {
           setConfirmReset(false)
           change.mutate({ type: 'createClassLink' })

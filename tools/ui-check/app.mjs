@@ -11,7 +11,7 @@ export async function launch() {
   })
   const page = await app.firstWindow()
   await page.setViewportSize({ width: 1280, height: 860 })
-  await page.waitForSelector('text=Dashboard')
+  await page.waitForSelector('aside nav')
   return { app, page }
 }
 export async function go(page, route) {

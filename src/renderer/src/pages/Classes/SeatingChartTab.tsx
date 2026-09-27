@@ -16,6 +16,8 @@ import {
   useUnassignSeat,
   useUpdateClass
 } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
+import { trNodes } from '@renderer/lib/trNodes'
 
 export function SeatingChartTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -62,7 +64,7 @@ export function SeatingChartTab(): React.JSX.Element {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
           <label className="flex items-center gap-1.5">
-            Rows
+            {tr('Rows')}
             <input
               type="number"
               min={1}
@@ -78,7 +80,7 @@ export function SeatingChartTab(): React.JSX.Element {
             />
           </label>
           <label className="flex items-center gap-1.5">
-            Columns
+            {tr('Columns')}
             <input
               type="number"
               min={1}
@@ -96,25 +98,27 @@ export function SeatingChartTab(): React.JSX.Element {
         </div>
         <Button variant="secondary" size="sm" onClick={() => setConfirmClear(true)}>
           <RotateCcw size={13} className="mr-1 inline" aria-hidden />
-          Clear chart
+          {tr('Clear chart')}
         </Button>
       </div>
 
       {!students.length ? (
         <EmptyState
           icon={LayoutGrid}
-          title="No students enrolled"
-          description="Enroll students from the Roster tab before seating them."
+          title={tr('No students enrolled')}
+          description={tr('Enroll students from the Roster tab before seating them.')}
         />
       ) : (
         <div className="flex gap-6">
           <Card className="shrink-0">
             <CardBody>
               <p className="mb-2 text-xs font-semibold text-[var(--color-text-muted)]">
-                Unseated ({unseated.length})
+                {tr('Unseated ({length})', { length: unseated.length })}
               </p>
               {!unseated.length ? (
-                <p className="text-xs text-[var(--color-text-muted)]">Everyone has a seat.</p>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  {tr('Everyone has a seat.')}
+                </p>
               ) : (
                 <ul className="flex w-44 flex-col gap-1">
                   {unseated.map((s) => (
@@ -136,13 +140,15 @@ export function SeatingChartTab(): React.JSX.Element {
               )}
               {selectedStudentId && (
                 <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-                  Click a seat below to place{' '}
-                  <strong>
-                    {studentById.get(selectedStudentId)
-                      ? studentFullName(studentById.get(selectedStudentId)!)
-                      : 'this student'}
-                  </strong>
-                  .
+                  {trNodes('Click a seat below to place {student}.', {
+                    student: (
+                      <strong>
+                        {studentById.get(selectedStudentId)
+                          ? studentFullName(studentById.get(selectedStudentId)!)
+                          : tr('this student')}
+                      </strong>
+                    )
+                  })}
                 </p>
               )}
             </CardBody>
@@ -164,10 +170,10 @@ export function SeatingChartTab(): React.JSX.Element {
                     onDoubleClick={() => occupant && unassignSeat.mutate(occupant.id)}
                     title={
                       occupant
-                        ? `${studentFullName(occupant)} — double-click to unseat`
+                        ? tr('{name} — double-click to unseat', { name: studentFullName(occupant) })
                         : selectedStudentId
-                          ? 'Click to place selected student here'
-                          : 'Empty seat'
+                          ? tr('Click to place selected student here')
+                          : tr('Empty seat')
                     }
                     className={cn(
                       'flex h-16 w-24 flex-col items-center justify-center rounded-lg border text-center text-xs leading-tight',
@@ -189,9 +195,9 @@ export function SeatingChartTab(): React.JSX.Element {
 
       <ConfirmDialog
         open={confirmClear}
-        title="Clear seating chart"
-        message="Unseat every student in this class? This can't be undone."
-        confirmLabel="Clear"
+        title={tr('Clear seating chart')}
+        message={tr("Unseat every student in this class? This can't be undone.")}
+        confirmLabel={tr('Clear')}
         danger
         onConfirm={async () => {
           await clearChart.mutateAsync()

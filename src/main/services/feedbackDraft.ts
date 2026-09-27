@@ -8,6 +8,7 @@ import { canExtractText, extractFileText } from './notebookService'
 import { downloadSubmissionFile } from './portalSyncService'
 import { buildFeedbackPrompt, parseFeedbackDraft } from './feedbackPrompt'
 import type { FeedbackDraft } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 /** Drafts feedback for one student's submission. Reads the assignment, its rubric, the
  * written answer and (for PDF/text attachments) the attached file, then asks the
@@ -17,12 +18,12 @@ export async function draftSubmissionFeedback(
   studentId: string
 ): Promise<FeedbackDraft> {
   const assignment = getHomeworkAssignment(homeworkAssignmentId)
-  if (!assignment) throw new Error('Assignment not found')
+  if (!assignment) throw new Error(tr('Assignment not found'))
   const submission = listSubmissionsForAssignment(homeworkAssignmentId, assignment.classId).find(
     (s) => s.studentId === studentId
   )
   if (!submission || submission.status === 'not_started') {
-    throw new Error('This student has not turned anything in yet.')
+    throw new Error(tr('This student has not turned anything in yet.'))
   }
 
   let attachment: { name: string; text: string | null } | null = null

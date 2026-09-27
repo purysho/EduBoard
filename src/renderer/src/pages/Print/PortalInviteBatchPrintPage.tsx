@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useClasses, usePortalInviteBatch } from '@renderer/lib/queries'
 import { Spinner } from '@renderer/components/ui/EmptyState'
+import { tr } from '@shared/i18n'
 
 export function PortalInviteBatchPrintPage(): React.JSX.Element {
   const { batchId } = useParams<{ batchId: string }>()
@@ -35,7 +36,7 @@ export function PortalInviteBatchPrintPage(): React.JSX.Element {
   }, [loading, batch])
 
   if (loading) return <Spinner />
-  if (!batch) return <p className="p-8">Batch not available.</p>
+  if (!batch) return <p className="p-8">{tr('Batch not available.')}</p>
 
   return (
     <div className="bg-white p-6 text-slate-900">
@@ -50,9 +51,14 @@ export function PortalInviteBatchPrintPage(): React.JSX.Element {
               <img src={qrByCode[invite.code]} alt="" className="h-16 w-16 shrink-0" />
             )}
             <div className="min-w-0">
-              <p className="text-xs uppercase text-slate-500">{classSection?.name ?? 'Class'}</p>
+              <p className="text-xs uppercase text-slate-500">
+                {classSection?.name ?? tr('Class')}
+              </p>
               <p className="font-mono text-sm font-semibold">{invite.code}</p>
-              <p className="text-[10px] text-slate-400">Portal invite #{i + 1}</p>
+              <p className="text-[10px] text-slate-400">
+                {tr('Portal invite #')}
+                {i + 1}
+              </p>
             </div>
           </div>
         ))}

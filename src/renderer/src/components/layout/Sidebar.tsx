@@ -27,6 +27,7 @@ import {
   useSecurityStatus,
   useSettings
 } from '@renderer/lib/queries'
+import { tr, uiLanguage } from '@shared/i18n'
 
 // Grouped so fourteen destinations scan as four short lists instead of one long one.
 const navGroups: {
@@ -36,40 +37,40 @@ const navGroups: {
   {
     heading: null,
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
-      { to: '/classes', label: 'Classes', icon: GraduationCap },
-      { to: '/students', label: 'Students', icon: Users }
+      { to: '/', label: tr('Dashboard'), icon: LayoutGrid, end: true },
+      { to: '/classes', label: tr('Classes'), icon: GraduationCap },
+      { to: '/students', label: tr('Students'), icon: Users }
     ]
   },
   {
-    heading: 'Teaching',
+    heading: tr('Teaching'),
     items: [
-      { to: '/calendar', label: 'Calendar', icon: Calendar },
-      { to: '/timetable', label: 'Timetable', icon: CalendarDays },
-      { to: '/resources', label: 'Resources', icon: FolderOpen },
-      { to: '/notebook', label: 'Notebook', icon: BookOpenText }
+      { to: '/calendar', label: tr('Calendar'), icon: Calendar },
+      { to: '/timetable', label: tr('Timetable'), icon: CalendarDays },
+      { to: '/resources', label: tr('Resources'), icon: FolderOpen },
+      { to: '/notebook', label: tr('Notebook'), icon: BookOpenText }
     ]
   },
   {
-    heading: 'Grading',
+    heading: tr('Grading'),
     items: [
-      { to: '/rubrics', label: 'Rubrics', icon: ClipboardCheck },
-      { to: '/composite-grades', label: 'Composite Grades', icon: Layers },
-      { to: '/analytics', label: 'Analytics', icon: BarChart3 }
+      { to: '/rubrics', label: tr('Rubrics'), icon: ClipboardCheck },
+      { to: '/composite-grades', label: tr('Composite Grades'), icon: Layers },
+      { to: '/analytics', label: tr('Analytics'), icon: BarChart3 }
     ]
   },
   {
-    heading: 'Families & students',
+    heading: tr('Families & students'),
     items: [
-      { to: '/messages', label: 'Messages', icon: MessageSquare },
-      { to: '/communications', label: 'Communications', icon: MessageCircle }
+      { to: '/messages', label: tr('Messages'), icon: MessageSquare },
+      { to: '/communications', label: tr('Communications'), icon: MessageCircle }
     ]
   },
   {
-    heading: 'Admin',
+    heading: tr('Admin'),
     items: [
-      { to: '/audit-log', label: 'Audit Log', icon: History },
-      { to: '/settings', label: 'Settings', icon: Settings2 }
+      { to: '/audit-log', label: tr('Audit Log'), icon: History },
+      { to: '/settings', label: tr('Settings'), icon: Settings2 }
     ]
   }
 ]
@@ -90,10 +91,13 @@ export function Sidebar(): React.JSX.Element {
   const updateLabel = !update?.updateAvailable
     ? null
     : update.readyVersion
-      ? `EduBoard ${update.readyVersion} is ready to install`
+      ? tr('EduBoard {version} is ready to install', { version: update.readyVersion })
       : update.downloading !== null
-        ? `Downloading EduBoard ${update.latest}… ${Math.round(update.downloading * 100)}%`
-        : `EduBoard ${update.latest} is available`
+        ? tr('Downloading EduBoard {version}… {percent}%', {
+            version: update.latest,
+            percent: Math.round(update.downloading * 100)
+          })
+        : tr('EduBoard {version} is available', { version: update.latest })
 
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -111,7 +115,7 @@ export function Sidebar(): React.JSX.Element {
         )}
         <span className="min-w-0 leading-tight">
           <span className="block text-base font-semibold tracking-tight text-[var(--color-text)]">
-            EduBoard
+            {tr('EduBoard')}
           </span>
           {settings?.schoolName && (
             <span className="block truncate text-[11px] text-[var(--color-text-muted)]">
@@ -121,8 +125,12 @@ export function Sidebar(): React.JSX.Element {
         </span>
         <button
           onClick={() => setPresenting(!presenting)}
-          title={presenting ? 'Stop presenting' : 'Present: hide grades, notes and contact details'}
-          aria-label={presenting ? 'Stop presenting' : 'Present'}
+          title={
+            presenting
+              ? tr('Stop presenting')
+              : tr('Present: hide grades, notes and contact details')
+          }
+          aria-label={presenting ? tr('Stop presenting') : tr('Present on a projector')}
           aria-pressed={presenting}
           className={cn(
             'rounded-lg p-1.5 hover:bg-[var(--color-surface-muted)]',
@@ -204,12 +212,23 @@ export function Sidebar(): React.JSX.Element {
       </nav>
       <div className="mt-auto flex items-center gap-1.5 px-5 py-4 text-xs text-[var(--color-text-muted)]">
         <ShieldCheck size={14} aria-hidden />
-        <span className="flex-1">Your data stays on this device</span>
+        <span className="flex-1">{tr('Your data stays on this device')}</span>
+        <button
+          onClick={async () => {
+            await window.api.settings.update({ uiLanguage: uiLanguage() === 'zh' ? 'en' : 'zh' })
+            location.reload()
+          }}
+          title={uiLanguage() === 'zh' ? tr('Switch to English') : '切换到中文'}
+          aria-label={uiLanguage() === 'zh' ? tr('Switch to English') : '切换到中文'}
+          className="rounded-md px-1 py-0.5 font-medium hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
+        >
+          {uiLanguage() === 'zh' ? 'EN' : '中文'}
+        </button>
         {security?.protected && (
           <button
             onClick={() => void window.api.security.lock()}
-            title="Lock EduBoard now"
-            aria-label="Lock EduBoard now"
+            title={tr('Lock EduBoard now')}
+            aria-label={tr('Lock EduBoard now')}
             className="rounded-md p-1 hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-text)]"
           >
             <Lock size={14} aria-hidden />

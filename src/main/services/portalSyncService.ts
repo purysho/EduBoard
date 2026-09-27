@@ -37,10 +37,11 @@ import type {
   PortalMessageThread,
   PortalStudentProfile
 } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 export class PortalNotConfiguredError extends Error {
   constructor() {
-    super('Set a Portal URL and sync secret in Settings first.')
+    super(tr('Set a Portal URL and sync secret in Settings first.'))
     this.name = 'PortalNotConfiguredError'
   }
 }
@@ -208,7 +209,7 @@ function buildPublishPayload(): {
       if (file?.ok) attachmentPaths.set(hw.id, file.path)
       else if (file && hw.fileName) {
         skipped.push(
-          `${hw.fileName} (${file.reason === 'too_large' ? 'over 25 MB' : 'file not found on this computer'})`
+          `${hw.fileName} (${file.reason === 'too_large' ? tr('over 25 MB') : tr('file not found on this computer')})`
         )
       }
       homeworkAssignments.push({
@@ -330,7 +331,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify(body)
   })
-  if (!res.ok) throw await portalFailure('Portal sync failed', res)
+  if (!res.ok) throw await portalFailure(tr('Portal sync failed'), res)
   const reply = (await res.json().catch(() => ({}))) as {
     needFiles?: unknown
     needChunks?: unknown
@@ -355,7 +356,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
         body: readFileSync(filePath)
       }
     )
-    if (!upload.ok) throw await portalFailure('Uploading a homework attachment failed', upload)
+    if (!upload.ok) throw await portalFailure(tr('Uploading a homework attachment failed'), upload)
     attachmentsUploaded++
   }
   let materialsUploaded = 0
@@ -370,7 +371,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
         body: JSON.stringify({ chunks })
       }
     )
-    if (!upload.ok) throw await portalFailure('Uploading study material text failed', upload)
+    if (!upload.ok) throw await portalFailure(tr('Uploading study material text failed'), upload)
     materialsUploaded++
   }
   // Everything arrived: remember what students now see, for the "unpublished changes" check.
@@ -428,7 +429,7 @@ async function sendPendingStudentDeletes(): Promise<void> {
     // 403: the Portal says another teacher has this student there, so there's
     // nothing of ours left to remove.
     if (!res.ok && res.status !== 403) {
-      throw await portalFailure('Removing a student from the Portal failed', res)
+      throw await portalFailure(tr('Removing a student from the Portal failed'), res)
     }
     setStoredValue(
       PENDING_DELETES_KEY,
@@ -445,7 +446,7 @@ export async function importNewStudentsFromPortal(): Promise<number> {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (res.status === 404) return 0 // a Portal from before join links
-  if (!res.ok) throw await portalFailure('Checking for new students failed', res)
+  if (!res.ok) throw await portalFailure(tr('Checking for new students failed'), res)
   const rows = (await res.json()) as {
     id: string
     firstName: string
@@ -497,7 +498,7 @@ export async function pullSubmissionsFromPortal(): Promise<number> {
   const res = await fetch(`${portalUrl}/api/sync/submissions`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Portal pull failed', res)
+  if (!res.ok) throw await portalFailure(tr('Portal pull failed'), res)
 
   const rows = (await res.json()) as {
     homeworkAssignmentId: string
@@ -548,7 +549,7 @@ export async function pushSubmissionGrade(input: {
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ grades: [input] })
   })
-  if (!res.ok) throw await portalFailure('Portal grade push failed', res)
+  if (!res.ok) throw await portalFailure(tr('Portal grade push failed'), res)
 }
 
 /**
@@ -576,7 +577,7 @@ export async function mergeStudentsEverywhere(
       headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
       body: JSON.stringify({ from: duplicateId, into: keepId })
     })
-    if (!res.ok) throw await portalFailure('Merging on the Portal failed', res)
+    if (!res.ok) throw await portalFailure(tr('Merging on the Portal failed'), res)
   }
   const merged = mergeStudents(keepId, duplicateId)
   if (portalConfigured) {
@@ -600,7 +601,7 @@ export async function pushSubmissionPortfolio(input: {
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify(input)
   })
-  if (!res.ok) throw await portalFailure('Portal portfolio push failed', res)
+  if (!res.ok) throw await portalFailure(tr('Portal portfolio push failed'), res)
 }
 
 /** Downloads a student's submitted file to a local temp folder so the teacher can open
@@ -616,7 +617,7 @@ export async function downloadSubmissionFile(
     `${portalUrl}/api/sync/submissions/${homeworkAssignmentId}/${studentId}/file`,
     { headers: { 'X-Sync-Secret': portalSyncSecret } }
   )
-  if (!res.ok) throw await portalFailure('Download failed', res)
+  if (!res.ok) throw await portalFailure(tr('Download failed'), res)
 
   const dir = join(tmpdir(), 'eduboard-submissions')
   mkdirSync(dir, { recursive: true })
@@ -628,7 +629,9 @@ export async function downloadSubmissionFile(
   // contents, or through an older Portal, must not reach the disk unvetted.
   const check = checkUpload(fileName, bytes)
   if (!check.ok) {
-    throw new Error(`EduBoard didn't open this file because ${check.reason}.`)
+    throw new Error(
+      tr('EduBoard didn’t open this file because {reason}.', { reason: check.reason })
+    )
   }
   writeFileSync(destPath, bytes)
   markAsDownloadedFromInternet(destPath)
@@ -643,7 +646,8 @@ export async function getPortalProfile(studentId: string): Promise<PortalStudent
   const headers = { 'X-Sync-Secret': portalSyncSecret }
 
   const res = await fetch(`${portalUrl}/api/sync/profiles`, { headers })
-  if (!res.ok) throw new Error(`Could not load Portal profiles: ${res.status}`)
+  if (!res.ok)
+    throw new Error(tr('Could not load Portal profiles: {status}', { status: res.status }))
   const profiles = (await res.json()) as (Omit<PortalStudentProfile, 'photoDataUrl'> & {
     hasPhoto: boolean
   })[]
@@ -683,7 +687,7 @@ export async function listMessageThreads(): Promise<PortalMessageThread[]> {
   const res = await fetch(`${portalUrl}/api/sync/messages/threads`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Could not load messages', res)
+  if (!res.ok) throw await portalFailure(tr('Could not load messages'), res)
   return res.json()
 }
 
@@ -695,7 +699,7 @@ export async function sendTeacherMessage(accountId: string, body: string): Promi
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ accountId, body })
   })
-  if (!res.ok) throw await portalFailure('Could not send message', res)
+  if (!res.ok) throw await portalFailure(tr('Could not send message'), res)
 }
 
 /** Every question a student asked the Portal's Study Helper and the answers, optionally
@@ -711,7 +715,7 @@ export async function getStudentAiActivity(
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (res.status === 404) return []
-  if (!res.ok) throw await portalFailure('Could not load AI activity', res)
+  if (!res.ok) throw await portalFailure(tr('Could not load AI activity'), res)
   return (await res.json()) as PortalAiInteraction[]
 }
 
@@ -726,7 +730,7 @@ export async function translateMessage(messageId: string, targetLang: string): P
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ targetLang })
   })
-  if (!res.ok) throw await portalFailure('Could not translate message', res)
+  if (!res.ok) throw await portalFailure(tr('Could not translate message'), res)
   const data = await res.json()
   return data.translatedBody
 }
@@ -738,7 +742,7 @@ export async function markMessageThreadRead(accountId: string): Promise<void> {
     method: 'POST',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Could not mark read', res)
+  if (!res.ok) throw await portalFailure(tr('Could not mark read'), res)
 }
 
 export async function listClassPosts(): Promise<ClassPost[]> {
@@ -747,7 +751,7 @@ export async function listClassPosts(): Promise<ClassPost[]> {
   const res = await fetch(`${portalUrl}/api/sync/posts`, {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Could not load posts', res)
+  if (!res.ok) throw await portalFailure(tr('Could not load posts'), res)
   return res.json()
 }
 
@@ -770,7 +774,7 @@ export async function createClassPost(
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ classId, body, imageName, imageData })
   })
-  if (!res.ok) throw await portalFailure('Could not post', res)
+  if (!res.ok) throw await portalFailure(tr('Could not post'), res)
 }
 
 export async function deleteClassPost(id: string): Promise<void> {
@@ -780,7 +784,7 @@ export async function deleteClassPost(id: string): Promise<void> {
     method: 'DELETE',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Could not delete post', res)
+  if (!res.ok) throw await portalFailure(tr('Could not delete post'), res)
 }
 
 /** Triggers an immediate send of the weekly digest to every family with an email on
@@ -799,7 +803,7 @@ export async function listPortalResetRequests(): Promise<PortalResetRequest[]> {
   const res = await fetch(`${config.portalUrl}/api/sync/reset-requests`, {
     headers: { 'X-Sync-Secret': config.portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Checking password reset requests failed', res)
+  if (!res.ok) throw await portalFailure(tr('Checking password reset requests failed'), res)
   return (await res.json()) as PortalResetRequest[]
 }
 
@@ -810,7 +814,7 @@ export async function answerPortalResetRequest(id: string, approve: boolean): Pr
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
     body: JSON.stringify({ approve })
   })
-  if (!res.ok) throw await portalFailure('Answering the reset request failed', res)
+  if (!res.ok) throw await portalFailure(tr('Answering the reset request failed'), res)
 }
 
 export async function resetPortalPassword(username: string, newPassword: string): Promise<void> {
@@ -825,7 +829,7 @@ export async function resetPortalPassword(username: string, newPassword: string)
     // The Portal's own message ("No such account", "Password must be at least 8
     // characters") is what the teacher needs to see, not the raw status line.
     const body = (await res.json().catch(() => null)) as { error?: string } | null
-    throw new Error(body?.error || `Password reset failed: ${res.status}`)
+    throw new Error(body?.error || tr('Password reset failed: {status}', { status: res.status }))
   }
 }
 
@@ -840,6 +844,6 @@ export async function sendDigestNow(): Promise<{
     method: 'POST',
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
-  if (!res.ok) throw await portalFailure('Digest send failed', res)
+  if (!res.ok) throw await portalFailure(tr('Digest send failed'), res)
   return res.json()
 }

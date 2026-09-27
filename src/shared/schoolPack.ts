@@ -6,6 +6,7 @@ import type { AppSettings, GradeThresholds, LogQuickAdd, StudentField, Term } fr
 import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
 import { COMMENT_CATEGORIES, type BankComment } from './commentBank'
+import { tr } from './i18n'
 
 export interface SchoolPackTerm {
   name: string
@@ -62,10 +63,10 @@ export function parseSchoolPack(json: string): SchoolPack {
   try {
     raw = JSON.parse(json)
   } catch {
-    throw new Error('That file isn’t a school pack (it isn’t readable JSON).')
+    throw new Error(tr('That file isn’t a school pack (it isn’t readable JSON).'))
   }
   if (!raw || raw.kind !== 'eduboard-school-pack' || raw.version !== 1) {
-    throw new Error('That file isn’t an EduBoard school pack.')
+    throw new Error(tr('That file isn’t an EduBoard school pack.'))
   }
   const pack: SchoolPack = {
     kind: 'eduboard-school-pack',
@@ -205,15 +206,19 @@ export function planSchoolPack(
   const changes: string[] = []
   if (pack.schoolName && pack.schoolName !== settings.schoolName) {
     patch.schoolName = pack.schoolName
-    changes.push(`School name: ${pack.schoolName}`)
+    changes.push(tr('School name: {name}', { name: pack.schoolName }))
   }
   if (pack.schoolLogo && pack.schoolLogo !== settings.schoolLogo) {
     patch.schoolLogo = pack.schoolLogo
-    changes.push('School logo')
+    changes.push(tr('School logo'))
   }
   if (pack.accentColor !== undefined && pack.accentColor !== settings.accentColor) {
     patch.accentColor = pack.accentColor
-    changes.push(pack.accentColor ? `School colour ${pack.accentColor}` : 'EduBoard’s own colour')
+    changes.push(
+      pack.accentColor
+        ? tr('School colour {colour}', { colour: pack.accentColor })
+        : tr('EduBoard’s own colour')
+    )
   }
   if (
     pack.defaultGradeThresholds &&
@@ -221,32 +226,40 @@ export function planSchoolPack(
   ) {
     patch.defaultGradeThresholds = pack.defaultGradeThresholds
     changes.push(
-      `Grading scale for new classes: ${gradeBands(pack.defaultGradeThresholds)
-        .map((b) => b.label)
-        .join(' / ')}`
+      tr('Grading scale for new classes: {bands}', {
+        bands: gradeBands(pack.defaultGradeThresholds)
+          .map((b) => b.label)
+          .join(' / ')
+      })
     )
   }
   if (pack.defaultPassMark && pack.defaultPassMark !== settings.defaultPassMark) {
     patch.defaultPassMark = pack.defaultPassMark
-    changes.push(`Pass mark for new classes: ${pack.defaultPassMark}%`)
+    changes.push(tr('Pass mark for new classes: {n}%', { n: pack.defaultPassMark }))
   }
   if (pack.defaultMaxScore && pack.defaultMaxScore !== settings.defaultMaxScore) {
     patch.defaultMaxScore = pack.defaultMaxScore
-    changes.push(`Default max score: ${pack.defaultMaxScore}`)
+    changes.push(tr('Default max score: {n}', { n: pack.defaultMaxScore }))
   }
   if (
     pack.logQuickAdds &&
     JSON.stringify(pack.logQuickAdds) !== JSON.stringify(settings.logQuickAdds)
   ) {
     patch.logQuickAdds = pack.logQuickAdds
-    changes.push(`Log quick-add buttons: ${pack.logQuickAdds.map((q) => q.label).join(', ')}`)
+    changes.push(
+      tr('Log quick-add buttons: {list}', {
+        list: pack.logQuickAdds.map((q) => q.label).join(', ')
+      })
+    )
   }
   if (pack.studentFields) {
     const have = new Set(settings.studentFields.map((f) => f.id))
     const added = pack.studentFields.filter((f) => !have.has(f.id))
     if (added.length) {
       patch.studentFields = [...settings.studentFields, ...added]
-      changes.push(`Student fields added: ${added.map((f) => f.label).join(', ')}`)
+      changes.push(
+        tr('Student fields added: {list}', { list: added.map((f) => f.label).join(', ') })
+      )
     }
   }
   if (
@@ -254,22 +267,26 @@ export function planSchoolPack(
     JSON.stringify(pack.commentBank) !== JSON.stringify(settings.commentBank)
   ) {
     patch.commentBank = pack.commentBank
-    changes.push(`Report comment bank (${pack.commentBank.length} comments)`)
+    changes.push(tr('Report comment bank ({n} comments)', { n: pack.commentBank.length }))
   }
   if (pack.letterTemplate && pack.letterTemplate !== settings.letterTemplate) {
     patch.letterTemplate = pack.letterTemplate
-    changes.push('Parent letter')
+    changes.push(tr('Parent letter'))
   }
   if (pack.customCss !== undefined && pack.customCss !== settings.customCss) {
     patch.customCss = pack.customCss
-    changes.push('School stylesheet')
+    changes.push(tr('School stylesheet'))
   }
   const key = (t: { name: string; schoolYear: string }): string =>
     `${t.name.trim().toLowerCase()}|${t.schoolYear.trim()}`
   const existing = new Set(terms.map(key))
   const newTerms = (pack.terms ?? []).filter((t) => !existing.has(key(t)))
   if (newTerms.length) {
-    changes.push(`Terms added: ${newTerms.map((t) => `${t.name} ${t.schoolYear}`).join(', ')}`)
+    changes.push(
+      tr('Terms added: {list}', {
+        list: newTerms.map((t) => `${t.name} ${t.schoolYear}`).join(', ')
+      })
+    )
   }
   return { settings: patch, newTerms, changes }
 }

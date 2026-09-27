@@ -5,6 +5,7 @@ import type { AssignmentSubmission } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { useDeleteAssignmentSubmission, useUpsertAssignmentSubmission } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 export function SubmissionPopover({
   classId,
@@ -43,8 +44,16 @@ export function SubmissionPopover({
       <button
         ref={anchorRef}
         type="button"
-        title={submission ? `Submission: ${submission.fileName}` : 'Attach a submission'}
-        aria-label={submission ? `Submission: ${submission.fileName}` : 'Attach a submission'}
+        title={
+          submission
+            ? tr('Submission: {fileName}', { fileName: submission.fileName })
+            : tr('Attach a submission')
+        }
+        aria-label={
+          submission
+            ? tr('Submission: {fileName}', { fileName: submission.fileName })
+            : tr('Attach a submission')
+        }
         onClick={handleToggle}
         className="rounded p-0.5 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
       >
@@ -57,7 +66,7 @@ export function SubmissionPopover({
             className="fixed z-50 w-60 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
             style={{ top: position.top, left: position.left }}
           >
-            <p className="mb-1.5 text-xs font-semibold">Submission</p>
+            <p className="mb-1.5 text-xs font-semibold">{tr('Submission')}</p>
             {submission ? (
               <div className="space-y-2">
                 <button
@@ -68,11 +77,13 @@ export function SubmissionPopover({
                   {submission.fileName}
                 </button>
                 <p className="text-[10px] text-[var(--color-text-muted)]">
-                  Submitted {formatDate(submission.submittedAt, 'MMM d, yyyy p')}
+                  {tr('Submitted {date}', {
+                    date: formatDate(submission.submittedAt, 'MMM d, yyyy p')
+                  })}
                 </p>
                 <div className="flex justify-end gap-1.5">
                   <Button variant="ghost" size="sm" onClick={handleAttach}>
-                    Replace
+                    {tr('Replace')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -80,14 +91,14 @@ export function SubmissionPopover({
                     onClick={() => deleteSubmission.mutate(submission.id)}
                   >
                     <Trash2 size={12} className="mr-1 inline" aria-hidden />
-                    Remove
+                    {tr('Remove')}
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="flex justify-end">
                 <Button variant="primary" size="sm" onClick={handleAttach}>
-                  Attach file…
+                  {tr('Attach file…')}
                 </Button>
               </div>
             )}

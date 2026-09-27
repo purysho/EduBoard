@@ -6,6 +6,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **EduBoard in Chinese (中文).** Every screen, message, printout (report cards, parent letters) and the exit-ticket and check-in pages students open on their phones can be in Simplified Chinese. Switch with **中文 / EN** at the bottom of the sidebar or in Settings → Language; it follows the computer's language until you choose. Dates, the timetable clock and name order follow the language (a name written in Chinese shows family name first, 陈麦). The built-in comment bank, log buttons and parent letter have Chinese versions, used whenever you haven't changed them, and AI suggestions and lesson-plan drafts come back in the app's language. Roster imports accept Chinese headings (学号, 家长电话…) and a single 姓名 column.
 - **Start next term for every class at once** (Classes → Start next term): pick the ending and next term, untick any class that doesn't carry on, and each gets a next-term class with the same setup and, if you like, the same students and timetable; the old classes can be archived in the same step. Running it twice makes no doubles.
 - **Today** on the Dashboard: today's lessons from the timetable, each showing whether attendance is taken and which lesson plan it has, plus parent follow-ups due.
 - **Students to check on** (Dashboard): students below their class's pass mark, dropping 8 or more points over their last few scores, or with three or more concerns logged in 30 days, each with the reason.

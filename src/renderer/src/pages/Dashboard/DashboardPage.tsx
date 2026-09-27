@@ -21,6 +21,7 @@ import { ResetRequests } from './ResetRequests'
 import { UnpublishedNotice } from './UnpublishedNotice'
 import { AttendanceWarnings } from './AttendanceWarnings'
 import { TodayCard, WatchListCard } from './TodayCards'
+import { tr } from '@shared/i18n'
 
 export function DashboardPage(): React.JSX.Element {
   const { data: stats, isLoading } = useDashboardStats()
@@ -30,7 +31,10 @@ export function DashboardPage(): React.JSX.Element {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="Everything you're teaching, at a glance." />
+      <PageHeader
+        title={tr('Dashboard')}
+        description={tr("Everything you're teaching, at a glance.")}
+      />
 
       <ResetRequests />
       <UnpublishedNotice />
@@ -41,28 +45,33 @@ export function DashboardPage(): React.JSX.Element {
       <WatchListCard />
 
       <div className="mb-6 grid grid-cols-3 gap-4 md:grid-cols-6">
-        <StatCard label="Classes" value={String(stats.classCount)} icon={GraduationCap} />
-        <StatCard label="Students" value={String(stats.studentCount)} icon={Users} tone="neutral" />
+        <StatCard label={tr('Classes')} value={String(stats.classCount)} icon={GraduationCap} />
         <StatCard
-          label="Active enrollments"
+          label={tr('Students')}
+          value={String(stats.studentCount)}
+          icon={Users}
+          tone="neutral"
+        />
+        <StatCard
+          label={tr('Active enrollments')}
           value={String(stats.activeEnrollmentCount)}
           icon={ClipboardCheck}
           tone="neutral"
         />
         <StatCard
-          label="Overall average"
+          label={tr('Overall average')}
           value={formatPercent(stats.averagePercent)}
           icon={TrendingUp}
           tone="success"
         />
         <StatCard
-          label="Pass rate"
+          label={tr('Pass rate')}
           value={formatRate(stats.passRate)}
           icon={CheckCircle2}
           tone="success"
         />
         <StatCard
-          label="Avg. attendance"
+          label={tr('Avg. attendance')}
           value={formatRate(stats.averageAttendanceRate)}
           icon={CalendarClock}
           tone="warning"
@@ -71,15 +80,19 @@ export function DashboardPage(): React.JSX.Element {
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2">
-          <h2 className="mb-3 text-sm font-semibold text-[var(--color-text)]">Your classes</h2>
+          <h2 className="mb-3 text-sm font-semibold text-[var(--color-text)]">
+            {tr('Your classes')}
+          </h2>
           {!classes?.length ? (
             <EmptyState
               icon={GraduationCap}
-              title="No classes yet"
-              description="Create a class to start tracking students, grades, and lesson plans."
+              title={tr('No classes yet')}
+              description={tr(
+                'Create a class to start tracking students, grades, and lesson plans.'
+              )}
               action={
                 <Link to="/classes">
-                  <Button variant="primary">+ New class</Button>
+                  <Button variant="primary">{tr('+ New class')}</Button>
                 </Link>
               }
             />
@@ -97,17 +110,21 @@ export function DashboardPage(): React.JSX.Element {
             <CardHeader className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-semibold">
                 <CalendarClock size={16} className="text-[var(--color-text-muted)]" aria-hidden />
-                Upcoming lessons
+                {tr('Upcoming lessons')}
               </h2>
               {stats.ungradedAssessmentCount > 0 && (
                 <span className="rounded-full bg-[var(--color-warning-soft)] px-2 py-0.5 text-xs font-medium text-[var(--color-warning)]">
-                  {stats.ungradedAssessmentCount} need grades
+                  {tr('{ungradedAssessmentCount} need grades', {
+                    ungradedAssessmentCount: stats.ungradedAssessmentCount
+                  })}
                 </span>
               )}
             </CardHeader>
             <CardBody>
               {!stats.upcomingLessons.length ? (
-                <p className="text-sm text-[var(--color-text-muted)]">Nothing scheduled yet.</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  {tr('Nothing scheduled yet.')}
+                </p>
               ) : (
                 <ul className="space-y-3">
                   {stats.upcomingLessons.map((lesson) => (

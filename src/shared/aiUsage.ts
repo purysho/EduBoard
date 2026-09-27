@@ -1,3 +1,4 @@
+import { tr, trn } from './i18n'
 // How a student's submission involved the Portal's AI, as recorded when it was turned in
 // (portal/services/aiUsage.js decides; this mirrors its rule so the desktop can explain
 // the badge). Keep OVERLAP_FLAG_RATIO equal to the Portal's.
@@ -16,15 +17,22 @@ export function aiUsageReasons(s: SubmissionAiFacts): string[] {
   const reasons: string[] = []
   if (s.aiHelpCount > 0) {
     reasons.push(
-      `Asked the AI about this assignment ${s.aiHelpCount === 1 ? 'once' : `${s.aiHelpCount} times`}`
+      trn(
+        'Asked the AI about this assignment once',
+        'Asked the AI about this assignment {n} times',
+        s.aiHelpCount
+      )
     )
   }
   if (s.aiOverlap != null && s.aiOverlap >= OVERLAP_FLAG_RATIO) {
     reasons.push(
-      `About ${Math.round(s.aiOverlap * 100)}% of the typed answer matches AI answers they were given`
+      tr('About {percent}% of the typed answer matches AI answers they were given', {
+        percent: Math.round(s.aiOverlap * 100)
+      })
     )
   }
-  if (s.aiDeclared) reasons.push('Said they used AI (this can include tools outside the Portal)')
+  if (s.aiDeclared)
+    reasons.push(tr('Said they used AI (this can include tools outside the Portal)'))
   return reasons
 }
 

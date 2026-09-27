@@ -8,6 +8,7 @@ import { join } from 'path'
 import { getSqlite } from '../db/client'
 import { recordAudit } from '../repositories/auditLog'
 import { listBackups } from './backup'
+import { tr } from '@shared/i18n'
 
 type Row = Record<string, unknown>
 
@@ -54,7 +55,7 @@ export interface StudentDataExport {
 
 export function exportStudentData(studentId: string): StudentDataExport {
   const student = studentRow(studentId)
-  if (!student) throw new Error('That student no longer exists.')
+  if (!student) throw new Error(tr('That student no longer exists.'))
   const records: Record<string, Row[]> = {}
   for (const table of tablesWithStudentId()) {
     const rows = getSqlite()
@@ -77,7 +78,7 @@ export interface EraseResult {
 export function eraseStudent(studentId: string): EraseResult {
   const sqlite = getSqlite()
   const student = studentRow(studentId)
-  if (!student) throw new Error('That student no longer exists.')
+  if (!student) throw new Error(tr('That student no longer exists.'))
   let rowsErased = 0
   sqlite.transaction(() => {
     const typedIds = unlinkedExitTicketAnswers(student).map((r) => r.id as string)
@@ -96,7 +97,7 @@ export function eraseStudent(studentId: string): EraseResult {
     entityType: 'student',
     entityId: 'erased',
     action: 'delete',
-    summary: 'Erased all records of a student at their request'
+    summary: tr('Erased all records of a student at their request')
   })
   // SQLite keeps deleted rows in free pages of the file until they're reused; rebuild the
   // file so the erased data is really gone from it.

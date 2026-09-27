@@ -24,33 +24,41 @@ import {
   writePending,
   type PendingUpdate
 } from './pendingUpdate'
+import { tr } from '@shared/i18n'
 
 /** How this copy of EduBoard was installed, which decides how it replaces itself; or
  * why it can't (running from source, from the Mac disk image…). */
 function installKind(): { kind: InstallKind } | { reason: string } {
-  if (!app.isPackaged) return { reason: 'This copy runs from source code, not an installed app.' }
+  if (!app.isPackaged)
+    return { reason: tr('This copy runs from source code, not an installed app.') }
   if (process.platform === 'win32') {
     return { kind: process.env.PORTABLE_EXECUTABLE_FILE ? 'windows-portable' : 'windows-installer' }
   }
   if (process.platform === 'darwin') {
     const bundle = macAppBundle()
-    if (!bundle) return { reason: 'Couldn’t find the EduBoard app to replace.' }
+    if (!bundle) return { reason: tr('Couldn’t find the EduBoard app to replace.') }
     if (bundle.startsWith('/Volumes/')) {
-      return { reason: 'EduBoard is running from its disk image. Drag it into Applications first.' }
+      return {
+        reason: tr('EduBoard is running from its disk image. Drag it into Applications first.')
+      }
     }
     if (!isWritable(dirname(bundle))) {
-      return { reason: `EduBoard can’t replace itself in ${dirname(bundle)}.` }
+      return {
+        reason: tr('EduBoard can’t replace itself in {folder}.', { folder: dirname(bundle) })
+      }
     }
     return { kind: 'mac' }
   }
   if (process.platform === 'linux') {
     const appImage = process.env.APPIMAGE
-    if (!appImage) return { reason: 'Only the AppImage version can update itself.' }
+    if (!appImage) return { reason: tr('Only the AppImage version can update itself.') }
     if (!isWritable(dirname(appImage)))
-      return { reason: `EduBoard can’t replace itself in ${dirname(appImage)}.` }
+      return {
+        reason: tr('EduBoard can’t replace itself in {folder}.', { folder: dirname(appImage) })
+      }
     return { kind: 'linux-appimage' }
   }
-  return { reason: 'Updating from inside EduBoard isn’t supported on this system.' }
+  return { reason: tr('Updating from inside EduBoard isn’t supported on this system.') }
 }
 
 function isWritable(dir: string): boolean {
@@ -144,7 +152,7 @@ async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
   const release = await fetchLatestRelease(portalUrl())
   latestKnown = release.version
   const asset = pickAsset(kind, process.arch, release.assets)
-  if (!asset) throw new Error('The newest release has no download for this computer.')
+  if (!asset) throw new Error(tr('The newest release has no download for this computer.'))
   const dir = pendingDir()
   clearPending(dir)
   mkdirSync(dir, { recursive: true })
@@ -207,8 +215,10 @@ function announceReady(version: string): void {
   if (notifiedVersion === version || !Notification.isSupported()) return
   notifiedVersion = version
   const note = new Notification({
-    title: `EduBoard ${version} is ready`,
-    body: 'It installs the next time you open EduBoard. To install it now, restart from Settings.'
+    title: tr('EduBoard {version} is ready', { version }),
+    body: tr(
+      'It installs the next time you open EduBoard. To install it now, restart from Settings.'
+    )
   })
   note.on('click', () => {
     const win = BrowserWindow.getAllWindows()[0]
@@ -285,6 +295,9 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
   return true
 }
 
+const escapeHtml = (s: string): string =>
+  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+
 function showUpdatingWindow(version: string): BrowserWindow {
   const win = new BrowserWindow({
     width: 420,
@@ -294,12 +307,16 @@ function showUpdatingWindow(version: string): BrowserWindow {
     minimizable: false,
     maximizable: false,
     autoHideMenuBar: true,
-    title: 'Updating EduBoard'
+    title: tr('Updating EduBoard')
   })
-  const html = `<!doctype html><meta charset="utf-8"><title>Updating EduBoard</title>
+  const heading = tr('Updating EduBoard to {version}…', {
+    version: version.replace(/[^0-9A-Za-z.-]/g, '')
+  })
+  const note = tr('It will reopen by itself in a moment. Your data is kept.')
+  const html = `<!doctype html><meta charset="utf-8"><title>${escapeHtml(tr('Updating EduBoard'))}</title>
 <body style="font:15px system-ui,sans-serif;margin:0;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;color:#1f2937;background:#fff">
-<div><strong>Updating EduBoard to ${version.replace(/[^0-9A-Za-z.-]/g, '')}…</strong><br>
-<span style="color:#6b7280">It will reopen by itself in a moment. Your data is kept.</span></div></body>`
+<div><strong>${escapeHtml(heading)}</strong><br>
+<span style="color:#6b7280">${escapeHtml(note)}</span></div></body>`
   void win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
   return win
 }
@@ -315,7 +332,7 @@ export async function installAppUpdate(): Promise<void> {
     createBackup()
     let pending = usablePending()
     if (!pending || (latestKnown && isNewerVersion(latestKnown, pending.version))) {
-      if (progress.phase === 'downloading') throw new Error('The update is still downloading.')
+      if (progress.phase === 'downloading') throw new Error(tr('The update is still downloading.'))
       pending = await downloadToPending(where.kind)
     }
     progress = { phase: 'installing', fraction: 1, error: null }

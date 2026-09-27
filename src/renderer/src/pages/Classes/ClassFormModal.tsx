@@ -5,12 +5,13 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
 import { useCreateClass, useSettings, useTerms, useUpdateClass } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 const LEVEL_OPTIONS: { value: LevelType; label: string }[] = [
-  { value: 'k12', label: 'K-12' },
-  { value: 'university', label: 'University' },
-  { value: 'club', label: 'Club / activity' },
-  { value: 'other', label: 'Other' }
+  { value: 'k12', label: tr('K-12') },
+  { value: 'university', label: tr('University') },
+  { value: 'club', label: tr('Club / activity') },
+  { value: 'other', label: tr('Other') }
 ]
 
 interface ClassFormModalProps {
@@ -71,15 +72,15 @@ export function ClassFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit class' : 'New class'}
+      title={isEdit ? tr('Edit class') : tr('New class')}
       wide
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button variant="primary" type="submit" form="class-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
@@ -87,16 +88,16 @@ export function ClassFormModal({
       <form id="class-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <FormRow
-            label="Class name"
-            hint='e.g. "Grade 5 Homeroom", "AP English 11", "Robotics Club"'
+            label={tr('Class name')}
+            hint={tr('e.g. "Grade 5 Homeroom", "AP English 11", "Robotics Club"')}
           >
             <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
           </FormRow>
         </div>
-        <FormRow label="Subject">
+        <FormRow label={tr('Subject')}>
           <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
         </FormRow>
-        <FormRow label="Level">
+        <FormRow label={tr('Level')}>
           <Select value={levelType} onChange={(e) => setLevelType(e.target.value as LevelType)}>
             {LEVEL_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -105,12 +106,12 @@ export function ClassFormModal({
             ))}
           </Select>
         </FormRow>
-        <FormRow label="Grade level / year" hint='e.g. "Grade 5", "Year 2"'>
+        <FormRow label={tr('Grade level / year')} hint={tr('e.g. "Grade 5", "Year 2"')}>
           <Input value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} />
         </FormRow>
-        <FormRow label="Term">
+        <FormRow label={tr('Term')}>
           <Select value={termId} onChange={(e) => setTermId(e.target.value)}>
-            <option value="">No term</option>
+            <option value="">{tr('No term')}</option>
             {(terms ?? []).map((term) => (
               <option key={term.id} value={term.id}>
                 {term.name}
@@ -118,10 +119,10 @@ export function ClassFormModal({
             ))}
           </Select>
         </FormRow>
-        <FormRow label="Schedule" hint="e.g. Mon/Wed/Fri 9:00–9:50">
+        <FormRow label={tr('Schedule')} hint={tr('e.g. Mon/Wed/Fri 9:00–9:50')}>
           <Input value={schedule} onChange={(e) => setSchedule(e.target.value)} />
         </FormRow>
-        <FormRow label="Room">
+        <FormRow label={tr('Room')}>
           <Input value={room} onChange={(e) => setRoom(e.target.value)} />
         </FormRow>
       </form>

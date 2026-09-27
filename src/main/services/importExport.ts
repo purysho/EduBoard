@@ -14,17 +14,44 @@ import { getClassRoster } from './reports'
 import type { RosterImportResult } from '@shared/importExportTypes'
 import { getSettings } from '../repositories/settingsRepo'
 import type { StudentField } from '@shared/types'
+import { tr } from '@shared/i18n'
 
 // Column name -> accepted header aliases (case-insensitive, matched against row 1).
+// Chinese class lists usually have one 姓名 (full name) column instead of two.
 const HEADER_ALIASES: Record<string, string[]> = {
-  firstName: ['first name', 'firstname', 'first', 'given name'],
-  lastName: ['last name', 'lastname', 'last', 'surname', 'family name'],
-  studentNumber: ['student number', 'student id', 'id', 'student no', 'studentid'],
-  gradeLevel: ['grade level', 'grade', 'year', 'major', 'major / cohort', 'cohort'],
-  email: ['email', 'e-mail'],
-  guardianName: ['guardian name', 'parent name', 'guardian'],
-  guardianContact: ['guardian contact', 'parent contact', 'phone', 'contact'],
-  notes: ['notes', 'note']
+  firstName: ['first name', 'firstname', 'first', 'given name', '名', '名字'],
+  lastName: ['last name', 'lastname', 'last', 'surname', 'family name', '姓', '姓氏'],
+  fullName: ['name', 'full name', 'student name', '姓名', '学生姓名'],
+  studentNumber: ['student number', 'student id', 'id', 'student no', 'studentid', '学号'],
+  gradeLevel: ['grade level', 'grade', 'year', 'major', 'major / cohort', 'cohort', '年级', '班级'],
+  email: ['email', 'e-mail', '邮箱', '电子邮箱'],
+  guardianName: ['guardian name', 'parent name', 'guardian', '家长姓名', '监护人', '家长'],
+  guardianContact: [
+    'guardian contact',
+    'parent contact',
+    'phone',
+    'contact',
+    '家长电话',
+    '联系电话',
+    '联系方式',
+    '电话'
+  ],
+  notes: ['notes', 'note', '备注']
+}
+
+const CJK = /[\u3400-\u9fff\uf900-\ufaff]/
+
+/** Splits a full name: a Chinese name's first character is the family name ("陈麦"
+ * is 陈 + 麦); otherwise the last word is ("Mai Chen" is Mai + Chen). */
+export function splitFullName(full: string): { firstName: string; lastName: string } | null {
+  const name = full.trim().replace(/\s+/g, ' ')
+  if (!name) return null
+  if (CJK.test(name) && !name.includes(' ')) {
+    return name.length < 2 ? null : { lastName: name[0], firstName: name.slice(1) }
+  }
+  const at = name.lastIndexOf(' ')
+  if (at < 0) return null
+  return { firstName: name.slice(0, at), lastName: name.slice(at + 1) }
 }
 
 async function loadFirstWorksheet(filePath: string): Promise<ExcelJS.Worksheet> {
@@ -34,7 +61,7 @@ async function loadFirstWorksheet(filePath: string): Promise<ExcelJS.Worksheet> 
   }
   await workbook.xlsx.readFile(filePath)
   const sheet = workbook.worksheets[0]
-  if (!sheet) throw new Error('Workbook has no sheets')
+  if (!sheet) throw new Error(tr('Workbook has no sheets'))
   return sheet
 }
 
@@ -81,8 +108,11 @@ export async function importRoster(
   const customFields = getSettings().studentFields
   const headerIndex = buildHeaderIndex(headerRow, customFields)
 
-  if (!headerIndex.has('firstName') || !headerIndex.has('lastName')) {
-    throw new Error('The file needs "First Name" and "Last Name" columns.')
+  const splitNames = !(headerIndex.has('firstName') && headerIndex.has('lastName'))
+  if (splitNames && !headerIndex.has('fullName')) {
+    throw new Error(
+      tr('The file needs “First Name” and “Last Name” columns, or one “Name” (姓名) column.')
+    )
   }
 
   const result: RosterImportResult = { imported: 0, skipped: 0, errors: [] }
@@ -91,8 +121,15 @@ export async function importRoster(
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return
 
-    const firstName = cellText(row, headerIndex.get('firstName'))
-    const lastName = cellText(row, headerIndex.get('lastName'))
+    const split = splitNames
+      ? splitFullName(cellText(row, headerIndex.get('fullName')) ?? '')
+      : null
+    const firstName = splitNames
+      ? (split?.firstName ?? null)
+      : cellText(row, headerIndex.get('firstName'))
+    const lastName = splitNames
+      ? (split?.lastName ?? null)
+      : cellText(row, headerIndex.get('lastName'))
     if (!firstName || !lastName) {
       result.skipped++
       return
@@ -121,7 +158,9 @@ export async function importRoster(
       }
       result.imported++
     } catch (error) {
-      result.errors.push(`Row ${rowNumber}: ${(error as Error).message}`)
+      result.errors.push(
+        tr('Row {row}: {message}', { row: rowNumber, message: (error as Error).message })
+      )
     }
   })
 
@@ -138,7 +177,7 @@ export async function exportGradebookXlsx(classId: string, filePath: string): Pr
 /** One class's gradebook (every assessment score, percent and letter) as a worksheet. */
 function addGradebookSheet(workbook: ExcelJS.Workbook, classId: string, sheetName?: string): void {
   const cls = getClass(classId)
-  if (!cls) throw new Error('Class not found')
+  if (!cls) throw new Error(tr('Class not found'))
 
   const assessmentsList = listAssessmentsByClass(classId)
   const scoresByKey = new Map(
@@ -149,12 +188,12 @@ function addGradebookSheet(workbook: ExcelJS.Workbook, classId: string, sheetNam
   const sheet = workbook.addWorksheet(uniqueSheetName(workbook, sheetName ?? cls.name))
 
   sheet.addRow([
-    'Last Name',
-    'First Name',
-    'Student #',
+    tr('Last Name'),
+    tr('First Name'),
+    tr('Student #'),
     ...assessmentsList.map((a) => `${a.name} (/${a.maxScore})`),
-    'Percent',
-    'Letter'
+    tr('Percent'),
+    tr('Letter')
   ])
   sheet.getRow(1).font = { bold: true }
 
@@ -202,7 +241,7 @@ export async function exportCourseGradeSheetXlsx(
 ): Promise<void> {
   const composite = getCourseGroupComposite(courseGroupId)
   const classesInGroup = listClassesByCourseGroup(courseGroupId)
-  if (!classesInGroup.length) throw new Error('This course has no classes yet.')
+  if (!classesInGroup.length) throw new Error(tr('This course has no classes yet.'))
   // Same term order the Composite Grades page uses.
   const order = new Map<string, number>()
   for (const entry of composite.flatMap((c) => c.classes)) {
@@ -226,15 +265,15 @@ export async function exportCourseGradeSheetXlsx(
   )
 
   const workbook = new ExcelJS.Workbook()
-  const sheet = workbook.addWorksheet('Final grades')
+  const sheet = workbook.addWorksheet(tr('Final grades'))
   sheet.addRow([
-    'Last Name',
-    'First Name',
-    'Student #',
+    tr('Last Name'),
+    tr('First Name'),
+    tr('Student #'),
     ...classes.flatMap((c) => [`${label(c)} %`, `${label(c)} letter`]),
-    'Final %',
-    'Final letter',
-    'Attendance %'
+    tr('Final %'),
+    tr('Final letter'),
+    tr('Attendance %')
   ])
   sheet.getRow(1).font = { bold: true }
 
@@ -282,7 +321,7 @@ function csvField(value: string): string {
  * without opening the app. */
 export async function exportAttendanceCsv(classId: string, filePath: string): Promise<void> {
   const cls = getClass(classId)
-  if (!cls) throw new Error('Class not found')
+  if (!cls) throw new Error(tr('Class not found'))
 
   const roster = getClassRoster(classId)
   const records = listAttendanceByClass(classId)
@@ -291,7 +330,7 @@ export async function exportAttendanceCsv(classId: string, filePath: string): Pr
   const statusByKey = new Map(records.map((r) => [`${r.studentId}:${r.date}`, r.status]))
 
   const lines: string[] = []
-  lines.push(['Last Name', 'First Name', 'Student #', ...dates].map(csvField).join(','))
+  lines.push([tr('Last Name'), tr('First Name'), tr('Student #'), ...dates].map(csvField).join(','))
   for (const row of roster) {
     lines.push(
       [

@@ -18,6 +18,7 @@ import { formatDate, ipcErrorMessage, todayIso } from '@renderer/lib/format'
 import { LessonPlanFormModal, type LessonPlanDraft } from './LessonPlanFormModal'
 import { useQueryClient } from '@tanstack/react-query'
 import { addDays, mondayOf } from '@shared/dates'
+import { tr, trn } from '@shared/i18n'
 
 const STATUS_TONE = {
   planned: 'primary',
@@ -65,7 +66,7 @@ export function LessonPlannerTab(): React.JSX.Element {
             <Input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Topic, e.g. fractions to decimals"
+              placeholder={tr('Topic, e.g. fractions to decimals')}
               className="w-64"
               autoFocus
             />
@@ -74,7 +75,7 @@ export function LessonPlannerTab(): React.JSX.Element {
               onClick={handleDraft}
               disabled={!topic.trim() || draftPlan.isPending}
             >
-              {draftPlan.isPending ? 'Drafting…' : 'Go'}
+              {draftPlan.isPending ? tr('Drafting…') : tr('Go')}
             </Button>
           </div>
         )}
@@ -89,19 +90,23 @@ export function LessonPlannerTab(): React.JSX.Element {
             )
             setCopyMessage(
               n
-                ? `Copied ${n} plan${n === 1 ? '' : 's'} from last week to this week.`
-                : 'Nothing to copy: no new plans last week.'
+                ? trn(
+                    'Copied {n} plan from last week to this week.',
+                    'Copied {n} plans from last week to this week.',
+                    n
+                  )
+                : tr('Nothing to copy: no new plans last week.')
             )
             await qc.invalidateQueries({ queryKey: ['classes', classSection.id] })
           }}
-          title="Copy last week's plans to the same days this week"
+          title={tr("Copy last week's plans to the same days this week")}
         >
           <CopyPlus size={15} className="mr-1 inline" aria-hidden />
-          Copy last week
+          {tr('Copy last week')}
         </Button>
         <Button variant="secondary" onClick={() => setShowAiTopic((v) => !v)}>
           <Sparkles size={15} className="mr-1 inline" aria-hidden />
-          Draft with AI
+          {tr('Draft with AI')}
         </Button>
         <Button
           variant="primary"
@@ -111,25 +116,25 @@ export function LessonPlannerTab(): React.JSX.Element {
           }}
         >
           <Plus size={15} className="mr-1 inline" aria-hidden />
-          Lesson plan
+          {tr('Lesson plan')}
         </Button>
       </div>
       {copyMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{copyMessage}</p>}
       {draftPlan.isError && (
         <p className="mb-4 text-sm text-[var(--color-danger)]">
-          {ipcErrorMessage(draftPlan.error, 'Could not draft a lesson plan.')}
+          {ipcErrorMessage(draftPlan.error, tr('Could not draft a lesson plan.'))}
         </p>
       )}
 
       {!plans?.length ? (
         <EmptyState
           icon={NotebookPen}
-          title="No lesson plans yet"
-          description="Sketch out what you'll teach and when."
+          title={tr('No lesson plans yet')}
+          description={tr("Sketch out what you'll teach and when.")}
           action={
             <Button variant="primary" onClick={() => setShowAdd(true)}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              Lesson plan
+              {tr('Lesson plan')}
             </Button>
           }
         />
@@ -143,7 +148,7 @@ export function LessonPlannerTab(): React.JSX.Element {
                     <span className="text-xs font-medium text-[var(--color-text-muted)]">
                       {formatDate(plan.date)}
                     </span>
-                    <Badge tone={STATUS_TONE[plan.status]}>{plan.status}</Badge>
+                    <Badge tone={STATUS_TONE[plan.status]}>{tr(plan.status)}</Badge>
                   </div>
                   <h3 className="mt-1 text-sm font-semibold">{plan.title}</h3>
                   {plan.objectives && (
@@ -153,11 +158,11 @@ export function LessonPlannerTab(): React.JSX.Element {
                 <div className="flex shrink-0 gap-2">
                   <Button variant="secondary" size="sm" onClick={() => setEditingPlan(plan)}>
                     <Pencil size={13} className="mr-1 inline" aria-hidden />
-                    Edit
+                    {tr('Edit')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPendingDelete(plan)}>
                     <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                    Delete
+                    {tr('Delete')}
                   </Button>
                 </div>
               </CardBody>
@@ -190,9 +195,9 @@ export function LessonPlannerTab(): React.JSX.Element {
       )}
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete lesson plan"
-        message={`Delete "${pendingDelete?.title}"?`}
-        confirmLabel="Delete"
+        title={tr('Delete lesson plan')}
+        message={tr('Delete "{title}"?', { title: pendingDelete?.title })}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deletePlan.mutateAsync(pendingDelete.id)

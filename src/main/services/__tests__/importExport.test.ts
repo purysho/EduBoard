@@ -63,6 +63,21 @@ describe('importRoster', () => {
     expect(listStudents()[0].customFields).toEqual({ house: 'Blue' })
   })
 
+  it('reads a Chinese class list with one 姓名 column', async () => {
+    const filePath = join(tempDir, 'chinese.csv')
+    writeFileSync(filePath, '姓名,学号,家长电话\n陈麦,2026001,13800000000\nMai Chen,2026002,\n')
+    const result = await importRoster(filePath)
+    expect(result.imported).toBe(2)
+    const names = listStudents().map((s) => [s.lastName, s.firstName, s.studentNumber])
+    expect(names).toEqual(
+      expect.arrayContaining([
+        ['陈', '麦', '2026001'],
+        ['Chen', 'Mai', '2026002']
+      ])
+    )
+    expect(listStudents().find((s) => s.lastName === '陈')?.guardianContact).toBe('13800000000')
+  })
+
   it('also enrolls imported students when a class id is given', async () => {
     const filePath = join(tempDir, 'roster.csv')
     writeFileSync(filePath, CSV)

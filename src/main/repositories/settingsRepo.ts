@@ -1,18 +1,18 @@
 import { eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { settings } from '../db/schema'
-import { DEFAULT_APP_SETTINGS, type AppSettings } from '@shared/types'
+import { DEFAULT_APP_SETTINGS, withLocalDefaults, type AppSettings } from '@shared/types'
 
 const SETTINGS_KEY = 'app_settings'
 
 export function getSettings(): AppSettings {
   const row = getDb().select().from(settings).where(eq(settings.key, SETTINGS_KEY)).get() as
     { key: string; value: string } | undefined
-  if (!row) return DEFAULT_APP_SETTINGS
+  if (!row) return withLocalDefaults(DEFAULT_APP_SETTINGS)
   try {
-    return { ...DEFAULT_APP_SETTINGS, ...JSON.parse(row.value) }
+    return withLocalDefaults({ ...DEFAULT_APP_SETTINGS, ...JSON.parse(row.value) })
   } catch {
-    return DEFAULT_APP_SETTINGS
+    return withLocalDefaults(DEFAULT_APP_SETTINGS)
   }
 }
 

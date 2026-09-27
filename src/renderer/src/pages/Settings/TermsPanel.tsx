@@ -7,14 +7,15 @@ import { DateSelect, FormRow, Input } from '@renderer/components/ui/Field'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useCreateTerm, useDeleteTerm, useTerms, useUpdateTerm } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 function termDates(term: Term): string {
   if (term.startDate && term.endDate) {
     return `${formatDate(term.startDate)} – ${formatDate(term.endDate)}`
   }
-  if (term.startDate) return `from ${formatDate(term.startDate)}`
-  if (term.endDate) return `until ${formatDate(term.endDate)}`
-  return 'no dates yet'
+  if (term.startDate) return tr('from {date}', { date: formatDate(term.startDate) })
+  if (term.endDate) return tr('until {date}', { date: formatDate(term.endDate) })
+  return tr('no dates yet')
 }
 
 /** Name, school year and dates of one term; used both to add a term and to edit one. */
@@ -39,20 +40,20 @@ function TermFields({
 }): React.JSX.Element {
   return (
     <>
-      <FormRow label="Name">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Term 1" />
+      <FormRow label={tr('Name')}>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr('Term 1')} />
       </FormRow>
-      <FormRow label="School year">
+      <FormRow label={tr('School year')}>
         <Input
           value={schoolYear}
           onChange={(e) => setSchoolYear(e.target.value)}
           placeholder="2026-2027"
         />
       </FormRow>
-      <FormRow label="Start date">
+      <FormRow label={tr('Start date')}>
         <DateSelect value={startDate} onChange={setStartDate} />
       </FormRow>
-      <FormRow label="End date">
+      <FormRow label={tr('End date')}>
         <DateSelect value={endDate} onChange={setEndDate} />
       </FormRow>
     </>
@@ -97,10 +98,10 @@ function EditTermForm({ term, onDone }: { term: Term; onDone: () => void }): Rea
       />
       <div className="col-span-2 flex gap-2">
         <Button variant="primary" size="sm" type="submit" disabled={updateTerm.isPending}>
-          Save
+          {tr('Save')}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={onDone}>
-          Cancel
+          {tr('Cancel')}
         </Button>
       </div>
     </form>
@@ -140,10 +141,10 @@ export function TermsPanel(): React.JSX.Element {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <CalendarRange size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Terms
+          {tr('Terms')}
         </h2>
         <p className="text-xs text-[var(--color-text-muted)]">
-          Dates are optional and can be changed any time with Edit.
+          {tr('Dates are optional and can be changed any time with Edit.')}
         </p>
       </CardHeader>
       <CardBody className="space-y-4">
@@ -169,13 +170,13 @@ export function TermsPanel(): React.JSX.Element {
                       onClick={() => setEditingId(term.id)}
                     >
                       <Pencil size={11} className="mr-1 inline" aria-hidden />
-                      Edit
+                      {tr('Edit')}
                     </button>
                     <button
                       className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                       onClick={() => setDeleting(term)}
                     >
-                      Delete
+                      {tr('Delete')}
                     </button>
                   </span>
                 </li>
@@ -199,16 +200,18 @@ export function TermsPanel(): React.JSX.Element {
           <div className="col-span-2">
             <Button variant="secondary" type="submit" disabled={createTerm.isPending}>
               <Plus size={14} className="mr-1 inline" aria-hidden />
-              Add term
+              {tr('Add term')}
             </Button>
           </div>
         </form>
       </CardBody>
       <ConfirmDialog
         open={deleting !== null}
-        title={`Delete ${deleting?.name ?? 'this term'}?`}
-        message="Classes in this term are kept, with no term set. To change the dates instead, use Edit."
-        confirmLabel="Delete term"
+        title={tr('Delete {name}?', { name: deleting?.name ?? tr('this term') })}
+        message={tr(
+          'Classes in this term are kept, with no term set. To change the dates instead, use Edit.'
+        )}
+        confirmLabel={tr('Delete term')}
         danger
         onConfirm={() => {
           if (deleting) deleteTerm.mutate(deleting.id)

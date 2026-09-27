@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ListChecks, Plus, X } from 'lucide-react'
 import {
-  DEFAULT_LOG_QUICK_ADDS,
+  defaultLogQuickAdds,
   STUDENT_LOG_TYPES,
   type LogQuickAdd,
   type StudentField,
@@ -9,19 +9,20 @@ import {
 } from '@shared/types'
 import {
   COMMENT_CATEGORIES,
-  DEFAULT_COMMENT_BANK,
+  defaultCommentBank,
   type BankComment,
   type CommentCategory
 } from '@shared/commentBank'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 const TYPE_LABELS: Record<StudentLogType, string> = {
-  note: 'Note',
-  positive: 'Positive',
-  concern: 'Concern',
-  contact: 'Parent contact'
+  note: tr('Note'),
+  positive: tr('Positive'),
+  concern: tr('Concern'),
+  contact: tr('Parent contact')
 }
 
 const inputClass =
@@ -49,29 +50,29 @@ export function ListsPanel(): React.JSX.Element | null {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <ListChecks size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          Your lists
+          {tr('Your lists')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-5 text-sm">
         <section>
-          <h3 className="font-medium">Quick-add buttons on a student’s log</h3>
+          <h3 className="font-medium">{tr('Quick-add buttons on a student’s log')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
-            One tap adds the entry. Parent-contact entries appear under Communications.
+            {tr('One tap adds the entry. Parent-contact entries appear under Communications.')}
           </p>
           <div className="space-y-1.5">
             {q.map((item, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
-                  aria-label="Button label"
+                  aria-label={tr('Button label')}
                   className={`${inputClass} w-44`}
                   value={item.label}
-                  placeholder="Button label"
+                  placeholder={tr('Button label')}
                   onChange={(e) =>
                     setQuick(q.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
                   }
                 />
                 <select
-                  aria-label="Kind of entry"
+                  aria-label={tr('Kind of entry')}
                   className={inputClass}
                   value={item.type}
                   onChange={(e) =>
@@ -89,10 +90,10 @@ export function ListsPanel(): React.JSX.Element | null {
                   ))}
                 </select>
                 <input
-                  aria-label="Text it adds"
+                  aria-label={tr('Text it adds')}
                   className={`${inputClass} flex-1`}
                   value={item.text}
-                  placeholder="Text it adds"
+                  placeholder={tr('Text it adds')}
                   onChange={(e) =>
                     setQuick(q.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))
                   }
@@ -113,32 +114,32 @@ export function ListsPanel(): React.JSX.Element | null {
               onClick={() => setQuick([...q, { label: '', type: 'note', text: '' }])}
             >
               <Plus size={12} aria-hidden />
-              Add a button
+              {tr('Add a button')}
             </button>
             <button
               className="text-[var(--color-text-muted)] hover:underline"
-              onClick={() => setQuick(DEFAULT_LOG_QUICK_ADDS)}
+              onClick={() => setQuick(defaultLogQuickAdds())}
             >
-              Restore EduBoard’s
+              {tr('Restore EduBoard’s')}
             </button>
           </div>
         </section>
 
         <section>
-          <h3 className="font-medium">Extra student fields</h3>
+          <h3 className="font-medium">{tr('Extra student fields')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
-            Things to record about every student, such as house, allergies or support plan. They
-            appear on the student form and page, and a roster import fills them from columns with
-            the same name. They stay on this computer (never sent to the Portal).
+            {tr(
+              'Things to record about every student, such as house, allergies or support plan. They appear on the student form and page, and a roster import fills them from columns with the same name. They stay on this computer (never sent to the Portal).'
+            )}
           </p>
           <div className="space-y-1.5">
             {f.map((field, i) => (
               <div key={field.id} className="flex items-center gap-2">
                 <input
-                  aria-label="Field name"
+                  aria-label={tr('Field name')}
                   className={`${inputClass} w-64`}
                   value={field.label}
-                  placeholder="e.g. House"
+                  placeholder={tr('e.g. House')}
                   onChange={(e) =>
                     setFields(f.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
                   }
@@ -158,27 +159,29 @@ export function ListsPanel(): React.JSX.Element | null {
             onClick={() => setFields([...f, { id: crypto.randomUUID(), label: '' }])}
           >
             <Plus size={12} aria-hidden />
-            Add a field
+            {tr('Add a field')}
           </button>
           {settings.studentFields.some((old) => !f.find((x) => x.id === old.id)) && (
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              A removed field is hidden; what was recorded in it is kept, and comes back if you add
-              it again from a school pack.
+              {tr(
+                'A removed field is hidden; what was recorded in it is kept, and comes back if you add it again from a school pack.'
+              )}
             </p>
           )}
         </section>
 
         <section>
-          <h3 className="font-medium">Report comment bank</h3>
+          <h3 className="font-medium">{tr('Report comment bank')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
-            Sentences you add to report card comments in one click. {'{name}'}, {'{class}'},{' '}
-            {'{grade}'} and {'{percent}'} are filled in for each student.
+            {tr(
+              'Sentences you add to report card comments in one click. {name}, {class}, {grade} and {percent} are filled in for each student.'
+            )}
           </p>
           <div className="max-h-72 space-y-1.5 overflow-auto pr-1">
             {b.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
                 <select
-                  aria-label="Category"
+                  aria-label={tr('Category')}
                   className={inputClass}
                   value={c.category}
                   onChange={(e) =>
@@ -191,12 +194,12 @@ export function ListsPanel(): React.JSX.Element | null {
                 >
                   {COMMENT_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
-                      {cat}
+                      {tr(cat)}
                     </option>
                   ))}
                 </select>
                 <input
-                  aria-label="Comment"
+                  aria-label={tr('Comment')}
                   className={`${inputClass} flex-1`}
                   value={c.text}
                   onChange={(e) =>
@@ -204,7 +207,7 @@ export function ListsPanel(): React.JSX.Element | null {
                   }
                 />
                 <button
-                  aria-label="Remove comment"
+                  aria-label={tr('Remove comment')}
                   className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                   onClick={() => setBank(b.filter((_, j) => j !== i))}
                 >
@@ -219,13 +222,13 @@ export function ListsPanel(): React.JSX.Element | null {
               onClick={() => setBank([...b, { category: 'General', text: '' }])}
             >
               <Plus size={12} aria-hidden />
-              Add a comment
+              {tr('Add a comment')}
             </button>
             <button
               className="text-[var(--color-text-muted)] hover:underline"
-              onClick={() => setBank(DEFAULT_COMMENT_BANK)}
+              onClick={() => setBank(defaultCommentBank())}
             >
-              Restore EduBoard’s
+              {tr('Restore EduBoard’s')}
             </button>
           </div>
         </section>
@@ -246,7 +249,7 @@ export function ListsPanel(): React.JSX.Element | null {
               setBank(null)
             }}
           >
-            Save lists
+            {tr('Save lists')}
           </Button>
           {dirty && (
             <Button
@@ -258,7 +261,7 @@ export function ListsPanel(): React.JSX.Element | null {
                 setBank(null)
               }}
             >
-              Undo changes
+              {tr('Undo changes')}
             </Button>
           )}
         </div>

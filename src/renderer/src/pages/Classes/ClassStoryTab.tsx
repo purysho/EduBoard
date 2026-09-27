@@ -9,6 +9,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useClassPosts, useCreateClassPost, useDeleteClassPost } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 export function ClassStoryTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -43,13 +44,13 @@ export function ClassStoryTab(): React.JSX.Element {
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Share a quick update with families in this class…"
+              placeholder={tr('Share a quick update with families in this class…')}
               rows={3}
             />
             <div className="flex items-center justify-between">
               <Button type="button" variant="secondary" size="sm" onClick={handlePickImage}>
                 <ImageIcon size={13} className="mr-1 inline" aria-hidden />
-                {imagePath ? 'Change photo' : 'Add photo'}
+                {imagePath ? tr('Change photo') : tr('Add photo')}
               </Button>
               <Button
                 type="submit"
@@ -57,7 +58,7 @@ export function ClassStoryTab(): React.JSX.Element {
                 size="sm"
                 disabled={!body.trim() || createPost.isPending}
               >
-                {createPost.isPending ? 'Posting…' : 'Post to families'}
+                {createPost.isPending ? tr('Posting…') : tr('Post to families')}
               </Button>
             </div>
             {imagePath && (
@@ -72,8 +73,8 @@ export function ClassStoryTab(): React.JSX.Element {
       {!posts?.length ? (
         <EmptyState
           icon={Newspaper}
-          title="No updates posted yet"
-          description="Short posts here show up on every enrolled family's Portal dashboard."
+          title={tr('No updates posted yet')}
+          description={tr("Short posts here show up on every enrolled family's Portal dashboard.")}
         />
       ) : (
         <div className="space-y-3">
@@ -86,12 +87,14 @@ export function ClassStoryTab(): React.JSX.Element {
                   </p>
                   <p className="mt-1 whitespace-pre-wrap text-sm">{p.body}</p>
                   {p.hasImage && (
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">📷 Photo attached</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      {tr('📷 Photo attached')}
+                    </p>
                   )}
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setPendingDelete(p.id)}>
                   <Trash2 size={13} className="mr-1 inline" aria-hidden />
-                  Delete
+                  {tr('Delete')}
                 </Button>
               </CardBody>
             </Card>
@@ -101,9 +104,9 @@ export function ClassStoryTab(): React.JSX.Element {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete post"
-        message="Delete this update? Families will no longer see it."
-        confirmLabel="Delete"
+        title={tr('Delete post')}
+        message={tr('Delete this update? Families will no longer see it.')}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deletePost.mutateAsync(pendingDelete)

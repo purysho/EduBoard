@@ -4,6 +4,7 @@ import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input } from '@renderer/components/ui/Field'
 import { useCreateGradeCategory, useUpdateGradeCategory } from '@renderer/lib/queries'
+import { tr } from '@shared/i18n'
 
 export function CategoryFormModal({
   open,
@@ -49,23 +50,23 @@ export function CategoryFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit category' : 'New grade category'}
+      title={isEdit ? tr('Edit category') : tr('New grade category')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {tr('Cancel')}
           </Button>
           <Button variant="primary" type="submit" form="category-form" disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tr('Saving…') : tr('Save')}
           </Button>
         </>
       }
     >
       <form id="category-form" onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-        <FormRow label="Name" hint='e.g. "Homework", "Exams", "Speaking"'>
+        <FormRow label={tr('Name')} hint={tr('e.g. "Homework", "Exams", "Speaking"')}>
           <Input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </FormRow>
-        <FormRow label="Weight (%)">
+        <FormRow label={tr('Weight (%)')}>
           <Input
             type="number"
             min={0}

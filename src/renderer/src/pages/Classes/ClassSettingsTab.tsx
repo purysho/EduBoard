@@ -29,6 +29,7 @@ import { CategoryFormModal } from './CategoryFormModal'
 import { NewTermClassModal } from './NewTermClassModal'
 import { GradeScaleEditor } from '@renderer/components/GradeScaleEditor'
 import { gradeScaleIsValid } from '@shared/gradeScales'
+import { tr } from '@shared/i18n'
 
 const NEW_COURSE_GROUP_VALUE = '__new__'
 
@@ -54,7 +55,7 @@ export function ClassSettingsTab(): React.JSX.Element {
 
   async function handleCourseGroupChange(value: string): Promise<void> {
     if (value === NEW_COURSE_GROUP_VALUE) {
-      const name = window.prompt('Name this course (e.g. "Algebra I")')?.trim()
+      const name = window.prompt(tr('Name this course (e.g. "Algebra I")'))?.trim()
       if (!name) return
       const group = await createCourseGroup.mutateAsync({ name })
       await updateClass.mutateAsync({ id: classSection.id, patch: { courseGroupId: group.id } })
@@ -93,39 +94,41 @@ export function ClassSettingsTab(): React.JSX.Element {
     <div className="grid grid-cols-2 gap-6">
       <Card className="col-span-2 h-fit">
         <CardHeader className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Class details</h2>
+          <h2 className="text-sm font-semibold">{tr('Class details')}</h2>
           <div className="flex gap-2">
             <Button
               variant="secondary"
               size="sm"
               onClick={() => setShowNewTerm(true)}
-              title="A new class for the next term with this class's setup and, if you like, its students (who keep their Portal logins)"
+              title={tr(
+                "A new class for the next term with this class's setup and, if you like, its students (who keep their Portal logins)"
+              )}
             >
               <CopyPlus size={13} className="mr-1 inline" aria-hidden />
-              Start next term
+              {tr('Start next term')}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setShowEditClass(true)}>
               <Pencil size={13} className="mr-1 inline" aria-hidden />
-              Edit
+              {tr('Edit')}
             </Button>
           </div>
         </CardHeader>
         <CardBody className="grid grid-cols-4 gap-4 text-sm">
-          <DetailItem label="Subject" value={classSection.subject} />
-          <DetailItem label="Grade level" value={classSection.gradeLevel} />
-          <DetailItem label="Schedule" value={classSection.schedule} />
-          <DetailItem label="Room" value={classSection.room} />
+          <DetailItem label={tr('Subject')} value={classSection.subject} />
+          <DetailItem label={tr('Grade level')} value={classSection.gradeLevel} />
+          <DetailItem label={tr('Schedule')} value={classSection.schedule} />
+          <DetailItem label={tr('Room')} value={classSection.room} />
         </CardBody>
       </Card>
 
       <Card className="h-fit">
         <CardHeader>
-          <h2 className="text-sm font-semibold">Grading scale</h2>
+          <h2 className="text-sm font-semibold">{tr('Grading scale')}</h2>
         </CardHeader>
         <CardBody>
           <form onSubmit={handleGradingSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormRow label="Pass mark (%)">
+              <FormRow label={tr('Pass mark (%)')}>
                 <Input
                   type="number"
                   min={0}
@@ -134,7 +137,10 @@ export function ClassSettingsTab(): React.JSX.Element {
                   onChange={(e) => setPassMark(Number(e.target.value))}
                 />
               </FormRow>
-              <FormRow label="Default assessment max score" hint="Used to prefill new assessments">
+              <FormRow
+                label={tr('Default assessment max score')}
+                hint={tr('Used to prefill new assessments')}
+              >
                 <Input
                   type="number"
                   min={1}
@@ -149,7 +155,7 @@ export function ClassSettingsTab(): React.JSX.Element {
               type="submit"
               disabled={updateClass.isPending || !gradeScaleIsValid(thresholds)}
             >
-              {updateClass.isPending ? 'Saving…' : 'Save grading scale'}
+              {updateClass.isPending ? tr('Saving…') : tr('Save grading scale')}
             </Button>
           </form>
         </CardBody>
@@ -159,32 +165,35 @@ export function ClassSettingsTab(): React.JSX.Element {
         <CardHeader>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <Layers size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-            Course group
+            {tr('Course group')}
           </h2>
         </CardHeader>
         <CardBody className="space-y-4">
           <p className="text-sm text-[var(--color-text-muted)]">
-            Link this class to the same course&apos;s other terms (e.g. Fall + Spring) to see a
-            combined grade for each student on the Composite Grades page.
+            {tr(
+              "Link this class to the same course's other terms (e.g. Fall + Spring) to see a combined grade for each student on the Composite Grades page."
+            )}
           </p>
-          <FormRow label="Course">
+          <FormRow label={tr('Course')}>
             <Select
               value={classSection.courseGroupId ?? ''}
               onChange={(e) => handleCourseGroupChange(e.target.value)}
             >
-              <option value="">Not part of a course group</option>
+              <option value="">{tr('Not part of a course group')}</option>
               {(courseGroups ?? []).map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.name}
                 </option>
               ))}
-              <option value={NEW_COURSE_GROUP_VALUE}>+ New course…</option>
+              <option value={NEW_COURSE_GROUP_VALUE}>{tr('+ New course…')}</option>
             </Select>
           </FormRow>
           {classSection.courseGroupId && (
             <FormRow
-              label="Weight in composite"
-              hint="How much this term counts relative to the group's other terms — 1 means equally"
+              label={tr('Weight in composite')}
+              hint={tr(
+                "How much this term counts relative to the group's other terms — 1 means equally"
+              )}
             >
               <div className="flex items-center gap-2">
                 <Input
@@ -201,7 +210,7 @@ export function ClassSettingsTab(): React.JSX.Element {
                   onClick={() => updateClass.mutate({ id: classSection.id, patch: { termWeight } })}
                   disabled={updateClass.isPending || termWeight === classSection.termWeight}
                 >
-                  Save
+                  {tr('Save')}
                 </Button>
               </div>
             </FormRow>
@@ -213,22 +222,22 @@ export function ClassSettingsTab(): React.JSX.Element {
         <CardHeader>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <UserCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-            Attendance requirement
+            {tr('Attendance requirement')}
           </h2>
         </CardHeader>
         <CardBody className="space-y-3">
           <p className="text-sm text-[var(--color-text-muted)]">
-            If this course requires a minimum attendance, students below it are listed on the
-            Dashboard once they&apos;ve had three sessions. Excused absences don&apos;t count
-            against them.
+            {tr(
+              "If this course requires a minimum attendance, students below it are listed on the Dashboard once they've had three sessions. Excused absences don't count against them."
+            )}
           </p>
-          <FormRow label="Minimum attendance (%)" hint="Leave blank for no requirement">
+          <FormRow label={tr('Minimum attendance (%)')} hint={tr('Leave blank for no requirement')}>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
                 min={1}
                 max={100}
-                placeholder="e.g. 80"
+                placeholder={tr('e.g. 80')}
                 value={minAttendance}
                 onChange={(e) => setMinAttendance(e.target.value)}
                 className="w-24"
@@ -248,12 +257,14 @@ export function ClassSettingsTab(): React.JSX.Element {
                   minAttendanceValue === classSection.minAttendance
                 }
               >
-                Save
+                {tr('Save')}
               </Button>
             </div>
           </FormRow>
           {minAttendanceInvalid && (
-            <p className="text-xs text-[var(--color-danger)]">Enter a number from 1 to 100.</p>
+            <p className="text-xs text-[var(--color-danger)]">
+              {tr('Enter a number from 1 to 100.')}
+            </p>
           )}
         </CardBody>
       </Card>
@@ -262,18 +273,19 @@ export function ClassSettingsTab(): React.JSX.Element {
         <CardHeader className="flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <Tags size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-            Grade categories
+            {tr('Grade categories')}
           </h2>
           <Button variant="secondary" size="sm" onClick={() => setShowAddCategory(true)}>
             <Plus size={13} className="mr-1 inline" aria-hidden />
-            Category
+            {tr('Category')}
           </Button>
         </CardHeader>
         <CardBody>
           {!categories?.length ? (
             <p className="text-sm text-[var(--color-text-muted)]">
-              No categories yet — assessments will count equally toward the class grade. Add
-              categories like &quot;Homework&quot; and &quot;Exams&quot; to weight them differently.
+              {tr(
+                'No categories yet — assessments will count equally toward the class grade. Add categories like "Homework" and "Exams" to weight them differently.'
+              )}
             </p>
           ) : (
             <>
@@ -287,13 +299,13 @@ export function ClassSettingsTab(): React.JSX.Element {
                         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                         onClick={() => setEditingCategory(cat.id)}
                       >
-                        Edit
+                        {tr('Edit')}
                       </button>
                       <button
                         className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                         onClick={() => deleteCategory.mutate(cat.id)}
                       >
-                        Delete
+                        {tr('Delete')}
                       </button>
                     </div>
                   </li>
@@ -301,8 +313,10 @@ export function ClassSettingsTab(): React.JSX.Element {
               </ul>
               {totalWeight !== 100 && (
                 <p className="mt-2 text-xs text-[var(--color-warning)]">
-                  Weights add up to {totalWeight}%, not 100%. Categories with graded work are
-                  renormalized automatically, but this is worth double-checking.
+                  {tr(
+                    'Weights add up to {totalWeight}%, not 100%. Categories with graded work are renormalized automatically, but this is worth double-checking.',
+                    { totalWeight }
+                  )}
                 </p>
               )}
             </>
@@ -312,17 +326,21 @@ export function ClassSettingsTab(): React.JSX.Element {
 
       <Card className="col-span-2 h-fit">
         <CardHeader>
-          <h2 className="text-sm font-semibold">Archive</h2>
+          <h2 className="text-sm font-semibold">{tr('Archive')}</h2>
         </CardHeader>
         <CardBody className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium">
-              {classSection.archived ? 'This class is archived' : 'Archive this class'}
+              {classSection.archived ? tr('This class is archived') : tr('Archive this class')}
             </p>
             <p className="text-sm text-[var(--color-text-muted)]">
               {classSection.archived
-                ? 'Hidden from the active classes list. All its data is kept, and it can be unarchived any time. On the Portal, students still see it as finished: grades, feedback and materials, read-only.'
-                : 'Hides it from the active classes list at the end of a term, without deleting anything — roster, gradebook, attendance, and lesson plans are all kept. On the Portal it shows as finished: students keep their grades, feedback and materials, but can’t hand in more work or join.'}
+                ? tr(
+                    'Hidden from the active classes list. All its data is kept, and it can be unarchived any time. On the Portal, students still see it as finished: grades, feedback and materials, read-only.'
+                  )
+                : tr(
+                    'Hides it from the active classes list at the end of a term, without deleting anything — roster, gradebook, attendance, and lesson plans are all kept. On the Portal it shows as finished: students keep their grades, feedback and materials, but can’t hand in more work or join.'
+                  )}
             </p>
           </div>
           <Button
@@ -338,12 +356,12 @@ export function ClassSettingsTab(): React.JSX.Element {
             {classSection.archived ? (
               <>
                 <ArchiveRestore size={14} className="mr-1 inline" aria-hidden />
-                Unarchive
+                {tr('Unarchive')}
               </>
             ) : (
               <>
                 <Archive size={14} className="mr-1 inline" aria-hidden />
-                Archive
+                {tr('Archive')}
               </>
             )}
           </Button>
@@ -354,18 +372,20 @@ export function ClassSettingsTab(): React.JSX.Element {
         <CardHeader>
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-danger)]">
             <AlertTriangle size={15} aria-hidden />
-            Danger zone
+            {tr('Danger zone')}
           </h2>
         </CardHeader>
         <CardBody className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Delete this class</p>
+            <p className="text-sm font-medium">{tr('Delete this class')}</p>
             <p className="text-sm text-[var(--color-text-muted)]">
-              Permanently removes the class, its roster, gradebook, attendance, and lesson plans.
+              {tr(
+                'Permanently removes the class, its roster, gradebook, attendance, and lesson plans.'
+              )}
             </p>
           </div>
           <Button variant="danger" onClick={() => setConfirmDeleteClass(true)}>
-            Delete class
+            {tr('Delete class')}
           </Button>
         </CardBody>
       </Card>
@@ -395,9 +415,12 @@ export function ClassSettingsTab(): React.JSX.Element {
       )}
       <ConfirmDialog
         open={confirmDeleteClass}
-        title="Delete class"
-        message={`Delete "${classSection.name}"? This permanently removes its roster, gradebook, attendance records, and lesson plans. This can't be undone.`}
-        confirmLabel="Delete"
+        title={tr('Delete class')}
+        message={tr(
+          'Delete "{name}"? This permanently removes its roster, gradebook, attendance records, and lesson plans. This can\'t be undone.',
+          { name: classSection.name }
+        )}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           await deleteClass.mutateAsync(classSection.id)

@@ -5,6 +5,7 @@ import { newId, nowIso } from '../db/util'
 import { recordAudit } from './auditLog'
 import type { ClassSection } from '@shared/types'
 import type { CreateClassInput, UpdateClassInput } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { CreateClassInput, UpdateClassInput }
 
@@ -37,7 +38,7 @@ export function createClass(input: CreateClassInput): ClassSection {
     entityType: 'class',
     entityId: row.id,
     action: 'create',
-    summary: `Created class "${row.name}"`,
+    summary: tr('Created class “{name}”', { name: row.name }),
     classId: row.id
   })
   return row
@@ -55,7 +56,7 @@ export function updateClass(id: string, patch: UpdateClassInput): ClassSection {
     entityType: 'class',
     entityId: id,
     action: 'update',
-    summary: `Updated class "${updated.name}"`,
+    summary: tr('Updated class “{name}”', { name: updated.name }),
     classId: id
   })
   return updated
@@ -69,7 +70,7 @@ export function deleteClass(id: string): void {
       entityType: 'class',
       entityId: id,
       action: 'delete',
-      summary: `Deleted class "${existing.name}"`,
+      summary: tr('Deleted class “{name}”', { name: existing.name }),
       classId: id
     })
   }

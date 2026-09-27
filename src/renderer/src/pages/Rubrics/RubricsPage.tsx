@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useDeleteRubric, useRubrics } from '@renderer/lib/queries'
 import { cn } from '@renderer/lib/cn'
 import { StandardsPanel } from './StandardsPanel'
+import { tr } from '@shared/i18n'
 
 type Tab = 'library' | 'standards'
 
@@ -23,13 +24,15 @@ export function RubricsPage(): React.JSX.Element {
   return (
     <div>
       <PageHeader
-        title="Rubrics & Standards"
-        description="Build reusable grading rubrics and keep a library of the standards they cover."
+        title={tr('Rubrics & Standards')}
+        description={tr(
+          'Build reusable grading rubrics and keep a library of the standards they cover.'
+        )}
         actions={
           tab === 'library' && (
             <Button variant="primary" onClick={() => navigate('/rubrics/new')}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              New rubric
+              {tr('New rubric')}
             </Button>
           )
         }
@@ -38,8 +41,8 @@ export function RubricsPage(): React.JSX.Element {
       <div className="mb-4 flex gap-1 border-b border-[var(--color-border)]">
         {(
           [
-            { key: 'library', label: 'Rubric library' },
-            { key: 'standards', label: 'Standards' }
+            { key: 'library', label: tr('Rubric library') },
+            { key: 'standards', label: tr('Standards') }
           ] as const
         ).map((t) => (
           <button
@@ -64,12 +67,12 @@ export function RubricsPage(): React.JSX.Element {
       ) : !rubrics?.length ? (
         <EmptyState
           icon={ClipboardCheck}
-          title="No rubrics yet"
-          description="Build a rubric once and reuse it on any assessment across any class."
+          title={tr('No rubrics yet')}
+          description={tr('Build a rubric once and reuse it on any assessment across any class.')}
           action={
             <Button variant="primary" onClick={() => navigate('/rubrics/new')}>
               <Plus size={15} className="mr-1 inline" aria-hidden />
-              New rubric
+              {tr('New rubric')}
             </Button>
           }
         />
@@ -90,7 +93,7 @@ export function RubricsPage(): React.JSX.Element {
                       e.stopPropagation()
                       setPendingDelete(r)
                     }}
-                    aria-label="Delete rubric"
+                    aria-label={tr('Delete rubric')}
                   >
                     <Trash2 size={14} aria-hidden />
                   </button>
@@ -101,7 +104,10 @@ export function RubricsPage(): React.JSX.Element {
                   </p>
                 )}
                 <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-                  {r.criteria.length} criteria · {r.maxPoints} pts max
+                  {tr('{length} criteria · {maxPoints} pts max', {
+                    length: r.criteria.length,
+                    maxPoints: r.maxPoints
+                  })}
                 </p>
               </CardBody>
             </Card>
@@ -111,9 +117,12 @@ export function RubricsPage(): React.JSX.Element {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete rubric"
-        message={`Delete "${pendingDelete?.name}"? Assessments using it keep their current scores but lose the rubric detail — this can't be undone.`}
-        confirmLabel="Delete"
+        title={tr('Delete rubric')}
+        message={tr(
+          'Delete "{name}"? Assessments using it keep their current scores but lose the rubric detail — this can\'t be undone.',
+          { name: pendingDelete?.name }
+        )}
+        confirmLabel={tr('Delete')}
         danger
         onConfirm={async () => {
           if (pendingDelete) await deleteRubric.mutateAsync(pendingDelete.id)

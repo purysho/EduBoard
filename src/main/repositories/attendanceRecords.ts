@@ -5,6 +5,7 @@ import { newId, nowIso } from '../db/util'
 import { recordAudit } from './auditLog'
 import type { AttendanceRecord } from '@shared/types'
 import type { MarkAttendanceInput } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { MarkAttendanceInput }
 
@@ -50,7 +51,10 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
         entityType: 'attendance',
         entityId: existing.id,
         action: 'update',
-        summary: `Attendance on ${input.date} changed to "${patch.status}"`,
+        summary: tr('Attendance on {date} changed to “{status}”', {
+          date: input.date,
+          status: tr(patch.status ?? '')
+        }),
         studentId: input.studentId,
         classId: input.classId
       })
@@ -72,7 +76,10 @@ export function markAttendance(input: MarkAttendanceInput): AttendanceRecord {
     entityType: 'attendance',
     entityId: row.id,
     action: 'create',
-    summary: `Attendance on ${input.date} marked "${input.status}"`,
+    summary: tr('Attendance on {date} marked “{status}”', {
+      date: input.date,
+      status: tr(input.status)
+    }),
     studentId: input.studentId,
     classId: input.classId
   })

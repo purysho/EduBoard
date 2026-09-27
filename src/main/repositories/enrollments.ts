@@ -5,6 +5,7 @@ import { newId, nowIso } from '../db/util'
 import { recordAudit } from './auditLog'
 import type { Enrollment, Student } from '@shared/types'
 import type { CreateEnrollmentInput } from '@shared/inputs'
+import { tr } from '@shared/i18n'
 
 export type { CreateEnrollmentInput }
 
@@ -46,7 +47,7 @@ export function enrollStudent(input: CreateEnrollmentInput): Enrollment {
     entityType: 'enrollment',
     entityId: row.id,
     action: 'create',
-    summary: 'Enrolled in class',
+    summary: tr('Enrolled in class'),
     studentId: row.studentId,
     classId: row.classId
   })
@@ -62,7 +63,7 @@ export function updateEnrollmentStatus(id: string, status: Enrollment['status'])
       entityType: 'enrollment',
       entityId: id,
       action: 'update',
-      summary: `Enrollment status changed to "${status}"`,
+      summary: tr('Enrollment status changed to “{status}”', { status: tr(status) }),
       studentId: existing.studentId,
       classId: existing.classId
     })
@@ -104,7 +105,7 @@ export function unenrollStudent(studentId: string, classId: string): void {
     entityType: 'enrollment',
     entityId: `${studentId}:${classId}`,
     action: 'delete',
-    summary: 'Unenrolled from class (scores and attendance for this class cleared)',
+    summary: tr('Unenrolled from class (scores and attendance for this class cleared)'),
     studentId,
     classId
   })

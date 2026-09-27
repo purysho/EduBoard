@@ -7,6 +7,7 @@ import {
   scaleProblem,
   type GradeBand
 } from '@shared/gradeScales'
+import { tr } from '@shared/i18n'
 
 /** Which preset a class's scale matches, or 'custom'. */
 function presetId(value: GradeThresholds): string {
@@ -55,7 +56,7 @@ export function GradeScaleEditor({
   return (
     <div className="space-y-2">
       <label className="flex items-center gap-2 text-sm">
-        <span className="font-medium">Scale</span>
+        <span className="font-medium">{tr('Scale')}</span>
         <select
           className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1"
           value={current}
@@ -77,7 +78,7 @@ export function GradeScaleEditor({
               {p.name}
             </option>
           ))}
-          <option value="custom">Your own…</option>
+          <option value="custom">{tr('Your own…')}</option>
         </select>
       </label>
       {note && <p className="text-xs text-[var(--color-text-muted)]">{note}</p>}
@@ -85,8 +86,8 @@ export function GradeScaleEditor({
       <table className="text-sm">
         <thead>
           <tr className="text-left text-xs text-[var(--color-text-muted)]">
-            <th className="pr-3 pb-1 font-medium">Band</th>
-            <th className="pr-3 pb-1 font-medium">From %</th>
+            <th className="pr-3 pb-1 font-medium">{tr('Band')}</th>
+            <th className="pr-3 pb-1 font-medium">{tr('From %')}</th>
             <th />
           </tr>
         </thead>
@@ -97,7 +98,7 @@ export function GradeScaleEditor({
               <tr key={i}>
                 <td className="pr-3 py-0.5">
                   <input
-                    aria-label={`Band ${i + 1} name`}
+                    aria-label={tr('Band {n} name', { n: i + 1 })}
                     className="w-24 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 disabled:opacity-60"
                     value={b.label}
                     disabled={isAF}
@@ -106,7 +107,7 @@ export function GradeScaleEditor({
                 </td>
                 <td className="pr-3 py-0.5">
                   <input
-                    aria-label={`${b.label} from percent`}
+                    aria-label={tr('{label} from percent', { label: b.label })}
                     type="number"
                     min={0}
                     max={100}
@@ -120,7 +121,7 @@ export function GradeScaleEditor({
                   {!isAF && bands.length > 2 && (
                     <button
                       type="button"
-                      aria-label={`Remove ${b.label}`}
+                      aria-label={tr('Remove {label}', { label: b.label })}
                       className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-danger)]"
                       onClick={() => setBands(bands.filter((_, j) => j !== i))}
                     >
@@ -146,14 +147,18 @@ export function GradeScaleEditor({
           }}
         >
           <Plus size={12} aria-hidden />
-          Add a band
+          {tr('Add a band')}
         </button>
       )}
       {problem ? (
         <p className="text-xs text-[var(--color-danger)]">{problem}</p>
       ) : (
         <p className="text-xs text-[var(--color-text-muted)]">
-          e.g. {[95, 82, 64, 40].map((p) => `${p}% → ${letterForPercent(p, value)}`).join(' · ')}
+          {tr('e.g. {percent}', {
+            percent: [95, 82, 64, 40]
+              .map((p) => `${p}% → ${letterForPercent(p, value)}`)
+              .join(' · ')
+          })}
         </p>
       )}
     </div>

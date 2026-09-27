@@ -12,6 +12,7 @@ import {
   useUpdateSettings
 } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
+import { tr } from '@shared/i18n'
 
 const RELEASES_URL = 'https://github.com/purysho/EduBoard/releases/latest'
 
@@ -53,7 +54,7 @@ export function AboutPanel(): React.JSX.Element {
       setProgress({ phase: 'installing', fraction: 1, error: null })
     } catch (err) {
       setProgress(null)
-      setError(ipcErrorMessage(err, 'The update didn’t work. Nothing was changed; try again.'))
+      setError(ipcErrorMessage(err, tr('The update didn’t work. Nothing was changed; try again.')))
     }
   }
 
@@ -63,7 +64,7 @@ export function AboutPanel(): React.JSX.Element {
         <CardHeader className="flex items-center justify-between">
           <h2 className="flex items-center gap-1.5 text-sm font-semibold">
             <Sparkles size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-            EduBoard {info?.current ?? ''}
+            {tr('EduBoard')} {info?.current ?? ''}
           </h2>
           <Button
             variant="secondary"
@@ -72,7 +73,7 @@ export function AboutPanel(): React.JSX.Element {
             disabled={isFetching || updating}
           >
             <RefreshCw size={13} className="mr-1 inline" aria-hidden />
-            {isFetching ? 'Checking…' : 'Check for updates'}
+            {isFetching ? tr('Checking…') : tr('Check for updates')}
           </Button>
         </CardHeader>
         <CardBody className="space-y-3 text-sm">
@@ -80,8 +81,11 @@ export function AboutPanel(): React.JSX.Element {
             <div>
               <p className="mb-2">
                 {progress?.phase === 'installing'
-                  ? 'Installing. EduBoard will close and reopen by itself in a moment…'
-                  : `Downloading EduBoard ${info.latest}… ${Math.round((progress?.fraction ?? 0) * 100)}%`}
+                  ? tr('Installing. EduBoard will close and reopen by itself in a moment…')
+                  : tr('Downloading EduBoard {latest}… {round}%', {
+                      latest: info.latest,
+                      round: Math.round((progress?.fraction ?? 0) * 100)
+                    })}
               </p>
               <div className="h-2 overflow-hidden rounded-full bg-[var(--color-surface-muted)]">
                 <div
@@ -93,27 +97,27 @@ export function AboutPanel(): React.JSX.Element {
           ) : ready ? (
             <>
               <p>
-                <strong>EduBoard {ready} is downloaded.</strong>{' '}
+                <strong>{tr('EduBoard {ready} is downloaded.', { ready })}</strong>{' '}
                 {status?.autoInstallFailed
-                  ? 'Installing it automatically didn’t finish last time, so install it here.'
+                  ? tr('Installing it automatically didn’t finish last time, so install it here.')
                   : settings?.autoUpdate
-                    ? 'It installs the next time you open EduBoard, or now if you restart.'
-                    : 'Restart to install it.'}
+                    ? tr('It installs the next time you open EduBoard, or now if you restart.')
+                    : tr('Restart to install it.')}
               </p>
               <Button variant="primary" onClick={() => setConfirming(true)}>
                 <RefreshCw size={14} className="mr-1 inline" aria-hidden />
-                Restart and update now
+                {tr('Restart and update now')}
               </Button>
             </>
           ) : info.updateAvailable ? (
             <>
               <p>
-                <strong>EduBoard {info.latest} is available.</strong>
+                <strong>{tr('EduBoard {latest} is available.', { latest: info.latest })}</strong>
               </p>
               {info.canInstall ? (
                 <Button variant="primary" onClick={() => setConfirming(true)}>
                   <Download size={14} className="mr-1 inline" aria-hidden />
-                  Update now
+                  {tr('Update now')}
                 </Button>
               ) : (
                 <p className="text-[var(--color-text-muted)]">
@@ -124,17 +128,19 @@ export function AboutPanel(): React.JSX.Element {
                     rel="noreferrer"
                     className="font-medium text-[var(--color-primary)] hover:underline"
                   >
-                    Download it instead
+                    {tr('Download it instead')}
                   </a>
                 </p>
               )}
             </>
           ) : info.latest ? (
-            <p className="text-[var(--color-text-muted)]">You have the newest version.</p>
+            <p className="text-[var(--color-text-muted)]">{tr('You have the newest version.')}</p>
           ) : (
             <p className="text-[var(--color-text-muted)]">
-              Couldn&apos;t check for updates just now{info.problem ? ` (${info.problem})` : ''}.
-              Check your internet connection and try again.
+              {tr(
+                'Couldn’t check for updates just now{problem}. Check your internet connection and try again.',
+                { problem: info.problem ? ` (${info.problem})` : '' }
+              )}
             </p>
           )}
           {error && <p className="text-[var(--color-danger)]">{error}</p>}
@@ -147,10 +153,11 @@ export function AboutPanel(): React.JSX.Element {
                 onChange={(e) => updateSettings.mutate({ autoUpdate: e.target.checked })}
               />
               <span>
-                Install updates automatically
+                {tr('Install updates automatically')}
                 <span className="block text-xs text-[var(--color-text-muted)]">
-                  New versions download in the background and install the next time you open
-                  EduBoard, after a backup. Turn off to update only from here.
+                  {tr(
+                    'New versions download in the background and install the next time you open EduBoard, after a backup. Turn off to update only from here.'
+                  )}
                 </span>
               </span>
             </label>
@@ -159,13 +166,17 @@ export function AboutPanel(): React.JSX.Element {
 
         <ConfirmDialog
           open={confirming}
-          title={`Update to EduBoard ${ready ?? info?.latest ?? ''}?`}
+          title={tr('Update to EduBoard {version}?', { version: ready ?? info?.latest ?? '' })}
           message={
             ready
-              ? 'Save anything you’re working on first (a message or form you’re typing). EduBoard will take a backup, close, install the update and reopen by itself. Your classes, grades and all other data are kept.'
-              : 'Save anything you’re working on first (a message or form you’re typing). EduBoard will take a backup, download the update, close, install it and reopen by itself. This takes a few minutes. Your classes, grades and all other data are kept.'
+              ? tr(
+                  'Save anything you’re working on first (a message or form you’re typing). EduBoard will take a backup, close, install the update and reopen by itself. Your classes, grades and all other data are kept.'
+                )
+              : tr(
+                  'Save anything you’re working on first (a message or form you’re typing). EduBoard will take a backup, download the update, close, install it and reopen by itself. This takes a few minutes. Your classes, grades and all other data are kept.'
+                )
           }
-          confirmLabel={ready ? 'Restart and update' : 'Update now'}
+          confirmLabel={ready ? tr('Restart and update') : tr('Update now')}
           onConfirm={startUpdate}
           onCancel={() => setConfirming(false)}
         />

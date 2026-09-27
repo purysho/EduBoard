@@ -7,6 +7,7 @@ import {
   useState
 } from 'react'
 import { cn } from '@renderer/lib/cn'
+import { tr } from '@shared/i18n'
 
 const fieldClasses =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] disabled:opacity-50'
@@ -45,18 +46,18 @@ export function Select({
 }
 
 const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December'
+  tr('January'),
+  tr('February'),
+  tr('March'),
+  tr('April'),
+  tr('May'),
+  tr('June'),
+  tr('July'),
+  tr('August'),
+  tr('September'),
+  tr('October'),
+  tr('November'),
+  tr('December')
 ]
 
 /** A Month/Day/Year select trio instead of the OS date picker — used everywhere a date
@@ -108,7 +109,7 @@ export function DateSelect({
   return (
     <div id={id} className="grid grid-cols-[2fr_1fr_1.2fr] gap-2">
       <Select value={m} onChange={(e) => pick(y, e.target.value, d)} required={required}>
-        <option value="">Month</option>
+        <option value="">{tr('Month')}</option>
         {MONTH_NAMES.map((name, i) => (
           <option key={name} value={String(i + 1).padStart(2, '0')}>
             {name}
@@ -116,7 +117,7 @@ export function DateSelect({
         ))}
       </Select>
       <Select value={d} onChange={(e) => pick(y, m, e.target.value)} required={required}>
-        <option value="">Day</option>
+        <option value="">{tr('Day')}</option>
         {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
           <option key={day} value={String(day).padStart(2, '0')}>
             {day}
@@ -124,7 +125,7 @@ export function DateSelect({
         ))}
       </Select>
       <Select value={y} onChange={(e) => pick(e.target.value, m, d)} required={required}>
-        <option value="">Year</option>
+        <option value="">{tr('Year')}</option>
         {years.map((year) => (
           <option key={year} value={year}>
             {year}
