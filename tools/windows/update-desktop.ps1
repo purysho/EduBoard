@@ -30,18 +30,22 @@ function Send([string]$url, [string]$accept, [bool]$auth) {
   $req.Headers.UserAgent.ParseAdd('EduBoard-Updater')
   $req.Headers.Accept.ParseAdd($accept)
   if ($auth -and $token) { $req.Headers.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue('Bearer', $token) }
-  return $client.SendAsync($req, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).Result
+  # No reply at all (blocked, offline, timed out) comes back as $null, i.e. code 0.
+  try { return $client.SendAsync($req, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).Result }
+  catch { return $null }
 }
+function Code($r) { if ($r) { return [int]$r.StatusCode } else { return 0 } }
+$direct = "https://github.com/$Repo/releases/download/$Tag/EduBoard-Setup.exe"
 
 # Which build is newest.
 $resp = Send "https://api.github.com/repos/$Repo/releases/tags/$Tag" 'application/vnd.github+json' $true
-$code = [int]$resp.StatusCode
+$code = Code $resp
 if ($code -eq 401 -and $token) {
   # An old token that has expired: forget it and ask again without one.
   Remove-Item $tokenFile -ErrorAction SilentlyContinue
   $token = $null
   $resp = Send "https://api.github.com/repos/$Repo/releases/tags/$Tag" 'application/vnd.github+json' $true
-  $code = [int]$resp.StatusCode
+  $code = Code $resp
 }
 # GitHub limits how often a network address may ask without a token, and a school's
 # computers often share one address; wait and ask again a few times before giving up.
@@ -52,10 +56,16 @@ while (($code -eq 403 -or $code -eq 429) -and $tries -lt 4) {
   Write-Host "  GitHub is busy ($code); asking again in $wait seconds..."
   Start-Sleep -Seconds $wait
   $resp = Send "https://api.github.com/repos/$Repo/releases/tags/$Tag" 'application/vnd.github+json' $true
-  $code = [int]$resp.StatusCode
+  $code = Code $resp
 }
 if ($code -eq 404) {
   Write-Host '  No test build found yet. Try again in a few minutes.'
+  exit 1
+}
+if ($code -eq 0) {
+  Write-Host '  This computer could not reach GitHub (no reply). The network may block or slow it.'
+  Write-Host '  Try again in a few minutes or with a VPN, or download the installer yourself:'
+  Write-Host "  $direct"
   exit 1
 }
 if ($code -ne 200) { Write-Host "  GitHub answered $code; try again later."; exit 1 }
@@ -75,11 +85,15 @@ Write-Host "  Downloading $($release.name)..."
 $out = Join-Path $env:TEMP 'EduBoard-Setup.exe'
 $resp = Send $asset.url 'application/octet-stream' $true
 $hops = 0
-while ([int]$resp.StatusCode -ge 300 -and [int]$resp.StatusCode -lt 400 -and $hops -lt 5) {
+while ((Code $resp) -ge 300 -and (Code $resp) -lt 400 -and $hops -lt 5) {
   $resp = Send $resp.Headers.Location.AbsoluteUri 'application/octet-stream' $false
   $hops++
 }
-if (-not $resp.IsSuccessStatusCode) { Write-Host "  Download failed ($([int]$resp.StatusCode))."; exit 1 }
+if (-not $resp -or -not $resp.IsSuccessStatusCode) {
+  Write-Host "  Download failed ($(Code $resp)). Download the installer yourself instead:"
+  Write-Host "  $direct"
+  exit 1
+}
 $stream = $resp.Content.ReadAsStreamAsync().Result
 $file = [System.IO.File]::Create($out)
 try { $stream.CopyTo($file) } finally { $file.Close(); $stream.Close() }
