@@ -259,7 +259,7 @@ function CommentRow({
             )
           })}
           <p className="text-xs text-[var(--color-text-muted)]">
-            {tr('Edit these in Settings → Your lists.')}
+            {tr('Edit these in Settings → Grading and reports.')}
           </p>
         </div>
       </Modal>

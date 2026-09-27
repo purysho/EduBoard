@@ -105,7 +105,9 @@ export function toWindowError(err: unknown, where: string): Error {
   console.error(`[EB-0900 ref ${ref}] ${where}:`, err)
   return new Error(
     withCode(
-      tr('Something unexpected went wrong. The details are in the error report (Settings → Help).'),
+      tr(
+        'Something unexpected went wrong. The details are in the error report (Settings → Help and updates).'
+      ),
       'EB-0900',
       ref
     )

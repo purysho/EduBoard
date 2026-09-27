@@ -26,17 +26,17 @@ after changing either.
 | EB-0003 | The student isn’t (or is no longer) in this class. | Check the class’s roster; re-enrol the student if they should be there. |
 | EB-0004 | Something needed is missing or not valid (nothing chosen, nothing written, a bad date). | Read the message: it names what to fill in or choose. |
 | EB-0005 | The assignment has no rubric linked, so it can’t be marked with one. | Edit the assessment and link a rubric, or enter the score directly. |
-| EB-0900 | Something unexpected went wrong in EduBoard itself. The details (and a reference) are in the error log. | Ask for the error report (Settings → Help → Copy error report) and look up the reference in it. Restarting EduBoard usually clears a one-off. |
-| EB-0901 | A screen failed to draw. The details (and a reference) are in the error log. | Click Reload. If the same screen fails again, get the error report (Settings → Help) and look up the reference. |
+| EB-0900 | Something unexpected went wrong in EduBoard itself. The details (and a reference) are in the error log. | Ask for the error report (Settings → Help and updates → Copy error report) and look up the reference in it. Restarting EduBoard usually clears a one-off. |
+| EB-0901 | A screen failed to draw. The details (and a reference) are in the error log. | Click Reload. If the same screen fails again, get the error report (Settings → Help and updates) and look up the reference. |
 
 ### Portal
 
 | Code | What happened | What to do |
 | --- | --- | --- |
-| EB-1001 | No Portal is set up in Settings (address or sync secret missing). | Settings → Portal: enter the Portal address and the sync secret from the Portal’s administrator. |
-| EB-1002 | The Portal address in Settings isn’t a usable web address. | Settings → Portal: use the full address, e.g. https://portal.edu-board.com. |
+| EB-1001 | No Portal is set up in Settings (address or sync secret missing). | Settings → Portal and families: enter the Portal address and the sync secret from the Portal’s administrator. |
+| EB-1002 | The Portal address in Settings isn’t a usable web address. | Settings → Portal and families: use the full address, e.g. https://portal.edu-board.com. |
 | EB-1003 | This computer couldn’t connect to the Portal (no internet, a firewall or VPN, a wrong address, or the server is down). | Check the internet connection and the address in Settings. Open the address in a browser: if it doesn’t load there either, the server is down (check the VPS). |
-| EB-1004 | The Portal didn’t accept the sync secret. | Settings → Portal: the sync secret must be exactly the SYNC_SECRET in the Portal’s .env file, or the teacher’s own secret from the admin page. |
+| EB-1004 | The Portal didn’t accept the sync secret. | Settings → Portal and families: the sync secret must be exactly the SYNC_SECRET in the Portal’s .env file, or the teacher’s own secret from the admin page. |
 | EB-1005 | The Portal refused something as too large. | Update the Portal (Update-Live-Portal). If it still happens, the file is over the size limit; use a smaller file. |
 | EB-1006 | The Portal server isn’t responding (502, 503 or 504 from the proxy in front of it). | Wait a minute and try again. If it lasts, on the server run: systemctl status eduboard-portal (and restart it). |
 | EB-1007 | The Portal is an older version that doesn’t have this feature. | Update the Portal (Update-Live-Portal). |
@@ -47,7 +47,7 @@ after changing either.
 
 | Code | What happened | What to do |
 | --- | --- | --- |
-| EB-2001 | The chosen file isn’t a school pack (not readable, or not EduBoard’s format). | Export a fresh school pack from the other computer (Settings → School pack) and import that file. |
+| EB-2001 | The chosen file isn’t a school pack (not readable, or not EduBoard’s format). | Export a fresh school pack from the other computer (Settings → Data and security → School pack) and import that file. |
 | EB-2002 | A roster or gradebook import couldn’t be read (no sheets, or not the expected layout). | Open the file in Excel or WPS, check it has a sheet with a header row, and save it as .xlsx. |
 | EB-2003 | The course group has no classes, so there’s nothing to export. | Add classes to the course group first (Composite Grades). |
 | EB-2004 | A resource file couldn’t be read (too large, an unsupported type, or damaged). | Save the file as PDF, Word (.docx) or plain text, under the size limit, and add it again. |
@@ -91,9 +91,9 @@ after changing either.
 | EB-6002 | There was nothing to send. | Write the post or newsletter first. |
 | EB-6003 | This computer couldn’t reach DingTalk or WeCom. | Check the internet connection. |
 | EB-6004 | DingTalk refused the message because of the robot’s security setting (310000). | In the robot’s settings choose 加签 (signing) and paste its secret (SEC…) into EduBoard, or add a keyword the messages always contain. |
-| EB-6005 | The robot no longer exists (DingTalk 300001 / 300005, WeCom 93000). | Add the robot again in the group and paste its new address in Settings → Class group chats. |
+| EB-6005 | The robot no longer exists (DingTalk 300001 / 300005, WeCom 93000). | Add the robot again in the group and paste its new address in Settings → Portal and families → Class group chats. |
 | EB-6006 | DingTalk or WeCom refused the message for another reason, shown in the message. | Look up the service’s own error code in the message in its documentation. |
-| EB-6007 | That group chat has been removed from Settings. | Choose another group, or add it again in Settings → Class group chats. |
+| EB-6007 | That group chat has been removed from Settings. | Choose another group, or add it again in Settings → Portal and families → Class group chats. |
 
 ## Portal (PT)
 

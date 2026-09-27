@@ -217,7 +217,8 @@ export const IpcChannels = {
     export: 'schoolPack:export',
     preview: 'schoolPack:preview',
     apply: 'schoolPack:apply',
-    importCss: 'schoolPack:importCss'
+    importCss: 'schoolPack:importCss',
+    saveExampleCss: 'schoolPack:saveExampleCss'
   },
   security: {
     status: 'security:status',

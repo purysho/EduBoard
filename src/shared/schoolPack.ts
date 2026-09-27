@@ -43,7 +43,7 @@ export interface SchoolPack {
 }
 
 const MAX_LOGO_CHARS = 700_000
-const MAX_CSS_CHARS = 50_000
+export const MAX_CSS_CHARS = 50_000
 
 /** A school stylesheet may change how EduBoard looks, but never fetch anything: no
  * @import, and no url() except inline data: images. Also drops old IE script hooks. */

@@ -84,7 +84,9 @@ export function NewTermClassModal({
           hint={
             terms?.length
               ? undefined
-              : tr('No terms yet. Add them in Settings → Terms, or set one on the new class later.')
+              : tr(
+                  'No terms yet. Add them in Settings → Grading and reports, or set one on the new class later.'
+                )
           }
         >
           <Select value={chosenTerm} onChange={(e) => setTermId(e.target.value)}>

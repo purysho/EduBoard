@@ -64,7 +64,7 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       description: tr('Paste your Portal address and sync secret in Settings.'),
       done: p.portalConnected,
       optional: false,
-      to: '/settings',
+      to: '/settings?section=portal',
       actionLabel: tr('Open Settings')
     },
     {
@@ -97,7 +97,7 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       ),
       done: p.aiConfigured,
       optional: true,
-      to: '/settings',
+      to: '/settings?section=ai',
       actionLabel: tr('Open Settings')
     }
   ]

@@ -2,6 +2,7 @@ import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat } from './groupChats'
 import type { UsagePing } from './usagePing'
+import type { CssCheck } from './cssCheck'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -386,7 +387,10 @@ export interface EduBoardApi {
     /** Applies the pack at filePath (read and checked again, not trusted from preview). */
     apply(filePath: string): Promise<{ changes: string[]; reload?: boolean }>
     /** Asks for a .css file and saves it, cleaned, as the school stylesheet. */
-    importCss(): Promise<boolean>
+    /** Loads a school stylesheet and says what it changes, or null if none was chosen. */
+    importCss(): Promise<CssCheck | null>
+    /** Saves an example stylesheet with every EduBoard colour, to edit and load. */
+    saveExampleCss(): Promise<boolean>
   }
   security: {
     status(): Promise<SecurityStatus>

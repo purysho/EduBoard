@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
-import { ImagePlus, Palette, X } from 'lucide-react'
+import { FileDown, ImagePlus, Palette, X } from 'lucide-react'
+import type { CssCheck } from '@shared/cssCheck'
 import type { AppSettings } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
 import { ACCENT_PRESETS, isHexColour, whiteTextContrast } from '@renderer/lib/appearance'
 import { cn } from '@renderer/lib/cn'
-import { tr } from '@shared/i18n'
+import { tr, trn } from '@shared/i18n'
 
 const MAX_LOGO_PX = 256
 
@@ -23,6 +24,55 @@ async function logoDataUrl(file: File): Promise<string> {
   return canvas.toDataURL('image/png')
 }
 
+/** What a stylesheet just loaded changes, in plain words. */
+function describeCssCheck(c: CssCheck): { ok: boolean; text: string } {
+  const cut = c.truncated
+    ? ' ' + tr('It was longer than 50,000 characters, so only the start is used.')
+    : ''
+  if (c.tokens.length) {
+    return {
+      ok: true,
+      text:
+        trn(
+          'Loaded. It sets {n} of EduBoard’s colours.',
+          'Loaded. It sets {n} of EduBoard’s colours.',
+          c.tokens.length
+        ) + cut
+    }
+  }
+  const total = c.generalRules + c.otherRules
+  if (c.generalRules > 0 && c.otherRules <= c.generalRules * 4) {
+    return {
+      ok: true,
+      text:
+        trn(
+          'Loaded. {n} of its rules style text, headings or buttons on every screen.',
+          'Loaded. {n} of its rules style text, headings or buttons on every screen.',
+          c.generalRules
+        ) + cut
+    }
+  }
+  return {
+    ok: false,
+    text:
+      (c.generalRules > 0
+        ? trn(
+            'Loaded, but it looks like a stylesheet made for another website: only {n} of its {total} rules applies to EduBoard, so you’ll see little or no change.',
+            'Loaded, but it looks like a stylesheet made for another website: only {n} of its {total} rules apply to EduBoard, so you’ll see little or no change.',
+            c.generalRules,
+            { total }
+          )
+        : tr(
+            'Loaded, but nothing in it applies to EduBoard, so nothing changes. It looks like a stylesheet made for another website.'
+          )) +
+      ' ' +
+      tr(
+        'To change EduBoard’s colours, use “Save an example to start from”, change the colours in it and load that file instead.'
+      ) +
+      cut
+  }
+}
+
 /** Settings → Appearance: the school's logo and colour, and text size and contrast.
  * Every change applies at once. */
 export function AppearancePanel(): React.JSX.Element | null {
@@ -31,6 +81,7 @@ export function AppearancePanel(): React.JSX.Element | null {
   const fileInput = useRef<HTMLInputElement>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
   const [customHex, setCustomHex] = useState('')
+  const [cssNote, setCssNote] = useState<{ ok: boolean; text: string } | null>(null)
   if (!settings) return null
 
   const set = (patch: Partial<AppSettings>): void => update.mutate(patch)
@@ -143,7 +194,7 @@ export function AppearancePanel(): React.JSX.Element | null {
           <h3 className="mb-1 font-medium">{tr('School stylesheet')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
             {tr(
-              'For a school that wants its own background or fonts: a .css file applied on top of EduBoard’s look. It can change the colour tokens (such as --color-bg, --color-surface, --color-primary) and use inline images, but can’t load anything from the internet.'
+              'For a school that wants its own colours, background or fonts: a .css file applied on top of EduBoard’s look. It works by changing EduBoard’s colour names (such as --color-bg, --color-surface, --color-primary), so a stylesheet made for a website won’t change anything. Start from the example. It can use inline images, but can’t load anything from the internet.'
             )}
           </p>
           <div className="flex items-center gap-2">
@@ -151,20 +202,47 @@ export function AppearancePanel(): React.JSX.Element | null {
               variant="secondary"
               size="sm"
               onClick={async () => {
-                if (await window.api.schoolPack.importCss()) {
-                  await update.mutateAsync({})
-                }
+                const check = await window.api.schoolPack.importCss()
+                if (!check) return
+                await update.mutateAsync({})
+                setCssNote(describeCssCheck(check))
               }}
             >
               {settings.customCss ? tr('Replace stylesheet') : tr('Load .css file')}
             </Button>
             {settings.customCss && (
-              <Button variant="ghost" size="sm" onClick={() => set({ customCss: '' })}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  set({ customCss: '' })
+                  setCssNote(null)
+                }}
+              >
                 <X size={13} className="mr-1 inline" aria-hidden />
                 {tr('Remove')}
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.api.schoolPack.saveExampleCss()}
+            >
+              <FileDown size={13} className="mr-1 inline" aria-hidden />
+              {tr('Save an example to start from')}
+            </Button>
           </div>
+          {cssNote && (
+            <p
+              role="status"
+              className={cn(
+                'mt-2 rounded-md px-2.5 py-1.5 text-xs text-[var(--color-text)]',
+                cssNote.ok ? 'bg-[var(--color-success-soft)]' : 'bg-[var(--color-warning-soft)]'
+              )}
+            >
+              {cssNote.text}
+            </p>
+          )}
         </section>
 
         <section className="grid grid-cols-2 gap-4">

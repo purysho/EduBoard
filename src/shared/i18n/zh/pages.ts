@@ -16,8 +16,8 @@ export const PAGES: Record<string, string> = {
   Grade: '成绩',
   Homework: '作业',
   Submission: '提交',
-  "Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Backups) before being permanently purged.":
-    '所有成绩、考勤、选课、班级和作业的变动——谁在什么时候做了什么。已删除学生的记录会立即从这里隐藏，但会保留 12 个月（见 设置 → 备份）后再永久清除。',
+  "Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Data and security) before being permanently purged.":
+    '所有成绩、考勤、选课、班级和作业的变动——谁在什么时候做了什么。已删除学生的记录会立即从这里隐藏，但会保留 12 个月（见“设置 → 数据与安全”）后再永久清除。',
   'All students': '全部学生',
   'All classes': '全部班级',
   'No activity yet': '还没有操作记录',

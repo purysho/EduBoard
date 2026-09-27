@@ -8,8 +8,6 @@ export const TEMPLATES: Record<string, string> = {
   'Replace what’s written with the template?': '用模板替换已写的内容？',
   'Teacher’s signature': '教师签名',
   'Parent or guardian’s signature': '家长签名',
-  'Add a ready-made set': '添加现成的评语组',
-  'Add a ready-made set…': '添加现成的评语组…',
   'Your templates': '我的模板',
   'Saved with “Save as template” on a parent letter, Class Story post or lesson plan.':
     '在家长信、班级动态或教案中点击“存为模板”保存。',

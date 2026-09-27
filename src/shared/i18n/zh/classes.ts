@@ -179,8 +179,8 @@ export const CLASSES: Record<string, string> = {
   'No reason': '无原因',
   '+1 for {name}': '给 {name} 加 1 分',
   '−1 for {name}': '给 {name} 减 1 分',
-  'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Your lists.':
-    '点名字加 1 分，点 − 减 1 分。每周一重新计分，总积分会保留。积分类别可在“设置 → 我的列表”中修改。',
+  'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Class lists.':
+    '点名字加 1 分，点 − 减 1 分。每周一重新计分，总积分会保留。积分类别可在“设置 → 班级列表”中修改。',
   'Edit comment': '编辑备注',
   'Add comment': '添加备注',
   Comment: '备注',
@@ -370,8 +370,8 @@ export const CLASSES: Record<string, string> = {
   'Create class': '创建班级',
   "Makes a new class with this one's grading scale, categories and course group. Grades, attendance and homework stay with {name}.":
     '新建一个沿用本班等级制、成绩类别和课程组的班级。成绩、考勤和作业仍保留在{name}。',
-  'No terms yet. Add them in Settings → Terms, or set one on the new class later.':
-    '还没有学期。请在“设置 → 学期”中添加，或稍后在新班级上设置。',
+  'No terms yet. Add them in Settings → Grading and reports, or set one on the new class later.':
+    '还没有学期。请在“设置 → 评分与报告”中添加，或稍后在新班级上设置。',
   'Bring the students across ({activeCount})': '带上这些学生（{activeCount}）',
   'They keep their Portal logins: the new class shows up for them after you publish, with no new invite or sign-up.':
     '他们的门户账号保持不变：你发布后新班级就会出现，无需重新邀请或注册。',
@@ -384,7 +384,8 @@ export const CLASSES: Record<string, string> = {
   'Ending term': '结束的学期',
   'Next term': '下一学期',
   'Choose a different term from the one ending.': '请选择与结束学期不同的学期。',
-  'No terms yet. Add them in Settings → Terms.': '还没有学期。请在“设置 → 学期”中添加。',
+  'No terms yet. Add them in Settings → Grading and reports.':
+    '还没有学期。请在“设置 → 评分与报告”中添加。',
   'Classes that carry on': '继续开设的班级',
   'No current classes in this term.': '这个学期没有当前班级。',
   'Bring the students across': '带上学生',
@@ -442,7 +443,7 @@ export const CLASSES: Record<string, string> = {
   'AI suggestions (needs internet). Each says what it’s based on; check it before adding. Click one to add it.':
     'AI 建议（需要联网）。每条都注明了依据；添加前请检查。点击即可添加。',
   'Comment bank — {name}': '评语库——{name}',
-  'Edit these in Settings → Your lists.': '可在“设置 → 我的列表”中编辑。',
+  'Edit these in Settings → Grading and reports.': '可在“设置 → 评分与报告”中编辑。',
   'No report available': '暂无报告',
   'Parent letters': '家长信',
   'Print all report cards (PDF)': '打印全部成绩单（PDF）',
@@ -500,8 +501,6 @@ export const CLASSES: Record<string, string> = {
   'e.g. Effort': '例如：努力',
   'Category name': '类别名称',
   'Add a category': '添加类别',
-  'Use a ready-made set': '使用现成的一套',
-  'Use a ready-made set…': '使用现成的一套…',
   'Class points by category': '按类别的课堂积分',
   'Class points this past week': '过去一周的课堂积分',
   'EduBoard’s five': 'EduBoard 默认的五项',

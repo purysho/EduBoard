@@ -145,7 +145,7 @@ export function NextTermAllModal({
                   ? tr('Choose a different term from the one ending.')
                   : terms?.length
                     ? undefined
-                    : tr('No terms yet. Add them in Settings → Terms.')
+                    : tr('No terms yet. Add them in Settings → Grading and reports.')
               }
             >
               <Select value={to} onChange={(e) => setToTerm(e.target.value)}>

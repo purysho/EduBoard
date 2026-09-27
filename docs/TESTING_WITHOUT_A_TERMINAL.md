@@ -16,7 +16,7 @@ double-click **Update-EduBoard.cmd**. It does two things in one window:
 No GitHub token is needed: the repository is public.
 
 Once you have EduBoard 0.3.3 or later, you can also update from inside the app:
-**Settings → Check for updates → Update now** (on Windows, Mac and Linux).
+**Settings → Help and updates → Check for updates → Update now** (on Windows, Mac and Linux).
 
 The newest build appears about 10 minutes after each desktop change, under the
 repository's **Releases** as "Test build". Running Update-EduBoard.cmd before then
@@ -38,7 +38,7 @@ GitHub. You can also start a build yourself.
    Click **More info** → **Run anyway**. This happens once per download.
 
 Your existing EduBoard data is kept. The installer updates the program, not your
-classes. To be safe anyway, first use **Settings → Backups → Back up now**.
+classes. To be safe anyway, first use **Settings → Data and security → Backups → Back up now**.
 
 ## 2. The student Portal
 
@@ -134,7 +134,7 @@ Nothing touches the live site or real students.
 
 1. Get a free key at [open.bigmodel.cn](https://open.bigmodel.cn) (Zhipu). Sign up,
    then create an API key under API Keys.
-2. Desktop **Settings → Student AI (Portal)**: provider **Zhipu (GLM) — free tier**,
+2. Desktop **Settings → AI → Student AI (Portal)**: provider **Zhipu (GLM) — free tier**,
    paste the key.
 3. Click **Test connection**. "Works. glm-4-flash-250414 replied." means it's good.
    If not, the message says why: key rejected, out of quota, or can't reach the

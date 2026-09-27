@@ -9,6 +9,15 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 - **Error codes.** Every error message now ends with a code: EB-xxxx from EduBoard on the teacher's computer, PT-xxxx from the Portal (shown on the Portal's pages too). [docs/ERROR_CODES.md](docs/ERROR_CODES.md) says what each one means and how to fix it. **Settings → Help** lists recent errors and copies an error report (version, system, recent errors) to send; unexpected errors show a short reference that points to the full details in the error log (`logs/errors.log` beside the database) or, for the Portal, in the server log. A screen that fails to draw now shows a Reload button and its code instead of a blank window.
 - **A homepage with downloads** at `/download` on the Portal (portal.edu-board.com/download), in English and Chinese: what EduBoard does, screenshots, and every download for Windows, Mac and Linux through the Portal server (so they work where GitHub is blocked), with GitHub as a second link. The Portal's login page links to it for teachers. A Portal can also make it the front page of another address (`HOMEPAGE_HOSTS`).
 
+### Changed
+
+- **Settings is split into sections** with a menu on the left: You and your school, Appearance, Grading and reports, Class lists, Portal and families, AI, Data and security, and Help and updates. **Search settings** finds a section by what you type. Each box has its own **Save** and **Undo changes**, and says "Not saved yet." when something in it has changed, instead of one Save for a long page. Links from the Dashboard and the getting-started checklist open the right section.
+
+### Fixed
+
+- **School stylesheet** said nothing after loading, so a stylesheet made for a website (such as a WordPress theme) seemed to be ignored. EduBoard now says what a loaded stylesheet changes, or that it looks made for another website and changes nothing, and **Save an example to start from** saves a stylesheet with every EduBoard colour in it to edit.
+- **Report comment bank → Add a ready-made set** seemed to do nothing: the sentences were added out of sight at the end of the list, and the menu went back to its first line. It now scrolls to them, says how many were added (or that they're all there already), and reminds you to Save.
+
 ## [0.5.0] — 2026-09-27
 
 **If you run a Portal, update it** (Update-Live-Portal): read receipts, class points in the digest and the usage count need the updated Portal.

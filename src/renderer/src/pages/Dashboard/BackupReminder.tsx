@@ -37,7 +37,10 @@ export function BackupReminder({ hasData }: { hasData: boolean }): React.JSX.Ele
     <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-surface)] px-4 py-3 text-sm">
       <CloudUpload size={16} className="shrink-0 text-[var(--color-warning)]" aria-hidden />
       <span className="min-w-0 flex-1">{message}</span>
-      <Link to="/settings" className="font-medium text-[var(--color-primary)] hover:underline">
+      <Link
+        to="/settings?section=data"
+        className="font-medium text-[var(--color-primary)] hover:underline"
+      >
         {status.folder ? tr('Check backups') : tr('Set up a second copy')}
       </Link>
       <button

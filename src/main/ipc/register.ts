@@ -97,7 +97,14 @@ import { getTodayOverview, getWatchList } from '../services/today'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { saveUiPrefs } from '../i18n'
 import { resolveAttendanceCodes } from '@shared/attendanceCodes'
-import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
+import {
+  MAX_CSS_CHARS,
+  makeSchoolPack,
+  parseSchoolPack,
+  planSchoolPack,
+  sanitizeCss
+} from '@shared/schoolPack'
+import { checkCss, exampleStylesheet } from '@shared/cssCheck'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
@@ -852,8 +859,19 @@ export function registerIpcHandlers(): void {
       properties: ['openFile'],
       filters: [{ name: tr('Stylesheet'), extensions: ['css'] }]
     })
-    if (canceled || !filePaths[0]) return false
-    settingsRepo.updateSettings({ customCss: sanitizeCss(await readFile(filePaths[0], 'utf-8')) })
+    if (canceled || !filePaths[0]) return null
+    const css = await readFile(filePaths[0], 'utf-8')
+    settingsRepo.updateSettings({ customCss: sanitizeCss(css) })
+    return checkCss(css, MAX_CSS_CHARS)
+  })
+  handle(IpcChannels.schoolPack.saveExampleCss, async () => {
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      title: tr('Save an example stylesheet'),
+      defaultPath: 'eduboard-school.css',
+      filters: [{ name: tr('Stylesheet'), extensions: ['css'] }]
+    })
+    if (canceled || !filePath) return false
+    await writeFile(filePath, exampleStylesheet(), 'utf-8')
     return true
   })
 

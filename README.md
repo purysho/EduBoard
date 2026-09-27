@@ -45,7 +45,7 @@ Your data lives in a single database file next to the app, so the whole thing �
   <a href="https://github.com/purysho/EduBoard/releases/latest/download/EduBoard.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"></a>
 </p>
 
-Each button always grabs the newest release, no version numbers to track. Once installed, EduBoard keeps itself up to date: new versions download in the background and install the next time you open it (or straight away from **Settings → Restart and update now**). New here? Start with the **[User Guide](docs/USER_GUIDE.md)** for a full walkthrough after installing.
+Each button always grabs the newest release, no version numbers to track. Once installed, EduBoard keeps itself up to date: new versions download in the background and install the next time you open it (or straight away from **Settings → Help and updates → Restart and update now**). New here? Start with the **[User Guide](docs/USER_GUIDE.md)** for a full walkthrough after installing.
 
 - **Windows** — the button above downloads `EduBoard-Portable.exe`: no install, no admin rights, copy it to a USB stick and double-click it anywhere. EduBoard keeps its database in an `EduBoard-data` folder next to the exe, so the whole thing travels together. Prefer a normal install instead? Grab `EduBoard-Setup.exe` from the [Releases page](https://github.com/purysho/EduBoard/releases/latest) — in that case your data lives in your Windows user profile instead.
 - **macOS** — pick the button for your Mac's chip (Apple menu → **About This Mac**: "Apple M1/M2/M3…" is Apple Silicon, "Intel" is Intel). Each downloads a `.dmg`; `.zip` versions are on the [Releases page](https://github.com/purysho/EduBoard/releases/latest) if you'd rather not mount a disk image.
@@ -59,7 +59,7 @@ Each button always grabs the newest release, no version numbers to track. Once i
 2. **Classes** → New class → set its level (K-12 / university / club), grading scale, and grade categories (e.g. Homework 40%, Exams 60%).
 3. On a class page: **Roster** to enroll students, **Gradebook** to add assessments and enter scores, **Attendance** to mark the day, **Lesson plans** to jot down what you're teaching, **Seating chart** to lay out the room, **Exit ticket** to run a quick end-of-lesson check, **Report** for the class-wide picture and printable report cards.
 4. **Resources** (sidebar) for a shared library of files and links, **Communications** (sidebar) to log parent contact across every student, **Composite Grades** (sidebar) once a class is linked to a course group spanning multiple terms.
-5. **Settings → Backups** → back up before anything risky (a big import, a term rollover) and occasionally copy the backup file somewhere off the laptop.
+5. **Settings → Data and security → Backups** → back up before anything risky (a big import, a term rollover) and occasionally copy the backup file somewhere off the laptop.
 
 Grades use a standard weighted-category model: within a category, it's total points earned over total points possible; the class grade is those category percentages blended by weight, using only categories that have graded work so far (so a mid-term "current grade" is always the average of what's actually been entered, not zeros for missing work).
 

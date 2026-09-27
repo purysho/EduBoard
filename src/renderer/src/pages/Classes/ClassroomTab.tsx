@@ -422,7 +422,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
         </div>
         <p className="text-xs text-[var(--color-text-muted)]">
           {tr(
-            'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Your lists.'
+            'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Class lists.'
           )}
         </p>
       </CardBody>

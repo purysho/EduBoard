@@ -49,24 +49,24 @@ export const APP_ERROR_CODES = {
     area: 'General',
     meaning:
       'Something unexpected went wrong in EduBoard itself. The details (and a reference) are in the error log.',
-    fix: 'Ask for the error report (Settings → Help → Copy error report) and look up the reference in it. Restarting EduBoard usually clears a one-off.'
+    fix: 'Ask for the error report (Settings → Help and updates → Copy error report) and look up the reference in it. Restarting EduBoard usually clears a one-off.'
   },
   'EB-0901': {
     area: 'General',
     meaning: 'A screen failed to draw. The details (and a reference) are in the error log.',
-    fix: 'Click Reload. If the same screen fails again, get the error report (Settings → Help) and look up the reference.'
+    fix: 'Click Reload. If the same screen fails again, get the error report (Settings → Help and updates) and look up the reference.'
   },
 
   // --- Portal -----------------------------------------------------------------------------
   'EB-1001': {
     area: 'Portal',
     meaning: 'No Portal is set up in Settings (address or sync secret missing).',
-    fix: 'Settings → Portal: enter the Portal address and the sync secret from the Portal’s administrator.'
+    fix: 'Settings → Portal and families: enter the Portal address and the sync secret from the Portal’s administrator.'
   },
   'EB-1002': {
     area: 'Portal',
     meaning: 'The Portal address in Settings isn’t a usable web address.',
-    fix: 'Settings → Portal: use the full address, e.g. https://portal.edu-board.com.'
+    fix: 'Settings → Portal and families: use the full address, e.g. https://portal.edu-board.com.'
   },
   'EB-1003': {
     area: 'Portal',
@@ -77,7 +77,7 @@ export const APP_ERROR_CODES = {
   'EB-1004': {
     area: 'Portal',
     meaning: 'The Portal didn’t accept the sync secret.',
-    fix: 'Settings → Portal: the sync secret must be exactly the SYNC_SECRET in the Portal’s .env file, or the teacher’s own secret from the admin page.'
+    fix: 'Settings → Portal and families: the sync secret must be exactly the SYNC_SECRET in the Portal’s .env file, or the teacher’s own secret from the admin page.'
   },
   'EB-1005': {
     area: 'Portal',
@@ -110,7 +110,7 @@ export const APP_ERROR_CODES = {
   'EB-2001': {
     area: 'Files',
     meaning: 'The chosen file isn’t a school pack (not readable, or not EduBoard’s format).',
-    fix: 'Export a fresh school pack from the other computer (Settings → School pack) and import that file.'
+    fix: 'Export a fresh school pack from the other computer (Settings → Data and security → School pack) and import that file.'
   },
   'EB-2002': {
     area: 'Files',
@@ -243,7 +243,7 @@ export const APP_ERROR_CODES = {
   'EB-6005': {
     area: 'Group chats',
     meaning: 'The robot no longer exists (DingTalk 300001 / 300005, WeCom 93000).',
-    fix: 'Add the robot again in the group and paste its new address in Settings → Class group chats.'
+    fix: 'Add the robot again in the group and paste its new address in Settings → Portal and families → Class group chats.'
   },
   'EB-6006': {
     area: 'Group chats',
@@ -253,7 +253,7 @@ export const APP_ERROR_CODES = {
   'EB-6007': {
     area: 'Group chats',
     meaning: 'That group chat has been removed from Settings.',
-    fix: 'Choose another group, or add it again in Settings → Class group chats.'
+    fix: 'Choose another group, or add it again in Settings → Portal and families → Class group chats.'
   }
 } as const satisfies Record<string, ErrorCodeInfo>
 

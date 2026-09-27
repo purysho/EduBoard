@@ -5,7 +5,7 @@ A small, standalone service that lets students/parents check grades, attendance,
 
 This is **not** part of the desktop app's build. It's a separate Node service you deploy
 once, on your own small server, and the desktop app talks to it over plain HTTPS from
-then on (Settings → Portal URL / Portal sync secret).
+then on (Settings → Portal and families → Portal URL / Portal sync secret).
 
 ## How it fits together
 
@@ -110,7 +110,7 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    ```bash
    sudo systemctl enable --now eduboard-portal
    ```
-9. **In the desktop app**, go to Settings → set Portal URL to
+9. **In the desktop app**, go to Settings → Portal and families → set Portal URL to
    `https://portal.yourdomain.com` and Portal sync secret to the same `SYNC_SECRET` you
    set above. Click "Publish to portal" once to push your first batch of data.
 
@@ -122,7 +122,7 @@ sees their own classes, students, grades, and homework. To manage teachers, open
 can:
 
 - **Add a teacher.** Their sync secret is shown exactly once, so copy it then and give
-  it to them privately to paste into their desktop app's Settings → Portal sync secret.
+  it to them privately to paste into their desktop app's Settings → Portal and families → Portal sync secret.
   The Portal URL is the same for every teacher on this deployment.
 - **See who's using the Portal**, with a class and student count for each teacher.
 - **Remove a teacher.** Their sync secret stops working at once, and their classes and
@@ -138,8 +138,8 @@ Wrong guesses are rate limited like every other secret. The same actions are ava
 as an API (`GET/POST /api/admin/teachers`, `DELETE /api/admin/teachers/:id`, with an
 `X-Admin-Secret` header) if you'd rather script them.
 
-The AI provider/key and the weekly digest SMTP settings (Settings → Student AI /
-Weekly parent digest email on the desktop app) are per-teacher — each teacher's own
+The AI provider/key and the weekly digest SMTP settings (Settings → AI → Student AI /
+Settings → Portal and families → Weekly parent digest email on the desktop app) are per-teacher — each teacher's own
 publish only ever writes their own `ai_settings`/`digest_settings` row, so one
 teacher's key or sender address never affects another's.
 
@@ -223,7 +223,7 @@ mail deliverability from a fresh VPS is its own headache. Instead:
   choose a new password, which signs the account out everywhere else. Requests expire
   after a day, and asking about a username that doesn't exist looks exactly the same,
   so nobody can find out who has an account.
-- **Or, set a temporary password yourself** → in the desktop app, Settings → Portal sync →
+- **Or, set a temporary password yourself** → in the desktop app, Settings → Portal and families →
   "Reset a student's Portal password". Enter their username, click Generate (or type a
   temporary password), and give it to them. The reset signs that account out on every
   device. It only works for accounts linked to your own students. Students can then

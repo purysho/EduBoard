@@ -39,8 +39,6 @@ export const SETTINGS: Record<string, string> = {
   'This colour is light, so white text on buttons may be hard to read. A darker shade works better.':
     '这个颜色偏浅，按钮上的白字可能看不清，建议选深一点的颜色。',
   'School stylesheet': '学校样式表',
-  'For a school that wants its own background or fonts: a .css file applied on top of EduBoard’s look. It can change the colour tokens (such as --color-bg, --color-surface, --color-primary) and use inline images, but can’t load anything from the internet.':
-    '适合想要使用自己背景或字体的学校：一个叠加在 EduBoard 外观上的 .css 文件。它可以修改颜色变量（如 --color-bg、--color-surface、--color-primary），也可以使用内嵌图片，但不能从网上加载任何内容。',
   'Replace stylesheet': '更换样式表',
   'Load .css file': '载入 .css 文件',
   'Text size': '字体大小',
@@ -89,7 +87,6 @@ export const SETTINGS: Record<string, string> = {
   Positive: '表扬',
   Concern: '关注',
   'Parent contact': '家长联系',
-  'Your lists': '我的列表',
   'Quick-add buttons on a student’s log': '学生日志的快捷按钮',
   'One tap adds the entry. Parent-contact entries appear under Communications.':
     '点一下即可添加记录。家长联系记录会显示在“家校沟通”中。',
@@ -97,7 +94,7 @@ export const SETTINGS: Record<string, string> = {
   'Kind of entry': '记录类型',
   'Text it adds': '添加的文字',
   'Add a button': '添加按钮',
-  'Restore EduBoard’s': '恢复默认',
+  'Restore the original list': '恢复原来的列表',
   'Extra student fields': '学生附加信息',
   'Things to record about every student, such as house, allergies or support plan. They appear on the student form and page, and a roster import fills them from columns with the same name. They stay on this computer (never sent to the Portal).':
     '为每个学生记录的额外信息，例如学院/分组、过敏情况或帮扶计划。它们显示在学生表单和学生页面上，导入名单时会从同名的列自动填入。这些信息只保存在本机（不会发送到学生门户）。',
@@ -111,7 +108,6 @@ export const SETTINGS: Record<string, string> = {
     '一键添加到成绩单评语中的句子。{name}、{class}、{grade} 和 {percent} 会按每个学生自动填入。',
   'Remove comment': '删除评语',
   'Add a comment': '添加评语',
-  'Save lists': '保存列表',
   'Undo changes': '撤销修改',
   'Portal sync': '学生门户同步',
   'Pulling…': '正在拉取…',
@@ -206,7 +202,6 @@ export const SETTINGS: Record<string, string> = {
   'Testing…': '测试中…',
   'Test connection': '测试连接',
   'Works. {model} replied.': '连接正常，{model} 已回复。',
-  'App-wide defaults, terms, import, and backups.': '全局默认设置、学期、导入和备份。',
   'Show getting-started checklist': '显示入门清单',
   'Your name': '你的姓名',
   'School / organization': '学校 / 机构',
@@ -236,8 +231,6 @@ export const SETTINGS: Record<string, string> = {
   '{provider} key': '{provider} 密钥',
   'Optional — leave blank for a server that needs no key, like local Ollama.':
     '可选——服务器不需要密钥（如本地 Ollama）时留空。',
-  'Optional — enables AI-drafted lesson plans and report comments. Your key is sent only to that provider, never anywhere else.':
-    '可选——用于 AI 起草教案和成绩单评语。你的密钥只会发送给该服务商，不会发送到其他任何地方。',
   'sk-ant-…': 'sk-ant-…',
   'sk-…': 'sk-…',
   'Portal URL': '学生门户地址',
@@ -319,8 +312,8 @@ export const SETTINGS: Record<string, string> = {
   'No backup is taken and it can’t be undone.': '不会备份，且无法撤销。',
   'Use {download} first if they asked for a copy.': '如果对方需要一份副本，请先使用{download}。',
   'Type their name, {name}, to confirm': '输入学生姓名 {name} 以确认',
-  '{olderBackups} backups made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Backups → Open folder) if they must go now.':
-    '之前的 {olderBackups} 份备份中仍包含该学生。自动备份会随时间被替换；如果需要立即删除，请到备份文件夹（设置 → 备份 → 打开文件夹）中手动删除。',
+  '{olderBackups} backups made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Data and security → Backups → Open folder) if they must go now.':
+    '之前的 {olderBackups} 份备份中仍包含该学生。自动备份会随时间被替换；如果需要立即删除，请到备份文件夹（设置 → 数据与安全 → 备份 → 打开文件夹）中手动删除。',
   'Not enough data': '数据不足',
   Declining: '下降',
   Improving: '上升',
@@ -374,7 +367,6 @@ export const SETTINGS: Record<string, string> = {
   'Add your first student, or import a roster from Settings.':
     '添加第一名学生，或在“设置”中导入名单。',
   'Grade / cohort': '年级 / 届',
-  'General settings': '常规设置',
   'EduBoard is connected to this group. Posts from the teacher will appear here.':
     'EduBoard 已连接到本群。老师发布的动态将显示在这里。',
   'That isn’t a DingTalk or WeCom robot address.': '这不是钉钉或企业微信的机器人地址。',
@@ -415,5 +407,74 @@ export const SETTINGS: Record<string, string> = {
   'The group’s robot address is no longer valid. Copy it again from the group.':
     '群机器人地址已失效，请从群里重新复制。',
   'The group chat didn’t accept the message ({reason}).': '群聊没有接受这条消息（{reason}）。',
-  'no reply': '无回复'
+  'no reply': '无回复',
+  'Save an example stylesheet': '保存示例样式表',
+  'It was longer than 50,000 characters, so only the start is used.':
+    '文件超过 50,000 个字符，所以只使用了开头部分。',
+  'Loaded, but it looks like a stylesheet made for another website: only {n} of its {total} rules apply to EduBoard, so you’ll see little or no change.':
+    '已加载，但它看起来是为别的网站制作的样式表：{total} 条规则中只有 {n} 条适用于 EduBoard，所以你几乎看不到变化。',
+  'Loaded, but nothing in it applies to EduBoard, so nothing changes. It looks like a stylesheet made for another website.':
+    '已加载，但其中没有任何内容适用于 EduBoard，所以不会有变化。它看起来是为别的网站制作的样式表。',
+  'To change EduBoard’s colours, use “Save an example to start from”, change the colours in it and load that file instead.':
+    '要更改 EduBoard 的颜色，请使用“保存示例作为起点”，修改其中的颜色，然后改为加载该文件。',
+  'For a school that wants its own colours, background or fonts: a .css file applied on top of EduBoard’s look. It works by changing EduBoard’s colour names (such as --color-bg, --color-surface, --color-primary), so a stylesheet made for a website won’t change anything. Start from the example. It can use inline images, but can’t load anything from the internet.':
+    '适合想使用自己的颜色、背景或字体的学校：一个叠加在 EduBoard 外观之上的 .css 文件。它通过修改 EduBoard 的颜色名称（例如 --color-bg、--color-surface、--color-primary）来生效，所以为网站制作的样式表不会改变任何内容。请从示例开始。它可以使用内嵌图片，但不能从互联网加载任何内容。',
+  'Save an example to start from': '保存示例作为起点',
+  'Loaded. It sets {n} of EduBoard’s colours.': '已加载。它设置了 EduBoard 的 {n} 种颜色。',
+  'Loaded. {n} of its rules style text, headings or buttons on every screen.':
+    '已加载。其中 {n} 条规则会改变每个页面上的文字、标题或按钮样式。',
+  'Not saved yet.': '尚未保存。',
+  'Every button needs a label and the text it adds.': '每个按钮都需要一个名称和它要添加的文字。',
+  button: '按钮',
+  'Every field needs a name.': '每个字段都需要一个名称。',
+  field: '字段',
+  'A comment can’t be empty.': '评语不能为空。',
+  'Add a ready-made set:': '添加现成的评语集：',
+  'Every sentence in “{set}” is already in your bank.': '“{set}”中的每个句子都已在你的评语库中。',
+  'Choose…': '请选择…',
+  'None yet. Use “Save as template” when writing a letter, post or lesson plan.':
+    '还没有。在写信、发帖或写教案时，使用“存为模板”。',
+  'Use a ready-made set:': '使用现成的一套：',
+  '{n} sentences added from “{set}”, at the end of the list. Save to keep them.':
+    '已从“{set}”添加 {n} 个句子，位于列表末尾。请保存以保留它们。',
+  'You and your school': '你和你的学校',
+  'AI for you': '为你服务的 AI',
+  'Optional. Suggests report-comment phrases, newsletter wording, lesson-plan drafts and feedback, always for you to check. Needs internet. Your key is sent only to that provider.':
+    '可选。为成绩单评语、简报措辞、教案草稿和反馈提供建议，始终由你检查后使用。需要联网。你的密钥只会发送给该服务商。',
+  'Connect to your Portal': '连接你的学生门户',
+  'The Portal is the website where students and families sign in. Paste its address and sync secret here, then use “Publish to portal” below.':
+    '学生门户是学生和家长登录的网站。在这里粘贴它的网址和同步密钥，然后使用下方的“发布到学生门户”。',
+  'Name, email, language, theme': '姓名、邮箱、语言、主题',
+  'name school email language theme dark mode':
+    '姓名 学校 邮箱 语言 主题 深色模式 name school email language theme dark',
+  'Logo, colour, text size, stylesheet': '校徽、颜色、字号、样式表',
+  'logo colour color text size contrast motion stylesheet css':
+    '校徽 标志 颜色 字号 对比度 动画 样式表 logo colour color text size contrast css',
+  'Grading and reports': '评分与报告',
+  'Grading scale, terms, report cards, comment bank': '等级制、学期、成绩单、评语库',
+  'grade scale pass mark terms report card layout comment bank sentences':
+    '等级 评分 及格线 学期 成绩单 布局 评语库 句子 grade scale terms report comment',
+  'Class lists': '班级列表',
+  'Attendance codes, class points, student fields, words': '考勤代码、课堂积分、学生字段、用语',
+  'attendance codes class points categories quick add log buttons student fields allergies words terminology templates':
+    '考勤 代码 积分 类别 快速添加 记录 按钮 学生字段 过敏 用语 术语 模板 attendance points fields templates',
+  'Portal and families': '学生门户与家长',
+  'Portal connection, digest email, group chats': '门户连接、周报邮件、群聊',
+  'portal sync secret publish accounts password reset digest email smtp newsletter dingtalk wecom group chat':
+    '门户 同步 密钥 发布 账号 密码 重置 周报 邮件 简报 钉钉 企业微信 群聊 portal sync digest email dingtalk wecom',
+  AI: 'AI',
+  'Your AI key, and AI for students': '你的 AI 密钥，以及学生用的 AI',
+  'ai key provider deepseek qwen zhipu anthropic ollama students study helper':
+    'AI 密钥 服务商 学生 学习助手 ai key provider deepseek qwen zhipu anthropic ollama',
+  'Data and security': '数据与安全',
+  'Backups, password, import, school pack': '备份、密码、导入、学校配置包',
+  'backup restore password lock encryption import roster excel school pack export':
+    '备份 恢复 密码 锁定 加密 导入 名单 学校配置包 导出 backup password import excel pack',
+  'Help and updates': '帮助与更新',
+  'Version, updates, error report': '版本、更新、错误报告',
+  'version update help error report code log usage improve':
+    '版本 更新 帮助 错误 报告 代码 日志 改进 version update help error report',
+  'Settings sections': '设置分区',
+  'Search settings': '搜索设置',
+  'Nothing matches “{query}”.': '没有与“{query}”匹配的内容。'
 }

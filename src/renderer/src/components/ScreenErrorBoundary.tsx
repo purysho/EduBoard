@@ -45,7 +45,7 @@ export class ScreenErrorBoundary extends Component<
         <h1 className="text-lg font-semibold">{tr('This screen couldn’t be shown')}</h1>
         <p className="text-sm text-[var(--color-text-muted)]">
           {tr(
-            'Your data is safe. Reload to try again. If it happens again, copy the error report in Settings → Help and send it with this code:'
+            'Your data is safe. Reload to try again. If it happens again, copy the error report in Settings → Help and updates and send it with this code:'
           )}
         </p>
         <p className="select-all font-mono text-sm">

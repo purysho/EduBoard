@@ -68,13 +68,13 @@ chmod +x EduBoard.AppImage
 
 EduBoard opens on the **Dashboard** with a **Getting started** checklist at the top: create a class, add students, publish an assignment, connect the student Portal, and invite your students (plus two optional extras: sharing study material and adding an AI key). Each step has a button that takes you where it's done, and ticks itself once it really is done. Click **I'll do this later** to hide it; **Settings → Show getting-started checklist** brings it back.
 
-A good first stop is **Settings**:
+A good first stop is **Settings**. Its menu on the left splits it into sections: **You and your school**, **Appearance**, **Grading and reports**, **Class lists**, **Portal and families**, **AI**, **Data and security** and **Help and updates**. **Search settings** at the top of the menu finds the right section by what you type (for example "backup" or "comment"). Each box has its own **Save**; "Not saved yet." next to it means you've changed something there, and **Undo changes** puts it back.
 
-- **Your name** / **School / organization** — shown on printed report cards.
-- **Theme** — light, dark, or match your system.
-- **Language** — English or 中文 (Simplified Chinese). **中文 / EN** at the bottom of the sidebar switches in one click. Until you choose, EduBoard follows the computer's language. Everything changes: screens, printouts, the pages students open for exit tickets and check-in, and the built-in comment bank and parent letter (unless you've edited them).
-- **Default pass mark** — pre-fills new classes; you can still override it per class.
-- **Terms** (further down the Settings page) — optional. Add a term (e.g. "Term 1", school year "2026-2027") if you want to tag classes by term. Dates are optional too, and **Edit** changes a term's name or dates any time, so you can add Term 2 before its dates are fixed and fill them in later. Skip this if you don't need it — a class works fine with no term set.
+- **You and your school → Your name** / **School / organization** — shown on printed report cards.
+- **You and your school → Theme** — light, dark, or match your system.
+- **You and your school → Language** — English or 中文 (Simplified Chinese). It changes straight away, and **中文 / EN** at the bottom of the sidebar switches in one click. Until you choose, EduBoard follows the computer's language. Everything changes: screens, printouts, the pages students open for exit tickets and check-in, and the built-in comment bank and parent letter (unless you've edited them).
+- **Grading and reports → Default pass mark** — pre-fills new classes; you can still override it per class.
+- **Grading and reports → Terms** — optional. Add a term (e.g. "Term 1", school year "2026-2027") if you want to tag classes by term. Dates are optional too, and **Edit** changes a term's name or dates any time, so you can add Term 2 before its dates are fixed and fill them in later. Skip this if you don't need it — a class works fine with no term set.
 
 ![Settings](screenshots/settings.png)
 
@@ -113,7 +113,7 @@ For a whole class at once, skip manual entry — see [Importing a roster](#impor
 
 ### Importing a roster
 
-**Settings → Import a roster.** Point it at an `.xlsx` or `.csv` file with **"First Name"** and **"Last Name"** columns (a few common header spellings are recognized). It also picks up, when present: student number/ID, grade level, email, guardian name, guardian contact, notes. Optionally choose a class to enroll everyone into as they're imported — or leave that blank to just add them to your directory without enrolling anyone yet.
+**Settings → Data and security → Import a roster.** Point it at an `.xlsx` or `.csv` file with **"First Name"** and **"Last Name"** columns (a few common header spellings are recognized). It also picks up, when present: student number/ID, grade level, email, guardian name, guardian contact, notes. Optionally choose a class to enroll everyone into as they're imported — or leave that blank to just add them to your directory without enrolling anyone yet.
 
 ---
 
@@ -132,7 +132,7 @@ If your weights don't add to 100%, EduBoard tells you (categories with data are 
 
 ### Grading scales
 
-A class's **Settings** tab has its **Grading scale**. Choose A–F (the default), A–F with + and −, 优秀 / 良好 / 合格 / 待合格, 优秀 / 良好 / 中等 / 及格 / 不及格, 1–7, 9–1, Pass / Fail, or **Your own…**, then set where each band starts. The example line underneath shows what a few percents would get. Everything that shows a letter (gradebook, report cards, class report, composite grades, the Portal) uses the class's own labels. **Settings → Grading scale for new classes** sets the scale new classes start with. Pass rates still use the class's pass mark.
+A class's **Settings** tab has its **Grading scale**. Choose A–F (the default), A–F with + and −, 优秀 / 良好 / 合格 / 待合格, 优秀 / 良好 / 中等 / 及格 / 不及格, 1–7, 9–1, Pass / Fail, or **Your own…**, then set where each band starts. The example line underneath shows what a few percents would get. Everything that shows a letter (gradebook, report cards, class report, composite grades, the Portal) uses the class's own labels. **Settings → Grading and reports → Grading scale for new classes** sets the scale new classes start with. Pass rates still use the class's pass mark.
 
 ## Using the gradebook
 
@@ -234,7 +234,7 @@ The layout is saved per class automatically — no separate save step.
 
 **Give points** (top right) turns the chart into a way to give class points: pick what the point is for, then tap a seat for +1 or its **−** for −1. Each seat shows the student's points this week, the same as the Classroom tab. **Arrange seats** switches back.
 
-If a student field is marked **Show on the seating chart** (in **Settings → Your lists**, next to the field's name), a seat shows a small ⓘ when something is recorded in it for that student, such as an allergy or a support plan. Point to it to read it. The icons are hidden while presenting.
+If a student field is marked **Show on the seating chart** (in **Settings → Class lists → Extra student fields**, next to the field's name), a seat shows a small ⓘ when something is recorded in it for that student, such as an allergy or a support plan. Point to it to read it. The icons are hidden while presenting.
 
 ---
 
@@ -245,7 +245,7 @@ Each class has a **Classroom** tab for the lesson itself. It's fine to put on th
 - **Random name**: press **Pick a name**. Nobody comes up twice until everyone has had a turn; **Start again** resets the round.
 - **Groups**: choose **Groups of** a size or a **Number of groups**, then **Make groups**. **Shuffle** until you like them.
 - **Timer**: pick 1–15 minutes, **Start**, **Pause**, **Reset**. The corner button makes it full screen, and it chimes when time's up.
-- **Class points**: pick what the point is for, then tap a student's name for +1, or **−** to take one away. Totals start again each Monday; **Undo last** takes back a mis-tap. What points are for is set in **Settings → Your lists → What class points are for**: rename EduBoard's five (Helping others, On task…), add your own, or **Use a ready-made set** such as 德智体美劳 or Respect / Effort / Teamwork. A category you stop using is hidden, not deleted. Report cards show each student's points per category (switch it off in **Settings → Report cards**), and the family digest can show the past week's.
+- **Class points**: pick what the point is for, then tap a student's name for +1, or **−** to take one away. Totals start again each Monday; **Undo last** takes back a mis-tap. What points are for is set in **Settings → Class lists → What class points are for**: rename EduBoard's five (Helping others, On task…), add your own, or **Use a ready-made set** such as 德智体美劳 or Respect / Effort / Teamwork. A category you stop using is hidden, not deleted. Report cards show each student's points per category (switch it off in **Settings → Grading and reports → Report cards**), and the family digest can show the past week's.
 
 Students marked **absent** or **excused** today are left out of the picker and groups (untick the box at the top to include them).
 
@@ -354,16 +354,16 @@ Two cards on the Dashboard help day to day. **Today** lists today's lessons from
 
 ### Templates and report card layouts
 
-Parent letters, Class Story posts and lesson plans each have **Start from a template…** with EduBoard's own (in the language EduBoard is in) and any you've saved. **Save as template** keeps what you've written for next time; your saved templates are listed, and can be deleted, in **Settings → Your lists**. The comment bank there can **Add a ready-made set** of sentences for primary, secondary or English-as-an-additional-language classes.
+Parent letters, Class Story posts and lesson plans each have **Start from a template…** with EduBoard's own (in the language EduBoard is in) and any you've saved. **Save as template** keeps what you've written for next time; your saved templates are listed, and can be deleted, in **Settings → Class lists → Your templates**. The report comment bank (**Settings → Grading and reports**) can **Add a ready-made set** of sentences for primary, secondary or English-as-an-additional-language classes.
 
-**Settings → Report cards** chooses what printed report cards show: **Standard** (grade, categories and every assessment), **Compact** (grade, attendance rate and comment) or **Detailed** (everything, plus signature lines for teacher and parent). Each part can be switched on or off, and you can set your own title ("End of term report") and a line printed at the bottom ("Next term starts on 2 March.").
+**Settings → Grading and reports → Report cards** chooses what printed report cards show: **Standard** (grade, categories and every assessment), **Compact** (grade, attendance rate and comment) or **Detailed** (everything, plus signature lines for teacher and parent). Each part can be switched on or off, and you can set your own title ("End of term report") and a line printed at the bottom ("Next term starts on 2 March.").
 
 ### Report card comments
 
-At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Your lists**). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.
+At the bottom of a class's **Report** tab, **Report card comments** has a box for each student; what you write saves when you click away and prints on their report card. **Comment bank** adds a ready-made sentence with the student's name, class, grade and percent filled in (edit the sentences in **Settings → Grading and reports → Report comment bank**, where **Add a ready-made set** adds sentences for primary, secondary or English as an additional language at the end of the list; click **Save** to keep them). **Suggest phrases** asks your AI provider (it needs an internet connection and an AI key in Settings) for a few short phrases, each marked with what it's based on (grade, trend, attendance or your notes); click one to add it, then edit. It never writes the whole comment for you. **Print all report cards (PDF)** at the top saves every student's report card in one file, a page each.
 ## Weekly digest, your week and newsletters
 
-The **weekly digest** is the Monday-morning email the Portal sends each family with an email on file. In **Settings → General**, under the digest email settings, tick what families get: grades, attendance, homework due this week, Class Story, a reminder about unread messages and, if you turn it on, each child's class points from the past week by category. It's written in the language EduBoard is in. **Settings → Portal sync → Preview** shows exactly what each family would receive this week, and says which families haven't given an email yet.
+The **weekly digest** is the Monday-morning email the Portal sends each family with an email on file. In **Settings → Portal and families → Weekly parent digest email**, tick what families get: grades, attendance, homework due this week, Class Story, a reminder about unread messages and, if you turn it on, each child's class points from the past week by category. It's written in the language EduBoard is in. **Settings → Portal and families → Portal sync → Preview** shows exactly what each family would receive this week, and says which families haven't given an email yet.
 
 **Your week** (the button at the top of the Dashboard) is your own summary across every class: what you taught and what's coming up, homework due and homework not handed in, students to check on and parent follow-ups owed. **Print (PDF)** saves it; **Email it to me** sends it to the address in **Settings → Your email address**, using the same email settings as the digest.
 
@@ -385,7 +385,7 @@ Under each Class Story post, **Seen by 24 of 30 families** shows how many studen
 Most classes in China already have a parents' group on DingTalk (钉钉) or WeCom (企业微信). EduBoard can post into it through the group's robot:
 
 1. In the group's settings, add a **custom robot** (DingTalk: 群设置 → 机器人 → 添加机器人 → 自定义; WeCom: 添加群机器人) and copy its **webhook address**. On DingTalk, choose **加签 (signing)** as the security setting and copy the secret too.
-2. In **Settings → Class group chats**, **Add a group chat**, paste the address (and the DingTalk secret), choose the class, and **Send a test message**. Then **Save group**.
+2. In **Settings → Portal and families → Class group chats**, **Add a group chat**, paste the address (and the DingTalk secret), choose the class, and **Send a test message**. Then **Save group**.
 3. On the class's **Class Story** tab, **Also send to** sends each new post to the group as well (text only; photos stay on the Portal). On the **Newsletter** page, **Send to group chat** sends the newsletter.
 
 It needs internet. Everyone in the group sees what you send, so keep it to class-wide news.
@@ -398,13 +398,13 @@ For anything you'd rather finish in Office or WPS, EduBoard saves a file you can
 - **Word (.docx)** in the Parent letters window: every letter, a page each, with the school logo.
 - **Word** and **Slides** next to each lesson plan: the plan as a document, or a starter PowerPoint deck: a title slide in the school colour, then objectives, materials, one slide per activity (write "Warm-up: song" and the slide is headed "Warm-up") and homework.
 - **Word (.docx)** on the Newsletter page, with headings and bullets kept.
-- Excel: **Export gradebook (.xlsx)** on the Report tab, the course grade sheet on Composite grades, **Export everything (Excel)** in Settings → Backups, and roster imports from .xlsx.
+- Excel: **Export gradebook (.xlsx)** on the Report tab, the course grade sheet on Composite grades, **Export everything (Excel)** in Settings → Data and security, and roster imports from .xlsx.
 
 ## Your school's look and settings
 
-**Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own background or fonts; it's applied on top of EduBoard's look and can override the colour tokens (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`). It can use inline (`data:`) images, but anything that would load from the internet is removed.
+**Settings → Appearance** sets the school logo (shown in the sidebar and on report cards), the school colour, text size, higher contrast and reduced motion. **School stylesheet** there loads a `.css` file for a school's own colours, background or fonts; it's applied on top of EduBoard's look. It works by overriding EduBoard's colour names (`--color-bg`, `--color-surface`, `--color-primary`, `--color-text` and friends, for light mode on `:root` and for dark mode on `.dark`), so a stylesheet made for a website (a WordPress theme, say) changes nothing. **Save an example to start from** saves a stylesheet with every colour name in it: change the colours, then load it. After loading, EduBoard says what the file changes, or that it looks made for another website. It can use inline (`data:`) images, but anything that would load from the internet is removed.
 
-**Settings → Your lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. Imports also read Chinese headings (姓名, 学号, 家长姓名, 家长电话…); a single 姓名 column is split into family name and given name. These fields stay on your computer; the Portal never receives them.
+**Settings → Class lists** edits the one-tap buttons above a student's log and adds your own student fields (such as House or Allergies). A roster import fills a field from a column with the same name. Imports also read Chinese headings (姓名, 学号, 家长姓名, 家长电话…); a single 姓名 column is split into family name and given name. These fields stay on your computer; the Portal never receives them.
 
 **Help improve EduBoard** (at the bottom of Settings) is off unless you turn it on. When on, EduBoard tells the project once a week that this copy is still in use. It sends only what the box underneath shows: a random number made up on your computer, the version, the system and language, and rough class and student counts (as ranges). Never names, your school, grades or anything a student wrote. Turning it off forgets the random number.
 
@@ -412,11 +412,11 @@ For anything you'd rather finish in Office or WPS, EduBoard saves a file you can
 
 **Words EduBoard uses** (also in **Your lists**) swaps EduBoard's words for your school's: "section" for "class", "test" for "assessment", "learner" for "student", "unit" for "assignment", "semester" for "term". Type the singular and plural; leave a box empty to keep EduBoard's word. In Chinese it's one box per word (教学班 for 班级, say). EduBoard reloads to use the new words.
 
-**Settings → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields, comment bank, parent letter) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
+**Settings → Data and security → School pack** puts all of the above (name, logo, colour, stylesheet, grading scale for new classes, pass mark, terms, log buttons, student fields, comment bank, parent letter) into one file. Set EduBoard up once, **Export school pack**, and share the file; colleagues use **Import school pack…**, see a list of what will change, and confirm. A pack never contains students or grades, never changes existing classes' grading scales, and only adds terms and student fields.
 
 ## Password protection
 
-**Settings → Password protection → Turn on password protection** encrypts everything EduBoard keeps (students, grades, notes, guardian contacts, and the Portal and AI keys in Settings), so the database file is unreadable without your password. Recommended if the computer is shared, goes home with you, or your data lives on a USB stick.
+**Settings → Data and security → Password protection → Turn on password protection** encrypts everything EduBoard keeps (students, grades, notes, guardian contacts, and the Portal and AI keys in Settings), so the database file is unreadable without your password. Recommended if the computer is shared, goes home with you, or your data lives on a USB stick.
 
 1. Choose a password (at least 8 characters). EduBoard backs up first, then encrypts.
 2. You get a **recovery key** (five groups of letters and numbers). Write it down or print it and keep it away from the computer. **If you forget your password, the recovery key is the only way in**; nobody can recover your data without one of them.
@@ -443,7 +443,7 @@ On a student's page, **Their data** has two buttons:
 
 ## Backing up your data
 
-**Settings → Backups → Back up now** makes a timestamped copy of your entire database. Do this before anything you'd hate to redo (a big import, end of term) — it takes a second. **Open folder** shows you where backups live on disk, so you can copy one to a USB stick, a cloud-synced folder, or email it to yourself.
+**Settings → Data and security → Backups → Back up now** makes a timestamped copy of your entire database. Do this before anything you'd hate to redo (a big import, end of term) — it takes a second. **Open folder** shows you where backups live on disk, so you can copy one to a USB stick, a cloud-synced folder, or email it to yourself.
 
 **Export everything (Excel)** saves all your data as one workbook, a sheet per table. It's for reading, a school's records or moving to another system; to move EduBoard itself to a new computer, use a backup.
 
@@ -470,7 +470,7 @@ Two things worth knowing:
 ## Troubleshooting
 
 **An error message ends with a code, such as (EB-1003) or (PT-3001).**
-The code says what went wrong: EB codes come from EduBoard on your computer, PT codes from the Portal. [ERROR_CODES.md](ERROR_CODES.md) lists every code, what it means and what to do. When you ask for help, give the code. **Settings → Help** lists your recent errors, and **Copy error report** copies EduBoard's version, your system and those errors to send. If a message says "ref" and six letters (for example EB-0900 · ref 7KQ2MX), include that too: it points to the full details in the error log. If a screen can't be drawn, EduBoard shows "This screen couldn't be shown" with a code and a **Reload** button; your data is safe.
+The code says what went wrong: EB codes come from EduBoard on your computer, PT codes from the Portal. [ERROR_CODES.md](ERROR_CODES.md) lists every code, what it means and what to do. When you ask for help, give the code. **Settings → Help and updates** lists your recent errors, and **Copy error report** copies EduBoard's version, your system and those errors to send. If a message says "ref" and six letters (for example EB-0900 · ref 7KQ2MX), include that too: it points to the full details in the error log. If a screen can't be drawn, EduBoard shows "This screen couldn't be shown" with a code and a **Reload** button; your data is safe.
 
 **Windows says "Windows protected your PC" / macOS says the app "cannot be opened."**
 Expected — see [Installing](#installing) above. It's a code-signing warning, not a real error.
@@ -482,7 +482,7 @@ Check the import result message: rows missing a first *and* last name are skippe
 Grades only compute once a category (or the whole class, if you're not using categories) has at least one graded assessment. If you're using categories, an assessment must be assigned to one for it to count toward category-weighted totals — assessments left "Uncategorized" still count, just folded in unweighted.
 
 **I want to move EduBoard's data to a different computer.**
-Use **Settings → Backups**, make a fresh backup, copy the `.db` file to the new machine (or the new machine's version of EduBoard), and use **Restore** to load it. For the portable build, it's simpler still: just copy the exe and its `EduBoard-data` folder together.
+Use **Settings → Data and security → Backups**, make a fresh backup, copy the `.db` file to the new machine (or the new machine's version of EduBoard), and use **Restore** to load it. For the portable build, it's simpler still: just copy the exe and its `EduBoard-data` folder together.
 
 **Something looks broken.**
 Please open an issue on the [GitHub repo](https://github.com/purysho/EduBoard/issues) with what you were doing and what you expected instead — screenshots help a lot.

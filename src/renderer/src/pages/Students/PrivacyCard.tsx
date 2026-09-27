@@ -146,8 +146,8 @@ function EraseStudentModal({
           {done.olderBackups > 0 && (
             <p className="text-[var(--color-text-muted)]">
               {trn(
-                '{olderBackups} backup made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Backups → Open folder) if they must go now.',
-                '{olderBackups} backups made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Backups → Open folder) if they must go now.',
+                '{olderBackups} backup made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Data and security → Backups → Open folder) if they must go now.',
+                '{olderBackups} backups made before now still include them. Automatic backups are replaced over time; delete the others from the backups folder (Settings → Data and security → Backups → Open folder) if they must go now.',
                 done.olderBackups,
                 { olderBackups: done.olderBackups }
               )}

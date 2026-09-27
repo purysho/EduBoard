@@ -44,7 +44,7 @@ export function AuditLogPage(): React.JSX.Element {
       <PageHeader
         title={tr('Audit Log')}
         description={tr(
-          "Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Backups) before being permanently purged."
+          "Every grade, attendance, enrollment, class, and homework change — who did what, when. A removed student's entries stop appearing here immediately, but are kept for 12 months (see Settings → Data and security) before being permanently purged."
         )}
       />
 
