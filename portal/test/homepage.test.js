@@ -82,3 +82,21 @@ function getHead(url, host) {
       .on('error', reject)
   })
 }
+
+test('the privacy notice and data processing terms are served in both languages', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  for (const [route, en, zh] of [
+    ['/privacy', /<h1>Privacy notice<\/h1>/, /<h1>隐私说明<\/h1>/],
+    ['/data-processing', /<h1>Data processing terms<\/h1>/, /<h1>数据处理条款<\/h1>/]
+  ]) {
+    const page = await get(portal.url + route, 'edu-board.com')
+    assert.equal(page.status, 200, route)
+    assert.match(page.body, en)
+    assert.match(page.body, zh)
+    assert.doesNotMatch(page.body, /<(script|link)[^>]+(src|href)="https?:\/\//)
+  }
+  const home = await get(portal.url + '/download', 'edu-board.com')
+  assert.match(home.body, /href="\/privacy"/)
+  assert.match(home.body, /href="\/data-processing"/)
+})

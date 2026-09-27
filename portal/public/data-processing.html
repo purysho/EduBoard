@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Data processing terms · EduBoard</title>
+    <meta
+      name="description"
+      content="Terms a school can sign for student data kept on the EduBoard Portal at portal.edu-board.com."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href="/download"><img src="/icon.svg" alt="" />EduBoard</a>
+        <span class="spacer"></span>
+        <button type="button" class="print" data-lang-block="en">Print or save as PDF</button>
+        <button type="button" class="print" data-lang-block="zh" hidden>打印或存为 PDF</button>
+        <div class="lang" role="group" aria-label="Language / 语言">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="zh">中文</button>
+        </div>
+      </header>
+
+      <article data-lang-block="en">
+        <h1>Data processing terms</h1>
+        <p class="updated">
+          For schools using the EduBoard Portal at portal.edu-board.com · Version of 27
+          September 2026
+        </p>
+
+        <div class="summary">
+          These terms are between the school named at the end (the <strong>School</strong>) and
+          the developer of EduBoard (the <strong>Provider</strong>). They apply when the School's
+          teachers publish to portal.edu-board.com. A school that runs the Portal on its own
+          server does not need them. Print this page or save it as a PDF, fill in the table at the
+          end, sign it and send a copy to
+          <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>; the Provider signs
+          and returns it. The <a href="/privacy">privacy notice</a> describes the data in more
+          detail and forms part of these terms.
+        </div>
+
+        <h2>1. Roles</h2>
+        <p>
+          The School decides why and how personal information is processed (it is the
+          controller; 个人信息处理者). The Provider processes it only on the School's behalf (it is
+          the processor; 受托人). The School's instructions are these terms and what its teachers
+          do in EduBoard, such as publishing, removing a student or changing settings.
+        </p>
+
+        <h2>2. What is processed</h2>
+        <table>
+          <tr>
+            <th>Purpose</th>
+            <td>
+              Letting students and families see their own classwork, grades, attendance, messages
+              and shared material, and letting teachers see what was handed in and read.
+            </td>
+          </tr>
+          <tr>
+            <th>People</th>
+            <td>The School's students, their parents or guardians, and its teachers.</td>
+          </tr>
+          <tr>
+            <th>Information</th>
+            <td>
+              Names, student numbers, dates of birth, class names, grades, attendance rates,
+              class points, homework and answers, uploaded files, messages, Class Story posts
+              and who has seen them, optional profile details and photo, Study Helper questions
+              and answers, usernames, bcrypt password hashes and optional email addresses.
+            </td>
+          </tr>
+          <tr>
+            <th>Sensitive information</th>
+            <td>
+              Information about children, which under China's Personal Information Protection
+              Law is sensitive for children under 14. The School should not publish health
+              or other special information to the Portal (EduBoard does not send its extra
+              student fields or notes there).
+            </td>
+          </tr>
+          <tr>
+            <th>Operations</th>
+            <td>
+              Storing, showing to signed-in users, backing up, deleting; sending the weekly
+              digest through the School's own email account; sending Study Helper questions and
+              translations to the AI provider the School chose, with the School's own key.
+            </td>
+          </tr>
+          <tr>
+            <th>Duration</th>
+            <td>While the School uses portal.edu-board.com, and until deletion under section 8.</td>
+          </tr>
+        </table>
+
+        <h2>3. What the Provider will do</h2>
+        <ul>
+          <li>
+            Process the information only on the School's instructions, and tell the School if
+            it believes an instruction breaks the law.
+          </li>
+          <li>
+            Never sell it, use it for advertising, profile anyone, or use it to train AI models.
+          </li>
+          <li>
+            Allow only people who need it to keep the service running to reach the database,
+            and bind them to confidentiality.
+          </li>
+          <li>
+            Keep these safeguards in place: HTTPS only; passwords stored as bcrypt hashes; limits
+            on sign-in attempts and secret links; each teacher's data kept apart by their own
+            sync secret; server access by key or password restricted to the Provider; security
+            updates applied; backups on the same server, the oldest deleted once there are 14.
+          </li>
+          <li>
+            Not disclose the information to anyone unless the law requires it, and then tell the
+            School first unless the law forbids that.
+          </li>
+        </ul>
+
+        <h2>4. Sub-processors</h2>
+        <p>The Provider uses:</p>
+        <ul>
+          <li>VPS.do (VpsQuan L.L.C.): the server, in Hong Kong, where the Portal runs.</li>
+          <li>
+            Cloudflare: domain name service only. It tells browsers which server to use;
+            personal information does not pass through it.
+          </li>
+        </ul>
+        <p>
+          The AI provider and email account the School sets up in EduBoard are used with the
+          School's own key and account, under the School's own agreement with them; they are not
+          the Provider's sub-processors. The Provider will tell the School at least 30 days before
+          adding or replacing a sub-processor. The School may object, and if the objection cannot
+          be resolved, may stop using the service and have its data deleted.
+        </p>
+
+        <h2>5. Security incidents</h2>
+        <p>
+          If personal information of the School's is lost, disclosed or accessed without
+          permission, the Provider will tell the School without undue delay and within 48 hours
+          of finding out, say what is known (what happened, whose information, what is being
+          done), keep the School updated, and help it inform families and the authorities.
+        </p>
+
+        <h2>6. Helping the School</h2>
+        <p>
+          The Provider will help the School answer requests from students and families to see,
+          correct, copy or delete their information, and give the School what it needs for a
+          personal information protection impact assessment (个人信息保护影响评估) or similar
+          review.
+        </p>
+
+        <h2>7. Where the information is kept</h2>
+        <p>
+          The information is kept in Hong Kong. Under the Personal Information Protection Law,
+          Hong Kong is outside mainland China. A school in mainland China is responsible for any
+          steps the law requires before sending personal information there (for example a
+          standard contract for cross-border transfer, 个人信息出境标准合同), and the Provider will
+          cooperate, including by signing such a contract. A school elsewhere that needs standard
+          contractual clauses can ask for them in the same way.
+        </p>
+
+        <h2>8. Ending</h2>
+        <p>
+          When the School stops using portal.edu-board.com, or asks, the Provider will first give
+          the School a copy of its data if it wants one, then delete it from the live Portal
+          within 30 days. Copies in backups are removed as those backups are replaced, and within
+          a further 30 days at most. The Provider will confirm the deletion in writing.
+        </p>
+
+        <h2>9. Checking</h2>
+        <p>
+          The Provider will answer the School's reasonable questions about how it meets these
+          terms, including a security questionnaire once a year. An inspection by an independent
+          auditor bound by confidentiality can be arranged with 30 days' notice, at the School's
+          cost.
+        </p>
+
+        <h2>10. Other terms</h2>
+        <p>
+          If these terms conflict with any other agreement between the School and the Provider
+          about this service, these terms win for personal information. They continue for as long
+          as the Provider holds the School's information.
+        </p>
+
+        <h2>Signatures</h2>
+        <table class="sign">
+          <tr>
+            <th>School</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Address</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Contact for data protection (name, email)</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Signed by (name, role)</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Signature and date</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Governing law (if agreed)</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Provider</th>
+            <td>The developer of EduBoard · privacy@edu-board.com</td>
+          </tr>
+          <tr>
+            <th>Signed by (name)</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>Signature and date</th>
+            <td></td>
+          </tr>
+        </table>
+      </article>
+
+      <article data-lang-block="zh" hidden>
+        <h1>数据处理条款</h1>
+        <p class="updated">适用于使用 portal.edu-board.com 学生门户的学校 · 2026 年 9 月 27 日版</p>
+
+        <div class="summary">
+          本条款由文末列明的学校（下称<strong>学校</strong>）与 EduBoard 的开发者（下称<strong>服务方</strong>）订立，适用于学校的老师向
+          portal.edu-board.com
+          发布内容的情形。在自己服务器上运行学生门户的学校无需签署。请打印本页或存为 PDF，填写文末表格并签字，然后发送至
+          <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>；服务方签字后寄回。<a
+            href="/privacy"
+            >隐私说明</a
+          >对数据有更详细的说明，是本条款的一部分。
+        </div>
+
+        <h2>1. 角色</h2>
+        <p>
+          学校决定个人信息的处理目的和方式（即“个人信息处理者”）。服务方只代表学校处理这些信息（即“受托人”）。学校的指示包括本条款，以及学校的老师在
+          EduBoard 中的操作，例如发布、删除学生或更改设置。
+        </p>
+
+        <h2>2. 处理的内容</h2>
+        <table>
+          <tr>
+            <th>目的</th>
+            <td>让学生和家长查看自己的作业、成绩、考勤、消息和分享的资料，让老师看到哪些作业已交、哪些内容已读。</td>
+          </tr>
+          <tr>
+            <th>涉及的人</th>
+            <td>学校的学生、其家长或监护人，以及学校的老师。</td>
+          </tr>
+          <tr>
+            <th>信息</th>
+            <td>
+              姓名、学号、出生日期、班级名称、成绩、出勤率、课堂积分、作业及答案、上传的文件、消息、班级动态及其阅读情况、可选的个人资料和照片、学习助手的问题和回答、用户名、bcrypt
+              密码散列以及可选的邮箱地址。
+            </td>
+          </tr>
+          <tr>
+            <th>敏感个人信息</th>
+            <td>
+              儿童的信息：根据《个人信息保护法》，不满十四周岁未成年人的个人信息属于敏感个人信息。学校不应把健康等特殊信息发布到学生门户（EduBoard
+              不会把自建学生字段或备注发送到学生门户）。
+            </td>
+          </tr>
+          <tr>
+            <th>处理方式</th>
+            <td>
+              存储、向已登录用户展示、备份、删除；通过学校自己的邮箱账号发送每周周报；用学校自己的密钥，把学习助手的问题和翻译请求发送给学校选择的
+              AI 服务商。
+            </td>
+          </tr>
+          <tr>
+            <th>期限</th>
+            <td>学校使用 portal.edu-board.com 期间，直至按第 8 条删除为止。</td>
+          </tr>
+        </table>
+
+        <h2>3. 服务方的义务</h2>
+        <ul>
+          <li>只按学校的指示处理信息；如认为某项指示违法，告知学校。</li>
+          <li>绝不出售这些信息，不用于广告或用户画像，也不用于训练 AI 模型。</li>
+          <li>只允许为维持服务运行而确有需要的人员访问数据库，并要求其承担保密义务。</li>
+          <li>
+            保持以下保护措施：只使用 HTTPS；以 bcrypt
+            散列保存密码；限制登录尝试和秘密链接的请求次数；每位老师的数据通过其各自的同步密钥相互隔离；服务器只允许服务方通过密钥或密码访问；及时安装安全更新；备份保存在同一台服务器上，超过
+            14 份时删除最旧的一份。
+          </li>
+          <li>除法律要求外不向任何人披露这些信息；如法律要求披露，除法律禁止外，先告知学校。</li>
+        </ul>
+
+        <h2>4. 分包处理方</h2>
+        <p>服务方使用：</p>
+        <ul>
+          <li>VPS.do（VpsQuan L.L.C.）：运行学生门户的服务器，位于香港。</li>
+          <li>Cloudflare：仅提供域名解析，告诉浏览器使用哪台服务器；个人信息不经过它。</li>
+        </ul>
+        <p>
+          学校在 EduBoard 中设置的 AI
+          服务商和邮箱账号，使用的是学校自己的密钥和账号，适用学校与其自行订立的协议，不属于服务方的分包处理方。服务方在增加或更换分包处理方前至少
+          30 天通知学校。学校可以提出异议；如无法解决，学校可以停止使用本服务并要求删除其数据。
+        </p>
+
+        <h2>5. 安全事件</h2>
+        <p>
+          如学校的个人信息发生丢失、泄露或未经许可的访问，服务方将及时告知学校，最迟在发现后 48
+          小时内，说明已知情况（发生了什么、涉及谁的信息、正在采取什么措施），持续向学校通报进展，并协助学校通知家长和主管部门。
+        </p>
+
+        <h2>6. 协助学校</h2>
+        <p>服务方将协助学校答复学生和家长查阅、更正、复制或删除其信息的请求，并向学校提供开展个人信息保护影响评估或类似评估所需的资料。</p>
+
+        <h2>7. 信息存放地点</h2>
+        <p>
+          信息存放在香港。根据《个人信息保护法》，香港属于境外。中国大陆的学校负责完成法律要求的个人信息出境手续（例如订立个人信息出境标准合同），服务方将予以配合，包括签署此类合同。其他地区需要标准合同条款的学校，也可以同样提出。
+        </p>
+
+        <h2>8. 终止</h2>
+        <p>
+          学校停止使用 portal.edu-board.com 或提出要求时，服务方先按学校需要提供一份数据副本，然后在 30
+          天内从正在运行的学生门户中删除。备份中的副本会随备份更替而删除，最迟再过 30 天。服务方将书面确认删除。
+        </p>
+
+        <h2>9. 核查</h2>
+        <p>
+          服务方将答复学校关于其如何履行本条款的合理询问，包括每年一次的安全问卷。经 30
+          天通知，可以安排受保密义务约束的独立审计师进行检查，费用由学校承担。
+        </p>
+
+        <h2>10. 其他</h2>
+        <p>
+          如本条款与学校和服务方之间关于本服务的其他协议相冲突，涉及个人信息的事项以本条款为准。只要服务方仍持有学校的信息，本条款持续有效。
+        </p>
+
+        <h2>签署</h2>
+        <table class="sign">
+          <tr>
+            <th>学校</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>地址</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>数据保护联系人（姓名、邮箱）</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>签署人（姓名、职务）</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>签字及日期</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>适用法律（如有约定）</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>服务方</th>
+            <td>EduBoard 开发者 · privacy@edu-board.com</td>
+          </tr>
+          <tr>
+            <th>签署人（姓名）</th>
+            <td></td>
+          </tr>
+          <tr>
+            <th>签字及日期</th>
+            <td></td>
+          </tr>
+        </table>
+      </article>
+
+      <footer>
+        <a href="/download" data-lang-block="en">EduBoard homepage</a>
+        <a href="/download" data-lang-block="zh" hidden>EduBoard 主页</a>
+        <a href="/privacy" data-lang-block="en">Privacy notice</a>
+        <a href="/privacy" data-lang-block="zh" hidden>隐私说明</a>
+      </footer>
+    </div>
+    <script src="/legal.js"></script>
+  </body>
+</html>

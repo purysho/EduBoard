@@ -476,5 +476,8 @@ export const SETTINGS: Record<string, string> = {
     '版本 更新 帮助 错误 报告 代码 日志 改进 version update help error report',
   'Settings sections': '设置分区',
   'Search settings': '搜索设置',
-  'Nothing matches “{query}”.': '没有与“{query}”匹配的内容。'
+  'Nothing matches “{query}”.': '没有与“{query}”匹配的内容。',
+  'What EduBoard keeps and where:': 'EduBoard 保存哪些内容、存放在哪里：',
+  'Privacy notice': '隐私说明',
+  'Data processing terms for schools': '学校数据处理条款'
 }

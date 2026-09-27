@@ -6,6 +6,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **Privacy notice and data processing terms**, in English and Chinese, at edu-board.com/privacy and edu-board.com/data-processing (on every Portal too). The notice says plainly what the app and the Portal keep, where, who can see it and for how long; the terms are what a school signs before using portal.edu-board.com (roles, safeguards, sub-processors, 48-hour breach notice, Hong Kong hosting and China's cross-border rules, deletion at the end). Linked from the homepage, the Portal login and Settings → Help and updates.
 - **edu-board.com as the homepage.** `Set-Up-Homepage.cmd` (double-click, once) updates the Portal and makes edu-board.com and www.edu-board.com show EduBoard's homepage with downloads, while the Portal stays at portal.edu-board.com. The homepage's "Log in" links go to the Portal's address (new `PORTAL_HOST` setting), and the Portal's login and admin pages ask search engines to leave them out of results.
 
 ## [0.5.1] — 2026-09-27

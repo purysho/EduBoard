@@ -12,9 +12,10 @@ import {
   useUpdateSettings
 } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
-import { tr } from '@shared/i18n'
+import { tr, uiLanguage } from '@shared/i18n'
 
 const RELEASES_URL = 'https://github.com/purysho/EduBoard/releases/latest'
+const SITE_URL = 'https://edu-board.com'
 
 /** EduBoard's version, and updating it from right here. */
 export function AboutPanel(): React.JSX.Element {
@@ -162,6 +163,26 @@ export function AboutPanel(): React.JSX.Element {
               </span>
             </label>
           )}
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {tr('What EduBoard keeps and where:')}{' '}
+            <a
+              href={`${SITE_URL}/privacy?lang=${uiLanguage()}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] hover:underline"
+            >
+              {tr('Privacy notice')}
+            </a>
+            {' · '}
+            <a
+              href={`${SITE_URL}/data-processing?lang=${uiLanguage()}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] hover:underline"
+            >
+              {tr('Data processing terms for schools')}
+            </a>
+          </p>
         </CardBody>
 
         <ConfirmDialog

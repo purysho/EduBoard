@@ -44,6 +44,11 @@ const homepageHosts = (process.env.HOMEPAGE_HOSTS || '')
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean)
 app.get(['/download', '/download/'], (_req, res) => res.sendFile(HOMEPAGE))
+// The privacy notice and the data processing terms a school can sign (both languages).
+app.get('/privacy', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')))
+app.get('/data-processing', (_req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'data-processing.html'))
+)
 const onHomepageHost = (req) => homepageHosts.includes((req.hostname || '').toLowerCase())
 app.get('/', (req, res, next) => (onHomepageHost(req) ? res.sendFile(HOMEPAGE) : next()))
 // The homepage's "Log in" links. On a homepage host "/" is the homepage itself, so they go
