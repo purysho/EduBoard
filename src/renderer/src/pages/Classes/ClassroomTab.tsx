@@ -17,7 +17,8 @@ import type { ClassSection } from '@shared/types'
 import { makeGroups, pickNext, startOfWeekIso } from '@shared/classroomTools'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { useAttendanceByClass, useClassRoster } from '@renderer/lib/queries'
+import { useAttendanceByClass, useClassRoster, useSettings } from '@renderer/lib/queries'
+import { resolvePointCategories } from '@shared/pointCategories'
 import { todayIso } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { tr } from '@shared/i18n'
@@ -344,10 +345,6 @@ function TimerCard(): React.JSX.Element {
   )
 }
 
-const REASONS = ['Helping others', 'On task', 'Great answer', 'Kindness', 'Teamwork'].map((r) =>
-  tr(r)
-)
-
 function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.JSX.Element {
   const qc = useQueryClient()
   const week = startOfWeekIso()
@@ -356,12 +353,14 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
     queryKey: key,
     queryFn: () => window.api.behaviourPoints.totals(classId, week)
   })
-  const [reason, setReason] = useState<string | null>(null)
+  const { data: settings } = useSettings()
+  const categories = resolvePointCategories(settings?.pointCategories).filter((c) => !c.hidden)
+  const [category, setCategory] = useState<string | null>(null)
   const byId = new Map((totals ?? []).map((t) => [t.studentId, t]))
   const refresh = (): void => void qc.invalidateQueries({ queryKey: key })
 
   async function give(studentId: string, points: number): Promise<void> {
-    await window.api.behaviourPoints.add({ classId, studentId, points, reason })
+    await window.api.behaviourPoints.add({ classId, studentId, points, category })
     refresh()
   }
 
@@ -387,18 +386,19 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
       <CardBody className="space-y-3">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-[var(--color-text-muted)]">{tr('For:')}</span>
-          {[null, ...REASONS].map((r) => (
+          {[null, ...categories].map((c) => (
             <button
-              key={r ?? 'none'}
+              key={c?.id ?? 'none'}
+              aria-pressed={category === (c?.id ?? null)}
               className={cn(
                 'rounded-full border px-2 py-0.5',
-                reason === r
+                category === (c?.id ?? null)
                   ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary)]'
                   : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
               )}
-              onClick={() => setReason(r)}
+              onClick={() => setCategory(c?.id ?? null)}
             >
-              {r ?? tr('No reason')}
+              {c?.name ?? tr('No reason')}
             </button>
           ))}
         </div>
@@ -441,7 +441,7 @@ function PointsCard({ classId, kids }: { classId: string; kids: Kid[] }): React.
         </div>
         <p className="text-xs text-[var(--color-text-muted)]">
           {tr(
-            'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept.'
+            'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Your lists.'
           )}
         </p>
       </CardBody>

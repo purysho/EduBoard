@@ -53,3 +53,27 @@ test('the teacher summary goes only to the teacher’s own address', async (t) =
   assert.equal(res.status, 400)
   assert.match(res.json.error, /own email/)
 })
+
+test('class points reach the digest only when the teacher turns them on', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const payload = classPayload()
+  payload.grades[0].points = [
+    { name: 'Character (德)', total: 3 },
+    { name: '<script>', total: 1 },
+    { name: 'bad', total: 'x' }
+  ]
+  await makeStudentAccount(portal, { payload })
+
+  // Old desktop apps send no options, and newer ones leave points off by default.
+  let [family] = (await portal.sync('/digest/preview')).json
+  assert.doesNotMatch(family.html, /Class points/)
+
+  payload.digestOptions = { points: true }
+  assert.equal((await portal.sync('', payload)).status, 200)
+  ;[family] = (await portal.sync('/digest/preview')).json
+  assert.match(family.html, /Class points this past week/)
+  assert.match(family.html, /Character \(德\) 3 · &lt;script&gt; 1/)
+  assert.doesNotMatch(family.html, /bad/)
+  assert.match(family.html, /91%/) // the other parts stay on
+})

@@ -425,13 +425,18 @@ export function SettingsPage(): React.JSX.Element {
                           ['attendance', tr('Attendance')],
                           ['homework', tr('Homework due this week')],
                           ['classStory', tr('Class Story')],
-                          ['messages', tr('Unread messages reminder')]
+                          ['messages', tr('Unread messages reminder')],
+                          ['points', tr('Class points this past week')]
                         ] as const
                       ).map(([key, label]) => (
                         <label key={key} className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            checked={form.digestOptions?.[key] !== false}
+                            checked={
+                              key === 'points'
+                                ? form.digestOptions?.points === true
+                                : form.digestOptions?.[key] !== false
+                            }
                             onChange={(e) =>
                               setForm({
                                 ...form,

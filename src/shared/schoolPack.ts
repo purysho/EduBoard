@@ -7,6 +7,7 @@ import { STUDENT_LOG_TYPES } from './types'
 import { gradeBands, scaleProblem } from './gradeScales'
 import { COMMENT_CATEGORIES, type BankComment } from './commentBank'
 import { BUILT_IN_STATUSES, type AttendanceCode } from './attendanceCodes'
+import { resolvePointCategories, type PointCategory } from './pointCategories'
 import { resolveReportLayout, type ReportCardLayout, type SavedTemplate } from './templates'
 import { RENAMEABLE_WORDS, tr, type RenameableWord, type Terminology } from './i18n'
 
@@ -34,6 +35,7 @@ export interface SchoolPack {
   commentBank?: BankComment[]
   letterTemplate?: string
   attendanceCodes?: AttendanceCode[]
+  pointCategories?: PointCategory[]
   terminology?: Terminology
   reportCard?: Partial<ReportCardLayout>
   savedTemplates?: SavedTemplate[]
@@ -183,6 +185,19 @@ export function parseSchoolPack(json: string): SchoolPack {
       }))
     }
   }
+  if (Array.isArray(raw.pointCategories)) {
+    const list = raw.pointCategories.filter(
+      (c): c is PointCategory =>
+        typeof c?.id === 'string' && /^[a-z0-9:-]{1,32}$/.test(c.id) && isString(c?.name, 40)
+    )
+    if (list.length) {
+      pack.pointCategories = list.map((c) => ({
+        id: c.id,
+        name: c.name,
+        ...(c.hidden === true ? { hidden: true } : {})
+      }))
+    }
+  }
   const words = raw.terminology as Terminology | undefined
   if (words && typeof words === 'object') {
     const keys = Object.keys(RENAMEABLE_WORDS) as RenameableWord[]
@@ -278,6 +293,7 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
     commentBank: settings.commentBank,
     letterTemplate: settings.letterTemplate,
     ...(settings.attendanceCodes?.length ? { attendanceCodes: settings.attendanceCodes } : {}),
+    ...(settings.pointCategories?.length ? { pointCategories: settings.pointCategories } : {}),
     ...(settings.reportCard && Object.keys(settings.reportCard).length
       ? { reportCard: settings.reportCard }
       : {}),
@@ -389,6 +405,27 @@ export function planSchoolPack(
           list: pack.attendanceCodes
             .filter((c) => c.label.trim())
             .map((c) => c.label)
+            .join(', ')
+        })
+      )
+    }
+  }
+  if (pack.pointCategories) {
+    // Same as codes: the pack's categories are added or renamed, and categories this
+    // computer already has stay, so points already given keep their meaning.
+    const merged = [...(settings.pointCategories ?? [])]
+    for (const cat of pack.pointCategories) {
+      const at = merged.findIndex((c) => c.id === cat.id)
+      if (at >= 0) merged[at] = cat
+      else merged.push(cat)
+    }
+    if (JSON.stringify(merged) !== JSON.stringify(settings.pointCategories ?? [])) {
+      patch.pointCategories = merged
+      changes.push(
+        tr('What class points are for: {list}', {
+          list: resolvePointCategories(pack.pointCategories)
+            .filter((c) => !c.hidden)
+            .map((c) => c.name)
             .join(', ')
         })
       )

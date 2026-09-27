@@ -1,22 +1,35 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, gte } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { behaviourPoints } from '../db/schema'
 import { newId, nowIso } from '../db/util'
+import { getSettings } from './settingsRepo'
 import type { BehaviourPoint, BehaviourTotal } from '@shared/types'
+import {
+  resolvePointCategories,
+  summarisePoints,
+  type PointSummaryItem
+} from '@shared/pointCategories'
 
 export function addBehaviourPoint(input: {
   classId: string
   studentId: string
   points: number
   reason?: string | null
+  /** A point category id; one the school doesn't have is stored as none. */
+  category?: string | null
 }): BehaviourPoint {
   const points = Math.max(-5, Math.min(5, Math.trunc(input.points))) || 1
+  const category =
+    resolvePointCategories(getSettings().pointCategories).find((c) => c.id === input.category) ??
+    null
   const row: BehaviourPoint = {
     id: newId(),
     classId: input.classId,
     studentId: input.studentId,
     points,
-    reason: input.reason?.trim().slice(0, 80) || null,
+    // The category's name at the time, so a point still reads right in a backup or export.
+    reason: input.reason?.trim().slice(0, 80) || category?.name || null,
+    category: category?.id ?? null,
     createdAt: nowIso()
   }
   getDb().insert(behaviourPoints).values(row).run()
@@ -67,4 +80,27 @@ export function listBehaviourPointsForStudent(
     .where(and(eq(behaviourPoints.classId, classId), eq(behaviourPoints.studentId, studentId)))
     .orderBy(desc(behaviourPoints.createdAt))
     .all() as BehaviourPoint[]
+}
+
+/** Each student's points in the class by category (since `sinceIso`, if given): for
+ * report cards (the whole class, i.e. the term) and the weekly digest (this week). */
+export function pointSummaries(
+  classId: string,
+  sinceIso?: string
+): Map<string, PointSummaryItem[]> {
+  const rows = getDb()
+    .select()
+    .from(behaviourPoints)
+    .where(
+      sinceIso
+        ? and(eq(behaviourPoints.classId, classId), gte(behaviourPoints.createdAt, sinceIso))
+        : eq(behaviourPoints.classId, classId)
+    )
+    .all() as BehaviourPoint[]
+  const categories = resolvePointCategories(getSettings().pointCategories)
+  const byStudent = new Map<string, BehaviourPoint[]>()
+  for (const r of rows) byStudent.set(r.studentId, [...(byStudent.get(r.studentId) ?? []), r])
+  return new Map(
+    [...byStudent].map(([studentId, points]) => [studentId, summarisePoints(points, categories)])
+  )
 }

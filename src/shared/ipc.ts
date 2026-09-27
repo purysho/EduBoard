@@ -210,7 +210,8 @@ export const IpcChannels = {
   behaviourPoints: {
     add: 'behaviourPoints:add',
     totals: 'behaviourPoints:totals',
-    undoLast: 'behaviourPoints:undoLast'
+    undoLast: 'behaviourPoints:undoLast',
+    summary: 'behaviourPoints:summary'
   },
   schoolPack: {
     export: 'schoolPack:export',

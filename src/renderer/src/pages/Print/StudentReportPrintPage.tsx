@@ -35,6 +35,10 @@ export function ReportCard({
     queryFn: () => window.api.reportComments.list(classId)
   })
   const comment = comments?.find((c) => c.studentId === studentId)?.text
+  const { data: points, isLoading: pointsLoading } = useQuery({
+    queryKey: ['pointSummary', classId, studentId],
+    queryFn: () => window.api.behaviourPoints.summary(classId, studentId)
+  })
 
   const { data: students, isLoading: studentsLoading } = useStudents(true)
   const { data: classes, isLoading: classesLoading } = useClasses(true)
@@ -69,7 +73,8 @@ export function ReportCard({
     assessmentsLoading ||
     scoresLoading ||
     settingsLoading ||
-    commentsLoading
+    commentsLoading ||
+    pointsLoading
 
   useEffect(() => {
     if (!loading) onReady()
@@ -211,6 +216,24 @@ export function ReportCard({
                 <td className="py-1">{tr('Excused')}</td>
                 <td className="py-1 text-right">{attendance?.excused ?? 0}</td>
               </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {layout.showPoints && (points?.length ?? 0) > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-sm font-semibold uppercase text-slate-500">
+            {tr('Class points')}
+          </h2>
+          <table className="w-full text-sm">
+            <tbody>
+              {points!.map((p) => (
+                <tr key={p.categoryId ?? 'other'}>
+                  <td className="py-1">{p.name}</td>
+                  <td className="py-1 text-right">{p.total}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

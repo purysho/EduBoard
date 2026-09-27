@@ -336,6 +336,9 @@ ensureColumn('students', 'joined_at', 'joined_at TEXT')
 ensureColumn('enrollments', 'origin', "origin TEXT NOT NULL DEFAULT 'desktop'")
 ensureColumn('invites', 'kind', 'kind TEXT')
 ensureColumn('invites', 'student_id', 'student_id TEXT')
+// This week's class points by category, as JSON ([{ name, total }]), sent only when the
+// teacher includes points in the family digest.
+ensureColumn('grades', 'points', 'points TEXT')
 
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite

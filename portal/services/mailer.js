@@ -54,7 +54,7 @@ function saveDigestSettings(
   // Sent by newer desktop apps only; an older one leaves them as they were.
   if (options && typeof options === 'object') {
     const clean = {}
-    for (const key of DIGEST_PARTS) clean[key] = options[key] !== false
+    for (const key of DIGEST_PARTS) clean[key] = partOn(key, options[key])
     db.prepare('UPDATE digest_settings SET options = ? WHERE teacher_id = ?').run(
       JSON.stringify(clean),
       teacherId
@@ -77,10 +77,14 @@ function saveDigestSettings(
   }
 }
 
-/** The parts of the family digest a teacher can switch off. */
-const DIGEST_PARTS = ['grades', 'attendance', 'homework', 'classStory', 'messages']
+/** The parts of the family digest a teacher can switch on or off. */
+const DIGEST_PARTS = ['grades', 'attendance', 'homework', 'classStory', 'messages', 'points']
+/** Parts families only get once the teacher turns them on. */
+const OFF_UNLESS_CHOSEN = ['points']
+const partOn = (key, value) => (OFF_UNLESS_CHOSEN.includes(key) ? value === true : value !== false)
 
-/** What families get: every part on unless the teacher switched it off. */
+/** What families get: each part on unless the teacher switched it off (or, for the
+ * parts in OFF_UNLESS_CHOSEN, off unless they switched it on). */
 function digestOptions(settings) {
   let saved = {}
   try {
@@ -88,7 +92,7 @@ function digestOptions(settings) {
   } catch {
     // Unreadable: everything on.
   }
-  return Object.fromEntries(DIGEST_PARTS.map((key) => [key, saved[key] !== false]))
+  return Object.fromEntries(DIGEST_PARTS.map((key) => [key, partOn(key, saved[key])]))
 }
 
 function markDigestSent(teacherId) {

@@ -28,6 +28,7 @@ const WORDS = {
     due: 'due',
     classStory: 'Class Story',
     noUpdates: 'No updates this week.',
+    points: 'Class points this past week',
     fromTeacher: 'From the teacher',
     unread: (n) =>
       `You have ${n} unread message${n === 1 ? '' : 's'} from the teacher — log in to the Portal to read ${n === 1 ? 'it' : 'them'}.`
@@ -44,6 +45,7 @@ const WORDS = {
     due: '截止',
     classStory: '班级动态',
     noUpdates: '本周没有新动态。',
+    points: '过去一周的课堂积分',
     fromTeacher: '老师的话',
     unread: (n) => `老师给您发了 ${n} 条未读消息，请登录学生门户查看。`
   }
@@ -98,7 +100,7 @@ function buildDigestHtml(account, teacherId) {
     const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId)
     const classes = db
       .prepare(
-        `SELECT c.id, c.name, g.percent, g.letter, g.attendance_rate FROM enrollments e
+        `SELECT c.id, c.name, g.percent, g.letter, g.attendance_rate, g.points FROM enrollments e
          JOIN classes c ON c.id = e.class_id
          LEFT JOIN grades g ON g.student_id = e.student_id AND g.class_id = e.class_id
          WHERE e.student_id = ? AND e.status = 'active'`
@@ -147,9 +149,30 @@ function buildDigestHtml(account, teacherId) {
       }`
     }
 
+    let pointsHtml = ''
+    if (show.points) {
+      const lines = classes
+        .map((c) => {
+          let list = []
+          try {
+            list = c.points ? JSON.parse(c.points) : []
+          } catch {
+            // Unreadable: leave this class out.
+          }
+          return list.length
+            ? `<li>${esc(c.name)}: ${list.map((p) => `${esc(p.name)} ${esc(p.total)}`).join(' · ')}</li>`
+            : ''
+        })
+        .filter(Boolean)
+      if (lines.length) {
+        pointsHtml = `<p style="margin:10px 0 2px; font-weight:600">${esc(w.points)}</p><ul>${lines.join('')}</ul>`
+      }
+    }
+
     return `
       <h3 style="margin:20px 0 6px">${esc(student.first_name)} ${esc(student.last_name)}</h3>
       ${table}
+      ${pointsHtml}
       ${dueHtml}`
   })
 

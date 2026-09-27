@@ -20,6 +20,9 @@ import PptxGenJS from 'pptxgenjs'
 import { getClass } from '../repositories/classes'
 import { getLessonPlan } from '../repositories/lessonPlans'
 import { listReportComments } from '../repositories/reportComments'
+import { pointSummaries } from '../repositories/behaviourPoints'
+import { resolveReportLayout } from '@shared/templates'
+import type { PointSummaryItem } from '@shared/pointCategories'
 import { getSettings } from '../repositories/settingsRepo'
 import { getClassRoster, getStudentClassGrade } from './reports'
 import { fillLetter } from '@shared/letters'
@@ -114,6 +117,9 @@ export async function reportCardsDocx(classId: string): Promise<Buffer> {
   const cls = getClass(classId)
   if (!cls) throw new Error(tr('That class no longer exists.'))
   const comments = new Map(listReportComments(classId).map((c) => [c.studentId, c.text]))
+  const points = resolveReportLayout(settings.reportCard).showPoints
+    ? pointSummaries(classId)
+    : new Map<string, PointSummaryItem[]>()
   const rows = getClassRoster(classId)
     .filter((r) => r.enrollment.status === 'active')
     .sort((a, b) => a.student.lastName.localeCompare(b.student.lastName))
@@ -160,6 +166,17 @@ export async function reportCardsDocx(classId: string): Promise<Buffer> {
               rows: grade.categoryBreakdown.map(
                 (c) => new TableRow({ children: [cell(c.categoryName), cell(pct(c.percent))] })
               )
+            })
+          ]
+        : []),
+      ...(points.get(r.student.id)?.length
+        ? [
+            new Paragraph({ text: tr('Class points'), heading: HeadingLevel.HEADING_3 }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: points
+                .get(r.student.id)!
+                .map((p) => new TableRow({ children: [cell(p.name), cell(String(p.total))] }))
             })
           ]
         : []),

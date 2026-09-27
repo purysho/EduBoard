@@ -774,9 +774,15 @@ export function registerIpcHandlers(): void {
       classId,
       studentId,
       points: Number(input?.points),
-      reason: typeof input?.reason === 'string' ? input.reason : null
+      reason: typeof input?.reason === 'string' ? input.reason : null,
+      category: typeof input?.category === 'string' ? input.category : null
     })
   })
+  handle(
+    IpcChannels.behaviourPoints.summary,
+    (_e, classId: string, studentId: string) =>
+      behaviourPointsRepo.pointSummaries(String(classId)).get(String(studentId)) ?? []
+  )
   handle(IpcChannels.behaviourPoints.totals, (_e, classId: string, weekStartIso: string) =>
     behaviourPointsRepo.behaviourTotals(String(classId), String(weekStartIso))
   )

@@ -1,4 +1,5 @@
 import type { PhraseSuggestion } from './commentBank'
+import type { PointSummaryItem } from './pointCategories'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -368,9 +369,12 @@ export interface EduBoardApi {
       studentId: string
       points: number
       reason?: string | null
+      category?: string | null
     }): Promise<BehaviourPoint>
     totals(classId: string, weekStartIso: string): Promise<BehaviourTotal[]>
     undoLast(classId: string): Promise<BehaviourPoint | null>
+    /** A student's points in the class, by category (for the report card). */
+    summary(classId: string, studentId: string): Promise<PointSummaryItem[]>
   }
   schoolPack: {
     /** Saves this computer's school-wide settings and terms as a school pack file. */

@@ -26,6 +26,7 @@ export function ReportCardPanel(): React.JSX.Element | null {
     ['showAssessments', tr('Every assessment and its score')],
     ['showComment', tr('Report card comment')],
     ['showAttendance', tr('Attendance summary')],
+    ['showPoints', tr('Class points by category')],
     ['showSignatures', tr('Signature lines for teacher and parent')]
   ]
 

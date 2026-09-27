@@ -13,6 +13,7 @@ import {
 } from './letters'
 import { uiLanguage, type Terminology } from './i18n'
 import type { AttendanceCode } from './attendanceCodes'
+import type { PointCategory } from './pointCategories'
 import type { ReportCardLayout, SavedTemplate } from './templates'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 
@@ -541,6 +542,8 @@ export interface DigestOptions {
   homework: boolean
   classStory: boolean
   messages: boolean
+  /** This week's class points by category. Off unless the teacher turns it on. */
+  points?: boolean
 }
 
 export interface ClassPost {
@@ -708,6 +711,8 @@ export interface AppSettings {
   accentColor: string
   /** The school's own attendance codes, plus any renaming of the built-in four. */
   attendanceCodes: AttendanceCode[]
+  /** What class points are for; empty means EduBoard's five. */
+  pointCategories: PointCategory[]
   /** What the family weekly digest includes. */
   digestOptions: DigestOptions
   /** The teacher's own address, for their weekly summary. */
@@ -890,8 +895,10 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     attendance: true,
     homework: true,
     classStory: true,
-    messages: true
+    messages: true,
+    points: false
   },
+  pointCategories: [],
   teacherEmail: '',
   savedTemplates: [],
   reportCard: {},
@@ -1100,6 +1107,8 @@ export interface BehaviourPoint {
   studentId: string
   points: number
   reason: string | null
+  /** A point category id (see pointCategories.ts), or null for none. */
+  category: string | null
   createdAt: string
 }
 

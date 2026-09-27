@@ -22,6 +22,16 @@ import {
   type AttendanceCode
 } from '@shared/attendanceCodes'
 import type { AttendanceStatus } from '@shared/types'
+import {
+  BUILT_IN_POINT_CATEGORY_IDS,
+  applyPointCategorySet,
+  editablePointCategories,
+  newPointCategoryId,
+  pointCategoryProblem,
+  pointCategorySets,
+  resolvePointCategories,
+  type PointCategory
+} from '@shared/pointCategories'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
@@ -52,7 +62,10 @@ export function ListsPanel(): React.JSX.Element | null {
   const [bank, setBank] = useState<BankComment[] | null>(null)
   const [codes, setCodes] = useState<AttendanceCode[] | null>(null)
   const [words, setWords] = useState<Terminology | null>(null)
+  const [cats, setCats] = useState<PointCategory[] | null>(null)
   if (!settings) return null
+  const pc = cats ?? editablePointCategories(settings.pointCategories)
+  const pcProblem = pointCategoryProblem(pc)
   // Built-ins first (blank label/letter means the usual one), then the school's own.
   const savedCodes = settings.attendanceCodes ?? []
   const c = codes ?? [
@@ -69,12 +82,18 @@ export function ListsPanel(): React.JSX.Element | null {
   const f = fields ?? settings.studentFields
   const b = bank ?? settings.commentBank
   const dirty =
-    quick !== null || fields !== null || bank !== null || codes !== null || words !== null
+    quick !== null ||
+    fields !== null ||
+    bank !== null ||
+    codes !== null ||
+    words !== null ||
+    cats !== null
   const valid =
     q.every((x) => x.label.trim() && x.text.trim()) &&
     f.every((x) => x.label.trim()) &&
     b.every((x) => x.text.trim()) &&
-    !codeProblem
+    !codeProblem &&
+    !pcProblem
 
   return (
     <Card>
@@ -395,6 +414,73 @@ export function ListsPanel(): React.JSX.Element | null {
         </section>
 
         <section>
+          <h3 className="font-medium">{tr('What class points are for')}</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'The buttons above the names in the Classroom tab. Report cards show each student’s points per category, and the family digest can show the past week’s. A category you stop using is hidden, not deleted, so points already given keep their name.'
+            )}
+          </p>
+          <div className="space-y-1.5">
+            {pc.map((cat, i) => {
+              const usual = BUILT_IN_POINT_CATEGORY_IDS.includes(cat.id)
+                ? resolvePointCategories([{ id: cat.id, name: '' }])[0].name
+                : tr('e.g. Effort')
+              const set = (patch: Partial<PointCategory>): void =>
+                setCats(pc.map((x, j) => (j === i ? { ...x, ...patch } : x)))
+              return (
+                <div
+                  key={cat.id}
+                  className={`flex items-center gap-2 ${cat.hidden ? 'opacity-50' : ''}`}
+                >
+                  <input
+                    aria-label={tr('Category name')}
+                    className={`${inputClass} w-64`}
+                    value={cat.name}
+                    placeholder={usual}
+                    maxLength={40}
+                    onChange={(e) => set({ name: e.target.value })}
+                  />
+                  <button
+                    className="text-xs text-[var(--color-text-muted)] hover:underline"
+                    onClick={() => set({ hidden: !cat.hidden })}
+                  >
+                    {cat.hidden ? tr('Use again') : tr('Stop using')}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-2 flex gap-3 text-xs">
+            <button
+              className="flex items-center gap-1 text-[var(--color-primary)] hover:underline"
+              onClick={() => setCats([...pc, { id: newPointCategoryId(), name: '' }])}
+            >
+              <Plus size={12} aria-hidden />
+              {tr('Add a category')}
+            </button>
+            <select
+              aria-label={tr('Use a ready-made set')}
+              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 text-xs"
+              value=""
+              onChange={(e) => {
+                const set = pointCategorySets().find((x) => x.id === e.target.value)
+                if (set) setCats(applyPointCategorySet(pc, set))
+              }}
+            >
+              <option value="">{tr('Use a ready-made set…')}</option>
+              {pointCategorySets().map((set) => (
+                <option key={set.id} value={set.id}>
+                  {set.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {cats !== null && pcProblem && (
+            <p className="mt-1 text-xs text-[var(--color-danger)]">{pcProblem}</p>
+          )}
+        </section>
+
+        <section>
           <h3 className="font-medium">{tr('Words EduBoard uses')}</h3>
           <p className="mb-2 text-xs text-[var(--color-text-muted)]">
             {tr(
@@ -471,9 +557,13 @@ export function ListsPanel(): React.JSX.Element | null {
                   label: x.label.trim(),
                   letter: x.letter.trim()
                 })),
-                ...(words !== null ? { terminology: words } : {})
+                ...(words !== null ? { terminology: words } : {}),
+                ...(cats !== null
+                  ? { pointCategories: cats.map((x) => ({ ...x, name: x.name.trim() })) }
+                  : {})
               })
               setCodes(null)
+              setCats(null)
               // Labels are worked out when a screen's code loads, so new words need a reload.
               if (words !== null) location.reload()
               setQuick(null)
@@ -493,6 +583,7 @@ export function ListsPanel(): React.JSX.Element | null {
                 setBank(null)
                 setCodes(null)
                 setWords(null)
+                setCats(null)
               }}
             >
               {tr('Undo changes')}

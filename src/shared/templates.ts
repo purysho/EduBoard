@@ -473,6 +473,8 @@ export interface ReportCardLayout {
   showAssessments: boolean
   showComment: boolean
   showAttendance: boolean
+  /** Class points per category (only printed when the student has some). */
+  showPoints: boolean
   showSignatures: boolean
   /** Replaces "Student report" at the top when set (e.g. "End of term report"). */
   title: string
@@ -486,6 +488,7 @@ const PRESETS: Record<ReportLayoutPreset, Omit<ReportCardLayout, 'preset' | 'tit
     showAssessments: true,
     showComment: true,
     showAttendance: true,
+    showPoints: true,
     showSignatures: false
   },
   compact: {
@@ -493,6 +496,7 @@ const PRESETS: Record<ReportLayoutPreset, Omit<ReportCardLayout, 'preset' | 'tit
     showAssessments: false,
     showComment: true,
     showAttendance: false,
+    showPoints: false,
     showSignatures: false
   },
   detailed: {
@@ -500,6 +504,7 @@ const PRESETS: Record<ReportLayoutPreset, Omit<ReportCardLayout, 'preset' | 'tit
     showAssessments: true,
     showComment: true,
     showAttendance: true,
+    showPoints: true,
     showSignatures: true
   }
 }

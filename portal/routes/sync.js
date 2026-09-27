@@ -37,6 +37,17 @@ function sanitizeFileName(name) {
     .slice(-120)
 }
 
+/** A grade row's class points as stored JSON: at most 12 { name, total } pairs with
+ * short names and whole-number totals, or null. */
+function cleanPoints(points) {
+  if (!Array.isArray(points)) return null
+  const list = points
+    .filter((p) => typeof p?.name === 'string' && Number.isInteger(p?.total))
+    .slice(0, 12)
+    .map((p) => ({ name: p.name.slice(0, 40), total: Math.max(-999, Math.min(999, p.total)) }))
+  return list.length ? JSON.stringify(list) : null
+}
+
 // Full push from the desktop app. Each table is wholesale-replaced inside one
 // transaction — the desktop app always sends its complete current state, never a
 // diff, so "replace everything" is simpler and can't drift out of sync from a missed
@@ -220,10 +231,17 @@ router.post('/', (req, res) => {
     }
 
     const insertGrade = db.prepare(
-      'INSERT OR REPLACE INTO grades (student_id, class_id, percent, letter, attendance_rate) VALUES (?, ?, ?, ?, ?)'
+      'INSERT OR REPLACE INTO grades (student_id, class_id, percent, letter, attendance_rate, points) VALUES (?, ?, ?, ?, ?, ?)'
     )
     for (const g of grades.filter(inPushedRoster)) {
-      insertGrade.run(g.studentId, g.classId, g.percent, g.letter, g.attendanceRate)
+      insertGrade.run(
+        g.studentId,
+        g.classId,
+        g.percent,
+        g.letter,
+        g.attendanceRate,
+        cleanPoints(g.points)
+      )
     }
 
     const insertHomework = db.prepare(

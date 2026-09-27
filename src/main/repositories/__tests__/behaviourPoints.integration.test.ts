@@ -8,7 +8,13 @@ import { closeDb, getDb, initDb, setDbPathForTesting } from '../../db/client'
 import { behaviourPoints } from '../../db/schema'
 import { createClass } from '../classes'
 import { createStudent } from '../students'
-import { addBehaviourPoint, behaviourTotals, undoLastBehaviourPoint } from '../behaviourPoints'
+import {
+  addBehaviourPoint,
+  behaviourTotals,
+  pointSummaries,
+  undoLastBehaviourPoint
+} from '../behaviourPoints'
+import { updateSettings } from '../settingsRepo'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let dir: string
@@ -83,5 +89,30 @@ describe('behaviour points', () => {
     const last = addBehaviourPoint({ classId, studentId: b, points: -1 })
     expect(undoLastBehaviourPoint(classId)?.id).toBe(last.id)
     expect(behaviourTotals(classId, '2000-01-01').map((t) => t.studentId)).toEqual([a])
+  })
+
+  it('stores the category and totals points per category', () => {
+    updateSettings({
+      pointCategories: [
+        { id: 'wuyu-de', name: 'Character' },
+        { id: 'wuyu-zhi', name: 'Learning' }
+      ]
+    })
+    const p = addBehaviourPoint({ classId, studentId: a, points: 1, category: 'wuyu-zhi' })
+    expect(p).toMatchObject({ category: 'wuyu-zhi', reason: 'Learning' })
+    addBehaviourPoint({ classId, studentId: a, points: 2, category: 'wuyu-zhi' })
+    addBehaviourPoint({ classId, studentId: a, points: 1, category: 'wuyu-de' })
+    // Not one of the school's categories: kept as a point with none.
+    expect(
+      addBehaviourPoint({ classId, studentId: a, points: -1, category: 'made-up' }).category
+    ).toBeNull()
+    addBehaviourPoint({ classId, studentId: b, points: 1 })
+    const all = pointSummaries(classId)
+    expect(all.get(a)).toEqual([
+      { categoryId: 'wuyu-de', name: 'Character', total: 1 },
+      { categoryId: 'wuyu-zhi', name: 'Learning', total: 3 },
+      { categoryId: null, name: 'Other', total: -1 }
+    ])
+    expect(pointSummaries(classId, '2999-01-01').size).toBe(0)
   })
 })

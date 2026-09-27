@@ -179,8 +179,8 @@ export const CLASSES: Record<string, string> = {
   'No reason': '无原因',
   '+1 for {name}': '给 {name} 加 1 分',
   '−1 for {name}': '给 {name} 减 1 分',
-  'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept.':
-    '点名字加 1 分，点 − 减 1 分。每周一重新计分，总积分会保留。',
+  'Tap a name for +1, or − to take one away. Totals start again each Monday; the all-time total is kept. Change what points are for in Settings → Your lists.':
+    '点名字加 1 分，点 − 减 1 分。每周一重新计分，总积分会保留。积分类别可在“设置 → 我的列表”中修改。',
   'Edit comment': '编辑备注',
   'Add comment': '添加备注',
   Comment: '备注',
@@ -492,5 +492,21 @@ export const CLASSES: Record<string, string> = {
   'Attach a submission': '上传提交内容',
   'Submitted {date}': '提交于 {date}',
   Replace: '替换',
-  'Attach file…': '上传文件…'
+  'Attach file…': '上传文件…',
+  'Class points': '课堂积分',
+  'What class points are for': '课堂积分类别',
+  'The buttons above the names in the Classroom tab. Report cards show each student’s points per category, and the family digest can show the past week’s. A category you stop using is hidden, not deleted, so points already given keep their name.':
+    '即课堂页名字上方的按钮。成绩单会按类别显示每位学生的积分，家长周报也可以显示过去一周的积分。停用的类别只会隐藏、不会删除，已给出的积分仍保留原类别名称。',
+  'e.g. Effort': '例如：努力',
+  'Category name': '类别名称',
+  'Add a category': '添加类别',
+  'Use a ready-made set': '使用现成的一套',
+  'Use a ready-made set…': '使用现成的一套…',
+  'Class points by category': '按类别的课堂积分',
+  'Class points this past week': '过去一周的课堂积分',
+  'EduBoard’s five': 'EduBoard 默认的五项',
+  'Every point category needs a name.': '每个积分类别都需要名称。',
+  'A point category’s name can be at most 40 characters.': '积分类别名称最多 40 个字符。',
+  'Two point categories have the same name.': '有两个积分类别同名。',
+  'What class points are for: {list}': '课堂积分类别：{list}'
 }

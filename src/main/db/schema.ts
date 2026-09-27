@@ -618,6 +618,7 @@ export const behaviourPoints = sqliteTable(
       .references(() => students.id, { onDelete: 'cascade' }),
     points: integer('points').notNull(),
     reason: text('reason'),
+    category: text('category'),
     createdAt: text('created_at').notNull()
   },
   (t) => ({

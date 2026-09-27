@@ -747,6 +747,26 @@ const migrations: Migration[] = [
         CREATE UNIQUE INDEX report_comments_class_student ON report_comments(class_id, student_id);
       `)
     }
+  },
+  {
+    id: 33,
+    name: 'behaviour_point_categories',
+    up: (db) => {
+      // What each point is for (a point category id). Points given before categories
+      // existed carry their reason as text; the five built-in reasons map to their ids.
+      db.exec(`ALTER TABLE behaviour_points ADD COLUMN category TEXT;`)
+      const map: [string, string, string][] = [
+        ['helping', 'Helping others', '帮助同学'],
+        ['on-task', 'On task', '专注学习'],
+        ['great-answer', 'Great answer', '回答精彩'],
+        ['kindness', 'Kindness', '友善待人'],
+        ['teamwork', 'Teamwork', '团队合作']
+      ]
+      const set = db.prepare(
+        'UPDATE behaviour_points SET category = ? WHERE category IS NULL AND reason IN (?, ?)'
+      )
+      for (const [id, en, zh] of map) set.run(id, en, zh)
+    }
   }
 ]
 

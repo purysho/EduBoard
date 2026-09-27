@@ -21,6 +21,7 @@ import { listLessonResources } from '../repositories/lessonResources'
 import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
+import { pointSummaries } from '../repositories/behaviourPoints'
 import { getSettings, getStoredValue, setStoredValue } from '../repositories/settingsRepo'
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
@@ -121,6 +122,8 @@ function buildPublishPayload(): {
     percent: number | null
     letter: string | null
     attendanceRate: number | null
+    /** The last 7 days' class points by category; only when the digest includes them. */
+    points?: { name: string; total: number }[]
   }[] = []
   const homeworkAssignments: {
     id: string
@@ -180,9 +183,12 @@ function buildPublishPayload(): {
     materialChunks.set(resource.id, chunks)
   }
 
+  const withPoints = getSettings().digestOptions?.points === true
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   for (const cls of classes) {
     const roster = getRosterForClass(cls.id)
     const classGrades = getClassGrades(cls.id)
+    const points = withPoints ? pointSummaries(cls.id, weekAgo) : null
 
     for (const { student, enrollment } of roster) {
       studentsById.set(student.id, student)
@@ -196,7 +202,12 @@ function buildPublishPayload(): {
         classId: cls.id,
         percent: grade?.percent ?? null,
         letter: grade?.letter ?? null,
-        attendanceRate: attendance.rate
+        attendanceRate: attendance.rate,
+        ...(points
+          ? {
+              points: (points.get(student.id) ?? []).map((p) => ({ name: p.name, total: p.total }))
+            }
+          : {})
       })
     }
 

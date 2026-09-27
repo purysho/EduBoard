@@ -248,7 +248,8 @@ const api: EduBoardApi = {
     add: (input) => invoke(IpcChannels.behaviourPoints.add, input),
     totals: (classId, weekStartIso) =>
       invoke(IpcChannels.behaviourPoints.totals, classId, weekStartIso),
-    undoLast: (classId) => invoke(IpcChannels.behaviourPoints.undoLast, classId)
+    undoLast: (classId) => invoke(IpcChannels.behaviourPoints.undoLast, classId),
+    summary: (classId, studentId) => invoke(IpcChannels.behaviourPoints.summary, classId, studentId)
   },
   schoolPack: {
     export: () => invoke(IpcChannels.schoolPack.export),
