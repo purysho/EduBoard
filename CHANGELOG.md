@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-09-27
+
+**If you run a Portal, update it** (Update-Live-Portal): the homepage at `/download` and the Portal's PT error codes need the updated Portal.
+
 ### Added
 
 - **Error codes.** Every error message now ends with a code: EB-xxxx from EduBoard on the teacher's computer, PT-xxxx from the Portal (shown on the Portal's pages too). [docs/ERROR_CODES.md](docs/ERROR_CODES.md) says what each one means and how to fix it. **Settings → Help** lists recent errors and copies an error report (version, system, recent errors) to send; unexpected errors show a short reference that points to the full details in the error log (`logs/errors.log` beside the database) or, for the Portal, in the server log. A screen that fails to draw now shows a Reload button and its code instead of a blank window.
