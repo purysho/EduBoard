@@ -1012,3 +1012,20 @@ export interface SecurityStatus {
   /** Null while the database is still closed (before the first unlock). */
   autoLockMinutes: number | null
 }
+
+/** One +1 or −1 on the Classroom tab. */
+export interface BehaviourPoint {
+  id: string
+  classId: string
+  studentId: string
+  points: number
+  reason: string | null
+  createdAt: string
+}
+
+/** A student's points in a class: this week and all time. */
+export interface BehaviourTotal {
+  studentId: string
+  week: number
+  total: number
+}

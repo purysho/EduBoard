@@ -194,6 +194,11 @@ export const IpcChannels = {
     remove: 'assignmentSubmissions:remove',
     openPath: 'assignmentSubmissions:openPath'
   },
+  behaviourPoints: {
+    add: 'behaviourPoints:add',
+    totals: 'behaviourPoints:totals',
+    undoLast: 'behaviourPoints:undoLast'
+  },
   schoolPack: {
     export: 'schoolPack:export',
     preview: 'schoolPack:preview',

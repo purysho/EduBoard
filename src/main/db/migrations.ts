@@ -711,6 +711,25 @@ const migrations: Migration[] = [
       // The teacher's own student fields (Settings → Lists): JSON keyed by field id.
       db.exec(`ALTER TABLE students ADD COLUMN custom_fields TEXT;`)
     }
+  },
+  {
+    id: 31,
+    name: 'behaviour_points',
+    up: (db) => {
+      // Classroom tab: +1 / −1 points per student, with an optional reason.
+      db.exec(`
+        CREATE TABLE behaviour_points (
+          id TEXT PRIMARY KEY,
+          class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          points INTEGER NOT NULL,
+          reason TEXT,
+          created_at TEXT NOT NULL
+        );
+        CREATE INDEX behaviour_points_class_idx ON behaviour_points(class_id, created_at);
+        CREATE INDEX behaviour_points_student_idx ON behaviour_points(student_id);
+      `)
+    }
   }
 ]
 

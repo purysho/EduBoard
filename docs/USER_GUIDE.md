@@ -16,6 +16,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Taking attendance](#taking-attendance)
 - [Planning lessons](#planning-lessons)
 - [Seating charts](#seating-charts)
+- [The Classroom tab](#the-classroom-tab)
 - [Exit tickets](#exit-tickets)
 - [Resources library](#resources-library)
 - [Students using AI](#students-using-ai)
@@ -225,6 +226,17 @@ Today's date is there by default — add more with the date picker and **+ Add d
 The layout is saved per class automatically — no separate save step.
 
 ---
+
+## The Classroom tab
+
+Each class has a **Classroom** tab for the lesson itself. It's fine to put on the projector, and stays visible in presenting mode.
+
+- **Random name**: press **Pick a name**. Nobody comes up twice until everyone has had a turn; **Start again** resets the round.
+- **Groups**: choose **Groups of** a size or a **Number of groups**, then **Make groups**. **Shuffle** until you like them.
+- **Timer**: pick 1–15 minutes, **Start**, **Pause**, **Reset**. The corner button makes it full screen, and it chimes when time's up.
+- **Class points**: tap a student's name for +1, or **−** to take one away, with an optional reason (Helping others, On task…). Totals start again each Monday; **Undo last** takes back a mis-tap.
+
+Students marked **absent** or **excused** today are left out of the picker and groups (untick the box at the top to include them).
 
 ## Exit tickets
 

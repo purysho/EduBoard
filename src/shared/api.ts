@@ -20,6 +20,8 @@ import type {
   AppUpdateProgress,
   AppUpdateStatus,
   SecurityStatus,
+  BehaviourPoint,
+  BehaviourTotal,
   PortalResetRequest,
   PublishStatus,
   AttendanceWarning,
@@ -321,6 +323,16 @@ export interface EduBoardApi {
     upsert(input: UpsertAssignmentSubmissionInput): Promise<AssignmentSubmission>
     remove(id: string): Promise<void>
     openPath(filePath: string): Promise<void>
+  }
+  behaviourPoints: {
+    add(input: {
+      classId: string
+      studentId: string
+      points: number
+      reason?: string | null
+    }): Promise<BehaviourPoint>
+    totals(classId: string, weekStartIso: string): Promise<BehaviourTotal[]>
+    undoLast(classId: string): Promise<BehaviourPoint | null>
   }
   schoolPack: {
     /** Saves this computer's school-wide settings and terms as a school pack file. */

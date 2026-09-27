@@ -605,3 +605,23 @@ export const exitTicketResponses = sqliteTable(
     ticketIdx: index('exit_ticket_responses_ticket_idx').on(t.exitTicketId, t.submittedAt)
   })
 )
+
+export const behaviourPoints = sqliteTable(
+  'behaviour_points',
+  {
+    id: text('id').primaryKey(),
+    classId: text('class_id')
+      .notNull()
+      .references(() => classes.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    points: integer('points').notNull(),
+    reason: text('reason'),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    classIdx: index('behaviour_points_class_idx').on(t.classId, t.createdAt),
+    studentIdx: index('behaviour_points_student_idx').on(t.studentId)
+  })
+)

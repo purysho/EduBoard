@@ -7,7 +7,7 @@ import { useSyncExternalStore } from 'react'
 /** Pages a class sees on the projector anyway. Everything else is hidden. */
 const SHOWN_PAGES = [
   /^\/classes\/?$/,
-  /^\/classes\/[^/]+\/(attendance|lessons|seating|exit-ticket|story)\/?$/,
+  /^\/classes\/[^/]+\/(attendance|lessons|seating|exit-ticket|story|classroom)\/?$/,
   /^\/timetable\/?$/,
   /^\/calendar\/?$/,
   /^\/resources\/?$/,

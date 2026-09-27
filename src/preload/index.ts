@@ -227,6 +227,12 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.assignmentSubmissions.remove, id),
     openPath: (filePath) => invoke(IpcChannels.assignmentSubmissions.openPath, filePath)
   },
+  behaviourPoints: {
+    add: (input) => invoke(IpcChannels.behaviourPoints.add, input),
+    totals: (classId, weekStartIso) =>
+      invoke(IpcChannels.behaviourPoints.totals, classId, weekStartIso),
+    undoLast: (classId) => invoke(IpcChannels.behaviourPoints.undoLast, classId)
+  },
   schoolPack: {
     export: () => invoke(IpcChannels.schoolPack.export),
     preview: () => invoke(IpcChannels.schoolPack.preview),

@@ -6,6 +6,7 @@ describe('presenting mode', () => {
     for (const path of [
       '/classes',
       '/classes/abc/seating',
+      '/classes/abc/classroom',
       '/classes/abc/exit-ticket',
       '/classes/abc/attendance',
       '/classes/abc/lessons',

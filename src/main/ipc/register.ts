@@ -86,6 +86,7 @@ import {
 } from '../services/portalSyncService'
 import * as backupService from '../services/backup'
 import * as security from '../services/security'
+import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '@shared/schoolPack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -641,6 +642,28 @@ export function registerIpcHandlers(): void {
   )
 
   // --- Exit tickets -----------------------------------------------------------------------
+  // --- Classroom tab: behaviour points ---------------------------------------------------
+  handle(IpcChannels.behaviourPoints.add, (_e, input) => {
+    const classId = String(input?.classId ?? '')
+    const studentId = String(input?.studentId ?? '')
+    // Only a student in this class can get points in it.
+    if (!enrollmentsRepo.getRosterForClass(classId).some((r) => r.student.id === studentId)) {
+      throw new Error('That student isn’t in this class.')
+    }
+    return behaviourPointsRepo.addBehaviourPoint({
+      classId,
+      studentId,
+      points: Number(input?.points),
+      reason: typeof input?.reason === 'string' ? input.reason : null
+    })
+  })
+  handle(IpcChannels.behaviourPoints.totals, (_e, classId: string, weekStartIso: string) =>
+    behaviourPointsRepo.behaviourTotals(String(classId), String(weekStartIso))
+  )
+  handle(IpcChannels.behaviourPoints.undoLast, (_e, classId: string) =>
+    behaviourPointsRepo.undoLastBehaviourPoint(String(classId))
+  )
+
   // --- School pack ----------------------------------------------------------------------
   handle(IpcChannels.schoolPack.export, async () => {
     const pack = makeSchoolPack(settingsRepo.getSettings(), termsRepo.listTerms())
