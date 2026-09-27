@@ -3,17 +3,18 @@
 Written 2026-09-27 at the end of a long build session, for a fresh Claude session
 picking EduBoard up cold. Read this first, then `handoff.MD` (older, Windows testing
 notes), `ROADMAP.md` and `CHANGELOG.md` (the `[Unreleased]` section lists everything
-built since 0.3.3).
+built since the last release).
 
 ## State
 
 - Repo `purysho/EduBoard`, branch **`main`**. Commit and push straight to `main`
   (the user asked for this). No PRs unless asked.
-- Last commit: `e291e27`; Tests and Windows test build both green.
-- `package.json` still says **0.3.3**. Everything in `[Unreleased]` (auto-update,
-  password protection, presenting mode, exit tickets by roster, school pack, grading
-  scales, Classroom tab, report comments, Today card, parent letters, export
-  everything…) is **not released**. Ask the user before cutting 0.4.0.
+- **0.4.0 released 2026-09-27** (tag `v0.4.0`; the Release workflow builds Windows,
+  Mac and Linux and publishes to GitHub Releases, which is where the in-app updater
+  looks). Anything new goes under `## [Unreleased]` in `CHANGELOG.md`. To release
+  again: `npm version X.Y.Z --no-git-tag-version` (also updates
+  `portal/desktop-version.json`), move the changelog section, commit, push `main`,
+  then `git push origin vX.Y.Z`.
 - Commits end with the Co-Authored-By / Claude-Session lines the harness gives you.
   No model names in commits.
 

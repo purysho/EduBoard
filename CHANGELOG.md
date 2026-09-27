@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-09-27
+
+**If you run a Portal, update it too** (Update-Live-Portal) after installing 0.4.0: the digest preview and settings, newsletters in the digest, emailing your week to yourself, and removing deleted students from the Portal all need the updated Portal. Everything else works with the Portal you have.
+
 ### Added
 
 - **Word and PowerPoint files** for finishing work in Office or WPS: every report card (Report tab), every parent letter (Parent letters), a newsletter, and a lesson plan as a Word document; a lesson plan as a starter slide deck (title slide in the school colour, objectives, materials, one slide per activity, homework). Made on your computer; nothing is uploaded.

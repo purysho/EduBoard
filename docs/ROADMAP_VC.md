@@ -13,7 +13,7 @@ families logins, homework hand-in, a Class Story and a weekly digest email. AI i
 only to _suggest_ (short report-comment phrases, newsletter wording) and every AI button
 says it needs internet; nothing AI-written goes out unchecked.
 
-**What's built (v0.3.3 + unreleased):** 157 commits, ~57 test files / 324 tests, Windows
+**What's built (v0.4.0):** 157 commits, ~57 test files / 324 tests, Windows
 installer, macOS and Linux builds, auto-update, encrypted database with app lock, Chinese
 UI across every screen and printout, school branding packs, custom attendance codes and
 school terminology, templates for letters / posts / lesson plans / report cards, weekly
