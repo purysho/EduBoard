@@ -927,6 +927,8 @@ export function registerIpcHandlers(): void {
       counts: {
         standards: pack.standards?.length ?? 0,
         rubrics: pack.rubrics?.length ?? 0,
+        resources: pack.resources?.length ?? 0,
+        studentFields: pack.studentFields?.length ?? 0,
         assessments: pack.assessments?.length ?? 0,
         homework: pack.homework?.length ?? 0,
         lessons: pack.lessons?.length ?? 0
