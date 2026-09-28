@@ -767,6 +767,63 @@ const migrations: Migration[] = [
       )
       for (const [id, en, zh] of map) set.run(id, en, zh)
     }
+  },
+  {
+    id: 34,
+    name: 'course_packs',
+    up: (db) => {
+      // Course Packs are a reusable curriculum layer, deliberately separate from real
+      // classes. Importing one never invents lesson dates or publishes homework.
+      db.exec(`
+        CREATE TABLE course_packs (
+          id TEXT PRIMARY KEY,
+          pack_id TEXT NOT NULL UNIQUE,
+          revision INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          course_group_id TEXT NOT NULL REFERENCES course_groups(id) ON DELETE CASCADE,
+          source_json TEXT NOT NULL,
+          imported_at TEXT NOT NULL
+        );
+        CREATE INDEX course_packs_course_group_idx ON course_packs(course_group_id);
+
+        CREATE TABLE course_pack_terms (
+          id TEXT PRIMARY KEY,
+          course_pack_id TEXT NOT NULL REFERENCES course_packs(id) ON DELETE CASCADE,
+          term_key TEXT NOT NULL,
+          term_id TEXT REFERENCES terms(id) ON DELETE SET NULL,
+          sort_order INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE UNIQUE INDEX course_pack_terms_pack_key_unique
+          ON course_pack_terms(course_pack_id, term_key);
+        CREATE INDEX course_pack_terms_pack_idx ON course_pack_terms(course_pack_id);
+
+        CREATE TABLE curriculum_sessions (
+          id TEXT PRIMARY KEY,
+          course_pack_id TEXT NOT NULL REFERENCES course_packs(id) ON DELETE CASCADE,
+          session_key TEXT NOT NULL,
+          term_key TEXT NOT NULL,
+          sequence INTEGER NOT NULL,
+          title TEXT NOT NULL,
+          duration_minutes INTEGER,
+          optional INTEGER NOT NULL DEFAULT 0,
+          objectives TEXT,
+          framework TEXT,
+          materials TEXT,
+          activities TEXT,
+          homework TEXT,
+          standard_codes TEXT NOT NULL,
+          assessment_keys TEXT NOT NULL,
+          resource_keys TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX curriculum_sessions_pack_key_unique
+          ON curriculum_sessions(course_pack_id, session_key);
+        CREATE UNIQUE INDEX curriculum_sessions_pack_term_sequence_unique
+          ON curriculum_sessions(course_pack_id, term_key, sequence);
+        CREATE INDEX curriculum_sessions_pack_idx
+          ON curriculum_sessions(course_pack_id, term_key, sequence);
+      `)
+    }
   }
 ]
 
