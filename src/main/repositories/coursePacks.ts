@@ -15,6 +15,9 @@ export interface InstallCoursePackInput {
   pack: CoursePack
   /** Course-pack term key -> an existing EduBoard class that should receive that term. */
   termBindings: Record<string, string>
+  /** Optional term key -> actual first class date. Relative curriculum dates use this
+   * rather than assuming the institution's teaching week begins on the class weekday. */
+  firstClassDates?: Record<string, string>
 }
 
 export interface CoursePackInstallResult {
@@ -46,14 +49,19 @@ export interface CoursePackInstallResult {
 const norm = (value: string): string => value.trim().toLowerCase()
 const termIdentity = (name: string, schoolYear: string): string => `${norm(name)}|${norm(schoolYear)}`
 
-function dateFromOffset(term: Term, offset: number | null | undefined): string | null {
+function dateFromOffset(
+  term: Term,
+  offset: number | null | undefined,
+  firstClassDate?: string
+): string | null {
   if (offset === null || offset === undefined) return null
-  if (!term.startDate) {
+  const anchor = firstClassDate || term.startDate
+  if (!anchor) {
     throw new Error(
-      `Course Pack term "${term.name}" needs a start date before relative lesson/assessment dates can be installed.`
+      `Course Pack term "${term.name}" needs a first class date before relative lesson/assessment dates can be installed.`
     )
   }
-  return addDays(term.startDate, offset)
+  return addDays(anchor, offset)
 }
 
 function neededBindingKeys(pack: CoursePack): Set<string> {
@@ -88,7 +96,7 @@ function validateBindings(pack: CoursePack, bindings: Record<string, string>): v
  * silent loss of local edits.
  */
 export function installCoursePack(input: InstallCoursePackInput): CoursePackInstallResult {
-  const { pack, termBindings } = input
+  const { pack, termBindings, firstClassDates = {} } = input
   validateBindings(pack, termBindings)
 
   return getSqlite().transaction(() => {
@@ -203,7 +211,11 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       const classId = termBindings[source.termKey] ?? termBindings[norm(source.termKey)]
       if (!classId) continue
       const term = termRows.get(norm(source.termKey))!
-      const date = dateFromOffset(term, source.offsetDays)
+      const date = dateFromOffset(
+        term,
+        source.offsetDays,
+        firstClassDates[source.termKey] ?? firstClassDates[norm(source.termKey)]
+      )
       const existing = listAssessmentsByClass(classId).find(
         (a) => norm(a.name) === norm(source.name) && a.assessmentDate === date
       )
@@ -234,7 +246,11 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       const classId = termBindings[source.termKey] ?? termBindings[norm(source.termKey)]
       if (!classId) continue
       const term = termRows.get(norm(source.termKey))!
-      const dueDate = dateFromOffset(term, source.dueOffsetDays)
+      const dueDate = dateFromOffset(
+        term,
+        source.dueOffsetDays,
+        firstClassDates[source.termKey] ?? firstClassDates[norm(source.termKey)]
+      )
       const existing = listHomeworkAssignmentsByClass(classId).find(
         (h) => norm(h.title) === norm(source.title) && h.dueDate === dueDate
       )
@@ -260,8 +276,12 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       const classId = termBindings[source.termKey] ?? termBindings[norm(source.termKey)]
       if (!classId) continue
       const term = termRows.get(norm(source.termKey))!
-      const date = dateFromOffset(term, source.offsetDays)
-      if (!date) throw new Error(`Lesson "${source.title}" needs a dated term.`)
+      const date = dateFromOffset(
+        term,
+        source.offsetDays,
+        firstClassDates[source.termKey] ?? firstClassDates[norm(source.termKey)]
+      )
+      if (!date) throw new Error(`Lesson "${source.title}" needs a first class date.`)
       const existing = listLessonPlansByClass(classId).find(
         (lesson) => lesson.date === date && norm(lesson.title) === norm(source.title)
       )

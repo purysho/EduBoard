@@ -415,7 +415,8 @@ export interface EduBoardApi {
     /** Backs up first, then installs the pack into the explicitly mapped existing classes. */
     apply(
       filePath: string,
-      termBindings: Record<string, string>
+      termBindings: Record<string, string>,
+      firstClassDates?: Record<string, string>
     ): Promise<{
       courseGroupId: string
       created: Record<string, number>
