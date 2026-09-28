@@ -4,7 +4,8 @@ import { initDb } from './db/client'
 import { registerIpcHandlers } from './ipc/register'
 import { initUiLanguage, syncUiPrefsWithSettings } from './i18n'
 import { getSettings } from './repositories/settingsRepo'
-import { createMainWindow } from './windows'
+import { applyWindowIcon, createMainWindow } from './windows'
+import { applyManagedSchoolPack } from './services/managedSchoolPack'
 import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
 import { stopExitTicketServer } from './services/exitTicketServer'
@@ -36,6 +37,8 @@ app.whenReady().then(() => {
 
   // Everything that needs the database open.
   const startWithDatabase = (): void => {
+    // The school's pack for everyone on this computer, if its IT installed one.
+    applyManagedSchoolPack()
     // The language and the school's words may differ in this database (a restore, say).
     if (syncUiPrefsWithSettings(getSettings())) {
       for (const win of BrowserWindow.getAllWindows()) win.webContents.reload()
@@ -49,6 +52,7 @@ app.whenReady().then(() => {
     })
     if (installing) return
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
+    applyWindowIcon(getSettings().schoolLogo)
     carryOn()
   }
   const carryOn = (): void => {

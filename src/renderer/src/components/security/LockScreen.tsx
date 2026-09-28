@@ -1,3 +1,5 @@
+import { bootAppName } from '@renderer/i18nInit'
+import { PRODUCT_NAME } from '@shared/branding'
 import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -55,7 +57,11 @@ export function LockScreen({ retryInSeconds }: { retryInSeconds: number }): Reac
             <Lock size={17} aria-hidden />
           </div>
           <div>
-            <h1 className="text-base font-semibold">{tr('EduBoard is locked')}</h1>
+            <h1 className="text-base font-semibold">
+              {bootAppName === PRODUCT_NAME
+                ? tr('EduBoard is locked')
+                : tr('{name} is locked', { name: bootAppName })}
+            </h1>
             <p className="text-xs text-[var(--color-text-muted)]">
               {tr('Your class data is protected with a password.')}
             </p>

@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react'
-import { FileDown, ImagePlus, Palette, X } from 'lucide-react'
+import { FileDown, ImagePlus, Lock, Palette, X } from 'lucide-react'
 import type { CssCheck } from '@shared/cssCheck'
 import type { AppSettings } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { useManagedBranding, useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { cleanAppName, MAX_APP_NAME, PRODUCT_NAME, type BrandingKey } from '@shared/branding'
 import { ACCENT_PRESETS, isHexColour, whiteTextContrast } from '@renderer/lib/appearance'
 import { cn } from '@renderer/lib/cn'
 import { tr, trn } from '@shared/i18n'
@@ -82,7 +83,16 @@ export function AppearancePanel(): React.JSX.Element | null {
   const [logoError, setLogoError] = useState<string | null>(null)
   const [customHex, setCustomHex] = useState('')
   const [cssNote, setCssNote] = useState<{ ok: boolean; text: string } | null>(null)
+  const { data: managed } = useManagedBranding()
+  const [appName, setAppName] = useState<string | null>(null)
   if (!settings) return null
+  const locked = (key: BrandingKey): boolean => !!managed?.locked.includes(key)
+  const saveAppName = (): void => {
+    if (appName === null) return
+    const clean = cleanAppName(appName)
+    setAppName(null)
+    if (clean !== settings.appDisplayName) set({ appDisplayName: clean })
+  }
 
   const set = (patch: Partial<AppSettings>): void => update.mutate(patch)
   const accent = settings.accentColor
@@ -97,6 +107,39 @@ export function AppearancePanel(): React.JSX.Element | null {
         </h2>
       </CardHeader>
       <CardBody className="space-y-5 text-sm">
+        {managed && managed.locked.length > 0 && (
+          <p className="flex items-start gap-2 rounded-md bg-[var(--color-primary-soft)] px-3 py-2 text-xs text-[var(--color-text)]">
+            <Lock size={13} className="mt-0.5 shrink-0" aria-hidden />
+            <span>
+              {tr(
+                'Your school set the app’s name, logo and look for everyone on this computer, so they can’t be changed here. To change them, ask whoever looks after the school’s computers (the file is {file}).',
+                { file: managed.filePath }
+              )}
+            </span>
+          </p>
+        )}
+        <section>
+          <h3 className="mb-2 font-medium">{tr('App name')}</h3>
+          <input
+            className="w-full max-w-xs rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-[var(--color-text)] disabled:opacity-60"
+            aria-label={tr('App name')}
+            placeholder={PRODUCT_NAME}
+            maxLength={MAX_APP_NAME}
+            disabled={locked('appDisplayName')}
+            value={appName ?? settings.appDisplayName}
+            onChange={(e) => setAppName(e.target.value)}
+            onBlur={saveAppName}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') saveAppName()
+            }}
+          />
+          <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'Your school’s own name for the app (for example “Riverside Teacher Hub”), shown in the sidebar, the window title and the lock screen instead of EduBoard. Leave empty for EduBoard. Updates and Settings → Help still say EduBoard.'
+            )}
+          </p>
+        </section>
+
         <section>
           <h3 className="mb-2 font-medium">{tr('School logo')}</h3>
           <div className="flex items-center gap-3">
@@ -111,10 +154,15 @@ export function AppearancePanel(): React.JSX.Element | null {
                 <ImagePlus size={20} className="text-[var(--color-text-muted)]" aria-hidden />
               )}
             </div>
-            <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={locked('schoolLogo')}
+              onClick={() => fileInput.current?.click()}
+            >
               {settings.schoolLogo ? tr('Change logo') : tr('Add logo')}
             </Button>
-            {settings.schoolLogo && (
+            {settings.schoolLogo && !locked('schoolLogo') && (
               <Button variant="ghost" size="sm" onClick={() => set({ schoolLogo: '' })}>
                 <X size={13} className="mr-1 inline" aria-hidden />
                 {tr('Remove')}
@@ -139,14 +187,19 @@ export function AppearancePanel(): React.JSX.Element | null {
             />
           </div>
           <p className="mt-1.5 text-xs text-[var(--color-text-muted)]">
-            {tr('Shown in the sidebar and on report cards and other printouts.')}
+            {tr(
+              'Shown in the sidebar, as the window’s icon in the taskbar, and on report cards and other printouts.'
+            )}
           </p>
           {logoError && <p className="mt-1 text-xs text-[var(--color-danger)]">{logoError}</p>}
         </section>
 
         <section>
           <h3 className="mb-2 font-medium">{tr('School colour')}</h3>
-          <div className="flex flex-wrap items-center gap-2">
+          <fieldset
+            disabled={locked('accentColor')}
+            className="flex flex-wrap items-center gap-2 disabled:opacity-60"
+          >
             {ACCENT_PRESETS.map((p) => (
               <button
                 key={p.name}
@@ -180,7 +233,7 @@ export function AppearancePanel(): React.JSX.Element | null {
                 }}
               />
             </label>
-          </div>
+          </fieldset>
           {lowContrast && (
             <p className="mt-1.5 text-xs text-[var(--color-warning)]">
               {tr(
@@ -197,7 +250,7 @@ export function AppearancePanel(): React.JSX.Element | null {
               'For a school that wants its own colours, background or fonts: a .css file applied on top of EduBoard’s look. It works by changing EduBoard’s colour names (such as --color-bg, --color-surface, --color-primary), so a stylesheet made for a website won’t change anything. Start from the example. It can use inline images, but can’t load anything from the internet.'
             )}
           </p>
-          <div className="flex items-center gap-2">
+          <fieldset disabled={locked('customCss')} className="flex items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -231,7 +284,7 @@ export function AppearancePanel(): React.JSX.Element | null {
               <FileDown size={13} className="mr-1 inline" aria-hidden />
               {tr('Save an example to start from')}
             </Button>
-          </div>
+          </fieldset>
           {cssNote && (
             <p
               role="status"

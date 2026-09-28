@@ -1,3 +1,4 @@
+import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat } from './groupChats'
@@ -240,6 +241,8 @@ export interface EduBoardApi {
     appUpdateProgress(): Promise<AppUpdateProgress>
     /** For the update icon and badges; cheap, polled. Doesn't reach the internet. */
     appUpdateStatus(): Promise<AppUpdateStatus>
+    /** The school pack installed for everyone on this computer, if any, and what it locks. */
+    managedBranding(): Promise<ManagedBranding | null>
   }
   backup: {
     create(): Promise<BackupInfo>

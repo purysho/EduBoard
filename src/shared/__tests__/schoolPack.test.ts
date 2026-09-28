@@ -22,6 +22,7 @@ describe('school pack', () => {
   it('round-trips the school-wide settings and terms', () => {
     const from = settings({
       schoolName: 'Riverside Primary',
+      appDisplayName: 'Riverside Teacher Hub',
       schoolLogo: PNG,
       accentColor: '#0f766e',
       defaultPassMark: 50,
@@ -45,6 +46,7 @@ describe('school pack', () => {
     const plan = planSchoolPack(pack, settings(), [])
     expect(plan.settings).toMatchObject({
       schoolName: 'Riverside Primary',
+      appDisplayName: 'Riverside Teacher Hub',
       schoolLogo: PNG,
       accentColor: '#0f766e',
       defaultPassMark: 50,

@@ -2,6 +2,7 @@
 // Export) and every teacher imports, so the whole school gets the same logo, colour,
 // grading scale, terms and lists without an account or a server. Everything in it is
 // checked on import, since the file comes from outside the app.
+import { cleanAppName } from './branding'
 import { AppError } from './errorCodes'
 import type { AppSettings, GradeThresholds, LogQuickAdd, StudentField, Term } from './types'
 import { STUDENT_LOG_TYPES } from './types'
@@ -24,6 +25,8 @@ export interface SchoolPack {
   version: 1
   createdAt: string
   schoolName?: string
+  /** The school's own name for the app (shared/branding.ts). */
+  appName?: string
   schoolLogo?: string
   accentColor?: string
   defaultGradeThresholds?: GradeThresholds
@@ -83,6 +86,7 @@ export function parseSchoolPack(json: string): SchoolPack {
     createdAt: isString(raw.createdAt, 40) ? raw.createdAt : ''
   }
   if (isString(raw.schoolName) && raw.schoolName.trim()) pack.schoolName = raw.schoolName.trim()
+  if (cleanAppName(raw.appName)) pack.appName = cleanAppName(raw.appName)
   if (
     typeof raw.schoolLogo === 'string' &&
     raw.schoolLogo.length <= MAX_LOGO_CHARS &&
@@ -283,6 +287,9 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
     version: 1,
     createdAt: new Date().toISOString(),
     ...(settings.schoolName ? { schoolName: settings.schoolName } : {}),
+    ...(cleanAppName(settings.appDisplayName)
+      ? { appName: cleanAppName(settings.appDisplayName) }
+      : {}),
     ...(settings.schoolLogo ? { schoolLogo: settings.schoolLogo } : {}),
     accentColor: settings.accentColor,
     defaultGradeThresholds: settings.defaultGradeThresholds,
@@ -330,6 +337,10 @@ export function planSchoolPack(
   if (pack.schoolName && pack.schoolName !== settings.schoolName) {
     patch.schoolName = pack.schoolName
     changes.push(tr('School name: {name}', { name: pack.schoolName }))
+  }
+  if (pack.appName && pack.appName !== settings.appDisplayName) {
+    patch.appDisplayName = pack.appName
+    changes.push(tr('App name: {name}', { name: pack.appName }))
   }
   if (pack.schoolLogo && pack.schoolLogo !== settings.schoolLogo) {
     patch.schoolLogo = pack.schoolLogo

@@ -14,17 +14,21 @@ import {
   type Terminology,
   type UiLanguage
 } from '@shared/i18n'
+import { cleanAppName } from '@shared/branding'
 
 const CHANNEL = 'i18n:prefs'
 
 export interface UiPrefs {
   language: UiLanguage
   terminology: Terminology
+  /** The school's name for the app ('' for EduBoard), for the lock screen. */
+  appName: string
 }
 
 interface StoredPrefs {
   language: UiLanguage | ''
   terminology: Terminology
+  appName: string
 }
 
 function prefsFile(): string {
@@ -37,13 +41,14 @@ function readStored(): StoredPrefs {
       const raw = JSON.parse(readFileSync(prefsFile(), 'utf8'))
       return {
         language: raw.language === 'en' || raw.language === 'zh' ? raw.language : '',
-        terminology: raw.terminology && typeof raw.terminology === 'object' ? raw.terminology : {}
+        terminology: raw.terminology && typeof raw.terminology === 'object' ? raw.terminology : {},
+        appName: cleanAppName(raw.appName)
       }
     }
   } catch {
     // Unreadable: fall back to the computer's language and the usual words.
   }
-  return { language: '', terminology: {} }
+  return { language: '', terminology: {}, appName: '' }
 }
 
 /** The language chosen here (or the computer's own) and the school's words. */
@@ -51,7 +56,8 @@ export function readUiPrefs(): UiPrefs {
   const stored = readStored()
   return {
     language: stored.language || languageFromLocale(app.getLocale()),
-    terminology: stored.terminology
+    terminology: stored.terminology,
+    appName: stored.appName
   }
 }
 
@@ -73,17 +79,19 @@ function applyUiPrefs(): void {
   setTerminology(prefs.terminology)
 }
 
-/** The file is a copy of two settings, kept for before the database opens. Once it's
+/** The file is a copy of three settings, kept for before the database opens. Once it's
  * open (after a restore, say, or an older copy), make the file match the settings.
  * Returns true if anything changed, so open windows can reload. */
 export function syncUiPrefsWithSettings(settings: {
   uiLanguage: UiLanguage | ''
   terminology: Terminology
+  appDisplayName?: string
 }): boolean {
   const stored = readStored()
   const wanted: StoredPrefs = {
     language: settings.uiLanguage,
-    terminology: settings.terminology ?? {}
+    terminology: settings.terminology ?? {},
+    appName: cleanAppName(settings.appDisplayName)
   }
   if (JSON.stringify(stored) === JSON.stringify(wanted)) return false
   saveUiPrefs(wanted)

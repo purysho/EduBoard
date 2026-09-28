@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { displayAppName } from '@shared/branding'
+import { useSettings } from '@renderer/lib/queries'
 import { Sidebar } from './Sidebar'
 import { ScreenErrorBoundary } from '../ScreenErrorBoundary'
 import { DeviceSyncBanner } from './DeviceSyncBanner'
@@ -12,6 +15,12 @@ export function AppShell(): React.JSX.Element {
   useThemeEffect()
   const presenting = usePresenting()
   const { pathname } = useLocation()
+  const { data: settings } = useSettings()
+  const appName = displayAppName(settings)
+  // The window's title (and the taskbar's): the school's name for the app when it has one.
+  useEffect(() => {
+    document.title = appName
+  }, [appName])
 
   return (
     <div className="flex h-full">

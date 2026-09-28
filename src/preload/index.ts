@@ -109,7 +109,8 @@ const api: EduBoardApi = {
     appUpdateInfo: () => invoke(IpcChannels.settings.appUpdateInfo),
     installAppUpdate: () => invoke(IpcChannels.settings.installAppUpdate),
     appUpdateProgress: () => invoke(IpcChannels.settings.appUpdateProgress),
-    appUpdateStatus: () => invoke(IpcChannels.settings.appUpdateStatus)
+    appUpdateStatus: () => invoke(IpcChannels.settings.appUpdateStatus),
+    managedBranding: () => invoke(IpcChannels.settings.managedBranding)
   },
   backup: {
     create: () => invoke(IpcChannels.backup.create),

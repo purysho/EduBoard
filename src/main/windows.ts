@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 
@@ -50,6 +50,17 @@ export function createMainWindow(): BrowserWindow {
     }
   })
   return win
+}
+
+/** The school's logo as the window's (and taskbar's) icon, or EduBoard's own when there's
+ * none. macOS shows the program's icon in the Dock whatever the window says. */
+export function applyWindowIcon(schoolLogo: string): void {
+  if (process.platform === 'darwin') return
+  const image = schoolLogo ? nativeImage.createFromDataURL(schoolLogo) : null
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (image && !image.isEmpty()) win.setIcon(image)
+    else if (process.platform === 'linux' || schoolLogo === '') win.setIcon(icon)
+  }
 }
 
 /** A hidden window used only to render a print-friendly route before printToPDF. */

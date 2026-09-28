@@ -15,6 +15,7 @@ import { ipcErrorMessage } from '@renderer/lib/format'
 import { tr, uiLanguage } from '@shared/i18n'
 
 const RELEASES_URL = 'https://github.com/purysho/EduBoard/releases/latest'
+const SOURCE_URL = 'https://github.com/purysho/EduBoard'
 const SITE_URL = 'https://edu-board.com'
 
 /** EduBoard's version, and updating it from right here. */
@@ -190,6 +191,28 @@ export function AboutPanel(): React.JSX.Element {
               className="text-[var(--color-primary)] hover:underline"
             >
               {tr('Security overview')}
+            </a>
+            {' · '}
+            <a
+              href={`${SITE_URL}/terms?lang=${uiLanguage()}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] hover:underline"
+            >
+              {tr('Terms of use')}
+            </a>
+          </p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'EduBoard is free software under the GNU Affero General Public License v3.0: you may use, change and share it under that licence.'
+            )}{' '}
+            <a
+              href={SOURCE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] hover:underline"
+            >
+              {tr('Source code')}
             </a>
           </p>
         </CardBody>

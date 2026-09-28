@@ -793,6 +793,9 @@ export interface AppSettings {
   schoolLogo: string
   /** '#rrggbb' to replace EduBoard's indigo with the school's colour; '' keeps it. */
   accentColor: string
+  /** The school's own name for the app, shown in the sidebar, window title and lock
+   * screen (shared/branding.ts); '' shows EduBoard. Decorative only. */
+  appDisplayName: string
   /** The school's own attendance codes, plus any renaming of the built-in four. */
   attendanceCodes: AttendanceCode[]
   /** Send an anonymous weekly "still using it" ping (shared/usagePing.ts). Off unless
@@ -995,6 +998,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   autoLockMinutes: 10,
   schoolLogo: '',
   accentColor: '',
+  appDisplayName: '',
   attendanceCodes: [],
   digestOptions: {
     grades: true,

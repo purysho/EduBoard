@@ -19,6 +19,8 @@ import * as studentsRepo from '../repositories/students'
 import * as portalJoinLinksRepo from '../repositories/portalJoinLinks'
 import { normalizePortalUrl } from '@shared/portalUrl'
 import * as termsRepo from '../repositories/terms'
+import { lockedBrandingKeys, managedBranding } from '../services/managedSchoolPack'
+import { withoutLocked } from '@shared/branding'
 import * as classesRepo from '../repositories/classes'
 import * as newTermClassRepo from '../repositories/newTermClass'
 import * as gradeCategoriesRepo from '../repositories/gradeCategories'
@@ -120,7 +122,7 @@ import { resolveBackupsDir } from '../db/path'
 import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { getSetupProgress } from '../services/setupProgress'
-import { createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
+import { applyWindowIcon, createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr, uiLanguage } from '@shared/i18n'
 import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
@@ -464,7 +466,9 @@ export function registerIpcHandlers(): void {
 
   // --- Settings -----------------------------------------------------------------------------
   handle(IpcChannels.settings.get, () => settingsRepo.getSettings())
-  handle(IpcChannels.settings.update, (_e, patch) => {
+  handle(IpcChannels.settings.update, (_e, requested) => {
+    // What the school set for everyone on this computer can't be changed here.
+    const patch = requested ? withoutLocked(requested, lockedBrandingKeys()) : requested
     if (patch && 'uiLanguage' in patch) {
       saveUiPrefs({
         language: patch.uiLanguage === 'zh' || patch.uiLanguage === 'en' ? patch.uiLanguage : ''
@@ -472,9 +476,12 @@ export function registerIpcHandlers(): void {
     }
     if (patch && 'terminology' in patch) saveUiPrefs({ terminology: patch.terminology ?? {} })
     const saved = settingsRepo.updateSettings(patch)
+    if (patch && 'appDisplayName' in patch) saveUiPrefs({ appName: saved.appDisplayName })
+    if (patch && 'schoolLogo' in patch) applyWindowIcon(saved.schoolLogo)
     if (patch && 'usagePing' in patch) usagePingSettingChanged(saved.usagePing === true)
     return saved
   })
+  handle(IpcChannels.settings.managedBranding, () => managedBranding())
   handle(IpcChannels.settings.appUpdateInfo, () => getAppUpdateInfo())
   handle(IpcChannels.settings.installAppUpdate, () => installAppUpdate())
   handle(IpcChannels.settings.appUpdateProgress, () => getAppUpdateProgress())
@@ -856,14 +863,21 @@ export function registerIpcHandlers(): void {
     const pack = parseSchoolPack(await readFile(String(filePath), 'utf-8'))
     const existing = termsRepo.listTerms()
     const plan = planSchoolPack(pack, settingsRepo.getSettings(), existing)
+    // What the school set for everyone on this computer stays as it is.
+    plan.settings = withoutLocked(plan.settings, lockedBrandingKeys())
     if (Object.keys(plan.settings).length) settingsRepo.updateSettings(plan.settings)
     let order = existing.reduce((max, t) => Math.max(max, t.sortOrder), 0)
     for (const t of plan.newTerms) termsRepo.createTerm({ ...t, sortOrder: ++order })
     if (plan.settings.terminology) saveUiPrefs({ terminology: plan.settings.terminology })
+    if (plan.settings.appDisplayName !== undefined) {
+      saveUiPrefs({ appName: plan.settings.appDisplayName })
+    }
+    if (plan.settings.schoolLogo !== undefined) applyWindowIcon(plan.settings.schoolLogo)
     // New words only show once screens reload.
     return { changes: plan.changes, reload: !!plan.settings.terminology }
   })
   handle(IpcChannels.schoolPack.importCss, async () => {
+    if (lockedBrandingKeys().includes('customCss')) return null
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
       filters: [{ name: tr('Stylesheet'), extensions: ['css'] }]

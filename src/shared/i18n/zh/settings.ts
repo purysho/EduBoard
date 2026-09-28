@@ -33,8 +33,8 @@ export const SETTINGS: Record<string, string> = {
   'Add logo': '添加校徽',
   'That file couldn’t be read as an image. Try a PNG or JPEG.':
     '无法把这个文件识别为图片，请使用 PNG 或 JPEG。',
-  'Shown in the sidebar and on report cards and other printouts.':
-    '显示在侧边栏、成绩单和其他打印件上。',
+  'Shown in the sidebar, as the window’s icon in the taskbar, and on report cards and other printouts.':
+    '显示在侧边栏、任务栏的窗口图标，以及成绩单等打印件上。',
   'School colour': '学校主题色',
   'This colour is light, so white text on buttons may be hard to read. A darker shade works better.':
     '这个颜色偏浅，按钮上的白字可能看不清，建议选深一点的颜色。',
@@ -504,5 +504,17 @@ export const SETTINGS: Record<string, string> = {
     '默认关闭，因为成绩册里的评语常常是写给自己的备注。开启前请先检查这些评语。',
   'Show the class average': '显示班级平均分',
   'Only once 5 or more students have a score, so nobody’s mark can be worked out from it.':
-    '只有在 5 名或以上学生有成绩时才显示，这样无法据此推算出任何人的分数。'
+    '只有在 5 名或以上学生有成绩时才显示，这样无法据此推算出任何人的分数。',
+  '{name} is locked': '{name} 已锁定',
+  'Terms of use': '使用条款',
+  'EduBoard is free software under the GNU Affero General Public License v3.0: you may use, change and share it under that licence.':
+    'EduBoard 是依据 GNU Affero 通用公共许可证第 3 版（AGPL-3.0）发布的自由软件：你可以依照该许可证使用、修改和分享它。',
+  'Source code': '源代码',
+  'Your school set the app’s name, logo and look for everyone on this computer, so they can’t be changed here. To change them, ask whoever looks after the school’s computers (the file is {file}).':
+    '学校已为这台电脑上的所有人设置了应用名称、标志和外观，因此无法在这里更改。如需更改，请联系负责学校电脑的老师或技术人员（文件位置：{file}）。',
+  'App name': '应用名称',
+  'Your school’s own name for the app (for example “Riverside Teacher Hub”), shown in the sidebar, the window title and the lock screen instead of EduBoard. Leave empty for EduBoard. Updates and Settings → Help still say EduBoard.':
+    '学校为本应用起的名称（例如“河滨教师助手”），会代替 EduBoard 显示在侧边栏、窗口标题和锁定界面上。留空则显示 EduBoard。更新提示和“设置 → 帮助”中仍显示 EduBoard。',
+  'Set by your school': '由学校设置',
+  'App name: {name}': '应用名称：{name}'
 }

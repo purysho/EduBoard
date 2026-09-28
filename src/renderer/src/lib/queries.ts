@@ -714,6 +714,15 @@ export function useSettings() {
   return useQuery({ queryKey: queryKeys.settings, queryFn: () => api().settings.get() })
 }
 
+/** The school pack installed for everyone on this computer (its IT's), if any. */
+export function useManagedBranding() {
+  return useQuery({
+    queryKey: ['managedBranding'],
+    queryFn: () => api().settings.managedBranding(),
+    staleTime: Infinity
+  })
+}
+
 export function useUpdateSettings() {
   const qc = useQueryClient()
   return useMutation({

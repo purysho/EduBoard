@@ -1,3 +1,4 @@
+import { appInitials, displayAppName, PRODUCT_NAME } from '@shared/branding'
 import { Link, NavLink } from 'react-router-dom'
 import {
   ArrowUpCircle,
@@ -101,6 +102,7 @@ export function Sidebar(): React.JSX.Element {
           })
         : tr('EduBoard {version} is available', { version: update.latest })
 
+  const appName = displayAppName(settings)
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="flex items-center gap-2.5 px-5 py-5">
@@ -112,12 +114,17 @@ export function Sidebar(): React.JSX.Element {
           />
         ) : (
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-hover)] text-sm font-bold text-white shadow-sm">
-            EB
+            {appInitials(appName)}
           </div>
         )}
         <span className="min-w-0 leading-tight">
-          <span className="block text-base font-semibold tracking-tight text-[var(--color-text)]">
-            {tr('EduBoard')}
+          <span
+            className={cn(
+              'line-clamp-2 block font-semibold tracking-tight break-words text-[var(--color-text)]',
+              appName.length > 14 ? 'text-sm' : 'text-base'
+            )}
+          >
+            {appName === PRODUCT_NAME ? tr('EduBoard') : appName}
           </span>
           {settings?.schoolName && (
             <span className="block truncate text-[11px] text-[var(--color-text-muted)]">

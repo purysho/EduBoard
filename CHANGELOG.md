@@ -4,8 +4,18 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-09-28
+
+**If you run a Portal, update it** (Harden-Server.cmd updates it and locks down the server in one go): the terms and consent screen, each assessment on the Grades page, the calendar link and the brochure need the updated Portal.
+
+### Changed
+
+- **EduBoard is now licensed under the GNU Affero General Public License v3.0** (`AGPL-3.0-only`), the app and the Portal both. You may still use, change and share it; anyone who shares a changed version, or runs a changed Portal for others, must offer their changed source. Versions up to 0.6.0 stay available under MIT. The Portal's login and Account pages and the app's About panel link to the source.
+
 ### Added
 
+- **The school's own name for the app** (Settings → Appearance → App name), e.g. "Riverside Teacher Hub", shown in the sidebar, the window title and the lock screen; the school logo is now also the window's icon in the taskbar. School packs carry the name too.
+- **A school pack for everyone on a computer**: a school's IT puts `school-pack.json` in `C:\ProgramData\EduBoard` (or runs Install-School-Pack.cmd as administrator), and every teacher on that computer gets the school's name, logo, colour and stylesheet, locked, plus the rest of the pack once per version. See `docs/SCHOOL_DEPLOYMENT.md`.
 - **A public demo login on the Portal** (`PORTAL_DEMO=1`; `Set-Up-Homepage.cmd` turns it on): username `demo`, password `try-eduboard`, for anyone to see what families see. It's a made-up class under its own demo teacher, with a report card, a notice to answer and a message. Its password, email and QR logins can't be changed (PT-1009), it resets every day, and it's left out of the admin page's usage numbers. The homepage's new **Try it first** section shows the login and points to the app's sample school.
 - **Sample school** (Settings → Help and updates, or the getting-started checklist): EduBoard reopens on two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans, notes and report comments, to try it or show it to a school. It lives in its own folder; the teacher's own classes are never read or changed, and a banner offers **Back to my classes** and **Start over**. No backups or usage pings are made from it.
 - **Portal usage on the admin page** (portal address /admin.html): teachers publishing, students with a login, families and teachers active each week (last 12 weeks), share of report cards opened, notices answered, Class Story posts seen and work handed in. **Copy as text** puts it all in an email or a pitch. It's worked out only from what the Portal already keeps for its features; nothing new is recorded.

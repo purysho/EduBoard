@@ -12,7 +12,7 @@ import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
-import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { useManagedBranding, useSettings, useUpdateSettings } from '@renderer/lib/queries'
 import { tr } from '@shared/i18n'
 import { trNodes } from '@renderer/lib/trNodes'
 
@@ -165,6 +165,7 @@ export function ProfileCard(): React.JSX.Element | null {
   const { data: settings } = useSettings()
   const update = useUpdateSettings()
   const f = useSettingsForm(['teacherName', 'schoolName', 'teacherEmail', 'theme'] as const)
+  const { data: managed } = useManagedBranding()
   if (!f.form || !settings) return null
   return (
     <FormCard
@@ -182,7 +183,12 @@ export function ProfileCard(): React.JSX.Element | null {
         />
       </FormRow>
       <FormRow label={tr('School / organization')}>
-        <Input value={f.form.schoolName} onChange={(e) => f.set({ schoolName: e.target.value })} />
+        <Input
+          value={f.form.schoolName}
+          disabled={!!managed?.locked.includes('schoolName')}
+          title={managed?.locked.includes('schoolName') ? tr('Set by your school') : undefined}
+          onChange={(e) => f.set({ schoolName: e.target.value })}
+        />
       </FormRow>
       <FormRow
         label={tr('Your email address')}
