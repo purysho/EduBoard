@@ -187,7 +187,8 @@ export const IpcChannels = {
     create: 'courseGroups:create',
     rename: 'courseGroups:rename',
     remove: 'courseGroups:remove',
-    getComposite: 'courseGroups:getComposite'
+    getComposite: 'courseGroups:getComposite',
+    curriculumMap: 'courseGroups:curriculumMap'
   },
   seatAssignments: {
     listByClass: 'seatAssignments:listByClass',
