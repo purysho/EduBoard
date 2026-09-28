@@ -103,6 +103,9 @@ const api: EduBoardApi = {
     studentGradeTrend: (studentId, classId) =>
       invoke(IpcChannels.reports.studentGradeTrend, studentId, classId)
   },
+  competencies: {
+    matrix: (classId) => invoke(IpcChannels.competencies.matrix, classId)
+  },
   settings: {
     get: () => invoke(IpcChannels.settings.get),
     update: (patch) => invoke(IpcChannels.settings.update, patch),
