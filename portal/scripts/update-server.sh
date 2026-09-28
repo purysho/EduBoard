@@ -33,10 +33,49 @@ say() { printf '\n==> %s\n' "$*"; }
 fail() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 
 [ -f "$PORTAL_DIR/server.js" ] || fail "No Portal found at $PORTAL_DIR. Run: bash update-server.sh /path/to/portal"
-command -v node >/dev/null || fail "Node.js isn't installed on this server."
-# 20.9 is the oldest the image library (sharp) runs on.
-node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 20 || (a === 20 && b >= 9) ? 0 : 1)' ||
-  fail "Node.js $(node -v) is too old; the Portal needs 20.9 or newer (22 recommended). Nothing was changed."
+
+node_is_22() {
+  command -v node >/dev/null 2>&1 &&
+    node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'
+}
+
+ensure_node_22() {
+  if node_is_22; then return; fi
+
+  CURRENT_NODE="$(node -v 2>/dev/null || echo "not installed")"
+  say "Node.js $CURRENT_NODE is too old; upgrading to Node.js 22"
+  [ "$(id -u)" -eq 0 ] ||
+    fail "Node.js 22 is required. Re-run this updater as root so it can install the supported runtime."
+
+  command -v apt-get >/dev/null 2>&1 ||
+    fail "Node.js 22 is required, but this updater can only upgrade it automatically on Debian/Ubuntu. Install Node.js 22, then run the updater again."
+
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq
+  apt-get install -y ca-certificates curl gnupg >/dev/null
+
+  install -m 0755 -d /etc/apt/keyrings
+  rm -f /etc/apt/keyrings/nodesource.gpg
+  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key |
+    gpg --dearmor --yes -o /etc/apt/keyrings/nodesource.gpg
+  printf '%s\n'     'deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main'     > /etc/apt/sources.list.d/nodesource.list
+
+  apt-get update -qq
+  apt-get install -y nodejs >/dev/null
+
+  node_is_22 || fail "Node.js upgrade did not produce Node 22+. Current version: $(node -v 2>/dev/null || echo missing)."
+  echo "    now using $(node -v)"
+}
+
+ensure_native_build_tools() {
+  if command -v make >/dev/null 2>&1 && command -v g++ >/dev/null 2>&1; then return; fi
+  [ "$(id -u)" -eq 0 ] || return
+  command -v apt-get >/dev/null 2>&1 || return
+  say "Installing native build tools"
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq
+  apt-get install -y build-essential >/dev/null
+}
 
 # ---- 1. Where the data lives --------------------------------------------------------------
 DATA_DIR="$PORTAL_DIR/data"
@@ -56,6 +95,13 @@ if [ ${#BACKUP_ITEMS[@]} -gt 0 ]; then
 else
   echo "    no data folder found at $DATA_DIR (a fresh install?); continuing"
 fi
+
+# ---- 2b. Supported runtime ----------------------------------------------------------------
+# better-sqlite3 13 requires Node 22+. Older Portal installs may still be on Node 20, so
+# update the runtime here, after the backup and before npm touches the installed packages.
+# Build tools are a fallback for native modules if a prebuilt binary is unavailable.
+ensure_node_22
+ensure_native_build_tools
 
 # ---- 3. New code --------------------------------------------------------------------------
 WORK="$(mktemp -d)"
