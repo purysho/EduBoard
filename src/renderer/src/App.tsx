@@ -8,6 +8,7 @@ import { ClassesListPage } from './pages/Classes/ClassesListPage'
 import { ClassDetailLayout } from './pages/Classes/ClassDetailLayout'
 import { RosterTab } from './pages/Classes/RosterTab'
 import { GradebookTab } from './pages/Classes/GradebookTab'
+import { CompetenciesTab } from './pages/Classes/CompetenciesTab'
 import { AttendanceTab } from './pages/Classes/AttendanceTab'
 import { LessonPlannerTab } from './pages/Classes/LessonPlannerTab'
 import { SeatingChartTab } from './pages/Classes/SeatingChartTab'
@@ -53,6 +54,7 @@ function App(): React.JSX.Element {
           <Route path="/classes/:classId" element={<ClassDetailLayout />}>
             <Route index element={<RosterTab />} />
             <Route path="gradebook" element={<GradebookTab />} />
+            <Route path="competencies" element={<CompetenciesTab />} />
             <Route path="attendance" element={<AttendanceTab />} />
             <Route path="lessons" element={<LessonPlannerTab />} />
             <Route path="seating" element={<SeatingChartTab />} />
