@@ -90,6 +90,9 @@ export const IpcChannels = {
     analyticsOverview: 'reports:analyticsOverview',
     studentGradeTrend: 'reports:studentGradeTrend'
   },
+  competencies: {
+    matrix: 'competencies:matrix'
+  },
   settings: {
     get: 'settings:get',
     update: 'settings:update',

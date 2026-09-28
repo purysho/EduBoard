@@ -106,6 +106,7 @@ import * as security from '../services/security'
 import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
 import { getTodayOverview, getWatchList } from '../services/today'
+import { getCompetencyMatrix } from '../services/competencyMatrix'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { saveUiPrefs } from '../i18n'
 import { resolveAttendanceCodes } from '@shared/attendanceCodes'
@@ -468,6 +469,11 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.reports.studentGradeTrend, (_e, studentId: string, classId: string) =>
     reportsService.getStudentGradeTrend(studentId, classId)
+  )
+
+  // --- Competency evidence ---------------------------------------------------------------
+  handle(IpcChannels.competencies.matrix, (_e, classId: string) =>
+    getCompetencyMatrix(String(classId))
   )
 
   // --- Settings -----------------------------------------------------------------------------

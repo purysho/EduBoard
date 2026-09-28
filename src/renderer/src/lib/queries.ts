@@ -70,6 +70,7 @@ export const queryKeys = {
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
+  competencyMatrix: (classId: string) => ['competencies', classId] as const,
   allScheduleSlots: ['scheduleSlots'] as const,
   homeworkAssignments: (classId: string) => ['classes', classId, 'homework'] as const,
   allHomeworkAssignments: ['homeworkAssignments', 'all'] as const,
@@ -373,6 +374,7 @@ export function useCreateAssessment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.assessments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
     }
   })
@@ -387,6 +389,7 @@ export function useUpdateAssessment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.assessments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
     }
   })
 }
@@ -399,6 +402,7 @@ export function useDeleteAssessment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.assessments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
     }
   })
@@ -817,6 +821,16 @@ export function useBackupPreview(filePath: string | null) {
   })
 }
 
+// ---- Competencies -----------------------------------------------------------------------
+
+export function useCompetencyMatrix(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.competencyMatrix(classId ?? ''),
+    queryFn: () => api().competencies.matrix(classId!),
+    enabled: !!classId
+  })
+}
+
 // ---- Standards --------------------------------------------------------------------------
 
 export function useStandards() {
@@ -931,7 +945,7 @@ export function useHomeworkRubricScores(
   })
 }
 
-export function useSaveHomeworkRubricScores() {
+export function useSaveHomeworkRubricScores(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: SaveHomeworkRubricScoresInput) => api().homeworkRubricScores.save(input),
@@ -942,6 +956,7 @@ export function useSaveHomeworkRubricScores() {
       qc.invalidateQueries({
         queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
       })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
       scheduleAutoPublishToPortal()
     }
   })

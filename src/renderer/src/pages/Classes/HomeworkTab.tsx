@@ -699,6 +699,7 @@ function SubmissionRow({
           open
           onClose={() => setScoringRubric(false)}
           homeworkAssignmentId={assignmentId}
+          classId={assignment.classId}
           rubricId={assignment.rubricId}
           studentId={submission.studentId}
           studentName={submission.studentName}
@@ -771,6 +772,7 @@ function HomeworkRubricScoringModal({
   open,
   onClose,
   homeworkAssignmentId,
+  classId,
   rubricId,
   studentId,
   studentName
@@ -778,6 +780,7 @@ function HomeworkRubricScoringModal({
   open: boolean
   onClose: () => void
   homeworkAssignmentId: string
+  classId: string
   rubricId: string
   studentId: string
   studentName: string
@@ -787,7 +790,7 @@ function HomeworkRubricScoringModal({
     homeworkAssignmentId,
     studentId
   )
-  const saveScores = useSaveHomeworkRubricScores()
+  const saveScores = useSaveHomeworkRubricScores(classId)
 
   const [selections, setSelections] = useState<Record<string, string>>({})
   const [feedback, setFeedback] = useState('')

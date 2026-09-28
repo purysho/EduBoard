@@ -77,6 +77,7 @@ import type {
   Standard,
   RubricWithCriteria,
   RubricScore,
+  CompetencyMatrix,
   StudentLogEntry,
   ParentCommunicationEntry,
   LessonResource,
@@ -230,6 +231,10 @@ export interface EduBoardApi {
     studentAttendanceSummary(studentId: string, classId: string): Promise<AttendanceSummary>
     analyticsOverview(): Promise<AnalyticsOverview>
     studentGradeTrend(studentId: string, classId: string): Promise<GradeTrendPoint[]>
+  }
+  competencies: {
+    /** Latest rubric evidence for each active student × standard in one class. */
+    matrix(classId: string): Promise<CompetencyMatrix>
   }
   settings: {
     get(): Promise<AppSettings>
