@@ -4,6 +4,9 @@
 // every teacher and locks them.
 
 export const PRODUCT_NAME = 'EduBoard'
+/** The folder teachers' data lives in. It never changes, whatever the product is called
+ * (docs/RENAMING.md). */
+export const DATA_FOLDER_NAME = 'EduBoard'
 export const MAX_APP_NAME = 40
 
 /** The settings a computer-wide school pack locks: re-applied at every start, and not

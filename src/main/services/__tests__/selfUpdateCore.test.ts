@@ -32,6 +32,23 @@ describe('which download fits this computer', () => {
     expect(pickAsset('mac', 'x64', [asset('EduBoard.dmg')])?.name).toBe('EduBoard.dmg')
     expect(pickAsset('linux-appimage', 'x64', [asset('EduBoard-Setup.exe')])).toBeNull()
   })
+
+  it('still finds the update if the app is renamed, and never picks a blockmap', () => {
+    const renamed = [
+      asset('Tongban-Setup.exe.blockmap'),
+      asset('Tongban-Setup.exe'),
+      asset('Tongban-Portable.exe'),
+      asset('Tongban-arm64.dmg.blockmap'),
+      asset('Tongban-arm64.dmg'),
+      asset('Tongban-x64.dmg'),
+      asset('Tongban.AppImage')
+    ]
+    expect(pickAsset('windows-installer', 'x64', renamed)?.name).toBe('Tongban-Setup.exe')
+    expect(pickAsset('windows-portable', 'x64', renamed)?.name).toBe('Tongban-Portable.exe')
+    expect(pickAsset('mac', 'arm64', renamed)?.name).toBe('Tongban-arm64.dmg')
+    expect(pickAsset('mac', 'x64', renamed)?.name).toBe('Tongban-x64.dmg')
+    expect(pickAsset('linux-appimage', 'x64', renamed)?.name).toBe('Tongban.AppImage')
+  })
 })
 
 describe('getting the new version', () => {
