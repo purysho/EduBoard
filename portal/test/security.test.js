@@ -78,6 +78,18 @@ test('invite codes: guessing is throttled per IP', async (t) => {
   assert.equal((await portal.call('GET', '/api/invites/GUESS9')).status, 429)
 })
 
+test('Portal-wide baseline limiter covers every route and is independently configurable', async (t) => {
+  const portal = await startPortal({ RATE_PORTAL_PER_IP_PER_MINUTE: '5' })
+  t.after(portal.stop)
+
+  const statuses = []
+  for (let i = 0; i < 10; i++) {
+    statuses.push((await portal.call('GET', '/health')).status)
+  }
+  assert.equal(statuses[0], 200)
+  assert.ok(statuses.includes(429), `expected a 429 in ${statuses.join(', ')}`)
+})
+
 test('signup enforces a minimum password length', async (t) => {
   const portal = await startPortal()
   t.after(portal.stop)

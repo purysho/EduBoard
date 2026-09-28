@@ -75,6 +75,7 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    | `PORTAL_CONSENT` | on | `off` stops asking families to agree to the terms of use at first sign-in, for a school that collects consent another way (on paper, for example). When it's on, the admin page downloads the records as a CSV. |
    | `PORTAL_HOST` | none | The Portal's own address (e.g. `portal.edu-board.com`), where the homepage's "Log in" links send students and parents when it's shown on a `HOMEPAGE_HOSTS` name. |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
+   | `RATE_PORTAL_PER_IP_PER_MINUTE` | `1200` | Coarse Portal-wide requests per IP per minute. This is intentionally high for classrooms/schools sharing one public IP; the sensitive endpoints below keep their own much tighter limits. |
    | `RATE_LOGIN_PER_IP` | `100` | Failed logins per IP per 15 min. Successful logins never count, so a class signing in together over the school's one address isn't paused. |
    | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |
    | `RATE_SECRET_URL_PER_IP` | `300` | Invite-code and QR-login requests per IP per 15 min (joining is two requests per student; codes can't be guessed at any rate). |
@@ -83,7 +84,7 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    | `RATE_AI_PER_DAY` | `100` | The same, per 24 hours. These calls spend your own AI key. |
    | `RATE_PASSWORD_CHANGE` | `5` | Password-change attempts per account per 15 min. |
 
-   Rate limits are kept in memory, so restarting the Portal resets them.
+   Rate limits are kept in memory, so restarting the Portal resets them. The Portal-wide limit is a coarse denial-of-service ceiling; the endpoint-specific limits remain the security controls for credential guessing and AI spend.
 7. **Put it behind HTTPS.** The simplest option is
    [Caddy](https://caddyserver.com/) — install it, then a `Caddyfile` like:
    ```
