@@ -156,22 +156,100 @@ describe('competency evidence matrix', () => {
       matrix.cells.find((item) => item.studentId === studentId && item.standardId === standardId)
 
     expect(cell(ada.id, speaking.id)).toMatchObject({
+      latestLevelLabels: ['Strong'],
       latestLevelLabel: 'Strong',
+      latestEvidenceMixed: false,
       latestSourceType: 'assessment',
       latestSourceName: 'Major explainer',
       evidenceCount: 1
     })
     expect(cell(ada.id, writing.id)).toMatchObject({
+      latestLevelLabels: ['Developing'],
       latestLevelLabel: 'Developing',
+      latestEvidenceMixed: false,
       latestSourceType: 'homework',
       latestSourceName: 'Professional email',
       evidenceCount: 1
     })
     expect(cell(grace.id, speaking.id)).toMatchObject({
+      latestLevelLabels: [],
       latestLevelLabel: null,
+      latestEvidenceMixed: false,
       latestSourceType: null,
       evidenceCount: 0
     })
+  })
+
+  it('marks the newest evidence as mixed when one assessment has different levels for the same standard', () => {
+    const cls = createClass({
+      name: 'Presentation class',
+      subject: 'English',
+      levelType: 'university',
+      gradeLevel: null,
+      termId: null,
+      schedule: null,
+      room: null,
+      color: null,
+      passMark: 60,
+      maxScore: 100,
+      gradeThresholds: DEFAULT_GRADE_THRESHOLDS
+    })
+    const student = makeStudent('Mei', 'Chen')
+    enrollStudent({ studentId: student.id, classId: cls.id, enrolledOn: '2026-09-01' })
+    const standard = createStandard({
+      code: 'PRES-01',
+      description: 'Present clearly.',
+      subject: 'English'
+    })
+    const rubric = createRubric({
+      name: 'Presentation evidence',
+      criteria: [
+        {
+          name: 'Message',
+          standardId: standard.id,
+          levels: [
+            { label: 'Developing', points: 2 },
+            { label: 'Secure', points: 3 }
+          ]
+        },
+        {
+          name: 'Delivery',
+          standardId: standard.id,
+          levels: [
+            { label: 'Developing', points: 2 },
+            { label: 'Secure', points: 3 }
+          ]
+        }
+      ]
+    })
+    const assessment = createAssessment({
+      classId: cls.id,
+      categoryId: null,
+      rubricId: rubric.id,
+      name: 'Presentation 1',
+      description: null,
+      assessmentDate: '2026-10-10',
+      maxScore: rubric.maxPoints
+    })
+
+    saveRubricScores({
+      assessmentId: assessment.id,
+      studentId: student.id,
+      selections: [
+        { criterionId: rubric.criteria[0].id, levelId: rubric.criteria[0].levels[1].id },
+        { criterionId: rubric.criteria[1].id, levelId: rubric.criteria[1].levels[0].id }
+      ]
+    })
+
+    const cell = getCompetencyMatrix(cls.id).cells[0]
+    expect(cell).toMatchObject({
+      latestLevelLabel: null,
+      latestEvidenceMixed: true,
+      latestSourceType: 'assessment',
+      latestSourceName: 'Presentation 1',
+      evidenceCount: 2
+    })
+    expect(new Set(cell.latestLevelLabels)).toEqual(new Set(['Secure', 'Developing']))
   })
 
   it('reflects re-grading immediately because rubric selections remain the source of truth', () => {
