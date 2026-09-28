@@ -140,8 +140,20 @@ export function CurriculumMapPage(): React.JSX.Element {
                                     )}
                                   </td>
                                   <td className="px-3 py-3 align-top">
-                                    <Badge tone={lesson.status === 'completed' ? 'success' : 'neutral'}>
-                                      {lesson.status === 'completed' ? tr('Completed') : tr('Planned')}
+                                    <Badge
+                                      tone={
+                                        lesson.status === 'taught'
+                                          ? 'success'
+                                          : lesson.status === 'skipped'
+                                            ? 'warning'
+                                            : 'neutral'
+                                      }
+                                    >
+                                      {lesson.status === 'taught'
+                                        ? tr('Taught')
+                                        : lesson.status === 'skipped'
+                                          ? tr('Skipped')
+                                          : tr('Planned')}
                                     </Badge>
                                   </td>
                                 </tr>
