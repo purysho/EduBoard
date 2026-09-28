@@ -55,6 +55,7 @@ after changing either.
 | EB-2004 | A resource file couldn’t be read (too large, an unsupported type, or damaged). | Save the file as PDF, Word (.docx) or plain text, under the size limit, and add it again. |
 | EB-2005 | A resource’s text couldn’t be read: it has no file or web address, or the web page couldn’t be fetched. | Edit the resource and attach the file or fix its web address; open the address in a browser to check it works. |
 | EB-2006 | EduBoard refused to open a handed-in file because it isn’t what its name says, or isn’t a type it opens safely. | Ask the student to save the work as PDF, Word, an image or plain text and hand it in again. |
+| EB-2007 | A Course Pack could not be read or contains conflicting curriculum data. | Use an EduBoard Course Pack v1 file and review the import message for the specific conflict. |
 
 ### Updates
 
