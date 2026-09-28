@@ -268,6 +268,73 @@ export interface CompetencyMatrix {
   cells: CompetencyEvidenceCell[]
 }
 
+export type CurriculumMapScopeType = 'courseGroup' | 'class'
+
+export interface CurriculumMapSection {
+  classId: string
+  className: string
+  termId: string | null
+  termName: string | null
+  termSortOrder: number
+}
+
+export interface CurriculumMapResource {
+  id: string
+  title: string
+  type: LessonResourceType
+}
+
+export interface CurriculumMapAssessmentRef {
+  id: string
+  classId: string
+  className: string
+  name: string
+  date: string | null
+}
+
+export interface CurriculumMapLesson {
+  id: string
+  classId: string
+  className: string
+  termId: string | null
+  termName: string | null
+  date: string
+  originalDate: string | null
+  moved: boolean
+  weekLabel: string | null
+  title: string
+  status: LessonPlanStatus
+  standards: string[]
+  assessment: CurriculumMapAssessmentRef | null
+  resources: CurriculumMapResource[]
+}
+
+export interface CurriculumStandardCoverage {
+  code: string
+  lessonCount: number
+  taughtCount: number
+  plannedCount: number
+  skippedCount: number
+}
+
+export interface CurriculumMap {
+  scopeType: CurriculumMapScopeType
+  scopeId: string
+  name: string
+  sections: CurriculumMapSection[]
+  lessons: CurriculumMapLesson[]
+  unlinkedAssessments: CurriculumMapAssessmentRef[]
+  standardCoverage: CurriculumStandardCoverage[]
+  nextLessonId: string | null
+  summary: {
+    total: number
+    planned: number
+    taught: number
+    skipped: number
+    moved: number
+  }
+}
+
 export const HOMEWORK_QUESTION_TYPES = ['multiple_choice', 'short_answer'] as const
 export type HomeworkQuestionType = (typeof HOMEWORK_QUESTION_TYPES)[number]
 
