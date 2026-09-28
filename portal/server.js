@@ -1,6 +1,7 @@
 const path = require('path')
 const crypto = require('crypto')
 const express = require('express')
+const { rateLimit: expressRateLimit } = require('express-rate-limit')
 const cookieParser = require('cookie-parser')
 
 const app = express()
@@ -17,6 +18,31 @@ function parseTrustProxy(value) {
   return value // IPs/subnets or names like "loopback, uniquelocal"
 }
 app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY))
+
+// Portal-wide DoS guard. This deliberately sits above the route-specific limiters:
+// - it gives every dynamic/file/database route a coarse safety ceiling;
+// - the stricter EduBoard limits still govern login failures, secret guessing, AI spend,
+//   password changes, invites and uploads;
+// - the default is high enough for several classrooms sharing one NAT address.
+// express-rate-limit is used directly here so GitHub CodeQL can recognize the guard
+// (js/missing-rate-limiting); RATE_PORTAL_PER_IP_PER_MINUTE can be raised for a very
+// large school deployment without weakening the sensitive endpoint limits below.
+function positiveEnvInt(name, fallback) {
+  const value = Number.parseInt(process.env[name] || '', 10)
+  return Number.isFinite(value) && value > 0 ? value : fallback
+}
+const portalWideLimiter = expressRateLimit({
+  windowMs: 60 * 1000,
+  limit: positiveEnvInt('RATE_PORTAL_PER_IP_PER_MINUTE', 1200),
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  ipv6Subnet: 56,
+  message: {
+    error: 'The Portal is receiving too many requests. Please wait a moment and try again.',
+    code: 'PT-1003'
+  }
+})
+app.use(portalWideLimiter)
 
 app.use((req, res, next) => {
   res.set({
