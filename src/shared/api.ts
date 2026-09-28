@@ -401,6 +401,27 @@ export interface EduBoardApi {
     /** Saves an example stylesheet with every EduBoard colour, to edit and load. */
     saveExampleCss(): Promise<boolean>
   }
+  coursePack: {
+    /** Chooses and validates a curriculum pack without changing the database. */
+    preview(): Promise<{
+      filePath: string
+      id: string
+      name: string
+      description: string | null
+      subject: string | null
+      terms: { key: string; name: string; schoolYear: string; startDate: string | null }[]
+      counts: { standards: number; rubrics: number; assessments: number; homework: number; lessons: number }
+    } | null>
+    /** Backs up first, then installs the pack into the explicitly mapped existing classes. */
+    apply(
+      filePath: string,
+      termBindings: Record<string, string>
+    ): Promise<{
+      courseGroupId: string
+      created: Record<string, number>
+      reused: Record<string, number>
+    }>
+  }
   security: {
     status(): Promise<SecurityStatus>
     /** Password or recovery key. */

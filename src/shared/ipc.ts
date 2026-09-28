@@ -221,6 +221,10 @@ export const IpcChannels = {
     importCss: 'schoolPack:importCss',
     saveExampleCss: 'schoolPack:saveExampleCss'
   },
+  coursePack: {
+    preview: 'coursePack:preview',
+    apply: 'coursePack:apply'
+  },
   security: {
     status: 'security:status',
     unlock: 'security:unlock',
