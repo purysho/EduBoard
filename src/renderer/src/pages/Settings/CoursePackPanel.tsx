@@ -32,13 +32,16 @@ export function CoursePackPanel(): React.JSX.Element {
   const [preview, setPreview] = useState<CoursePackPreview | null>(null)
   const [classes, setClasses] = useState<ClassSection[]>([])
   const [bindings, setBindings] = useState<Record<string, string>>({})
+  const [firstClassDates, setFirstClassDates] = useState<Record<string, string>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const ready =
     !!preview &&
     preview.terms.length > 0 &&
-    preview.terms.every((term) => Boolean(bindings[term.key]))
+    preview.terms.every(
+      (term) => Boolean(bindings[term.key]) && Boolean(firstClassDates[term.key])
+    )
 
   return (
     <Card>
@@ -68,6 +71,11 @@ export function CoursePackPanel(): React.JSX.Element {
                 if (!pack) return
                 setClasses(allClasses.filter((cls) => !cls.archived))
                 setBindings({})
+                setFirstClassDates(
+                  Object.fromEntries(
+                    pack.terms.map((term) => [term.key, term.startDate ?? ''])
+                  )
+                )
                 setPreview(pack)
               } catch (err) {
                 setMessage(ipcErrorMessage(err, tr('That Course Pack couldn’t be read.')))
@@ -99,7 +107,11 @@ export function CoursePackPanel(): React.JSX.Element {
                 if (!preview || !ready) return
                 setBusy(true)
                 try {
-                  const result = await window.api.coursePack.apply(preview.filePath, bindings)
+                  const result = await window.api.coursePack.apply(
+                    preview.filePath,
+                    bindings,
+                    firstClassDates
+                  )
                   const created = Object.values(result.created).reduce((sum, n) => sum + n, 0)
                   const reused = Object.values(result.reused).reduce((sum, n) => sum + n, 0)
                   setMessage(
@@ -152,35 +164,56 @@ export function CoursePackPanel(): React.JSX.Element {
                 <h3 className="font-medium">{tr('Choose the class for each term')}</h3>
                 <p className="text-xs text-[var(--color-text-muted)]">
                   {tr(
-                    'Only these classes will receive the pack. Existing students and grades are kept.'
+                    'Only these classes will receive the pack. Set the first actual class date so weekly lesson dates match your timetable. Existing students and grades are kept.'
                   )}
                 </p>
               </div>
 
               {preview.terms.map((term) => (
-                <label key={term.key} className="block space-y-1">
+                <div key={term.key} className="space-y-2 rounded-md border border-[var(--color-border)] p-3">
                   <span className="block text-xs font-medium">
                     {term.name} · {term.schoolYear}
                   </span>
-                  <select
-                    value={bindings[term.key] ?? ''}
-                    onChange={(event) =>
-                      setBindings((current) => ({
-                        ...current,
-                        [term.key]: event.target.value
-                      }))
-                    }
-                    className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-sm"
-                  >
-                    <option value="">{tr('Choose a class…')}</option>
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                        {cls.subject ? ` · ${cls.subject}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <label className="block space-y-1">
+                    <span className="block text-xs text-[var(--color-text-muted)]">
+                      {tr('Class')}
+                    </span>
+                    <select
+                      value={bindings[term.key] ?? ''}
+                      onChange={(event) =>
+                        setBindings((current) => ({
+                          ...current,
+                          [term.key]: event.target.value
+                        }))
+                      }
+                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-sm"
+                    >
+                      <option value="">{tr('Choose a class…')}</option>
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                          {cls.subject ? ` · ${cls.subject}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block space-y-1">
+                    <span className="block text-xs text-[var(--color-text-muted)]">
+                      {tr('First class date')}
+                    </span>
+                    <input
+                      type="date"
+                      value={firstClassDates[term.key] ?? ''}
+                      onChange={(event) =>
+                        setFirstClassDates((current) => ({
+                          ...current,
+                          [term.key]: event.target.value
+                        }))
+                      }
+                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-sm"
+                    />
+                  </label>
+                </div>
               ))}
             </div>
 
