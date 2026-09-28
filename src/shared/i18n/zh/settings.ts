@@ -483,6 +483,9 @@ export const SETTINGS: Record<string, string> = {
   'Choose the class for each term': '为每个学期选择班级',
   'Only these classes will receive the pack. Existing students and grades are kept.':
     '只有这些班级会接收该课程包。现有学生和成绩会保留。',
+  'Only these classes will receive the pack. Set the first actual class date so weekly lesson dates match your timetable. Existing students and grades are kept.':
+    '只有这些班级会接收该课程包。请设置每个学期第一次实际上课日期，使每周课程日期与你的课表一致。现有学生和成绩会保留。',
+  'First class date': '第一次上课日期',
   'Choose a class…': '选择班级…',
   'EduBoard makes a backup immediately before importing. Re-importing the same pack reuses matching curriculum instead of creating duplicates.':
     'EduBoard 会在导入前立即创建备份。再次导入同一课程包时，会复用匹配的课程内容，而不是创建重复项。',
