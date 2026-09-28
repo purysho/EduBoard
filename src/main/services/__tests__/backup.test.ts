@@ -45,6 +45,28 @@ describe('pruneAutoBackups', () => {
     expect([...remaining].filter((f) => f.startsWith('eduboard-autobackup-')).length).toBe(10)
   })
 
+  it('keeps a backup from each of the last days, not just the last few launches', () => {
+    // Five launches a day for twelve days: 60 backups.
+    const day = 24 * 60 * 60 * 1000
+    const noon = new Date()
+    noon.setHours(12, 0, 0, 0)
+    for (let d = 0; d < 12; d++) {
+      for (let l = 0; l < 5; l++) {
+        writeBackup(
+          `eduboard-autobackup-d${d}-l${l}.db`,
+          new Date(noon.getTime() - d * day - l * 60_000)
+        )
+      }
+    }
+    pruneAutoBackups(dir)
+    const kept = readdirSync(dir)
+    expect(kept.length).toBe(10)
+    // Today's three newest launches…
+    for (const l of [0, 1, 2]) expect(kept).toContain(`eduboard-autobackup-d0-l${l}.db`)
+    // …and the newest backup of each of the seven days before.
+    for (let d = 1; d <= 7; d++) expect(kept).toContain(`eduboard-autobackup-d${d}-l0.db`)
+  })
+
   it('does nothing when at or under the cap', () => {
     for (let i = 0; i < 5; i++) {
       writeBackup(`eduboard-autobackup-${i}.db`, new Date(Date.now() - i * 1000))

@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import type { PortalAiInteraction } from '@shared/aiUsage'
+import { getSqlite } from '../db/client'
 import { listClasses } from '../repositories/classes'
 import { mergeStudents } from '../repositories/studentMerge'
 import {
@@ -21,7 +22,7 @@ import { listInviteBatchesByClass } from '../repositories/portalInvites'
 import { listLessonResources } from '../repositories/lessonResources'
 import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
-import { getClassGrades, getStudentAttendanceSummary } from './reports'
+import { attendanceSummaryByStudent, getClassGrades } from './reports'
 import { pointSummaries } from '../repositories/behaviourPoints'
 import {
   portalAssessmentsForClass,
@@ -207,6 +208,7 @@ function buildPublishPayload(): {
   for (const cls of classes) {
     const roster = getRosterForClass(cls.id)
     const classGrades = getClassGrades(cls.id)
+    const classAttendance = attendanceSummaryByStudent(cls.id)
     const points = withPoints ? pointSummaries(cls.id, weekAgo) : null
 
     for (const { student, enrollment } of roster) {
@@ -215,13 +217,12 @@ function buildPublishPayload(): {
 
       if (enrollment.status !== 'active') continue
       const grade = classGrades.get(student.id)
-      const attendance = getStudentAttendanceSummary(student.id, cls.id)
       grades.push({
         studentId: student.id,
         classId: cls.id,
         percent: grade?.percent ?? null,
         letter: grade?.letter ?? null,
-        attendanceRate: attendance.rate,
+        attendanceRate: classAttendance.get(student.id)?.rate ?? null,
         ...(points
           ? {
               points: (points.get(student.id) ?? []).map((p) => ({ name: p.name, total: p.total }))
@@ -360,12 +361,35 @@ export function getPublishStatus(): PublishStatus {
     return { configured: false, upToDate: true, lastPublishedAt: null }
   }
   const last = getStoredValue<{ at: string; fingerprint: string }>(LAST_PUBLISH_KEY)
-  const { body } = buildPublishPayload()
   return {
     configured: true,
     lastPublishedAt: last?.at ?? null,
-    upToDate: !!last && last.fingerprint === payloadFingerprint(body)
+    upToDate: !!last && last.fingerprint === currentFingerprint()
   }
+}
+
+// The window asks for the status every 30 seconds, and building the payload reads every
+// class, mark and attendance record (most of a second for a teacher with 600 students).
+// So the answer is kept until something is written to the database (or it's reopened),
+// and at most 5 minutes: an attachment edited on disk writes nothing to the database.
+const STATUS_MAX_AGE_MS = 5 * 60 * 1000
+let statusCache: { db: object; changes: number; at: number; fingerprint: string } | null = null
+
+function currentFingerprint(): string {
+  const db = getSqlite()
+  const changes = (db.prepare('SELECT total_changes() AS n').get() as { n: number }).n
+  const cached = statusCache
+  if (
+    cached &&
+    cached.db === db &&
+    cached.changes === changes &&
+    Date.now() - cached.at < STATUS_MAX_AGE_MS
+  ) {
+    return cached.fingerprint
+  }
+  const fingerprint = payloadFingerprint(buildPublishPayload().body)
+  statusCache = { db, changes, at: Date.now(), fingerprint }
+  return fingerprint
 }
 
 async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {

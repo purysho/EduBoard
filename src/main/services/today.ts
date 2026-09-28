@@ -7,7 +7,7 @@ import { listAllScheduleSlots } from '../repositories/classScheduleSlots'
 import { listLessonPlansByClass } from '../repositories/lessonPlans'
 import { listClasses } from '../repositories/classes'
 import { getRosterForClass } from '../repositories/enrollments'
-import { getClassGrades, getStudentGradeTrend } from './reports'
+import { getClassGrades, gradeTrendsByStudent } from './reports'
 import { watchReasons } from '@shared/watchList'
 import type { TodayOverview, WatchListEntry } from '@shared/types'
 
@@ -62,12 +62,13 @@ export function getWatchList(now: Date = new Date()): WatchListEntry[] {
   const entries: WatchListEntry[] = []
   for (const cls of listClasses(false)) {
     const grades = getClassGrades(cls.id)
+    const trends = gradeTrendsByStudent(cls.id)
     for (const { student, enrollment } of getRosterForClass(cls.id)) {
       if (enrollment.status !== 'active') continue
       const reasons = watchReasons({
         percent: grades.get(student.id)?.percent ?? null,
         passMark: cls.passMark,
-        trend: getStudentGradeTrend(student.id, cls.id).map((p) => p.percent),
+        trend: (trends.get(student.id) ?? []).map((p) => p.percent),
         recentConcerns: concerns.get(student.id) ?? 0
       })
       if (reasons.length) {

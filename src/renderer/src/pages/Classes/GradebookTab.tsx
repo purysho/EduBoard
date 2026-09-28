@@ -14,7 +14,8 @@ import {
   useDeleteAssessment,
   useGradeCategories,
   useRubrics,
-  useScoresByClass
+  useScoresByClass,
+  useUpsertScore
 } from '@renderer/lib/queries'
 import { formatDate, formatPercent, studentFullName } from '@renderer/lib/format'
 import { AssessmentFormModal } from './AssessmentFormModal'
@@ -32,6 +33,7 @@ export function GradebookTab(): React.JSX.Element {
   const { data: submissions } = useAssignmentSubmissionsByClass(classSection.id)
   const { data: rubrics } = useRubrics()
   const deleteAssessment = useDeleteAssessment(classSection.id)
+  const upsertScore = useUpsertScore(classSection.id)
 
   const rubricsById = useMemo(() => new Map((rubrics ?? []).map((r) => [r.id, r])), [rubrics])
 
@@ -160,6 +162,7 @@ export function GradebookTab(): React.JSX.Element {
                             submission={submissionMap.get(`${a.id}:${row.student.id}`)}
                             row={rowIndex}
                             col={colIndex}
+                            save={upsertScore.mutate}
                           />
                         )}
                       </td>

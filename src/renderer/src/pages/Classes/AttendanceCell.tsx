@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { AttendanceRecord, AttendanceStatus } from '@shared/types'
-import { resolveAttendanceCodes, type AttendanceCode } from '@shared/attendanceCodes'
-import { useMarkAttendance, useSettings } from '@renderer/lib/queries'
+import type { AttendanceCode } from '@shared/attendanceCodes'
+import type { MarkAttendanceInput } from '@shared/inputs'
 import { Button } from '@renderer/components/ui/Button'
 import { cn } from '@renderer/lib/cn'
 import { tr } from '@shared/i18n'
@@ -21,17 +21,21 @@ export function AttendanceCell({
   classId,
   studentId,
   date,
-  record
+  record,
+  codes,
+  offered,
+  mark
 }: {
   classId: string
   studentId: string
   date: string
   record: AttendanceRecord | undefined
+  /** The school's codes, and the ones a click steps through; worked out once for the
+   * whole register (it has thousands of cells), as is `mark`, which saves one. */
+  codes: AttendanceCode[]
+  offered: AttendanceCode[]
+  mark: (input: MarkAttendanceInput) => Promise<unknown>
 }): React.JSX.Element {
-  const markAttendance = useMarkAttendance(classId)
-  const { data: settings } = useSettings()
-  const codes = resolveAttendanceCodes(settings?.attendanceCodes)
-  const offered = codes.filter((c) => !c.hidden)
   const code: AttendanceCode | undefined = record
     ? codes.find((c) => c.id === record.status)
     : undefined
@@ -43,7 +47,7 @@ export function AttendanceCell({
   function handleClick(): void {
     const currentIndex = record ? offered.findIndex((c) => c.id === record.status) : -1
     const next = offered[(currentIndex + 1) % offered.length]
-    markAttendance.mutate({ classId, studentId, date, status: next.id, note: record?.note ?? null })
+    void mark({ classId, studentId, date, status: next.id, note: record?.note ?? null })
   }
 
   function openMenu(e: React.MouseEvent): void {
@@ -123,7 +127,7 @@ export function AttendanceCell({
                 variant="primary"
                 size="sm"
                 onClick={async () => {
-                  await markAttendance.mutateAsync({
+                  await mark({
                     classId,
                     studentId,
                     date,

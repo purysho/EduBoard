@@ -1,6 +1,6 @@
 import { KeyboardEvent, useState } from 'react'
 import type { AssignmentSubmission, Score } from '@shared/types'
-import { useUpsertScore } from '@renderer/lib/queries'
+import type { UpsertScoreInput } from '@shared/inputs'
 import { ScoreHistoryPopover } from './ScoreHistoryPopover'
 import { CommentPopover } from './CommentPopover'
 import { SubmissionPopover } from './SubmissionPopover'
@@ -15,7 +15,8 @@ export function ScoreCell({
   score,
   submission,
   row,
-  col
+  col,
+  save
 }: {
   classId: string
   assessmentId: string
@@ -25,8 +26,13 @@ export function ScoreCell({
   submission: AssignmentSubmission | undefined
   row: number
   col: number
+  /** Saves a mark: one save for the whole gradebook, not one per cell. */
+  save: (input: UpsertScoreInput) => void
 }): React.JSX.Element {
-  const upsertScore = useUpsertScore(classId)
+  // A gradebook has thousands of cells, so a cell's small buttons (history, comment,
+  // submission) are only made once the mouse or keyboard reaches it; one that has a
+  // comment or a submission shows its button from the start.
+  const [active, setActive] = useState(false)
   const [value, setValue] = useState(score?.pointsEarned?.toString() ?? '')
 
   // Resync the edit buffer when the underlying score changes for a reason other than
@@ -46,7 +52,7 @@ export function ScoreCell({
       setValue(score?.pointsEarned?.toString() ?? '')
       return
     }
-    upsertScore.mutate({ assessmentId, studentId, pointsEarned, excused: score?.excused ?? false })
+    save({ assessmentId, studentId, pointsEarned, excused: score?.excused ?? false })
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>): void {
@@ -80,7 +86,11 @@ export function ScoreCell({
   const isExcused = score?.excused ?? false
 
   return (
-    <span className="group/cell relative inline-flex items-center">
+    <span
+      className="group/cell relative inline-flex items-center"
+      onMouseEnter={() => setActive(true)}
+      onFocus={() => setActive(true)}
+    >
       <input
         type="number"
         min={0}
@@ -95,12 +105,12 @@ export function ScoreCell({
         onKeyDown={handleKeyDown}
         className="w-16 rounded border border-transparent bg-transparent px-1.5 py-1 text-center text-sm hover:border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none disabled:text-[var(--color-text-muted)]"
       />
-      {score && (
+      {score && active && (
         <span className="absolute -right-3 flex flex-col opacity-0 transition-opacity group-hover/cell:opacity-100">
           <ScoreHistoryPopover assessmentId={assessmentId} studentId={studentId} />
         </span>
       )}
-      {score && (
+      {score && (active || score.comment) && (
         <span
           className={`absolute -right-3 top-3 flex flex-col transition-opacity ${
             score?.comment ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
@@ -114,18 +124,20 @@ export function ScoreCell({
           />
         </span>
       )}
-      <span
-        className={`absolute -right-3 top-6 flex flex-col transition-opacity ${
-          submission ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
-        }`}
-      >
-        <SubmissionPopover
-          classId={classId}
-          assessmentId={assessmentId}
-          studentId={studentId}
-          submission={submission}
-        />
-      </span>
+      {(active || submission) && (
+        <span
+          className={`absolute -right-3 top-6 flex flex-col transition-opacity ${
+            submission ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
+          }`}
+        >
+          <SubmissionPopover
+            classId={classId}
+            assessmentId={assessmentId}
+            studentId={studentId}
+            submission={submission}
+          />
+        </span>
+      )}
     </span>
   )
 }

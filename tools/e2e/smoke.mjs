@@ -199,6 +199,26 @@ async function go(page, route) {
   await go(page, `/classes/${grade}/gradebook`)
   check((await page.getByText('90.0%').count()) > 0, 'a new class shows 45/50 as 90.0%')
 
+  // Typing a mark in the gradebook saves it, and a comment can be added to it.
+  const cell = page.locator('input[data-row="0"][data-col="0"]')
+  await cell.fill('40')
+  await cell.press('Tab')
+  await page.waitForTimeout(800)
+  check((await page.getByText('80.0%').count()) > 0, 'a mark typed in the gradebook is saved')
+  await cell.hover()
+  await page.getByRole('button', { name: 'Add comment' }).click()
+  await page.getByPlaceholder('A note for yourself about this grade…').fill('Check units')
+  await page.getByRole('button', { name: /^Save$/ }).click()
+  await page.waitForTimeout(800)
+  const saved = await page.evaluate(
+    async (classId) => (await window.api.scores.listByClass(classId))[0],
+    grade
+  )
+  check(
+    saved?.pointsEarned === 40 && saved?.comment === 'Check units',
+    'a comment added in the gradebook is saved with the mark'
+  )
+
   const password = ['smoke', 'test', 'pass', '9'].join('-')
   const status = await page.evaluate(async (pw) => {
     const api = window.api

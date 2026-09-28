@@ -18,19 +18,11 @@ export function ScoreHistoryPopover({
   assessmentId: string
   studentId: string
 }): React.JSX.Element {
+  // Every gradebook cell has one of these, so the button is all that's there until it's
+  // opened: the history query and listener live in the panel.
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const anchorRef = useRef<HTMLButtonElement>(null)
-  const { data: history } = useScoreHistory(assessmentId, studentId, open)
-
-  useEffect(() => {
-    if (!open) return
-    function onClickAway(e: MouseEvent): void {
-      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onClickAway)
-    return () => document.removeEventListener('mousedown', onClickAway)
-  }, [open])
 
   function handleToggle(): void {
     if (!open && anchorRef.current) {
@@ -52,37 +44,67 @@ export function ScoreHistoryPopover({
       >
         <History size={11} aria-hidden />
       </button>
-      {open &&
-        position &&
-        createPortal(
-          <div
-            className="fixed z-50 w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
-            style={{ top: position.top, left: position.left }}
-          >
-            <p className="mb-1.5 text-xs font-semibold">{tr('Change history')}</p>
-            {history === undefined ? (
-              <p className="text-xs text-[var(--color-text-muted)]">{tr('Loading…')}</p>
-            ) : history.length === 0 ? (
-              <p className="text-xs text-[var(--color-text-muted)]">
-                {tr('No changes recorded yet.')}
-              </p>
-            ) : (
-              <ul className="max-h-48 space-y-1.5 overflow-auto">
-                {history.map((h) => (
-                  <li key={h.id} className="text-xs text-[var(--color-text-muted)]">
-                    <span className="font-medium text-[var(--color-text)]">
-                      {describe(h.previousPoints, h.previousExcused)} →{' '}
-                      {describe(h.newPoints, h.newExcused)}
-                    </span>
-                    <br />
-                    {formatDate(h.changedAt, 'MMM d, yyyy p')}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>,
-          document.body
-        )}
+      {open && position && (
+        <HistoryPanel
+          assessmentId={assessmentId}
+          studentId={studentId}
+          position={position}
+          anchorRef={anchorRef}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
+  )
+}
+
+function HistoryPanel({
+  assessmentId,
+  studentId,
+  position,
+  anchorRef,
+  onClose
+}: {
+  assessmentId: string
+  studentId: string
+  position: { top: number; left: number }
+  anchorRef: React.RefObject<HTMLButtonElement | null>
+  onClose: () => void
+}): React.JSX.Element {
+  const { data: history } = useScoreHistory(assessmentId, studentId, true)
+
+  useEffect(() => {
+    function onClickAway(e: MouseEvent): void {
+      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) onClose()
+    }
+    document.addEventListener('mousedown', onClickAway)
+    return () => document.removeEventListener('mousedown', onClickAway)
+  }, [anchorRef, onClose])
+
+  return createPortal(
+    <div
+      className="fixed z-50 w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
+      style={{ top: position.top, left: position.left }}
+    >
+      <p className="mb-1.5 text-xs font-semibold">{tr('Change history')}</p>
+      {history === undefined ? (
+        <p className="text-xs text-[var(--color-text-muted)]">{tr('Loading…')}</p>
+      ) : history.length === 0 ? (
+        <p className="text-xs text-[var(--color-text-muted)]">{tr('No changes recorded yet.')}</p>
+      ) : (
+        <ul className="max-h-48 space-y-1.5 overflow-auto">
+          {history.map((h) => (
+            <li key={h.id} className="text-xs text-[var(--color-text-muted)]">
+              <span className="font-medium text-[var(--color-text)]">
+                {describe(h.previousPoints, h.previousExcused)} →{' '}
+                {describe(h.newPoints, h.newExcused)}
+              </span>
+              <br />
+              {formatDate(h.changedAt, 'MMM d, yyyy p')}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>,
+    document.body
   )
 }
