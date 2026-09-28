@@ -1,0 +1,1799 @@
+{
+  "kind": "eduboard-course-pack",
+  "version": 1,
+  "createdAt": "2026-09-29T00:00:00.000Z",
+  "id": "just-applied-english-2026-27",
+  "name": "JUST Applied Academic & Professional English 2026–27",
+  "description": "Applied Academic & Professional English: English for Study, Research and Work. A supplementary/optional JUST Zhangjiagang course bridging knowing English → using English effectively. Core work broadly targets CSE 4–5 with support toward shared outcomes and stretch toward CSE 6. Term 1 has 15 fixed 90-minute sessions; Term 2 has 16 core + 3 FLEX sessions.",
+  "subject": "English",
+  "terms": [
+    {
+      "key": "t1",
+      "name": "2026–27 Term 1 — Academic Communication",
+      "schoolYear": "2026–27",
+      "startDate": null,
+      "endDate": null,
+      "sortOrder": 1
+    },
+    {
+      "key": "t2",
+      "name": "2026–27 Term 2 — Professional Communication",
+      "schoolYear": "2026–27",
+      "startDate": null,
+      "endDate": null,
+      "sortOrder": 2
+    }
+  ],
+  "standards": [
+    {
+      "key": "ueng-01",
+      "code": "UENG-01",
+      "description": "Read and listen strategically for purpose, structure, evidence and key information",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-02",
+      "code": "UENG-02",
+      "description": "Evaluate, summarise, paraphrase and combine information from sources",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-03",
+      "code": "UENG-03",
+      "description": "Participate actively in English discussions, meetings and collaborative problem-solving",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-04",
+      "code": "UENG-04",
+      "description": "Deliver clear structured spoken explanations and presentations",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-05",
+      "code": "UENG-05",
+      "description": "Produce concise academic and functional professional writing",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-06",
+      "code": "UENG-06",
+      "description": "Communicate appropriately in common professional situations",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-07",
+      "code": "UENG-07",
+      "description": "Explain Chinese, local, campus and disciplinary contexts to international audiences",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-08",
+      "code": "UENG-08",
+      "description": "Use digital and AI tools critically, ethically and with verification",
+      "subject": "English"
+    },
+    {
+      "key": "ueng-09",
+      "code": "UENG-09",
+      "description": "Plan, reflect on and improve their own communication through feedback and revision",
+      "subject": "English"
+    }
+  ],
+  "rubrics": [
+    {
+      "key": "r1-spoken",
+      "name": "R1 — Spoken Communication",
+      "description": "Reusable rubric for spoken task performance.",
+      "criteria": [
+        {
+          "name": "Task achievement",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Clarity",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Organisation",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Interaction",
+          "description": null,
+          "standardKey": "ueng-03",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Language control",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Intelligibility",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r2-evidence",
+      "name": "R2 — Evidence & Reasoning",
+      "description": "Reusable rubric for source-based reasoning and evidence use.",
+      "criteria": [
+        {
+          "name": "Source understanding",
+          "description": null,
+          "standardKey": "ueng-01",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Evidence selection",
+          "description": null,
+          "standardKey": "ueng-02",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Reasoning",
+          "description": null,
+          "standardKey": "ueng-02",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Qualification",
+          "description": null,
+          "standardKey": "ueng-02",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Accuracy of claims",
+          "description": null,
+          "standardKey": "ueng-02",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r3-written",
+      "name": "R3 — Written Communication",
+      "description": "Reusable rubric for concise academic and professional writing.",
+      "criteria": [
+        {
+          "name": "Purpose",
+          "description": null,
+          "standardKey": "ueng-05",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Organisation",
+          "description": null,
+          "standardKey": "ueng-05",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Concision",
+          "description": null,
+          "standardKey": "ueng-05",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Audience / tone",
+          "description": null,
+          "standardKey": "ueng-06",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Language accuracy",
+          "description": null,
+          "standardKey": "ueng-05",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r4-presentation",
+      "name": "R4 — Presentation",
+      "description": "Reusable rubric for structured presentations and Q&A.",
+      "criteria": [
+        {
+          "name": "Message",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Structure",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Supporting evidence",
+          "description": null,
+          "standardKey": "ueng-02",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Delivery",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Visuals",
+          "description": null,
+          "standardKey": "ueng-04",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Q&A",
+          "description": null,
+          "standardKey": "ueng-03",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r5-collaboration",
+      "name": "R5 — Professional Collaboration",
+      "description": "Reusable rubric for meetings, teamwork and collaborative problem-solving.",
+      "criteria": [
+        {
+          "name": "Contribution",
+          "description": null,
+          "standardKey": "ueng-03",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Listening",
+          "description": null,
+          "standardKey": "ueng-01",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Clarification",
+          "description": null,
+          "standardKey": "ueng-03",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Problem-solving",
+          "description": null,
+          "standardKey": "ueng-03",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Decision-making",
+          "description": null,
+          "standardKey": "ueng-06",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        },
+        {
+          "name": "Professionalism",
+          "description": null,
+          "standardKey": "ueng-06",
+          "levels": [
+            {
+              "label": "Not yet evidenced",
+              "points": 0,
+              "description": "No usable evidence yet for this criterion."
+            },
+            {
+              "label": "Emerging",
+              "points": 1,
+              "description": "Shows partial control with substantial support."
+            },
+            {
+              "label": "Developing",
+              "points": 2,
+              "description": "Shows workable control with some inconsistency or support."
+            },
+            {
+              "label": "Secure",
+              "points": 3,
+              "description": "Meets the expected outcome reliably in the task."
+            },
+            {
+              "label": "Strong",
+              "points": 4,
+              "description": "Performs the outcome confidently, accurately and with effective transfer."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "key": "t1-portfolio",
+      "termKey": "t1",
+      "name": "Term 1 Learning / Performance Portfolio",
+      "description": "Recommended weighting if a numerical grade is required: 20%. Evidence of usable competence across the term.",
+      "offsetDays": 98,
+      "maxScore": 100,
+      "sortOrder": 1
+    },
+    {
+      "key": "t1-source-position",
+      "termKey": "t1",
+      "name": "Source-Based Position",
+      "description": "Recommended weighting: 20%. Approximately two-minute source-based position with revision after feedback.",
+      "offsetDays": 42,
+      "rubricKey": "r2-evidence",
+      "sortOrder": 2
+    },
+    {
+      "key": "t1-major-presentation",
+      "termKey": "t1",
+      "name": "Major Explainer / Presentation",
+      "description": "Recommended weighting: 20%. Explain major-related content clearly for a non-specialist audience.",
+      "offsetDays": 63,
+      "rubricKey": "r4-presentation",
+      "sortOrder": 3
+    },
+    {
+      "key": "t1-academic-capstone",
+      "termKey": "t1",
+      "name": "Integrated Academic Capstone",
+      "description": "Recommended weighting: 30%. Integrated academic communication performance.",
+      "offsetDays": 98,
+      "rubricKey": "r4-presentation",
+      "isFinal": true,
+      "sortOrder": 4
+    },
+    {
+      "key": "t1-growth-reflection",
+      "termKey": "t1",
+      "name": "Reflection and Demonstrated Growth",
+      "description": "Recommended weighting: 10%. Baseline comparison, portfolio selection and next-term goal.",
+      "offsetDays": 98,
+      "maxScore": 100,
+      "sortOrder": 5
+    },
+    {
+      "key": "t2-portfolio",
+      "termKey": "t2",
+      "name": "Professional Communication Portfolio",
+      "description": "Recommended weighting if a numerical grade is required: 20%.",
+      "offsetDays": 126,
+      "maxScore": 100,
+      "sortOrder": 1
+    },
+    {
+      "key": "t2-interview",
+      "termKey": "t2",
+      "name": "Interview / Interaction Performance",
+      "description": "Recommended weighting: 15%. Direct, evidence-supported professional interaction.",
+      "offsetDays": 14,
+      "rubricKey": "r1-spoken",
+      "sortOrder": 2
+    },
+    {
+      "key": "t2-data-recommendation",
+      "termKey": "t2",
+      "name": "Data Update + Recommendation Task",
+      "description": "Recommended weighting: 20%. Explain data, make a recommendation and defend it under questioning.",
+      "offsetDays": 70,
+      "rubricKey": "r2-evidence",
+      "sortOrder": 3
+    },
+    {
+      "key": "t2-professional-capstone",
+      "termKey": "t2",
+      "name": "Final Professional Capstone",
+      "description": "Recommended weighting: 35%. Multi-mode professional communication showcase.",
+      "offsetDays": 119,
+      "rubricKey": "r5-collaboration",
+      "isFinal": true,
+      "sortOrder": 4
+    },
+    {
+      "key": "t2-growth-reflection",
+      "termKey": "t2",
+      "name": "Reflection and Demonstrated Growth",
+      "description": "Recommended weighting: 10%. End-of-year portfolio, baseline comparison and transfer plan.",
+      "offsetDays": 126,
+      "maxScore": 100,
+      "sortOrder": 5
+    }
+  ],
+  "homework": [],
+  "lessons": [
+    {
+      "key": "t1-01",
+      "termKey": "t1",
+      "title": "T1.01 — Where Am I Now?",
+      "offsetDays": 0,
+      "weekLabel": "T1.01",
+      "objectives": "Diagnostic + goal setting across speaking, listening/note-taking, reading and writing. Output: baseline self/major introduction, short written response, mini synthesis, confidence/goal survey. No grade.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Diagnostic + goal setting across speaking, listening/note-taking, reading and writing. Output: baseline self/major introduction, short written response, mini synthesis, confidence/goal survey. No grade.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-04",
+        "ueng-05",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t1-02",
+      "termKey": "t1",
+      "title": "T1.02 — Read With a Purpose",
+      "offsetDays": 7,
+      "weekLabel": "T1.02",
+      "objectives": "Skim, scan, predict, identify structure, claims and evidence. Output: explain the most important message from a university-level text and identify supporting evidence.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Skim, scan, predict, identify structure, claims and evidence. Output: explain the most important message from a university-level text and identify supporting evidence.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-02"
+      ]
+    },
+    {
+      "key": "t1-03",
+      "termKey": "t1",
+      "title": "T1.03 — Listen and Capture Meaning",
+      "offsetDays": 14,
+      "weekLabel": "T1.03",
+      "objectives": "Listen for structure, signposting and keywords; organise notes and reconstruct meaning. Output: 60-second explanation using notes only.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Listen for structure, signposting and keywords; organise notes and reconstruct meaning. Output: 60-second explanation using notes only.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-04"
+      ]
+    },
+    {
+      "key": "t1-04",
+      "termKey": "t1",
+      "title": "T1.04 — Say It in Your Own Words",
+      "offsetDays": 21,
+      "weekLabel": "T1.04",
+      "objectives": "Summary, paraphrase, quotation, attribution, patchwriting and academic integrity. Introduce responsible AI use. Output: transform a short source into an accurate concise explanation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Summary, paraphrase, quotation, attribution, patchwriting and academic integrity. Introduce responsible AI use. Output: transform a short source into an accurate concise explanation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-02",
+        "ueng-05",
+        "ueng-08"
+      ]
+    },
+    {
+      "key": "t1-05",
+      "termKey": "t1",
+      "title": "T1.05 — Make Data Speak",
+      "offsetDays": 28,
+      "weekLabel": "T1.05",
+      "objectives": "Charts, trends, comparison, quantity, cautious interpretation and avoiding unsupported causal claims. Output: 90-second major-relevant data explanation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Charts, trends, comparison, quantity, cautious interpretation and avoiding unsupported causal claims. Output: 90-second major-relevant data explanation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-04"
+      ]
+    },
+    {
+      "key": "t1-06",
+      "termKey": "t1",
+      "title": "T1.06 — Build an Argument",
+      "offsetDays": 35,
+      "weekLabel": "T1.06",
+      "objectives": "Claim → reason → evidence → qualification/counterpoint; distinguish fact, evidence, interpretation, opinion and assumption. Output: short evidence-supported position.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Claim → reason → evidence → qualification/counterpoint; distinguish fact, evidence, interpretation, opinion and assumption. Output: short evidence-supported position.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-02",
+        "ueng-04",
+        "ueng-05"
+      ]
+    },
+    {
+      "key": "t1-07",
+      "termKey": "t1",
+      "title": "T1.07 — Source-Based Position",
+      "offsetDays": 42,
+      "weekLabel": "T1.07",
+      "objectives": "Major assessed performance 1. Use a short reading/listening source set to deliver an approximately two-minute evidence-supported position, then revise after feedback.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Major assessed performance 1. Use a short reading/listening source set to deliver an approximately two-minute evidence-supported position, then revise after feedback.",
+      "homework": null,
+      "assessmentKey": "t1-source-position",
+      "standardKeys": [
+        "ueng-01",
+        "ueng-02",
+        "ueng-04",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t1-08",
+      "termKey": "t1",
+      "title": "T1.08 — Academic Discussion",
+      "offsetDays": 49,
+      "weekLabel": "T1.08",
+      "objectives": "Enter and manage discussion: invite, agree/disagree, qualify, ask for evidence, clarify and repair misunderstanding. Output: structured small-group academic discussion with distributed speaking time.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Enter and manage discussion: invite, agree/disagree, qualify, ask for evidence, clarify and repair misunderstanding. Output: structured small-group academic discussion with distributed speaking time.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-02"
+      ]
+    },
+    {
+      "key": "t1-09",
+      "termKey": "t1",
+      "title": "T1.09 — Explain Your Major to Me",
+      "offsetDays": 56,
+      "weekLabel": "T1.09",
+      "objectives": "Audience adaptation. Explain a process, concept, technology, model or idea from the student's major to an intelligent non-specialist. Output: 2–3 minute explanation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Audience adaptation. Explain a process, concept, technology, model or idea from the student's major to an intelligent non-specialist. Output: 2–3 minute explanation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-04",
+        "ueng-07"
+      ]
+    },
+    {
+      "key": "t1-10",
+      "termKey": "t1",
+      "title": "T1.10 — Present Clearly",
+      "offsetDays": 63,
+      "weekLabel": "T1.10",
+      "objectives": "Opening, signposting, sequencing, transitions, conclusion, vocal delivery, slide discipline and audience attention. Output: 3-minute mini-presentation without reading paragraphs from slides.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Opening, signposting, sequencing, transitions, conclusion, vocal delivery, slide discipline and audience attention. Output: 3-minute mini-presentation without reading paragraphs from slides.",
+      "homework": null,
+      "assessmentKey": "t1-major-presentation",
+      "standardKeys": [
+        "ueng-04",
+        "ueng-03"
+      ]
+    },
+    {
+      "key": "t1-11",
+      "termKey": "t1",
+      "title": "T1.11 — Combine Sources",
+      "offsetDays": 70,
+      "weekLabel": "T1.11",
+      "objectives": "Synthesis rather than separate summaries; compare reading and listening using agreement, contradiction, addition, limitation and qualification. Output: integrated spoken or written synthesis.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Synthesis rather than separate summaries; compare reading and listening using agreement, contradiction, addition, limitation and qualification. Output: integrated spoken or written synthesis.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-02",
+        "ueng-05"
+      ]
+    },
+    {
+      "key": "t1-12",
+      "termKey": "t1",
+      "title": "T1.12 — Can I Trust This?",
+      "offsetDays": 77,
+      "weekLabel": "T1.12",
+      "objectives": "Evaluate authorship, evidence, date, relevance, source type, unsupported claims and AI-generated information. Output: verify claims and explain the reasoning behind each verdict.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Evaluate authorship, evidence, date, relevance, source type, unsupported claims and AI-generated information. Output: verify claims and explain the reasoning behind each verdict.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-02",
+        "ueng-08"
+      ]
+    },
+    {
+      "key": "t1-13",
+      "termKey": "t1",
+      "title": "T1.13 — Explain China Across Cultures",
+      "offsetDays": 84,
+      "weekLabel": "T1.13",
+      "objectives": "Intercultural explanation without stereotyping. Recognise assumed knowledge, define unfamiliar concepts, compare, clarify and avoid over-generalisation. Output: international-audience explainer + follow-up questions.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Intercultural explanation without stereotyping. Recognise assumed knowledge, define unfamiliar concepts, compare, clarify and avoid over-generalisation. Output: international-audience explainer + follow-up questions.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-07",
+        "ueng-03",
+        "ueng-04"
+      ]
+    },
+    {
+      "key": "t1-14",
+      "termKey": "t1",
+      "title": "T1.14 — Integrated Academic Challenge",
+      "offsetDays": 91,
+      "weekLabel": "T1.14",
+      "objectives": "Combine research/input, source evaluation, evidence, discussion, explanation, structured output and response to questions. Revision/rehearsal for final performance.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Combine research/input, source evaluation, evidence, discussion, explanation, structured output and response to questions. Revision/rehearsal for final performance.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-02",
+        "ueng-03",
+        "ueng-04",
+        "ueng-05",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t1-15",
+      "termKey": "t1",
+      "title": "T1.15 — Academic Communication Showcase",
+      "offsetDays": 98,
+      "weekLabel": "T1.15",
+      "objectives": "Term 1 capstone. Integrated performance, Q&A, selected baseline tasks repeated, portfolio selection, self-reflection and Term 2 goal. Emphasis: demonstrated growth.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Term 1 capstone. Integrated performance, Q&A, selected baseline tasks repeated, portfolio selection, self-reflection and Term 2 goal. Emphasis: demonstrated growth.",
+      "homework": null,
+      "assessmentKey": "t1-academic-capstone",
+      "standardKeys": [
+        "ueng-01",
+        "ueng-02",
+        "ueng-03",
+        "ueng-04",
+        "ueng-05",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t2-01",
+      "termKey": "t2",
+      "title": "T2.01 — Reactivate and Transfer",
+      "offsetDays": 0,
+      "weekLabel": "T2.01",
+      "objectives": "Retrieve Term 1 learning and update pathway goals. Output: 90-second profile — who I am, what I study, where I am going.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Retrieve Term 1 learning and update pathway goals. Output: 90-second profile — who I am, what I study, where I am going.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-04",
+        "ueng-06",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t2-02",
+      "termKey": "t2",
+      "title": "T2.02 — Tell Your Skills Story",
+      "offsetDays": 7,
+      "weekLabel": "T2.02",
+      "objectives": "Skills, evidence, achievements, projects and concise professional self-description. Avoid unsupported adjectives. Output: professional profile/CV evidence statements.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Skills, evidence, achievements, projects and concise professional self-description. Avoid unsupported adjectives. Output: professional profile/CV evidence statements.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-03",
+      "termKey": "t2",
+      "title": "T2.03 — Interview Communication",
+      "offsetDays": 14,
+      "weekLabel": "T2.03",
+      "objectives": "Answer directly, use STAR-style experience answers, support strengths with evidence, explain projects, handle follow-up and unknown questions. Output: mini mock interview.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Answer directly, use STAR-style experience answers, support strengths with evidence, explain projects, handle follow-up and unknown questions. Output: mini mock interview.",
+      "homework": null,
+      "assessmentKey": "t2-interview",
+      "standardKeys": [
+        "ueng-03",
+        "ueng-04",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-04",
+      "termKey": "t2",
+      "title": "T2.04 — Professional Email and Messaging",
+      "offsetDays": 21,
+      "weekLabel": "T2.04",
+      "objectives": "Subject lines, purpose-first writing, requests, confirmation, follow-up, tone and concision for professors, supervisors, recruiters, clients, colleagues or international partners. Output: two realistic messages.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Subject lines, purpose-first writing, requests, confirmation, follow-up, tone and concision for professors, supervisors, recruiters, clients, colleagues or international partners. Output: two realistic messages.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-05",
+      "termKey": "t2",
+      "title": "T2.05 — Meetings That Achieve Something",
+      "offsetDays": 28,
+      "weekLabel": "T2.05",
+      "objectives": "Agenda, updates, entering discussion, clarification, disagreement, summarising and assigning actions. Output: short meeting with action record.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Agenda, updates, entering discussion, clarification, disagreement, summarising and assigning actions. Output: short meeting with action record.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-06",
+      "termKey": "t2",
+      "title": "T2.06 — Solve a Problem Together",
+      "offsetDays": 35,
+      "weekLabel": "T2.06",
+      "objectives": "Collaborative professional problem-solving: diagnose, propose, compare, challenge, prioritise and decide. Output: team recommendation with rationale.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Collaborative professional problem-solving: diagnose, propose, compare, challenge, prioritise and decide. Output: team recommendation with rationale.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-07",
+      "termKey": "t2",
+      "title": "T2.07 — Explain a Product, Process or System",
+      "offsetDays": 42,
+      "weekLabel": "T2.07",
+      "objectives": "Major-tailored ESP session. Explain a technical, software, manufacturing, business, service, market, supply-chain or trade process to a non-specialist.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Major-tailored ESP session. Explain a technical, software, manufacturing, business, service, market, supply-chain or trade process to a non-specialist.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-04",
+        "ueng-06",
+        "ueng-07"
+      ]
+    },
+    {
+      "key": "t2-08",
+      "termKey": "t2",
+      "title": "T2.08 — Precision Matters",
+      "offsetDays": 49,
+      "weekLabel": "T2.08",
+      "objectives": "Instructions, specifications, conditions and risk in engineering or business contexts. Output: give instructions and respond to clarification questions.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Instructions, specifications, conditions and risk in engineering or business contexts. Output: give instructions and respond to clarification questions.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-09",
+      "termKey": "t2",
+      "title": "T2.09 — Give a Data Update",
+      "offsetDays": 56,
+      "weekLabel": "T2.09",
+      "objectives": "Explain current state, change, significance, uncertainty and next action using experiment, software, manufacturing, project, market or KPI data.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Explain current state, change, significance, uncertainty and next action using experiment, software, manufacturing, project, market or KPI data.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-01",
+        "ueng-04",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-10",
+      "termKey": "t2",
+      "title": "T2.10 — Make a Recommendation",
+      "offsetDays": 63,
+      "weekLabel": "T2.10",
+      "objectives": "SCQA/Minto-style communication: Situation → Complication → Question → Answer. Lead with the answer when appropriate. Output: short proposal/recommendation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "SCQA/Minto-style communication: Situation → Complication → Question → Answer. Lead with the answer when appropriate. Output: short proposal/recommendation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-04",
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-11",
+      "termKey": "t2",
+      "title": "T2.11 — Defend Your Recommendation",
+      "offsetDays": 70,
+      "weekLabel": "T2.11",
+      "objectives": "Q&A: answer directly, clarify, defend evidence, acknowledge limitations, correct errors, say 'I don't know' professionally and state what to check next. Output: proposal + challenge panel.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Q&A: answer directly, clarify, defend evidence, acknowledge limitations, correct errors, say 'I don't know' professionally and state what to check next. Output: proposal + challenge panel.",
+      "homework": null,
+      "assessmentKey": "t2-data-recommendation",
+      "standardKeys": [
+        "ueng-02",
+        "ueng-03",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-12",
+      "termKey": "t2",
+      "title": "T2.12 — International Workplace Communication",
+      "offsetDays": 77,
+      "weekLabel": "T2.12",
+      "objectives": "Intercultural pragmatic competence: directness, disagreement, hierarchy, feedback, deadlines, clarification, expectations and avoiding simplistic stereotypes. Output: repair problematic workplace interactions.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Intercultural pragmatic competence: directness, disagreement, hierarchy, feedback, deadlines, clarification, expectations and avoiding simplistic stereotypes. Output: repair problematic workplace interactions.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-06",
+        "ueng-07"
+      ]
+    },
+    {
+      "key": "t2-13",
+      "termKey": "t2",
+      "title": "T2.13 — Professional Networking [FLEX]",
+      "offsetDays": 84,
+      "weekLabel": "T2.13",
+      "objectives": "FLEX. Introductions, conference/recruitment conversation, professional small talk, joining/leaving conversations and useful information exchange. Output: networking simulation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "FLEX. Introductions, conference/recruitment conversation, professional small talk, joining/leaving conversations and useful information exchange. Output: networking simulation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-03",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-14",
+      "termKey": "t2",
+      "title": "T2.14 — Research and Postgraduate Communication",
+      "offsetDays": 91,
+      "weekLabel": "T2.14",
+      "objectives": "Research interests, abstract structure, poster explanation, contacting an academic, discussing a project and answering research questions. Output: research/project poster pitch or research-interest presentation.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Research interests, abstract structure, poster explanation, contacting an academic, discussing a project and answering research questions. Output: research/project poster pitch or research-interest presentation.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-02",
+        "ueng-04",
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-15",
+      "termKey": "t2",
+      "title": "T2.15 — Take Your Local Expertise Global [FLEX]",
+      "offsetDays": 98,
+      "weekLabel": "T2.15",
+      "objectives": "FLEX. Explain something meaningful from JUST, Zhangjiagang, Suzhou/Jiangsu industry, Chinese innovation, trade or the student's discipline to an international audience.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "FLEX. Explain something meaningful from JUST, Zhangjiagang, Suzhou/Jiangsu industry, Chinese innovation, trade or the student's discipline to an international audience.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-04",
+        "ueng-06",
+        "ueng-07"
+      ]
+    },
+    {
+      "key": "t2-16",
+      "termKey": "t2",
+      "title": "T2.16 — Working With AI Without Outsourcing Your Thinking [FLEX]",
+      "offsetDays": 105,
+      "weekLabel": "T2.16",
+      "objectives": "FLEX. Define task/context, use AI where appropriate, inspect output, verify claims, revise for audience/purpose, disclose use where required and retain responsibility. Assessment focuses on judgment and verification.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "FLEX. Define task/context, use AI where appropriate, inspect output, verify claims, revise for audience/purpose, disclose use where required and retain responsibility. Assessment focuses on judgment and verification.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-05",
+        "ueng-06",
+        "ueng-08",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t2-17",
+      "termKey": "t2",
+      "title": "T2.17 — Capstone Studio",
+      "offsetDays": 112,
+      "weekLabel": "T2.17",
+      "objectives": "Teams choose or receive a realistic engineering, software, manufacturing, business, research or trade scenario. Build a multi-mode professional communication response.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Teams choose or receive a realistic engineering, software, manufacturing, business, research or trade scenario. Build a multi-mode professional communication response.",
+      "homework": null,
+      "standardKeys": [
+        "ueng-02",
+        "ueng-03",
+        "ueng-04",
+        "ueng-05",
+        "ueng-06",
+        "ueng-09"
+      ]
+    },
+    {
+      "key": "t2-18",
+      "termKey": "t2",
+      "title": "T2.18 — Professional Communication Showcase",
+      "offsetDays": 119,
+      "weekLabel": "T2.18",
+      "objectives": "Capstone performance including concise writing, evidence/data, spoken presentation, interaction/meeting and Q&A. Students must not simply deliver a memorised speech.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Capstone performance including concise writing, evidence/data, spoken presentation, interaction/meeting and Q&A. Students must not simply deliver a memorised speech.",
+      "homework": null,
+      "assessmentKey": "t2-professional-capstone",
+      "standardKeys": [
+        "ueng-02",
+        "ueng-03",
+        "ueng-04",
+        "ueng-05",
+        "ueng-06"
+      ]
+    },
+    {
+      "key": "t2-19",
+      "termKey": "t2",
+      "title": "T2.19 — Evidence of Growth",
+      "offsetDays": 126,
+      "weekLabel": "T2.19",
+      "objectives": "Final portfolio and transfer session. Compare end-of-year work with baseline; identify strongest improvement, persistent weakness, best evidence, next goal and independent-development strategy.",
+      "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
+      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
+      "activities": "Final portfolio and transfer session. Compare end-of-year work with baseline; identify strongest improvement, persistent weakness, best evidence, next goal and independent-development strategy.",
+      "homework": null,
+      "assessmentKey": "t2-growth-reflection",
+      "standardKeys": [
+        "ueng-09",
+        "ueng-04",
+        "ueng-05"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "key": "pathway-model",
+      "title": "Course pathway model",
+      "type": "note",
+      "notes": "Four task-context pathways: Graduate / Research; Industry / Engineering; Business / International; General Development. These are not separate classes.",
+      "tags": [
+        "general",
+        "model"
+      ],
+      "standardKey": "ueng-09"
+    },
+    {
+      "key": "support-core-stretch",
+      "title": "Support / Core / Stretch differentiation guide",
+      "type": "note",
+      "notes": "Use one shared task with three layers. Support: frames, model language, vocabulary bank, shorter source, preparation time, notes. Core: expected university task. Stretch: less scaffolding, extra source, counterargument, spontaneous Q&A, more technical/professional audience, tighter time.",
+      "tags": [
+        "support",
+        "core",
+        "stretch",
+        "model"
+      ],
+      "standardKey": "ueng-09"
+    },
+    {
+      "key": "ai-principles",
+      "title": "Responsible AI principles",
+      "type": "note",
+      "notes": "AI may assist. AI output must be checked. The student remains responsible. When appropriate preserve original attempt, AI-assisted version, verification and final human revision.",
+      "tags": [
+        "AI-literacy",
+        "model"
+      ],
+      "standardKey": "ueng-08"
+    },
+    {
+      "key": "cet-transfer",
+      "title": "CET-transfer boundary",
+      "type": "note",
+      "notes": "This is not a CET preparation curriculum. Reading efficiency, vocabulary in context, listening, summarising, writing and argumentation may transfer naturally; optional exam-oriented practice must not consume the main course.",
+      "tags": [
+        "CET-transfer",
+        "general"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "poa-spine",
+      "title": "90-minute production-oriented lesson spine",
+      "type": "note",
+      "notes": "Approximate sequence: 0–10 retrieval/warm-up; 10–20 output challenge; 20–40 targeted input/modelling/noticing; 40–60 guided practice/rehearsal; 60–75 main production; 75–85 feedback; 85–90 improved attempt/exit ticket.",
+      "tags": [
+        "model",
+        "T1",
+        "T2"
+      ],
+      "standardKey": "ueng-09"
+    }
+  ],
+  "studentFields": [
+    {
+      "id": "major",
+      "label": "Major"
+    },
+    {
+      "id": "year",
+      "label": "Year"
+    },
+    {
+      "id": "primary-english-goal",
+      "label": "Primary English Goal"
+    },
+    {
+      "id": "pathway",
+      "label": "Pathway"
+    },
+    {
+      "id": "cet4-status",
+      "label": "CET4 status if relevant"
+    },
+    {
+      "id": "cet6-status",
+      "label": "CET6 status if relevant"
+    },
+    {
+      "id": "baseline-communication-level",
+      "label": "Baseline communication level"
+    },
+    {
+      "id": "speaking-confidence",
+      "label": "Speaking confidence"
+    },
+    {
+      "id": "target-for-year",
+      "label": "Target for the year"
+    }
+  ]
+}
