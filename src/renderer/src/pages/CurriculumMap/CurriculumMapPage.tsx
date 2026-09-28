@@ -58,7 +58,7 @@ export function CurriculumMapPage(): React.JSX.Element {
           ) : (
             <div className="space-y-5">
               {curriculum.classes.map((section) => {
-                const complete = section.lessons.filter((lesson) => lesson.status === 'completed').length
+                const complete = section.lessons.filter((lesson) => lesson.status === 'taught').length
                 return (
                   <Card key={section.classId}>
                     <CardHeader>
