@@ -151,6 +151,11 @@ export const APP_ERROR_CODES = {
       'EduBoard refused to open a handed-in file because it isn’t what its name says, or isn’t a type it opens safely.',
     fix: 'Ask the student to save the work as PDF, Word, an image or plain text and hand it in again.'
   },
+  'EB-2007': {
+    area: 'Files',
+    meaning: 'A Course Pack could not be read or contains conflicting curriculum data.',
+    fix: 'Use an EduBoard Course Pack v1 file and review the import message for the specific conflict.'
+  },
 
   // --- Updates ------------------------------------------------------------------------------
   'EB-3001': {
