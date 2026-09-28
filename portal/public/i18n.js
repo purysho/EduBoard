@@ -161,6 +161,21 @@ const ZH = {
   'Quick check — {correct}/{total} correct': '随堂小测：答对 {correct}/{total}',
   'Submit answers': '提交答案',
   Late: '迟交',
+  Calendar: '日历',
+  'Add homework due dates to your phone or computer calendar. It keeps itself up to date, and ticks off work once it’s handed in.':
+    '把作业截止日期添加到手机或电脑的日历中。日历会自动更新，作业提交后会打勾。',
+  'Your calendar link': '你的日历链接',
+  'Copy link': '复制链接',
+  'Open in calendar app': '在日历应用中打开',
+  'In Google Calendar: Other calendars → + → From URL, and paste the link. On iPhone it opens the Calendar app. Anyone with this link can see the homework list, so only share it with family.':
+    '在 Google 日历中：其他日历 → + → 通过网址添加，然后粘贴链接。在 iPhone 上会打开“日历”应用。任何拿到此链接的人都能看到作业列表，请只分享给家人。',
+  'Your calendar link is on.': '你的日历链接已开启。',
+  'Make a new link': '生成新链接',
+  'Turn off': '关闭',
+  'A new link stops the old one working, e.g. if it was shared by mistake.':
+    '生成新链接后，旧链接将失效（例如不小心分享出去时）。',
+  'Get calendar link': '获取日历链接',
+  Copied: '已复制',
   Excused: '免评',
   'Class average': '班级平均',
   'Class average {percent}': '班级平均 {percent}',

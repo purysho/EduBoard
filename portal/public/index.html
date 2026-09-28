@@ -2244,6 +2244,11 @@ function renderDashboard(me) {
          </form>
          <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
        </div>
+       <div class="section-title">${t('Calendar')}</div>
+       <div class="card">
+         <p class="muted" style="margin:0 0 8px">${t('Add homework due dates to your phone or computer calendar. It keeps itself up to date, and ticks off work once it’s handed in.')}</p>
+         <div id="calendar-box"></div>
+       </div>
        <div class="section-title">${t('Your data')}</div>
        <div class="card">
          <p class="muted" style="margin:0 0 8px">${t('Download a copy of everything this Portal holds about you and your children: profile, classes and grades, handed-in work, answers, messages and Study Helper questions.')}</p>
@@ -2421,6 +2426,55 @@ function renderDashboard(me) {
       <a class="linklike" href="${qrDataUrl}" download="eduboard-login.png">${t('Download')}</a>
     `
   }
+  // The private calendar link is shown once, when made (the Portal keeps only its hash).
+  const calendarBox = document.getElementById('calendar-box')
+  const drawCalendar = (on, url) => {
+    calendarBox.innerHTML = url
+      ? `<label for="cal-url">${t('Your calendar link')}</label>
+         <input id="cal-url" readonly value="${esc(url)}" />
+         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+           <button type="button" class="chip" id="cal-copy">${t('Copy link')}</button>
+           <button type="button" class="chip" id="cal-open">${t('Open in calendar app')}</button>
+         </div>
+         <p class="field-note" style="margin:8px 0 0">${t('In Google Calendar: Other calendars → + → From URL, and paste the link. On iPhone it opens the Calendar app. Anyone with this link can see the homework list, so only share it with family.')}</p>`
+      : on
+        ? `<p style="margin:0 0 8px">${t('Your calendar link is on.')}</p>
+           <div style="display:flex; gap:8px; flex-wrap:wrap">
+             <button type="button" class="chip" id="cal-make">${t('Make a new link')}</button>
+             <button type="button" class="chip" id="cal-off">${t('Turn off')}</button>
+           </div>
+           <p class="field-note" style="margin:8px 0 0">${t('A new link stops the old one working, e.g. if it was shared by mistake.')}</p>`
+        : `<button type="button" class="chip" id="cal-make">${t('Get calendar link')}</button>`
+    const make = document.getElementById('cal-make')
+    if (make) make.onclick = async () => {
+      try {
+        const { url: made } = await api('/me/calendar', { method: 'POST', body: { lang: UI_LANG } })
+        drawCalendar(true, made)
+      } catch (ex) {
+        calendarBox.insertAdjacentHTML('beforeend', `<p class="error">${esc(ex.message)}</p>`)
+      }
+    }
+    const off = document.getElementById('cal-off')
+    if (off) off.onclick = async () => {
+      await api('/me/calendar', { method: 'DELETE' })
+      drawCalendar(false)
+    }
+    const open = document.getElementById('cal-open')
+    if (open) open.onclick = () => (location.href = url.replace(/^https?:/, 'webcal:'))
+    const copy = document.getElementById('cal-copy')
+    if (copy) copy.onclick = async () => {
+      const input = document.getElementById('cal-url')
+      try {
+        await navigator.clipboard.writeText(input.value)
+      } catch {
+        input.select()
+        document.execCommand('copy')
+      }
+      copy.textContent = t('Copied')
+    }
+  }
+  drawCalendar(!!me.calendarOn)
+
   document.getElementById('replay-tour').onclick = () =>
     startTour({ name: me.students[0]?.studentName.split(' ')[0], record: false })
 

@@ -40,6 +40,7 @@ router.use(requireAuth)
 // others out or attach their own email or QR login to it (services/demo.js).
 const { isDemoAccount } = require('../services/demo')
 const { consentNeeded, recordConsent } = require('../services/consent')
+const { newCalendarToken, turnOffCalendar, calendarOn } = require('../services/calendar')
 const demoRefusal = (res) =>
   res.status(403).json({ error: 'The demo account can’t be changed.', code: 'PT-1009' })
 router.use('/report-cards', require('./reportCards').family)
@@ -136,7 +137,12 @@ router.get('/', (req, res) => {
   // Terms and privacy not yet agreed to (services/consent.js): the page asks first.
   const consentRequiredNow = consentNeeded(req.accountId)
   if (!studentIds.length) {
-    return res.json({ students: [], onboarded, consentNeeded: consentRequiredNow })
+    return res.json({
+      students: [],
+      onboarded,
+      consentNeeded: consentRequiredNow,
+      calendarOn: calendarOn(req.accountId)
+    })
   }
 
   const now = new Date()
@@ -245,7 +251,12 @@ router.get('/', (req, res) => {
     }
   })
 
-  res.json({ students, onboarded, consentNeeded: consentRequiredNow })
+  res.json({
+    students,
+    onboarded,
+    consentNeeded: consentRequiredNow,
+    calendarOn: calendarOn(req.accountId)
+  })
 })
 
 // Gated on the requesting account actually having a linked student enrolled in this
@@ -1013,6 +1024,21 @@ function assessmentsFor(studentId, classId) {
       rubric: r.rubric ? JSON.parse(r.rubric) : null
     }))
 }
+
+// The private calendar link: shown once when made (only its hash is kept), so "Make a new
+// link" is also how a lost one is replaced. The language is fixed into the link.
+router.post('/calendar', (req, res) => {
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
+  const token = newCalendarToken(req.accountId)
+  const lang = req.body?.lang === 'zh' ? 'zh' : 'en'
+  res.json({ url: `${req.protocol}://${req.get('host')}/calendar/${token}.ics?lang=${lang}` })
+})
+
+router.delete('/calendar', (req, res) => {
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
+  turnOffCalendar(req.accountId)
+  res.json({ ok: true })
+})
 
 // Agreeing to the terms of use and privacy notice, once per version.
 router.post('/consent', (req, res) => {

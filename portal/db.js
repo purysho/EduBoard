@@ -378,6 +378,9 @@ ensureColumn('accounts', 'consent_at', 'consent_at TEXT')
 ensureColumn('accounts', 'consent_role', 'consent_role TEXT')
 ensureColumn('accounts', 'consent_name', 'consent_name TEXT')
 ensureColumn('accounts', 'consent_version', 'consent_version TEXT')
+// The private calendar link (services/calendar.js): only its hash, like other tokens.
+ensureColumn('accounts', 'calendar_token_hash', 'calendar_token_hash TEXT')
+db.exec('CREATE INDEX IF NOT EXISTS accounts_calendar_idx ON accounts(calendar_token_hash)')
 
 // Reply slips (回执) on Class Story posts: a post can ask families to confirm they've read
 // it ('ack') or answer a yes / no question ('yesno'). One reply per student, which the

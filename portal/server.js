@@ -96,6 +96,19 @@ app.use('/api/usage', require('./routes/usage').router)
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
+// A family's private calendar link (services/calendar.js). The secret in the address is
+// the only key, as with other calendar feeds; the Account page can replace or turn it off.
+const calendar = require('./services/calendar')
+app.get('/calendar/:token.ics', (req, res) => {
+  const accountId = calendar.accountForCalendarToken(req.params.token)
+  if (!accountId) return res.status(404).type('text/plain').send('Not found')
+  const portalUrl = `${req.protocol}://${req.get('host')}/`
+  res
+    .set({ 'Cache-Control': 'private, no-cache', 'X-Robots-Tag': 'noindex' })
+    .type('text/calendar; charset=utf-8')
+    .send(calendar.buildCalendar(accountId, req.query.lang === 'zh' ? 'zh' : 'en', portalUrl))
+})
+
 // The public demo login, for the homepage's "try it" box (services/demo.js).
 const demo = require('./services/demo')
 app.get('/api/demo', (_req, res) =>
