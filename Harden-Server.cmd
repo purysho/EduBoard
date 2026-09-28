@@ -40,7 +40,7 @@ echo   Connecting to root@%HOST% ...
 echo   If asked for a password, type the server's root password (from VPS.do).
 echo   Nothing appears while you type it; that's normal. Then press Enter.
 echo.
-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "S=/opt/eduboard/portal/scripts/update-server.sh; if [ -f $S ]; then cp $S /tmp/eb-update.sh; else curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh -o /tmp/eb-update.sh; fi && EDUBOARD_BRANCH=main bash /tmp/eb-update.sh && EB_SSH_KEY='%KEY%' bash /opt/eduboard/portal/scripts/harden-server.sh"
+ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "S=/opt/eduboard/portal/scripts/update-server.sh; if curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh -o /tmp/eb-update.sh; then :; elif [ -f $S ]; then cp $S /tmp/eb-update.sh; else exit 1; fi && EDUBOARD_BRANCH=main bash /tmp/eb-update.sh && EB_SSH_KEY='%KEY%' bash /opt/eduboard/portal/scripts/harden-server.sh"
 if errorlevel 1 goto :failed
 
 echo.
