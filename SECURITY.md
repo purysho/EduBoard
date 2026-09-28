@@ -45,7 +45,12 @@ EduBoard has two parts:
 - **The Portal** (`portal/`) is a Node/Express server where students and families sign
   in. It holds what teachers publish and what families add, behind bcrypt passwords,
   signed session cookies, per-family access checks on every request, rate limits and
-  upload content checks.
+  upload content checks. `portal/scripts/harden-server.sh` sets up the server around it
+  (firewall, fail2ban, automatic security updates, the service as its own sandboxed user,
+  optional key-only SSH).
+
+The shipped packages of both parts are checked with `npm audit` on every push and every
+week (`.github/workflows/dependency-check.yml`), and Dependabot proposes updates.
 
 The issues most worth reporting:
 

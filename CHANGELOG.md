@@ -12,7 +12,15 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 - **Terms of use** at edu-board.com/terms (English and Chinese), linked from the homepage, the privacy pages and the Portal's login and Account pages.
 - **A record of agreeing to the terms on the Portal.** The first time a family signs in, a parent or guardian agrees by name (or a student aged 14 or over agrees themselves) before seeing anything; the Portal records who, when and which version (PT-1010 if the name is missing). The admin page shows how many logins have agreed and downloads the records as **Consent records (CSV)** for the school's files. A school that collects consent on paper can turn the question off with `PORTAL_CONSENT=off`.
 - **Download my data** (Portal → Account → Your data): a family gets a copy of everything the Portal holds about them and their children as one file: profile, classes and grades, handed-in work, answers, report cards, notice replies, messages and Study Helper questions.
+- **Harden-Server.cmd** locks down the Portal server in one go: a firewall (only the website and SSH), blocking of addresses that keep failing to sign in, automatic security updates (restarting at 04:00 China time when one needs it), and the Portal running as its own restricted user instead of root. It also gives the computer a key to sign in with and, once that's proven to work, offers to turn off password sign-in. The steps are in `portal/scripts/harden-server.sh`.
+- **Automatic dependency checks**: every push and every Monday, GitHub checks the packages the app and the Portal ship with for known security problems, and Dependabot proposes updates once a month.
 - **Security overview** at edu-board.com/security (English and Chinese, printable): how the app and the Portal protect student data, how portal.edu-board.com is run, and what isn't done yet, for a school's IT or data protection review. Linked from the homepage ("For your IT and data protection review"), the privacy pages and Settings → Help and updates. The Portal also answers `/.well-known/security.txt`.
+
+### Security
+
+- **Electron 44** (from 39, which no longer gets security fixes): the app runs on a supported, patched Chromium again.
+- **Portal:** nodemailer 10 (fixes for email header and SMTP command injection in the weekly digest's mail sending) and sharp 0.35.5 (image library fixes for profile photos). The Portal now needs Node.js 20.9 or newer; the updater says so before changing anything.
+- **App:** drizzle-orm 0.45.3 (SQL identifier escaping), and newer uuid and image-size inside the spreadsheet and slide exporters.
 
 ### Fixed
 

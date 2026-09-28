@@ -88,6 +88,17 @@ The server keeps the token (readable by root only), so later updates are just
 download instead. If it stops with an error, nothing after that step was changed and the backup
 in `/root/` has the data as it was.
 
+#### Locking down the server (Harden-Server.cmd)
+
+Double-click **Harden-Server.cmd** once. It updates the Portal, then turns on a firewall,
+blocking of repeated failed sign-ins, automatic security updates, and runs the Portal as
+its own restricted user. It also gives this computer a key, so it isn't asked for the root
+password again. At the end it asks whether to turn off password sign-in completely; say
+**Y** unless you often use other computers. If you later need another computer (or lose
+this one), open VPS.do's web console (VNC), sign in as root and type
+`bash /opt/eduboard/portal/scripts/harden-server.sh allow-passwords`; the password works
+again, and you can run Harden-Server.cmd on the new computer.
+
 ### On your own computer, before it goes live (Start-Test-Portal.cmd)
 
 This runs a private copy of the Portal on your own PC. Only your PC can open it.

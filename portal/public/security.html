@@ -181,6 +181,18 @@
         <ul>
           <li>A server in Hong Kong (VPS.do). Only the Provider can sign in to it.</li>
           <li>
+            A firewall lets in only the website and the Provider's sign-in; addresses that keep
+            failing to sign in are blocked. Security updates install automatically.
+          </li>
+          <li>
+            The Portal runs as its own restricted user, which can change only its own data folder,
+            not the rest of the server.
+          </li>
+          <li>
+            The packages EduBoard is built on are checked for known security problems on every
+            change and every week, and updated when a fix is published.
+          </li>
+          <li>
             Updates are applied with a script that backs up the data first. Backups are kept on the
             same server; the oldest is deleted once there are 14.
           </li>
@@ -359,6 +371,13 @@
         <h2>3. portal.edu-board.com 的运维</h2>
         <ul>
           <li>服务器位于香港（VPS.do），只有服务方可以登录。</li>
+          <li>
+            防火墙只放行网站访问和服务方的登录；多次登录失败的地址会被封锁。安全更新自动安装。
+          </li>
+          <li>
+            学生门户以单独的受限用户运行，只能修改自己的数据文件夹，不能改动服务器的其他部分。
+          </li>
+          <li>EduBoard 所用的软件包在每次修改和每周都会检查已知安全问题，并在修复发布后更新。</li>
           <li>
             通过先备份数据的脚本进行更新。备份保存在同一台服务器上，超过 14 份时删除最旧的一份。
           </li>

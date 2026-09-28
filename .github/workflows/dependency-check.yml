@@ -1,0 +1,39 @@
+name: Dependency check
+
+# Fails when a package the desktop app or the Portal ships with has a known high or
+# critical security problem (npm audit; build and test tools aren't counted). Runs on every
+# push and every Monday, because new problems are found in packages that haven't changed.
+# Separate from Tests, so a newly published problem doesn't hide whether the code works.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '17 1 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: npm audit (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: desktop app
+            dir: .
+          - name: Portal
+            dir: portal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Reads package-lock.json only; nothing is installed or run.
+      - name: Known security problems in shipped packages
+        working-directory: ${{ matrix.dir }}
+        run: npm audit --omit=dev --audit-level=high

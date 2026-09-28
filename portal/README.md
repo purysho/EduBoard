@@ -127,6 +127,27 @@ sets `HOMEPAGE_HOSTS` and `PORTAL_HOST`, adds the domain to the Caddyfile (keepi
 `.bak` copy, and putting it back if Caddy rejects the change), and checks the result. On
 Windows, `Set-Up-Homepage.cmd` does all of this for edu-board.com.
 
+### Locking down the server
+
+`portal/scripts/harden-server.sh` (Debian or Ubuntu, as root) sets up the basics a school's
+IT review will ask about, and is safe to run again:
+
+- **Firewall** (ufw): only SSH, 80 and 443 are reachable; the Portal's own port is reached
+  only through Caddy.
+- **fail2ban**: 5 failed SSH sign-ins in 10 minutes blocks the address for an hour.
+- **Automatic security updates** (unattended-upgrades). When an update needs a restart,
+  the server restarts at 04:00 school time (`EB_SCHOOL_TZ`, default `Asia/Shanghai`).
+- **The Portal as its own user**: a systemd drop-in runs the `eduboard-portal` service as
+  user `eduboard`, able to write only to its data folder (`ProtectSystem=strict`). If the
+  Portal doesn't come back up like that, the change is undone.
+- `harden-server.sh lock-ssh` turns off SSH password sign-in (keys only). It refuses unless
+  root already has a key. `harden-server.sh allow-passwords` undoes it, e.g. from VPS.do's
+  web console after losing the computer with the key.
+
+On Windows, `Harden-Server.cmd` does it all: it updates the Portal, makes an SSH key for
+the computer (if it has none) and installs it on the server, then checks that the key
+works before offering to turn off password sign-in.
+
 ## Multiple teachers on one Portal (a school deployment)
 
 One Portal can serve several teachers — each gets their own sync secret and only ever
