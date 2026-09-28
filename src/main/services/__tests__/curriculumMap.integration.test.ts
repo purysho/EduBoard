@@ -76,7 +76,8 @@ describe('curriculum map', () => {
       tags: ['model'],
       standardId: standard.id,
       classId: null,
-      shareWithStudents: false
+      shareWithStudents: false,
+      studyGuide: null
     })
     createLessonResource({
       title: 'Unrelated source',
@@ -87,7 +88,8 @@ describe('curriculum map', () => {
       tags: [],
       standardId: null,
       classId: null,
-      shareWithStudents: false
+      shareWithStudents: false,
+      studyGuide: null
     })
     createLessonPlan({
       classId: cls.id,
