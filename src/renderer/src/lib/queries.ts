@@ -70,6 +70,7 @@ export const queryKeys = {
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
+  competencyMatrix: (classId: string) => ['competencies', classId] as const,
   competencyMatrix: (classId: string) => ['classes', classId, 'competencies'] as const,
   allScheduleSlots: ['scheduleSlots'] as const,
   homeworkAssignments: (classId: string) => ['classes', classId, 'homework'] as const,
@@ -401,6 +402,7 @@ export function useDeleteAssessment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.assessments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
     }
   })
@@ -824,6 +826,16 @@ export function useBackupPreview(filePath: string | null) {
     queryKey: [...queryKeys.backups, 'preview', filePath],
     queryFn: () => api().backup.preview(filePath as string),
     enabled: !!filePath
+  })
+}
+
+// ---- Competencies -----------------------------------------------------------------------
+
+export function useCompetencyMatrix(classId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.competencyMatrix(classId ?? ''),
+    queryFn: () => api().competencies.matrix(classId!),
+    enabled: !!classId
   })
 }
 
