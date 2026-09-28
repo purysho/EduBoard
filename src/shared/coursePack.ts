@@ -64,6 +64,7 @@ export interface CoursePackLessonTemplate {
   homework?: string | null
   assessmentKey?: string | null
   standardKeys?: string[]
+  resourceKeys?: string[]
 }
 
 export interface CoursePackResourceTemplate {
@@ -330,6 +331,7 @@ export function parseCoursePack(json: string): CoursePack {
     }
   )
   uniqueKeys(resources, 'resource')
+  const resourceKeys = new Set(resources.map((resource) => resource.key.toLowerCase()))
 
   const studentFields = array(raw.studentFields, 'studentFields').map(
     (item, index): CoursePackStudentField => {
@@ -361,6 +363,16 @@ export function parseCoursePack(json: string): CoursePack {
         return out
       }
     )
+    const resourceKeysForLesson = array(
+      x?.resourceKeys,
+      `lessons[${index}].resourceKeys`
+    ).map((v, ri) => {
+      const out = key(v, `lessons[${index}].resourceKeys[${ri}]`)
+      if (!resourceKeys.has(out.toLowerCase())) {
+        throw new Error(`Invalid course pack: unknown resource key ${out}`)
+      }
+      return out
+    })
     const assessmentKey =
       x?.assessmentKey === undefined || x?.assessmentKey === null
         ? null
@@ -380,7 +392,8 @@ export function parseCoursePack(json: string): CoursePack {
       activities: optionalString(x?.activities, `lessons[${index}].activities`),
       homework: optionalString(x?.homework, `lessons[${index}].homework`),
       assessmentKey,
-      standardKeys: standardKeysForLesson
+      standardKeys: standardKeysForLesson,
+      resourceKeys: resourceKeysForLesson
     }
   })
   uniqueKeys(lessons, 'lesson')
