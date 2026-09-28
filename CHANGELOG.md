@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-09-28
+
+**If you run a Portal, update it** (Update-Live-Portal): sending report cards, reply slips on notices and the privacy pages need the updated Portal. Score import and the student timeline work without it.
+
 ### Added
 
 - **A timeline on every student's page**: everything recorded about the student, newest first, across all their classes, grouped by month. Absences and lateness (with the note), scores (points, maximum and percent), class points (a line a day, by category), log notes and parent contacts (and follow-ups still needed), homework handed in with its grade, report card comments, joining a class, and Portal messages with the family when the Portal is connected. Chips show or hide each kind; with several classes, a menu shows one class.
