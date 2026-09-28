@@ -540,5 +540,21 @@ export const SETTINGS: Record<string, string> = {
   'Set by your school': '由学校设置',
   'App name: {name}': '应用名称：{name}',
   'Add your first student, or import your class list from a spreadsheet below.':
-    '添加第一位学生，或在下方从表格导入班级名单。'
+    '添加第一位学生，或在下方从表格导入班级名单。',
+  Competencies: '能力证据',
+  'No active classes': '没有进行中的班级',
+  'Add a class before viewing competency evidence.': '请先添加班级，再查看能力证据。',
+  'Competency evidence': '能力证据',
+  'Derived from rubric grading already in EduBoard. Nothing is averaged into a hidden mastery score: each cell shows the newest assessment or homework evidence for that standard.':
+    '这些结果直接来自 EduBoard 中已有的评分量规记录。系统不会把证据平均成隐藏的“掌握度分数”；每个单元格显示该标准最新的测评或作业证据。',
+  'No competency evidence yet': '还没有能力证据',
+  'Link rubric criteria to standards, use those rubrics on assessments or homework, and grade at least one student.':
+    '请先把评分量规的指标关联到标准，在测评或作业中使用这些量规，并至少为一名学生完成评分。',
+  '{type}: {name}': '{type}：{name}',
+  'Updated {date}': '更新于 {date}',
+  '{n} rubric criterion linked to this standard': '有 {n} 个评分指标关联到该标准',
+  '{n} rubric criteria linked to this standard': '有 {n} 个评分指标关联到该标准',
+  'No rubric evidence for this student and standard yet.': '该学生在此标准下还没有评分量规证据。',
+  'Mixed evidence': '证据不一致'
+
 }
