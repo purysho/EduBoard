@@ -15,7 +15,7 @@ import { listRubrics } from '../rubrics'
 import { listAssessmentsByClass } from '../assessments'
 import { listHomeworkAssignmentsByClass } from '../homeworkAssignments'
 import { linkLessonResource, listLessonPlansByClass, listLessonResourceIds } from '../lessonPlans'
-import { listLessonResources } from '../lessonResources'
+import { createLessonResource, listLessonResources } from '../lessonResources'
 import { getSettings, updateSettings } from '../settingsRepo'
 import { installCoursePack } from '../coursePacks'
 
@@ -264,10 +264,22 @@ describe('Course Packs', () => {
 
     // A local teacher link survives Course Pack re-import; the pack only adds its own
     // missing links and never replaces the lesson's whole resource set.
-    const local = listLessonResources()[0]
+    const packResource = listLessonResources().find((item) => item.title === 'Model explanation')!
+    const local = createLessonResource({
+      title: 'Teacher local note',
+      type: 'note',
+      url: null,
+      filePath: null,
+      notes: 'Added after the pack import.',
+      tags: ['local'],
+      standardId: null,
+      classId: cls.id,
+      shareWithStudents: false,
+      studyGuide: null
+    })
     linkLessonResource(lesson.id, local.id)
     installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
-    expect(listLessonResourceIds(lesson.id)).toEqual([local.id])
+    expect(new Set(listLessonResourceIds(lesson.id))).toEqual(new Set([packResource.id, local.id]))
   })
 
   it('rolls the whole install back if materialisation fails', () => {
