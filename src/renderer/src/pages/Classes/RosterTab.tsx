@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useClassRoster, useUnenrollStudent } from '@renderer/lib/queries'
 import { formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 import { EnrollStudentModal } from './EnrollStudentModal'
+import { ImportPanel } from '../Settings/ImportPanel'
 import { tr } from '@shared/i18n'
 
 export function RosterTab(): React.JSX.Element {
@@ -35,7 +36,9 @@ export function RosterTab(): React.JSX.Element {
         <EmptyState
           icon={Users}
           title={tr('No students enrolled yet')}
-          description={tr('Enroll existing students or add new ones to this class.')}
+          description={tr(
+            'Add students one by one, or import your class list from a spreadsheet below.'
+          )}
           action={
             <Button variant="primary" onClick={() => setShowEnroll(true)}>
               <UserPlus size={15} className="mr-1 inline" aria-hidden />
@@ -43,7 +46,15 @@ export function RosterTab(): React.JSX.Element {
             </Button>
           }
         />
-      ) : (
+      ) : null}
+      {/* A class list usually already exists in a spreadsheet: import it straight into
+          this class. */}
+      {!isLoading && !roster?.length && (
+        <div className="mt-4">
+          <ImportPanel fixedClassId={classSection.id} />
+        </div>
+      )}
+      {isLoading || !roster?.length ? null : (
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)]">
           <table className="w-full text-sm">
             <thead className="bg-[var(--color-surface-muted)] text-left text-xs uppercase text-[var(--color-text-muted)]">

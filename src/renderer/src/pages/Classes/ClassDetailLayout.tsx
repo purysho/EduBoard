@@ -66,8 +66,9 @@ export function ClassDetailLayout(): React.JSX.Element {
         </div>
       </div>
 
-      {/* Scrolls sideways on its own when the window is narrow, instead of widening the page. */}
-      <div className="mb-6 flex gap-1 overflow-x-auto border-b border-[var(--color-border)] [scrollbar-width:thin]">
+      {/* Wraps onto a second row when the window is narrow, so every tab stays in sight
+          (scrolling sideways hid the last few, where nobody found them). */}
+      <div className="mb-6 flex flex-wrap gap-x-1 border-b border-[var(--color-border)]">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}

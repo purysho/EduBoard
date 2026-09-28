@@ -17,7 +17,7 @@ import { tr } from '@shared/i18n'
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-sm'
-const DRAFT_KEY = 'eduboard.newsletterDraft'
+const OLD_DRAFT_KEY = 'eduboard.newsletterDraft'
 
 /** Sunday at the end of this week, when a newsletter added to the digest drops out. */
 function endOfWeek(): string {
@@ -50,23 +50,41 @@ export function NewsletterPage(): React.JSX.Element {
   })
   const [dropped, setDropped] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
-  const [draft, setDraft] = useState(() => {
-    try {
-      return localStorage.getItem(DRAFT_KEY) ?? ''
-    } catch {
-      return ''
+  // The draft is kept in the database with the rest of this school's data, so it stays
+  // with the right school (the sample school is separate) and is protected by the password.
+  const [draft, setDraftText] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      let saved = await window.api.newsletter.savedDraft()
+      // Older versions kept the draft in the window's own storage, which the sample school
+      // shared: move it into the teacher's own data (never the sample school's), once.
+      try {
+        const old = localStorage.getItem(OLD_DRAFT_KEY)
+        if (old !== null && !(await window.api.sampleSchool.status())) {
+          if (old && !saved) {
+            saved = old
+            await window.api.newsletter.saveDraft(old)
+          }
+          localStorage.removeItem(OLD_DRAFT_KEY)
+        }
+      } catch {
+        // Nothing to move.
+      }
+      if (!cancelled) setDraftText(saved)
+    })()
+    return () => {
+      cancelled = true
     }
-  })
+  }, [])
+  function setDraft(text: string): void {
+    setDraftText(text)
+    window.api.newsletter.saveDraft(text).catch(() => {
+      // A draft that isn't kept is only an inconvenience.
+    })
+  }
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(DRAFT_KEY, draft)
-    } catch {
-      // A draft that isn't kept is only an inconvenience.
-    }
-  }, [draft])
 
   const choice: NewsletterSourceChoice = { classIds: chosenClasses, ...include }
   const { data: facts, isFetching } = useQuery({

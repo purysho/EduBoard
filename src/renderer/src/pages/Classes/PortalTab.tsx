@@ -12,10 +12,12 @@ import {
   usePortalInviteBatches,
   usePublishStatus,
   usePublishToPortal,
-  useRevokePortalInvite
+  useRevokePortalInvite,
+  useSettings
 } from '@renderer/lib/queries'
 import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
 import { PublishSummary } from '@renderer/components/portal/PublishSummary'
+import { PortalNeeded } from '@renderer/components/PortalNeeded'
 import { JoinLinksCard } from './JoinLinksCard'
 import { tr } from '@shared/i18n'
 
@@ -27,6 +29,8 @@ export function PortalTab(): React.JSX.Element {
   const { data: publishStatus } = usePublishStatus()
   const qc = useQueryClient()
   const [printing, setPrinting] = useState<string | null>(null)
+  const { data: settings } = useSettings()
+  const connected = !!settings?.portalUrl.trim() && !!settings?.portalSyncSecret.trim()
 
   async function handlePrint(batchId: string): Promise<void> {
     setPrinting(batchId)
@@ -43,7 +47,16 @@ export function PortalTab(): React.JSX.Element {
     }
   }
 
-  if (isLoading) return <Spinner />
+  if (isLoading || !settings) return <Spinner />
+  if (!connected) {
+    return (
+      <PortalNeeded
+        what={tr(
+          'Students and families sign in to see homework, grades and your messages. This tab gives them their join links.'
+        )}
+      />
+    )
+  }
 
   return (
     <div>

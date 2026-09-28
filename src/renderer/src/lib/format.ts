@@ -78,6 +78,12 @@ export function todayIso(): string {
  * <ErrorClass>: <message>" — every error thrown in a main-process handler picks up that
  * prefix, so a message meant for a teacher (like "add an API key in Settings") arrives
  * wrapped in implementation detail. Strips it back down to the original message. */
+/** The error a Portal feature gives before a Portal is connected (EB-1001). That's the
+ * normal state for a new teacher, not a fault, so it gets an explanation, not red text. */
+export function isPortalNotConnected(error: unknown): boolean {
+  return error instanceof Error && error.message.includes('EB-1001')
+}
+
 export function ipcErrorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback
   const match = error.message.match(/Error invoking remote method '[^']*': (?:\w*Error: )?(.*)/s)

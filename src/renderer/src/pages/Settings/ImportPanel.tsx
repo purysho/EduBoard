@@ -8,10 +8,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { RosterImportResult } from '@shared/importExportTypes'
 import { tr } from '@shared/i18n'
 
-export function ImportPanel(): React.JSX.Element {
+/** Roster import from a spreadsheet. With `fixedClassId` (a class's own roster), the
+ * students go straight into that class and there's no class to choose. */
+export function ImportPanel({ fixedClassId }: { fixedClassId?: string } = {}): React.JSX.Element {
   const { data: classes } = useClasses()
   const queryClient = useQueryClient()
-  const [classId, setClassId] = useState('')
+  const [chosenClassId, setClassId] = useState('')
+  const classId = fixedClassId ?? chosenClassId
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<RosterImportResult | null>(null)
 
@@ -45,19 +48,21 @@ export function ImportPanel(): React.JSX.Element {
             'Import students from a .xlsx or .csv file with “First Name” and “Last Name” columns, or one “Name” (姓名) column. Student number, grade level, email and guardian details are picked up too if present, including Chinese headings such as 学号 and 家长电话.'
           )}
         </p>
-        <FormRow
-          label={tr('Also enroll into')}
-          hint={tr('Optional — leave blank to just add to your student directory')}
-        >
-          <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
-            <option value="">{tr("Don't enroll")}</option>
-            {(classes ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        </FormRow>
+        {!fixedClassId && (
+          <FormRow
+            label={tr('Also enroll into')}
+            hint={tr('Optional — leave blank to just add to your student directory')}
+          >
+            <Select value={classId} onChange={(e) => setClassId(e.target.value)}>
+              <option value="">{tr("Don't enroll")}</option>
+              {(classes ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </FormRow>
+        )}
         <Button variant="primary" onClick={handleImport} disabled={importing}>
           <Upload size={15} className="mr-1 inline" aria-hidden />
           {importing ? tr('Importing…') : tr('Choose file & import')}

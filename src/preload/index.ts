@@ -404,7 +404,9 @@ const api: EduBoardApi = {
   },
   newsletter: {
     facts: (choice) => invoke(IpcChannels.newsletter.facts, choice),
-    draft: (input) => invoke(IpcChannels.newsletter.draft, input)
+    draft: (input) => invoke(IpcChannels.newsletter.draft, input),
+    savedDraft: () => invoke(IpcChannels.newsletter.savedDraft),
+    saveDraft: (text) => invoke(IpcChannels.newsletter.saveDraft, text)
   }
 }
 

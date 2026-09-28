@@ -587,6 +587,10 @@ export interface EduBoardApi {
       facts: NewsletterFact[]
       notes: string
     }): Promise<string>
+    /** The newsletter being written, kept with this school's data (so the sample school
+     * and password protection keep it apart like everything else). */
+    savedDraft(): Promise<string>
+    saveDraft(text: string): Promise<void>
   }
   portalAccounts: {
     /** Sets a new password on a student/family Portal account and signs out all of its

@@ -12,6 +12,7 @@ import { useStudents } from '@renderer/lib/queries'
 import { studentFullName } from '@renderer/lib/format'
 import { StudentFormModal } from './StudentFormModal'
 import { MergeStudentsModal } from './MergeStudentsModal'
+import { ImportPanel } from '../Settings/ImportPanel'
 import { tr } from '@shared/i18n'
 import { trNodes } from '@renderer/lib/trNodes'
 
@@ -98,7 +99,7 @@ export function StudentsListPage(): React.JSX.Element {
           description={
             students?.length
               ? undefined
-              : tr('Add your first student, or import a roster from Settings.')
+              : tr('Add your first student, or import your class list from a spreadsheet below.')
           }
           action={
             !students?.length ? (
@@ -109,7 +110,15 @@ export function StudentsListPage(): React.JSX.Element {
             ) : undefined
           }
         />
-      ) : (
+      ) : null}
+      {/* A new teacher's class list is usually already in a spreadsheet: offer the import
+          right here (it's also under Settings → Data). */}
+      {!isLoading && !students?.length && (
+        <div className="mt-4">
+          <ImportPanel />
+        </div>
+      )}
+      {isLoading || filtered.length === 0 ? null : (
         <div className="overflow-hidden rounded-xl border border-[var(--color-border)]">
           <table className="w-full text-sm">
             <thead className="bg-[var(--color-surface-muted)] text-left text-xs uppercase text-[var(--color-text-muted)]">

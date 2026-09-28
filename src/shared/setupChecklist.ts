@@ -30,6 +30,7 @@ export interface SetupStep {
 export function setupSteps(p: SetupProgress): SetupStep[] {
   // Class-specific steps open the first class; until one exists, the Classes page.
   const cls = p.firstClassId ? `/classes/${p.firstClassId}` : null
+  // In the order a teacher can do them: the Portal before anything that goes on it.
   return [
     {
       id: 'class',
@@ -50,18 +51,11 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       actionLabel: tr('Open roster')
     },
     {
-      id: 'homework',
-      title: tr('Publish an assignment'),
-      description: tr('Drafts stay private. Publishing puts it on the Portal for students.'),
-      done: p.publishedHomeworkCount > 0,
-      optional: false,
-      to: cls ? `${cls}/homework` : '/classes',
-      actionLabel: tr('Open Homework')
-    },
-    {
       id: 'portal',
       title: tr('Connect the student Portal'),
-      description: tr('Paste your Portal address and sync secret in Settings.'),
+      description: tr(
+        'Where students and families sign in (needs internet). Paste its address and sync secret, from your school or your own Portal, in Settings.'
+      ),
       done: p.portalConnected,
       optional: false,
       to: '/settings?section=portal',
@@ -79,6 +73,15 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       actionLabel: tr('Get a join link')
     },
     {
+      id: 'homework',
+      title: tr('Publish an assignment'),
+      description: tr('Drafts stay private. Publishing puts it on the Portal for students.'),
+      done: p.publishedHomeworkCount > 0,
+      optional: false,
+      to: cls ? `${cls}/homework` : '/classes',
+      actionLabel: tr('Open Homework')
+    },
+    {
       id: 'materials',
       title: tr('Share study material'),
       description: tr(
@@ -93,7 +96,7 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       id: 'ai',
       title: tr('Add an AI key'),
       description: tr(
-        'Powers feedback drafts, study guides, flashcards and the student Study Helper.'
+        'Needs internet. Suggests feedback drafts, study guides, flashcards and the student Study Helper; you check everything before it’s used.'
       ),
       done: p.aiConfigured,
       optional: true,
