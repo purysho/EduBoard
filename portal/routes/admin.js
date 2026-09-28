@@ -50,6 +50,38 @@ router.get('/adoption', (req, res) => {
   res.json(require('../services/adoption').adoptionSummary(weeks))
 })
 
+// Every family login's agreement to the terms (services/consent.js), for a school's
+// records: which children, who agreed, when and to which version. The demo is left out.
+router.get('/consents', (_req, res) => {
+  const { DEMO_TEACHER_ID } = require('../services/demo')
+  const rows = db
+    .prepare(
+      `SELECT a.username, a.created_at, a.consent_at, a.consent_role, a.consent_name, a.consent_version,
+         GROUP_CONCAT(s.first_name || ' ' || s.last_name, ', ') AS children
+       FROM accounts a
+       JOIN account_students x ON x.account_id = a.id
+       JOIN students s ON s.id = x.student_id
+       WHERE s.teacher_id IS NOT ?
+       GROUP BY a.id ORDER BY children`
+    )
+    .all(DEMO_TEACHER_ID)
+  res.json(
+    rows.map((r) => ({
+      username: r.username,
+      children: r.children,
+      signedUp: r.created_at,
+      agreedAt: r.consent_at,
+      agreedBy:
+        r.consent_role === 'guardian'
+          ? r.consent_name
+          : r.consent_role === 'student'
+            ? 'student (14 or over)'
+            : null,
+      version: r.consent_version
+    }))
+  )
+})
+
 // A basic roster of who's using this Portal and how much they've published — the seed
 // of a school-level admin view (see EduBoardRoadMap.MD Phase 6), not a full dashboard.
 router.get('/teachers', (_req, res) => {

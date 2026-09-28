@@ -112,6 +112,7 @@ after changing either.
 | PT-1007 | The current password typed to change it is wrong. | Type the current password again, or ask the teacher for a reset. |
 | PT-1008 | The email address isn’t valid. | Check the address for typos. |
 | PT-1009 | The public demo login can’t be changed (password, email or QR login). | Nothing to do: the demo is shared and resets every day. |
+| PT-1010 | The agreement to the terms at first sign-in is missing a choice or the guardian’s name. | Choose who is agreeing, and type the parent or guardian’s name if it’s them. |
 
 ### Joining
 

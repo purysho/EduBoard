@@ -98,6 +98,11 @@ function adoptionSummary(weeks = 12, now = new Date()) {
     `SELECT COUNT(*) AS n FROM accounts WHERE ${notDemoAccount}`,
     ...demoAccount
   )
+  const accountsAgreed = count(
+    `SELECT COUNT(*) AS n FROM accounts WHERE consent_version = ? AND ${notDemoAccount}`,
+    require('./consent').CONSENT_VERSION,
+    ...demoAccount
+  )
   const accountsWithEmail = count(
     `SELECT COUNT(*) AS n FROM accounts WHERE email IS NOT NULL AND email != '' AND ${notDemoAccount}`,
     ...demoAccount
@@ -173,6 +178,7 @@ function adoptionSummary(weeks = 12, now = new Date()) {
       loginShare: ratio(studentsWithLogin, students),
       accounts,
       emailShare: ratio(accountsWithEmail, accounts),
+      consentShare: ratio(accountsAgreed, accounts),
       reportCards,
       reportCardsOpenedShare: ratio(reportCardsOpened, reportCards),
       replySlipExpected: slip.expected || 0,

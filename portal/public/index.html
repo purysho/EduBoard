@@ -381,6 +381,7 @@ async function main() {
 
   try {
     const me = await api('/me')
+    if (me.consentNeeded) return renderConsent(me)
     renderDashboard(me)
     startNotificationPolling()
   } catch {
@@ -395,6 +396,53 @@ async function main() {
       `
       return
     }
+    renderLogin()
+  }
+}
+
+// ---- Agreeing to the terms, once per version ------------------------------------------------
+// A parent or guardian agrees for a child under 14 (China's personal information law needs a
+// guardian's consent); a student aged 14 or over can agree themselves.
+function renderConsent(me) {
+  const names = me.students.map((s) => s.studentName).join(', ')
+  app.innerHTML = `
+    <h1>${t('Before you start')}</h1>
+    <p class="hint">${t('This Portal shows {names}’s classwork, grades, attendance and messages from their teacher. The school decides what is shared here, and only you and the teacher can see it.', { names: esc(names || t('your child')) })}</p>
+    <p class="hint">${t('Please read the terms of use and the privacy notice, then agree below.')} <a class="linklike" href="/terms" target="_blank" rel="noopener">${t('Terms of use')}</a> · <a class="linklike" href="/privacy" target="_blank" rel="noopener">${t('Privacy')}</a></p>
+    <form id="consent-form">
+      <label style="display:flex; gap:8px; align-items:flex-start; font-weight:500"><input type="radio" name="role" value="guardian" style="width:auto; margin-top:4px" required /> <span>${t('I am a parent or guardian, and I agree for my child')}</span></label>
+      <div id="guardian-name-row" hidden>
+        <label for="guardian-name">${t('Your name')}</label>
+        <input id="guardian-name" autocomplete="name" maxlength="100" />
+      </div>
+      <label style="display:flex; gap:8px; align-items:flex-start; font-weight:500"><input type="radio" name="role" value="student" style="width:auto; margin-top:4px" /> <span>${t('I am the student, I am 14 or older, and I agree')}</span></label>
+      <p class="field-note">${t('If the student is under 14, a parent or guardian needs to agree.')}</p>
+      <button type="submit">${t('Agree and continue')}</button>
+      <p class="error" id="consent-err" role="alert"></p>
+    </form>
+    <p class="field-note" style="margin-top:18px"><a href="#" class="linklike" id="consent-logout">${t('Log out')}</a></p>`
+  const form = document.getElementById('consent-form')
+  form.querySelectorAll('input[name="role"]').forEach((r) => {
+    r.onchange = () => {
+      document.getElementById('guardian-name-row').hidden = r.value !== 'guardian'
+      if (r.value === 'guardian') document.getElementById('guardian-name').focus()
+    }
+  })
+  form.onsubmit = async (e) => {
+    e.preventDefault()
+    const role = form.querySelector('input[name="role"]:checked')?.value
+    const name = document.getElementById('guardian-name').value
+    try {
+      await api('/me/consent', { method: 'POST', body: { role, name } })
+      main()
+    } catch (err) {
+      document.getElementById('consent-err').textContent = err.message
+    }
+  }
+  document.getElementById('consent-logout').onclick = async (e) => {
+    e.preventDefault()
+    await api('/auth/logout', { method: 'POST' }).catch(() => {})
+    await clearSavedData()
     renderLogin()
   }
 }
@@ -558,7 +606,7 @@ function renderLogin() {
       <strong>${t('Forgot your password?')}</strong> <a href="#" class="linklike" id="forgot">${t('Ask your teacher for a reset')}</a><br />
       <strong>${t('New here?')}</strong> ${t('Use the invite link or QR code your teacher gave you.')}<br />
       <strong>${t('Teacher?')}</strong> <a href="/download">${t('Download EduBoard')}</a><br />
-      <a href="/privacy">${t('Privacy')}</a>
+      <a href="/privacy">${t('Privacy')}</a> · <a href="/terms">${t('Terms of use')}</a>
     </p>
   `
   wirePasswordToggles()
@@ -2109,6 +2157,15 @@ function renderDashboard(me) {
            <button type="submit">${t('Change password')}</button>
          </form>
          <p id="password-status" class="muted" style="margin:6px 0 0; font-size:.8rem"></p>
+       </div>
+       <div class="section-title">${t('Your data')}</div>
+       <div class="card">
+         <p class="muted" style="margin:0 0 8px">${t('Download a copy of everything this Portal holds about you and your children: profile, classes and grades, handed-in work, answers, messages and Study Helper questions.')}</p>
+         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+           <button type="button" class="chip" onclick="location.href='/api/me/export'">${t('Download my data')}</button>
+           <a class="linklike" href="/terms" target="_blank" rel="noopener">${t('Terms of use')}</a>
+           <a class="linklike" href="/privacy" target="_blank" rel="noopener">${t('Privacy')}</a>
+         </div>
        </div>
        <div class="section-title">${t('This device')}</div>
        <div class="card">

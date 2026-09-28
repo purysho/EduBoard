@@ -89,7 +89,8 @@ test('the privacy notice and data processing terms are served in both languages'
   for (const [route, en, zh] of [
     ['/privacy', /<h1>Privacy notice<\/h1>/, /<h1>隐私说明<\/h1>/],
     ['/data-processing', /<h1>Data processing terms<\/h1>/, /<h1>数据处理条款<\/h1>/],
-    ['/security', /<h1>Security overview<\/h1>/, /<h1>安全概述<\/h1>/]
+    ['/security', /<h1>Security overview<\/h1>/, /<h1>安全概述<\/h1>/],
+    ['/terms', /<h1>Terms of use<\/h1>/, /<h1>使用条款<\/h1>/]
   ]) {
     const page = await get(portal.url + route, 'edu-board.com')
     assert.equal(page.status, 200, route)

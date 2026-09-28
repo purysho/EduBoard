@@ -178,6 +178,10 @@ function resetDemo(now = new Date()) {
     db.prepare(
       'INSERT INTO accounts (id, username, password_hash, created_at) VALUES (?, ?, ?, ?)'
     ).run(accountId, DEMO_USERNAME, hashPassword(DEMO_PASSWORD), day(0))
+    // The demo is shared, so nobody's consent is recorded for it; don't ask.
+    db.prepare(
+      "UPDATE accounts SET consent_at = ?, consent_role = 'demo', consent_version = ? WHERE id = ?"
+    ).run(day(0), require('./consent').CONSENT_VERSION, accountId)
     db.prepare('INSERT INTO account_students (account_id, student_id) VALUES (?, ?)').run(
       accountId,
       'demo-s1'

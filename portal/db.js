@@ -371,6 +371,14 @@ db.exec(`
   );
 `)
 
+// Consent to the Portal's terms and privacy notice, recorded at a family's first sign-in
+// (services/consent.js): who agreed (a parent or guardian by name, or a student aged 14 or
+// over), when, and to which version.
+ensureColumn('accounts', 'consent_at', 'consent_at TEXT')
+ensureColumn('accounts', 'consent_role', 'consent_role TEXT')
+ensureColumn('accounts', 'consent_name', 'consent_name TEXT')
+ensureColumn('accounts', 'consent_version', 'consent_version TEXT')
+
 // Reply slips (回执) on Class Story posts: a post can ask families to confirm they've read
 // it ('ack') or answer a yes / no question ('yesno'). One reply per student, which the
 // family can change.

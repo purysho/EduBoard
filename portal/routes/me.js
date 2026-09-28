@@ -39,6 +39,7 @@ router.use(requireAuth)
 // The public demo login is shared by everyone who tries it, so nobody can lock the
 // others out or attach their own email or QR login to it (services/demo.js).
 const { isDemoAccount } = require('../services/demo')
+const { consentNeeded, recordConsent } = require('../services/consent')
 const demoRefusal = (res) =>
   res.status(403).json({ error: 'The demo account can’t be changed.', code: 'PT-1009' })
 router.use('/report-cards', require('./reportCards').family)
@@ -132,7 +133,11 @@ router.get('/', (req, res) => {
   const onboarded = !!db
     .prepare('SELECT onboarded_at FROM accounts WHERE id = ?')
     .get(req.accountId)?.onboarded_at
-  if (!studentIds.length) return res.json({ students: [], onboarded })
+  // Terms and privacy not yet agreed to (services/consent.js): the page asks first.
+  const consentRequiredNow = consentNeeded(req.accountId)
+  if (!studentIds.length) {
+    return res.json({ students: [], onboarded, consentNeeded: consentRequiredNow })
+  }
 
   const now = new Date()
   const students = studentIds.map((studentId) => {
@@ -239,7 +244,7 @@ router.get('/', (req, res) => {
     }
   })
 
-  res.json({ students, onboarded })
+  res.json({ students, onboarded, consentNeeded: consentRequiredNow })
 })
 
 // Gated on the requesting account actually having a linked student enrolled in this
@@ -978,6 +983,87 @@ router.delete('/qr/:id', (req, res) => {
     req.accountId
   )
   res.json({ ok: true })
+})
+
+// Agreeing to the terms of use and privacy notice, once per version.
+router.post('/consent', (req, res) => {
+  if (isDemoAccount(req.accountId)) return res.json({ ok: true })
+  const problem = recordConsent(req.accountId, req.body?.role, req.body?.name)
+  if (problem) return res.status(400).json({ error: problem, code: 'PT-1010' })
+  res.json({ ok: true })
+})
+
+// Everything the Portal holds about this login and its children, as one JSON file: the
+// family's right to a copy of their data. Uploaded files are listed by name (the teacher
+// has the originals); everything written is included in full.
+router.get('/export', (req, res) => {
+  const account = db
+    .prepare(
+      `SELECT username, email, created_at AS createdAt, consent_at AS consentAt,
+         consent_role AS consentRole, consent_name AS consentName, consent_version AS consentVersion
+       FROM accounts WHERE id = ?`
+    )
+    .get(req.accountId)
+  const all = (sql, ...args) => db.prepare(sql).all(...args)
+  const children = getLinkedStudentIds(req.accountId).map((studentId) => {
+    const s = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId)
+    return {
+      name: `${s.first_name} ${s.last_name}`,
+      studentNumber: s.student_number,
+      dateOfBirth: s.date_of_birth,
+      profile: toOwnerView(
+        studentId,
+        db.prepare('SELECT * FROM student_profiles WHERE student_id = ?').get(studentId)
+      ),
+      classes: all(
+        `SELECT c.name, e.status, g.percent, g.letter, g.attendance_rate AS attendanceRate, g.points
+         FROM enrollments e JOIN classes c ON c.id = e.class_id
+         LEFT JOIN grades g ON g.class_id = e.class_id AND g.student_id = e.student_id
+         WHERE e.student_id = ?`,
+        studentId
+      ).map((c) => ({ ...c, points: c.points ? JSON.parse(c.points) : null })),
+      homework: all(
+        `SELECT h.title, h.due_date AS dueDate, s.status, s.submitted_at AS submittedAt,
+           s.text_answer AS textAnswer, s.file_name AS fileName, s.grade, s.feedback
+         FROM homework_submissions s JOIN homework_assignments h ON h.id = s.homework_assignment_id
+         WHERE s.student_id = ?`,
+        studentId
+      ),
+      answers: all(
+        `SELECT q.prompt, a.answer, a.correct FROM homework_question_answers a
+         JOIN homework_questions q ON q.id = a.homework_question_id WHERE a.student_id = ?`,
+        studentId
+      ),
+      reportCards: all(
+        'SELECT title, published_at AS sentAt FROM report_cards WHERE student_id = ?',
+        studentId
+      ),
+      noticeReplies: all(
+        `SELECT p.body AS notice, p.reply_question AS question, r.answer, r.replied_at AS repliedAt
+         FROM post_replies r JOIN class_posts p ON p.id = r.post_id WHERE r.student_id = ?`,
+        studentId
+      ),
+      studyHelper: all(
+        'SELECT question, reply, created_at AS askedAt FROM ai_interactions WHERE student_id = ? ORDER BY created_at',
+        studentId
+      )
+    }
+  })
+  const messages = all(
+    'SELECT sender, body, created_at AS sentAt FROM messages WHERE account_id = ? ORDER BY created_at',
+    req.accountId
+  )
+  // Usernames can be in any script; header values can't, so the file name keeps only safe
+  // characters.
+  const safeName = account.username.replace(/[^A-Za-z0-9_.-]/g, '')
+  res.set({
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Disposition': `attachment; filename="eduboard-portal-data${safeName ? '-' + safeName : ''}.json"`,
+    'Cache-Control': 'private, no-store'
+  })
+  res.send(
+    JSON.stringify({ exportedAt: new Date().toISOString(), account, children, messages }, null, 2)
+  )
 })
 
 // The first-login tour was finished or skipped. Idempotent; the first time is kept.

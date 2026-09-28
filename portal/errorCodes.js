@@ -54,6 +54,12 @@ const PORTAL_ERROR_CODES = {
     meaning: 'The public demo login can’t be changed (password, email or QR login).',
     fix: 'Nothing to do: the demo is shared and resets every day.'
   },
+  'PT-1010': {
+    area: 'Signing in',
+    meaning:
+      'The agreement to the terms at first sign-in is missing a choice or the guardian’s name.',
+    fix: 'Choose who is agreeing, and type the parent or guardian’s name if it’s them.'
+  },
 
   // --- Joining a class --------------------------------------------------------------------
   'PT-2001': {

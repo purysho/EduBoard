@@ -290,6 +290,26 @@ const ZH = {
   'Teacher?': '老师？',
   'Download EduBoard': '下载 EduBoard',
   Privacy: '隐私说明',
+  'Terms of use': '使用条款',
+  'Before you start': '开始之前',
+  'This Portal shows {names}’s classwork, grades, attendance and messages from their teacher. The school decides what is shared here, and only you and the teacher can see it.':
+    '学生门户会显示{names}的作业、成绩、考勤以及老师发来的消息。学校决定在这里分享哪些内容，只有你和老师能看到。',
+  'your child': '你的孩子',
+  'Please read the terms of use and the privacy notice, then agree below.':
+    '请阅读使用条款和隐私说明，然后在下方同意。',
+  'I am a parent or guardian, and I agree for my child': '我是家长或监护人，我代表孩子同意',
+  'Your name': '你的姓名',
+  'I am the student, I am 14 or older, and I agree': '我是学生，已满十四周岁，我同意',
+  'If the student is under 14, a parent or guardian needs to agree.':
+    '学生不满十四周岁的，需要由家长或监护人同意。',
+  'Agree and continue': '同意并继续',
+  'Your data': '你的数据',
+  'Download a copy of everything this Portal holds about you and your children: profile, classes and grades, handed-in work, answers, messages and Study Helper questions.':
+    '下载学生门户保存的关于你和你孩子的全部信息：个人资料、班级和成绩、提交的作业、答案、消息以及向学习助手提出的问题。',
+  'Download my data': '下载我的数据',
+  'Choose who is agreeing.': '请选择由谁同意。',
+  'Please type the parent or guardian’s name.': '请填写家长或监护人的姓名。',
+  'The demo account can’t be changed.': '演示账号不能修改。',
   'Ask your teacher for a reset. Once they approve it, you choose a new password here, on this device.':
     '向老师申请重置密码。老师批准后，你就可以在这台设备上设置新密码。',
   'Ask my teacher': '向老师申请',
