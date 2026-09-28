@@ -410,7 +410,15 @@ export interface EduBoardApi {
       description: string | null
       subject: string | null
       terms: { key: string; name: string; schoolYear: string; startDate: string | null }[]
-      counts: { standards: number; rubrics: number; assessments: number; homework: number; lessons: number }
+      counts: {
+        standards: number
+        rubrics: number
+        resources: number
+        studentFields: number
+        assessments: number
+        homework: number
+        lessons: number
+      }
     } | null>
     /** Backs up first, then installs the pack into the explicitly mapped existing classes. */
     apply(

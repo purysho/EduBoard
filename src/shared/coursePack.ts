@@ -1,4 +1,4 @@
-import type { HomeworkAssignmentStatus } from './types'
+import { LESSON_RESOURCE_TYPES, type HomeworkAssignmentStatus, type LessonResourceType, type StudentField } from './types'
 
 export interface CoursePackTerm {
   key: string
@@ -66,6 +66,18 @@ export interface CoursePackLessonTemplate {
   standardKeys?: string[]
 }
 
+export interface CoursePackResourceTemplate {
+  key: string
+  title: string
+  type: LessonResourceType
+  url?: string | null
+  notes?: string | null
+  tags?: string[]
+  standardKey?: string | null
+}
+
+export type CoursePackStudentField = StudentField
+
 export interface CoursePack {
   kind: 'eduboard-course-pack'
   version: 1
@@ -80,6 +92,8 @@ export interface CoursePack {
   assessments?: CoursePackAssessmentTemplate[]
   homework?: CoursePackHomeworkTemplate[]
   lessons?: CoursePackLessonTemplate[]
+  resources?: CoursePackResourceTemplate[]
+  studentFields?: CoursePackStudentField[]
 }
 
 const MAX_ITEMS = 500
@@ -287,6 +301,55 @@ export function parseCoursePack(json: string): CoursePack {
   )
   uniqueKeys(homework, 'homework')
 
+  const resources = array(raw.resources, 'resources').map(
+    (item, index): CoursePackResourceTemplate => {
+      const x = item as Record<string, unknown>
+      const type = requiredString(x?.type, `resources[${index}].type`, 20) as LessonResourceType
+      if (!(LESSON_RESOURCE_TYPES as readonly string[]).includes(type)) {
+        throw new Error(`Invalid course pack: resources[${index}].type`)
+      }
+      const standardKey =
+        x?.standardKey === undefined || x?.standardKey === null
+          ? null
+          : key(x.standardKey, `resources[${index}].standardKey`)
+      if (standardKey && !standardKeys.has(standardKey.toLowerCase())) {
+        throw new Error(`Invalid course pack: unknown standard key ${standardKey}`)
+      }
+      const tags = array(x?.tags, `resources[${index}].tags`).map((tag, ti) =>
+        requiredString(tag, `resources[${index}].tags[${ti}]`, 80)
+      )
+      return {
+        key: key(x?.key, `resources[${index}].key`),
+        title: requiredString(x?.title, `resources[${index}].title`, 160),
+        type,
+        url: optionalString(x?.url, `resources[${index}].url`, 2000),
+        notes: optionalString(x?.notes, `resources[${index}].notes`, 5000),
+        tags,
+        standardKey
+      }
+    }
+  )
+  uniqueKeys(resources, 'resource')
+
+  const studentFields = array(raw.studentFields, 'studentFields').map(
+    (item, index): CoursePackStudentField => {
+      const x = item as Record<string, unknown>
+      return {
+        id: key(x?.id, `studentFields[${index}].id`),
+        label: requiredString(x?.label, `studentFields[${index}].label`, 80),
+        ...(x?.onSeatingChart === true ? { onSeatingChart: true } : {})
+      }
+    }
+  )
+  const seenStudentFields = new Set<string>()
+  for (const field of studentFields) {
+    const normalized = field.id.toLowerCase()
+    if (seenStudentFields.has(normalized)) {
+      throw new Error(`Invalid course pack: duplicate student field id ${field.id}`)
+    }
+    seenStudentFields.add(normalized)
+  }
+
   const lessons = array(raw.lessons, 'lessons').map((item, index): CoursePackLessonTemplate => {
     const x = item as Record<string, unknown>
     const standardKeysForLesson = array(x?.standardKeys, `lessons[${index}].standardKeys`).map(
@@ -335,6 +398,8 @@ export function parseCoursePack(json: string): CoursePack {
     rubrics,
     assessments,
     homework,
-    lessons
+    lessons,
+    resources,
+    studentFields
   }
 }

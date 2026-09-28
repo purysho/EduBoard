@@ -18,6 +18,8 @@ interface CoursePackPreview {
   counts: {
     standards: number
     rubrics: number
+    resources: number
+    studentFields: number
     assessments: number
     homework: number
     lessons: number
@@ -141,10 +143,12 @@ export function CoursePackPanel(): React.JSX.Element {
               <p className="text-[var(--color-text-muted)]">{preview.description}</p>
             )}
 
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
               {[
                 [tr('Standards'), preview.counts.standards],
                 [tr('Rubrics'), preview.counts.rubrics],
+                [tr('Resources'), preview.counts.resources],
+                [tr('Extra student fields'), preview.counts.studentFields],
                 [tr('Assessments'), preview.counts.assessments],
                 [tr('Homework'), preview.counts.homework],
                 [tr('Lessons'), preview.counts.lessons]

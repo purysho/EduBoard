@@ -15,6 +15,8 @@ import { listRubrics } from '../rubrics'
 import { listAssessmentsByClass } from '../assessments'
 import { listHomeworkAssignmentsByClass } from '../homeworkAssignments'
 import { listLessonPlansByClass } from '../lessonPlans'
+import { listLessonResources } from '../lessonResources'
+import { getSettings, updateSettings } from '../settingsRepo'
 import { installCoursePack } from '../coursePacks'
 
 let tempDir: string
@@ -117,7 +119,18 @@ function samplePack(): CoursePack {
           assessmentKey: 'presentation-1',
           standardKeys: ['communication']
         }
-      ]
+      ],
+      resources: [
+        {
+          key: 'model-explanation',
+          title: 'Model explanation',
+          type: 'note',
+          notes: 'A teacher model for clear explanation.',
+          tags: ['speaking', 'model'],
+          standardKey: 'communication'
+        }
+      ],
+      studentFields: [{ id: 'english-goal', label: 'English goal' }]
     })
   )
 }
@@ -129,6 +142,18 @@ describe('Course Packs', () => {
     expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
   })
 
+  it('rejects a resource linked to an unknown standard', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.resources[0].standardKey = 'does-not-exist'
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
+  })
+
+  it('rejects duplicate student-field ids', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.studentFields.push({ id: 'english-goal', label: 'Duplicate' })
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/duplicate student field id/i)
+  })
+
   it('installs a pack transactionally into an explicitly mapped class', () => {
     const cls = universityClass('University English A')
     const result = installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
@@ -138,6 +163,8 @@ describe('Course Packs', () => {
       terms: 1,
       standards: 1,
       rubrics: 1,
+      resources: 1,
+      studentFields: 1,
       assessments: 1,
       homework: 1,
       lessons: 1
@@ -146,6 +173,12 @@ describe('Course Packs', () => {
     expect(listTerms()).toHaveLength(1)
     expect(listStandards().map((s) => s.code)).toEqual(['ENG-01'])
     expect(listRubrics()).toHaveLength(1)
+    expect(listLessonResources()[0]).toMatchObject({
+      title: 'Model explanation',
+      type: 'note',
+      tags: ['speaking', 'model']
+    })
+    expect(getSettings().studentFields).toContainEqual({ id: 'english-goal', label: 'English goal' })
     expect(listAssessmentsByClass(cls.id)[0]).toMatchObject({
       name: 'Presentation 1',
       assessmentDate: '2026-09-21'
@@ -189,6 +222,8 @@ describe('Course Packs', () => {
       terms: 0,
       standards: 0,
       rubrics: 0,
+      resources: 0,
+      studentFields: 0,
       assessments: 0,
       homework: 0,
       lessons: 0
@@ -198,6 +233,8 @@ describe('Course Packs', () => {
       terms: 1,
       standards: 1,
       rubrics: 1,
+      resources: 1,
+      studentFields: 1,
       assessments: 1,
       homework: 1,
       lessons: 1
@@ -205,6 +242,8 @@ describe('Course Packs', () => {
     expect(listCourseGroups()).toHaveLength(1)
     expect(listStandards()).toHaveLength(1)
     expect(listAssessmentsByClass(cls.id)).toHaveLength(1)
+    expect(listLessonResources().filter((r) => r.title === 'Model explanation')).toHaveLength(1)
+    expect(getSettings().studentFields.filter((field) => field.id === 'english-goal')).toHaveLength(1)
     expect(listHomeworkAssignmentsByClass(cls.id)).toHaveLength(1)
     expect(listLessonPlansByClass(cls.id)).toHaveLength(1)
   })
@@ -224,6 +263,21 @@ describe('Course Packs', () => {
     expect(listAssessmentsByClass(cls.id)).toHaveLength(0)
     expect(getClass(cls.id)?.courseGroupId).toBeNull()
     expect(getClass(cls.id)?.termId).toBeNull()
+  })
+
+  it('rolls back the whole install when a student field conflicts with local meaning', () => {
+    const cls = universityClass('University English A')
+    updateSettings({ studentFields: [{ id: 'english-goal', label: 'Different local meaning' }] })
+
+    expect(() => installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })).toThrow(
+      /student field/i
+    )
+    expect(listCourseGroups()).toHaveLength(0)
+    expect(listTerms()).toHaveLength(0)
+    expect(listStandards()).toHaveLength(0)
+    expect(listRubrics()).toHaveLength(0)
+    expect(listLessonResources()).toHaveLength(0)
+    expect(getClass(cls.id)?.courseGroupId).toBeNull()
   })
 
   it('never applies class-bound curriculum without an explicit class mapping', () => {
