@@ -685,5 +685,6 @@ export const CLASSES: Record<string, string> = {
   'No rubric evidence recorded': '尚未记录量规证据',
   'This view does not calculate a separate mastery grade. It reflects the rubric evidence already stored in EduBoard, so changing a rubric score changes this matrix too.':
     '此视图不会另行计算“掌握度”成绩。它直接反映 EduBoard 中已有的评分量规证据，因此修改量规评分也会同步改变此矩阵。'
-
+,
+  'Mixed evidence': '证据不一致'
 }
