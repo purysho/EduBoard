@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CloudUpload } from 'lucide-react'
@@ -21,7 +22,13 @@ function snoozedUntil(): number {
 export function BackupReminder({ hasData }: { hasData: boolean }): React.JSX.Element | null {
   const { data: status } = useExtraBackupStatus()
   const [hidden, setHidden] = useState(() => snoozedUntil() > Date.now())
-  if (!status?.needsAttention || !hasData || hidden) return null
+  // The sample school's made-up data is never backed up.
+  const { data: inSample } = useQuery({
+    queryKey: ['sampleSchool'],
+    queryFn: () => window.api.sampleSchool.status(),
+    staleTime: Infinity
+  })
+  if (!status?.needsAttention || !hasData || hidden || inSample !== false) return null
 
   const message = !status.folder
     ? tr('Your backups are only on this computer. If it’s lost or breaks, they go with it.')

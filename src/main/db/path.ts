@@ -32,7 +32,7 @@ function portableContainerDir(): string {
   return dirname(exePath)
 }
 
-export function resolveDataDir(): string {
+function ownDataDir(): string {
   if (!app.isPackaged) {
     return join(process.cwd(), 'data')
   }
@@ -43,6 +43,23 @@ export function resolveDataDir(): string {
   }
 
   return join(app.getPath('userData'), 'data')
+}
+
+/** EduBoard opened on the sample school (services/sampleSchool.ts) is started with this
+ * flag, and then keeps everything in a folder of its own inside the data folder. */
+export const SAMPLE_SCHOOL_FLAG = '--sample-school'
+export const SAMPLE_SCHOOL_FRESH_FLAG = '--sample-school-fresh'
+
+export function isSampleSchool(): boolean {
+  return process.argv.includes(SAMPLE_SCHOOL_FLAG)
+}
+
+export function sampleSchoolDir(): string {
+  return join(ownDataDir(), 'sample-school')
+}
+
+export function resolveDataDir(): string {
+  return isSampleSchool() ? sampleSchoolDir() : ownDataDir()
 }
 
 export function resolveDbPath(): string {

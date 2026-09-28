@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar'
 import { ScreenErrorBoundary } from '../ScreenErrorBoundary'
 import { DeviceSyncBanner } from './DeviceSyncBanner'
 import { UpdateBanner } from './UpdateBanner'
+import { SampleSchoolBanner } from './SampleSchoolBanner'
 import { HiddenWhilePresenting, PresentingBanner } from './PresentingBanner'
 import { isShownWhilePresenting, usePresenting } from '@renderer/lib/presenting'
 import { useThemeEffect } from '@renderer/lib/useTheme'
@@ -17,6 +18,7 @@ export function AppShell(): React.JSX.Element {
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <PresentingBanner />
+        <SampleSchoolBanner />
         {!presenting && <UpdateBanner />}
         <DeviceSyncBanner />
         <div className="mx-auto max-w-6xl px-8 py-8">

@@ -6,6 +6,12 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **Sample school** (Settings → Help and updates, or the getting-started checklist): EduBoard reopens on two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans, notes and report comments, to try it or show it to a school. It lives in its own folder; the teacher's own classes are never read or changed, and a banner offers **Back to my classes** and **Start over**. No backups or usage pings are made from it.
+
+### Fixed
+
+- "Students to check on" said "Below the pass mark (60% vs 60%)" for a student on 59.6%; it now shows the decimal when rounding would hide the gap.
+
 - **Portal usage on the admin page** (portal address /admin.html): teachers publishing, students with a login, families and teachers active each week (last 12 weeks), share of report cards opened, notices answered, Class Story posts seen and work handed in. **Copy as text** puts it all in an email or a pitch. It's worked out only from what the Portal already keeps for its features; nothing new is recorded.
 
 ## [0.6.0] — 2026-09-28

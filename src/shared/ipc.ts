@@ -287,6 +287,11 @@ export const IpcChannels = {
     markRead: 'portalMessages:markRead',
     translate: 'portalMessages:translate'
   },
+  sampleSchool: {
+    status: 'sampleSchool:status',
+    open: 'sampleSchool:open',
+    leave: 'sampleSchool:leave'
+  },
   studentTimeline: {
     get: 'studentTimeline:get'
   },

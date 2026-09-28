@@ -484,6 +484,15 @@ export interface EduBoardApi {
     markRead(accountId: string): Promise<void>
     translate(messageId: string, targetLang: string): Promise<string>
   }
+  /** The sample school: EduBoard reopened on made-up classes in a separate database. */
+  sampleSchool: {
+    /** Whether EduBoard is showing the sample school right now. */
+    status(): Promise<boolean>
+    /** Reopens EduBoard in the sample school; `fresh` starts it over. */
+    open(fresh?: boolean): Promise<void>
+    /** Reopens EduBoard on the teacher's own classes. */
+    leave(): Promise<void>
+  }
   /** One student's record in date order, across all their classes. */
   studentTimeline: {
     get(studentId: string): Promise<StudentTimelineEvent[]>

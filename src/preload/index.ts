@@ -341,6 +341,11 @@ const api: EduBoardApi = {
     translate: (messageId, targetLang) =>
       invoke(IpcChannels.portalMessages.translate, messageId, targetLang)
   },
+  sampleSchool: {
+    status: () => invoke(IpcChannels.sampleSchool.status),
+    open: (fresh) => invoke(IpcChannels.sampleSchool.open, fresh),
+    leave: () => invoke(IpcChannels.sampleSchool.leave)
+  },
   studentTimeline: {
     get: (studentId) => invoke(IpcChannels.studentTimeline.get, studentId)
   },

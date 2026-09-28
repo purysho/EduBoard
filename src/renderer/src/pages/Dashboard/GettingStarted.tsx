@@ -48,6 +48,19 @@ export function GettingStarted(): React.JSX.Element | null {
         </Button>
       </CardHeader>
       <CardBody className="pt-0">
+        {!complete && (
+          <p className="mb-3 text-xs text-[var(--color-text-muted)]">
+            {tr('Want to look around first?')}{' '}
+            <button
+              type="button"
+              className="font-medium text-[var(--color-primary)] hover:underline"
+              onClick={() => void window.api.sampleSchool.open()}
+            >
+              {tr('Open the sample school')}
+            </button>{' '}
+            {tr('(made-up classes, kept apart from yours).')}
+          </p>
+        )}
         <div
           className="mb-3 h-1.5 overflow-hidden rounded-full bg-[var(--color-surface-muted)]"
           role="progressbar"

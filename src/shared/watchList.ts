@@ -19,7 +19,12 @@ export function watchReasons(f: WatchFacts): string[] {
   if (f.percent !== null && f.percent < f.passMark) {
     reasons.push(
       tr('Below the pass mark ({percent}% vs {passMark}%)', {
-        percent: Math.round(f.percent),
+        // One decimal when rounding would make it look level with the pass mark
+        // ("59.6% vs 60%", not "60% vs 60%").
+        percent:
+          Math.round(f.percent) >= f.passMark
+            ? Math.floor(f.percent * 10) / 10
+            : Math.round(f.percent),
         passMark: f.passMark
       })
     )

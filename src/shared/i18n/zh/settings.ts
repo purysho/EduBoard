@@ -471,13 +471,25 @@ export const SETTINGS: Record<string, string> = {
   'backup restore password lock encryption import roster excel school pack export':
     '备份 恢复 密码 锁定 加密 导入 名单 学校配置包 导出 backup password import excel pack',
   'Help and updates': '帮助与更新',
-  'Version, updates, error report': '版本、更新、错误报告',
-  'version update help error report code log usage improve':
-    '版本 更新 帮助 错误 报告 代码 日志 改进 version update help error report',
+  'Version, updates, sample school, error report': '版本、更新、示例学校、错误报告',
+  'version update help error report code log usage improve sample demo try':
+    '版本 更新 帮助 错误 报告 代码 日志 改进 示例 演示 试用 version update help error report sample demo',
   'Settings sections': '设置分区',
   'Search settings': '搜索设置',
   'Nothing matches “{query}”.': '没有与“{query}”匹配的内容。',
   'What EduBoard keeps and where:': 'EduBoard 保存哪些内容、存放在哪里：',
   'Privacy notice': '隐私说明',
-  'Data processing terms for schools': '学校数据处理条款'
+  'Data processing terms for schools': '学校数据处理条款',
+  'Sample school.': '示例学校。',
+  'Made-up classes and students to try everything with. Your own classes aren’t here and aren’t changed.':
+    '用虚构的班级和学生试用所有功能。你自己的班级不在这里，也不会被改动。',
+  'Start over': '重新开始',
+  'Back to my classes': '回到我的班级',
+  'Want to look around first?': '想先看看？',
+  'Open the sample school': '打开示例学校',
+  '(made-up classes, kept apart from yours).': '（虚构的班级，与你的班级分开保存）。',
+  'Sample school': '示例学校',
+  'Two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans and notes, to try EduBoard or show it to someone. It’s kept apart from your own classes, which it never reads or changes. EduBoard restarts to open it.':
+    '两个虚构学生的班级，包含一个学期的成绩、考勤、课堂积分、作业、教案和记录，可以用来试用 EduBoard 或向别人演示。它与你自己的班级分开保存，从不读取或改动你的班级。打开时 EduBoard 会重新启动。',
+  'Start the sample school over': '重新开始示例学校'
 }

@@ -44,6 +44,7 @@ import {
 import { GroupChatsPanel } from './GroupChatsPanel'
 import { UsagePingPanel } from './UsagePingPanel'
 import { HelpPanel } from './HelpPanel'
+import { SampleSchoolCard } from './SampleSchoolCard'
 import { SchoolPackPanel } from './SchoolPackPanel'
 import { tr } from '@shared/i18n'
 
@@ -157,12 +158,13 @@ const SECTIONS: Section[] = [
   {
     id: 'help',
     label: tr('Help and updates'),
-    blurb: tr('Version, updates, error report'),
-    keywords: tr('version update help error report code log usage improve'),
+    blurb: tr('Version, updates, sample school, error report'),
+    keywords: tr('version update help error report code log usage improve sample demo try'),
     icon: LifeBuoy,
     content: () => (
       <>
         <AboutPanel />
+        <SampleSchoolCard />
         <HelpPanel />
         <UsagePingPanel />
       </>

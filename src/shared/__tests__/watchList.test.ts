@@ -18,6 +18,12 @@ describe('students to check on', () => {
     ])
   })
 
+  it('shows a decimal when rounding would hide that it is below the pass mark', () => {
+    expect(watchReasons({ ...base, percent: 59.67 })).toEqual([
+      'Below the pass mark (59.6% vs 60%)'
+    ])
+  })
+
   it('needs three scores before calling a trend, and ignores small dips', () => {
     expect(watchReasons({ ...base, trend: [90, 70] })).toEqual([])
     expect(watchReasons({ ...base, trend: [80, 78, 74] })).toEqual([])

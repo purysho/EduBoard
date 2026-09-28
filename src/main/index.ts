@@ -13,6 +13,11 @@ import { isProtected, startAutoLock, whenFirstUnlocked } from './services/securi
 import { installPendingUpdateOnLaunch, startAutomaticUpdateChecks } from './services/selfUpdate'
 import { startUsagePings } from './services/usagePing'
 import { toWindowError } from './services/errorLog'
+import {
+  clearSampleSchoolIfAsked,
+  isSampleSchool,
+  seedSampleSchoolIfEmpty
+} from './services/sampleSchool'
 
 // A promise nobody waited on failed: log it with a reference (it never reached a screen).
 process.on('unhandledRejection', (reason) => {
@@ -35,7 +40,7 @@ app.whenReady().then(() => {
     if (syncUiPrefsWithSettings(getSettings())) {
       for (const win of BrowserWindow.getAllWindows()) win.webContents.reload()
     }
-    createAutoBackupOnLaunch()
+    if (!isSampleSchool()) createAutoBackupOnLaunch()
     // An update downloaded last session installs now, before anything else opens;
     // EduBoard then reopens as the new version.
     const installing = installPendingUpdateOnLaunch(() => {
@@ -47,6 +52,11 @@ app.whenReady().then(() => {
     carryOn()
   }
   const carryOn = (): void => {
+    if (isSampleSchool()) {
+      // Made-up data: no backups of it, and it never counts as a copy in use.
+      startAutomaticUpdateChecks()
+      return
+    }
     startDailyAutoBackups()
     purgeOldDeletedAuditEntries()
     checkAndRecordDeviceSync()
@@ -61,7 +71,9 @@ app.whenReady().then(() => {
     whenFirstUnlocked(startWithDatabase)
     createMainWindow()
   } else {
+    clearSampleSchoolIfAsked()
     initDb()
+    seedSampleSchoolIfEmpty()
     startWithDatabase()
   }
 
