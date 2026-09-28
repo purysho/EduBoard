@@ -10,9 +10,10 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { useDeleteRubric, useRubrics } from '@renderer/lib/queries'
 import { cn } from '@renderer/lib/cn'
 import { StandardsPanel } from './StandardsPanel'
+import { CompetencyPanel } from './CompetencyPanel'
 import { tr } from '@shared/i18n'
 
-type Tab = 'library' | 'standards'
+type Tab = 'library' | 'standards' | 'competencies'
 
 export function RubricsPage(): React.JSX.Element {
   const navigate = useNavigate()
@@ -42,7 +43,8 @@ export function RubricsPage(): React.JSX.Element {
         {(
           [
             { key: 'library', label: tr('Rubric library') },
-            { key: 'standards', label: tr('Standards') }
+            { key: 'standards', label: tr('Standards') },
+            { key: 'competencies', label: tr('Competencies') }
           ] as const
         ).map((t) => (
           <button
@@ -62,6 +64,8 @@ export function RubricsPage(): React.JSX.Element {
 
       {tab === 'standards' ? (
         <StandardsPanel />
+      ) : tab === 'competencies' ? (
+        <CompetencyPanel />
       ) : isLoading ? (
         <Spinner />
       ) : !rubrics?.length ? (
