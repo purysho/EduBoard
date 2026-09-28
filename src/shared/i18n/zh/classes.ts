@@ -692,5 +692,6 @@ export const CLASSES: Record<string, string> = {
   'Add at least one class to this course group before building its curriculum map.': '至少向此课程组添加一个班级后，才能生成课程地图。',
   '{complete} of {total} lessons completed': '已完成 {complete}/{total} 节课',
   'No lesson plans in this class yet.': '此班级还没有课程计划。',
+  Lesson: '课程',
 
 }
