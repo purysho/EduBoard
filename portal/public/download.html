@@ -602,6 +602,31 @@
           </div>
         </section>
 
+        <section id="try">
+          <h2 data-t="tryTitle">Try it first</h2>
+          <div class="howto">
+            <div>
+              <h3 data-t="tryAppTitle">The app, with a sample school</h3>
+              <p data-t="tryApp">
+                In EduBoard, open Settings → Help and updates → Sample school. Two classes of
+                made-up students with a term of work appear, kept apart from your own classes.
+              </p>
+            </div>
+            <div id="try-portal" hidden>
+              <h3 data-t="tryPortalTitle">What families see</h3>
+              <p>
+                <span data-t="tryPortal">Sign in to the demo Portal as a parent:</span>
+                <a href="/login" data-t="tryPortalLink">open the Portal</a>,
+                <span data-t="tryUser">username</span> <code id="demo-user" style="white-space: nowrap"></code>,
+                <span data-t="tryPass">password</span> <code id="demo-pass" style="white-space: nowrap"></code>.
+                <span data-t="tryPortalNote"
+                  >Everything in it is made up, and it resets every day.</span
+                >
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section>
           <h2 data-t="schoolTitle">For schools</h2>
           <p class="sub" data-t="schoolSub">
@@ -688,6 +713,16 @@
         source: '在 GitHub 上开源（MIT）',
         login2: '学生门户登录',
         privacy: '隐私说明',
+        tryTitle: '先试一试',
+        tryAppTitle: '应用：示例学校',
+        tryApp:
+          '在 EduBoard 中打开“设置 → 帮助与更新 → 示例学校”。会出现两个虚构学生的班级和一个学期的数据，与你自己的班级分开保存。',
+        tryPortalTitle: '家长看到的内容',
+        tryPortal: '以家长身份登录演示版学生门户：',
+        tryPortalLink: '打开学生门户',
+        tryUser: '用户名',
+        tryPass: '密码',
+        tryPortalNote: '其中的内容全部是虚构的，每天都会重置。',
         dpa: '学校数据处理条款',
         // Built in script below
         recommended: '推荐',
@@ -906,6 +941,16 @@
         })
 
       applyLanguage()
+      // The demo login, when this Portal has one (PORTAL_DEMO=1).
+      fetch('/api/demo')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d || !d.enabled) return
+          document.getElementById('demo-user').textContent = d.username
+          document.getElementById('demo-pass').textContent = d.password
+          document.getElementById('try-portal').hidden = false
+        })
+        .catch(() => {})
     </script>
   </body>
 </html>

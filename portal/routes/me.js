@@ -35,6 +35,12 @@ const { processProfilePhoto } = require('../services/profilePhoto')
 
 const router = express.Router()
 router.use(requireAuth)
+
+// The public demo login is shared by everyone who tries it, so nobody can lock the
+// others out or attach their own email or QR login to it (services/demo.js).
+const { isDemoAccount } = require('../services/demo')
+const demoRefusal = (res) =>
+  res.status(403).json({ error: 'The demo account can’t be changed.', code: 'PT-1009' })
 router.use('/report-cards', require('./reportCards').family)
 
 // Every AI call spends the teacher's own API key, so each family account gets a short
@@ -906,6 +912,7 @@ router.get('/account', (req, res) => {
 })
 
 router.post('/account', (req, res) => {
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
   const email = (req.body?.email || '').trim()
   if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
     return res
@@ -924,6 +931,7 @@ router.post(
   '/password',
   rateLimit({ ...LIMITS.passwordChangePerAccount, keyFn: (req) => req.accountId }),
   (req, res) => {
+    if (isDemoAccount(req.accountId)) return demoRefusal(res)
     const { currentPassword, newPassword } = req.body || {}
     const account = db.prepare('SELECT password_hash FROM accounts WHERE id = ?').get(req.accountId)
     if (!verifyPassword(currentPassword || '', account?.password_hash)) {
@@ -945,6 +953,7 @@ router.post(
 // Issues a fresh, independent quick-login token and returns it as a downloadable QR
 // image — the raw token is shown/embedded exactly once, here; only its hash is stored.
 router.post('/qr', async (req, res) => {
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
   const token = newRandomToken()
   const id = crypto.randomUUID()
   db.prepare(

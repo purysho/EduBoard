@@ -39,10 +39,12 @@ grep -q "PORTAL_HOST" "$PORTAL_DIR/server.js" ||
   fail "This Portal is older than the homepage. Run Update-Live-Portal.cmd first, then this again."
 HOSTS="$DOMAIN${WWW:+,$WWW}"
 cp "$ENV_FILE" "$ENV_FILE.bak"
-sed -i '/^HOMEPAGE_HOSTS=/d; /^PORTAL_HOST=/d' "$ENV_FILE"
-printf 'HOMEPAGE_HOSTS=%s\nPORTAL_HOST=%s\n' "$HOSTS" "$PORTAL_HOST" >> "$ENV_FILE"
+sed -i '/^HOMEPAGE_HOSTS=/d; /^PORTAL_HOST=/d; /^PORTAL_DEMO=/d' "$ENV_FILE"
+# PORTAL_DEMO=1: the homepage's "Try it first" box offers a demo family login (username
+# demo) on a made-up class, reset daily and left out of the admin page's numbers.
+printf 'HOMEPAGE_HOSTS=%s\nPORTAL_HOST=%s\nPORTAL_DEMO=1\n' "$HOSTS" "$PORTAL_HOST" >> "$ENV_FILE"
 systemctl restart "$UNIT"
-echo "    HOMEPAGE_HOSTS=$HOSTS, PORTAL_HOST=$PORTAL_HOST"
+echo "    HOMEPAGE_HOSTS=$HOSTS, PORTAL_HOST=$PORTAL_HOST, demo login on"
 
 # ---- 3. Caddy (web addresses and certificates) ----------------------------------------------
 say "Adding $DOMAIN to Caddy"

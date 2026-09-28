@@ -5,6 +5,7 @@
 // grades without doing anything else isn't counted: the Portal keeps no visit log.
 const db = require('../db')
 const { weekOf } = require('../routes/usage')
+const { DEMO_TEACHER_ID } = require('./demo')
 
 const addWeeks = (week, n) => {
   const d = new Date(`${week}T00:00:00Z`)
@@ -52,10 +53,19 @@ function adoptionSummary(weeks = 12, now = new Date()) {
     )
     .all({ from })
 
+  // The public demo login and its teacher are left out of every number.
+  const demoAccount = db
+    .prepare(
+      `SELECT a.account_id AS id FROM account_students a JOIN students s ON s.id = a.student_id
+       WHERE s.teacher_id = ?`
+    )
+    .all(DEMO_TEACHER_ID)
+    .map((r) => r.id)
+  const excluded = new Set([DEMO_TEACHER_ID, ...demoAccount])
   const byWeek = (acts) => {
     const map = new Map()
     for (const { who, at } of acts) {
-      if (!who || !at) continue
+      if (!who || !at || excluded.has(who)) continue
       const w = weekOf(new Date(at))
       if (!map.has(w)) map.set(w, new Set())
       map.get(w).add(who)
@@ -74,24 +84,38 @@ function adoptionSummary(weeks = 12, now = new Date()) {
   }
 
   // Now: sign-ups, and how families respond to what teachers send.
-  const students = count('SELECT COUNT(*) AS n FROM students')
-  const studentsWithLogin = count(
-    'SELECT COUNT(DISTINCT a.student_id) AS n FROM account_students a JOIN students s ON s.id = a.student_id'
+  const students = count(
+    'SELECT COUNT(*) AS n FROM students WHERE teacher_id IS NOT ?',
+    DEMO_TEACHER_ID
   )
-  const accounts = count('SELECT COUNT(*) AS n FROM accounts')
+  const studentsWithLogin = count(
+    `SELECT COUNT(DISTINCT a.student_id) AS n FROM account_students a
+     JOIN students s ON s.id = a.student_id WHERE s.teacher_id IS NOT ?`,
+    DEMO_TEACHER_ID
+  )
+  const notDemoAccount = `id NOT IN (${demoAccount.map(() => '?').join(',') || "''"})`
+  const accounts = count(
+    `SELECT COUNT(*) AS n FROM accounts WHERE ${notDemoAccount}`,
+    ...demoAccount
+  )
   const accountsWithEmail = count(
-    "SELECT COUNT(*) AS n FROM accounts WHERE email IS NOT NULL AND email != ''"
+    `SELECT COUNT(*) AS n FROM accounts WHERE email IS NOT NULL AND email != '' AND ${notDemoAccount}`,
+    ...demoAccount
   )
   // Report cards a family could open (the student has a login), and how many were opened.
   const reportCards = count(
-    `SELECT COUNT(*) AS n FROM report_cards r
-     WHERE EXISTS (SELECT 1 FROM account_students a WHERE a.student_id = r.student_id)`
+    `SELECT COUNT(*) AS n FROM report_cards r JOIN classes c ON c.id = r.class_id
+     WHERE c.teacher_id IS NOT ?
+       AND EXISTS (SELECT 1 FROM account_students a WHERE a.student_id = r.student_id)`,
+    DEMO_TEACHER_ID
   )
   const reportCardsOpened = count(
-    `SELECT COUNT(*) AS n FROM report_cards r WHERE EXISTS (
+    `SELECT COUNT(*) AS n FROM report_cards r JOIN classes c ON c.id = r.class_id
+     WHERE c.teacher_id IS NOT ? AND EXISTS (
        SELECT 1 FROM report_card_reads x JOIN account_students a
          ON a.account_id = x.account_id AND a.student_id = r.student_id
-       WHERE x.report_card_id = r.id)`
+       WHERE x.report_card_id = r.id)`,
+    DEMO_TEACHER_ID
   )
   // Notices with a reply slip: of the students with a login in the class, how many
   // families replied.
@@ -102,11 +126,17 @@ function adoptionSummary(weeks = 12, now = new Date()) {
        FROM class_posts p
        JOIN enrollments e ON e.class_id = p.class_id AND e.status = 'active'
        WHERE p.reply_kind IS NOT NULL
+         AND p.class_id NOT IN (SELECT id FROM classes WHERE teacher_id = ?)
          AND EXISTS (SELECT 1 FROM account_students a WHERE a.student_id = e.student_id)`
     )
-    .get()
+    .get(DEMO_TEACHER_ID)
   const since30 = new Date(now.getTime() - 30 * 86400000).toISOString()
-  const posts30 = count('SELECT COUNT(*) AS n FROM class_posts WHERE created_at >= ?', since30)
+  const notDemoClass = 'class_id NOT IN (SELECT id FROM classes WHERE teacher_id = ?)'
+  const posts30 = count(
+    `SELECT COUNT(*) AS n FROM class_posts WHERE created_at >= ? AND ${notDemoClass}`,
+    since30,
+    DEMO_TEACHER_ID
+  )
   const seen = db
     .prepare(
       `SELECT COUNT(*) AS audience,
@@ -115,21 +145,29 @@ function adoptionSummary(weeks = 12, now = new Date()) {
                      WHERE r.post_id = p.id)) AS seen
        FROM class_posts p
        JOIN enrollments e ON e.class_id = p.class_id AND e.status = 'active'
-       WHERE p.created_at >= ?
+       WHERE p.created_at >= ? AND p.${notDemoClass}
          AND EXISTS (SELECT 1 FROM account_students a WHERE a.student_id = e.student_id)`
     )
-    .get(since30)
+    .get(since30, DEMO_TEACHER_ID)
   const handedIn30 = count(
-    'SELECT COUNT(*) AS n FROM homework_submissions WHERE submitted_at >= ?',
-    since30
+    `SELECT COUNT(*) AS n FROM homework_submissions h JOIN students s ON s.id = h.student_id
+     WHERE h.submitted_at >= ? AND s.teacher_id IS NOT ?`,
+    since30,
+    DEMO_TEACHER_ID
   )
 
   return {
     generatedAt: now.toISOString(),
     totals: {
-      teachers: count('SELECT COUNT(*) AS n FROM teachers'),
-      teachersPublishing: count('SELECT COUNT(DISTINCT teacher_id) AS n FROM classes'),
-      classes: count('SELECT COUNT(*) AS n FROM classes WHERE finished = 0'),
+      teachers: count('SELECT COUNT(*) AS n FROM teachers WHERE id != ?', DEMO_TEACHER_ID),
+      teachersPublishing: count(
+        'SELECT COUNT(DISTINCT teacher_id) AS n FROM classes WHERE teacher_id != ?',
+        DEMO_TEACHER_ID
+      ),
+      classes: count(
+        'SELECT COUNT(*) AS n FROM classes WHERE finished = 0 AND teacher_id != ?',
+        DEMO_TEACHER_ID
+      ),
       students,
       studentsWithLogin,
       loginShare: ratio(studentsWithLogin, students),

@@ -58,9 +58,9 @@ router.get('/teachers', (_req, res) => {
       `SELECT t.id, t.name, t.created_at,
               (SELECT COUNT(*) FROM classes WHERE teacher_id = t.id) AS class_count,
               (SELECT COUNT(*) FROM students WHERE teacher_id = t.id) AS student_count
-       FROM teachers t ORDER BY t.created_at`
+       FROM teachers t WHERE t.id != ? ORDER BY t.created_at`
     )
-    .all()
+    .all(require('../services/demo').DEMO_TEACHER_ID)
   res.json(
     teachers.map((t) => ({
       id: t.id,

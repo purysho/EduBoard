@@ -79,6 +79,16 @@ app.use('/api/usage', require('./routes/usage').router)
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
+// The public demo login, for the homepage's "try it" box (services/demo.js).
+const demo = require('./services/demo')
+app.get('/api/demo', (_req, res) =>
+  res.json(
+    demo.enabled()
+      ? { enabled: true, username: demo.DEMO_USERNAME, password: demo.DEMO_PASSWORD }
+      : { enabled: false }
+  )
+)
+
 // The newest EduBoard desktop release, relayed from GitHub (routes/appRelease.js), so
 // the desktop app can check for and download updates through this server.
 const appRelease = require('./routes/appRelease')
@@ -138,6 +148,8 @@ const server = app.listen(port, host, () => {
 // moment, since this is a long-running plain `node server.js` process with no cron of
 // its own; see digest.runScheduledDigestIfDue for the actual "is it due" logic (Monday
 // 8am server-local, at most once every 6 days).
+demo.startDemo()
+
 const { runScheduledDigestIfDue } = require('./services/digest')
 setInterval(
   () => {

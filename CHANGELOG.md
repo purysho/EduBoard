@@ -6,6 +6,7 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ### Added
 
+- **A public demo login on the Portal** (`PORTAL_DEMO=1`; `Set-Up-Homepage.cmd` turns it on): username `demo`, password `try-eduboard`, for anyone to see what families see. It's a made-up class under its own demo teacher, with a report card, a notice to answer and a message. Its password, email and QR logins can't be changed (PT-1009), it resets every day, and it's left out of the admin page's usage numbers. The homepage's new **Try it first** section shows the login and points to the app's sample school.
 - **Sample school** (Settings → Help and updates, or the getting-started checklist): EduBoard reopens on two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans, notes and report comments, to try it or show it to a school. It lives in its own folder; the teacher's own classes are never read or changed, and a banner offers **Back to my classes** and **Start over**. No backups or usage pings are made from it.
 
 ### Fixed
