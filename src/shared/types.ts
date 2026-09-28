@@ -249,8 +249,11 @@ export interface CompetencyMatrixStudent {
 export interface CompetencyEvidenceCell {
   studentId: string
   standardId: string
-  /** The actual rubric level most recently selected for this standard. */
+  /** All rubric levels selected for this standard in the most recent evidence source. */
+  latestLevelLabels: string[]
+  /** One agreed latest level, or null when the newest evidence is mixed / absent. */
   latestLevelLabel: string | null
+  latestEvidenceMixed: boolean
   latestSourceType: CompetencyEvidenceSource | null
   latestSourceName: string | null
   latestAt: string | null
