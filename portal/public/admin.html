@@ -13,6 +13,10 @@
   h1 { font-size: 1.4rem; margin: 0 0 4px; }
   p.hint { color: var(--muted); margin: 0 0 20px; font-size: .92rem; line-height: 1.5; }
   .card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .tile { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+  .tile-label { font-size: .75rem; color: var(--muted); }
+  .tile-value { font-weight: 600; margin-top: 2px; }
   label { display: block; font-size: .8rem; font-weight: 600; margin: 0 0 6px; color: var(--muted); }
   input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
   .row { display: flex; gap: 8px; align-items: flex-end; }
@@ -150,8 +154,10 @@ async function renderDashboard(newTeacher) {
           : '<p class="hint" style="margin:0">No teachers yet.</p>'
       }
     </div>
+    <div class="card" id="adoption"></div>
     <div class="card" id="usage"></div>`
 
+  renderAdoption()
   renderUsage()
   document.getElementById('signout').onclick = () => { setSecret(null); renderSignIn() }
   const copy = document.getElementById('copy')
@@ -185,6 +191,62 @@ async function renderDashboard(newTeacher) {
       renderDashboard()
     }
   })
+}
+
+// How much the Portal is used, from what it already stores for its own features.
+async function renderAdoption() {
+  const box = document.getElementById('adoption')
+  let data
+  try {
+    data = await adminApi('GET', '/adoption?weeks=12')
+  } catch {
+    box.remove()
+    return
+  }
+  const t = data.totals
+  const pct = (v) => (v === null ? '—' : Math.round(v * 100) + '%')
+  const recent = data.weeks.slice(-4)
+  const avg = (key) => Math.round(recent.reduce((s, w) => s + w[key], 0) / recent.length)
+  const tiles = [
+    ['Teachers publishing', `${t.teachersPublishing} of ${t.teachers}`],
+    ['Students with a login', `${t.studentsWithLogin} of ${t.students} (${pct(t.loginShare)})`],
+    ['Families active a week', `${avg('families')} (last 4 weeks)`],
+    ['Teachers active a week', `${avg('teachers')} (last 4 weeks)`],
+    ['Report cards opened', t.reportCards ? `${pct(t.reportCardsOpenedShare)} of ${t.reportCards} sent to families with a login` : '—'],
+    ['Notices answered', t.replySlipExpected ? pct(t.replySlipShare) : '—'],
+    ['Class Story seen (30 days)', t.posts30 ? `${pct(t.postsSeenShare30)} of ${t.posts30} posts` : '—'],
+    ['Work handed in (30 days)', String(t.handedIn30)]
+  ]
+  const summary = [
+    `EduBoard Portal usage, ${data.generatedAt.slice(0, 10)}`,
+    ...tiles.map(([k, v]) => `${k}: ${v}`),
+    '',
+    'Week of: families active / teachers active',
+    ...data.weeks.map((w) => `${w.week}: ${w.families} / ${w.teachers}`)
+  ].join('\n')
+  box.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+      <strong>How much the Portal is used</strong>
+      <button class="secondary" id="copy-adoption">Copy as text</button>
+    </div>
+    <p class="hint" style="margin:4px 0 10px">Counted only from what the Portal already keeps for its features. A family is active in a week if they saw a Class Story post, opened a report card, answered a notice, sent a message, handed in work or used the Study Helper; a teacher if they posted, sent report cards, marked work or messaged a family. Just looking at grades isn't counted, so these are lower bounds.</p>
+    <div class="tiles">${tiles.map(([k, v]) => `<div class="tile"><div class="tile-label">${esc(k)}</div><div class="tile-value">${esc(v)}</div></div>`).join('')}</div>
+    <table style="margin-top:12px">
+      <thead><tr><th>Week of</th><th class="num">Families active</th><th class="num">Teachers active</th></tr></thead>
+      <tbody>${data.weeks
+        .slice()
+        .reverse()
+        .map((w) => `<tr><td>${esc(w.week)}</td><td class="num">${w.families}</td><td class="num">${w.teachers}</td></tr>`)
+        .join('')}</tbody>
+    </table>`
+  document.getElementById('copy-adoption').onclick = async (e) => {
+    try {
+      await navigator.clipboard.writeText(summary)
+      e.target.textContent = 'Copied'
+    } catch {
+      e.target.textContent = 'Couldn’t copy'
+    }
+  }
 }
 
 // Anonymous desktop usage (only copies whose teacher turned on "Help improve EduBoard").

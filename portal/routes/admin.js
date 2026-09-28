@@ -43,6 +43,13 @@ router.get('/usage', (req, res) => {
   res.json(require('./usage').usageSummary(weeks))
 })
 
+// How much this Portal is used: sign-ups, weekly active families and teachers, and how
+// families respond to report cards and notices (services/adoption.js).
+router.get('/adoption', (req, res) => {
+  const weeks = Math.min(52, Math.max(1, Number.parseInt(req.query.weeks, 10) || 12))
+  res.json(require('../services/adoption').adoptionSummary(weeks))
+})
+
 // A basic roster of who's using this Portal and how much they've published — the seed
 // of a school-level admin view (see EduBoardRoadMap.MD Phase 6), not a full dashboard.
 router.get('/teachers', (_req, res) => {

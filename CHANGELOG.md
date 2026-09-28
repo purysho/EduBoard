@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- **Portal usage on the admin page** (portal address /admin.html): teachers publishing, students with a login, families and teachers active each week (last 12 weeks), share of report cards opened, notices answered, Class Story posts seen and work handed in. **Copy as text** puts it all in an email or a pitch. It's worked out only from what the Portal already keeps for its features; nothing new is recorded.
+
 ## [0.6.0] — 2026-09-28
 
 **If you run a Portal, update it** (Update-Live-Portal): sending report cards, reply slips on notices and the privacy pages need the updated Portal. Score import and the student timeline work without it.
