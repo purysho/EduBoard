@@ -220,7 +220,8 @@ const api: EduBoardApi = {
     create: (input) => invoke(IpcChannels.courseGroups.create, input),
     rename: (id, name) => invoke(IpcChannels.courseGroups.rename, id, name),
     remove: (id) => invoke(IpcChannels.courseGroups.remove, id),
-    getComposite: (courseGroupId) => invoke(IpcChannels.courseGroups.getComposite, courseGroupId)
+    getComposite: (courseGroupId) => invoke(IpcChannels.courseGroups.getComposite, courseGroupId),
+    curriculumMap: (courseGroupId) => invoke(IpcChannels.courseGroups.curriculumMap, courseGroupId)
   },
   seatAssignments: {
     listByClass: (classId) => invoke(IpcChannels.seatAssignments.listByClass, classId),
