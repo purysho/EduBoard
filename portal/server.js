@@ -87,9 +87,21 @@ app.use(express.static(path.join(__dirname, 'public')))
 // - A teacher's sync can carry base64 homework attachments and material text: 50 MB.
 // - A student's routes carry at most one 20 MB submission (~27 MB as base64): 30 MB.
 // - Everything else (login, signup, admin) is small JSON: the 100 KB default.
-app.use('/api/sync', requireSyncSecret, express.json({ limit: '50mb' }), require('./routes/sync'))
-app.use('/api/me', requireAuth, express.json({ limit: '30mb' }), require('./routes/me'))
-app.use(express.json({ limit: '100kb' }))
+// Express 5 leaves req.body undefined when a request has no JSON body; the routes expect
+// an empty object (as Express 4 gave), so a bodyless request gets a 400, never a crash.
+const emptyBody = (req, _res, next) => {
+  if (req.body === undefined) req.body = {}
+  next()
+}
+app.use(
+  '/api/sync',
+  requireSyncSecret,
+  express.json({ limit: '50mb' }),
+  emptyBody,
+  require('./routes/sync')
+)
+app.use('/api/me', requireAuth, express.json({ limit: '30mb' }), emptyBody, require('./routes/me'))
+app.use(express.json({ limit: '100kb' }), emptyBody)
 app.use('/api/invites', require('./routes/invites'))
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/admin', require('./routes/admin'))

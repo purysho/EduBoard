@@ -239,3 +239,16 @@ test('over HTTPS the browser is told to stay on HTTPS, and the sign-in cookie is
   assert.equal(http.headers.get('strict-transport-security'), null)
   assert.doesNotMatch(http.headers.get('set-cookie'), /;\s*Secure/i)
 })
+
+test('a request without a JSON body gets a clear answer, not a crash', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  // No Content-Type, no body: the routes see an empty object.
+  const res = await fetch(portal.url + '/api/sync/posts', {
+    method: 'POST',
+    headers: { 'X-Sync-Secret': portal.secrets.sync }
+  })
+  assert.equal(res.status, 400)
+  const login = await fetch(portal.url + '/api/auth/login', { method: 'POST' })
+  assert.ok(login.status >= 400 && login.status < 500, `login answered ${login.status}`)
+})
