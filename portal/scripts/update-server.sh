@@ -34,8 +34,9 @@ fail() { printf '\nERROR: %s\n' "$*" >&2; exit 1; }
 
 [ -f "$PORTAL_DIR/server.js" ] || fail "No Portal found at $PORTAL_DIR. Run: bash update-server.sh /path/to/portal"
 command -v node >/dev/null || fail "Node.js isn't installed on this server."
-NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
-[ "$NODE_MAJOR" -ge 20 ] || fail "Node.js $NODE_MAJOR is too old; the Portal needs 20 or newer (22 recommended)."
+# 20.9 is the oldest the image library (sharp) runs on.
+node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 20 || (a === 20 && b >= 9) ? 0 : 1)' ||
+  fail "Node.js $(node -v) is too old; the Portal needs 20.9 or newer (22 recommended). Nothing was changed."
 
 # ---- 1. Where the data lives --------------------------------------------------------------
 DATA_DIR="$PORTAL_DIR/data"

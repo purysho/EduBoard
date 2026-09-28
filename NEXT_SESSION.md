@@ -22,7 +22,7 @@ built since the last release).
 
 ## How the app is built (so you don't re-derive it)
 
-- Electron 39 + electron-vite + React 19 + Tailwind v4 (colours are CSS variables in
+- Electron 44 + electron-vite + React 19 + Tailwind v4 (colours are CSS variables in
   `src/renderer/src/styles.css`) + drizzle-orm + better-sqlite3 (aliased to
   `better-sqlite3-multiple-ciphers` for encryption).
 - Migrations: `src/main/db/migrations.ts` (latest id 33). Add a new numbered one.
