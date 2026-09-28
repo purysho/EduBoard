@@ -56,6 +56,7 @@ import {
 import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmissions'
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
+import * as coursePacksRepo from '../repositories/coursePacks'
 import { getCourseGroupComposite } from '../services/compositeGrades'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import {
@@ -116,6 +117,7 @@ import {
   sanitizeCss
 } from '@shared/schoolPack'
 import { checkCss, exampleStylesheet } from '@shared/cssCheck'
+import { parseCoursePack } from '@shared/coursePack'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
@@ -901,6 +903,50 @@ export function registerIpcHandlers(): void {
     await writeFile(filePath, exampleStylesheet(), 'utf-8')
     return true
   })
+
+  // --- Course packs ---------------------------------------------------------------------
+  handle(IpcChannels.coursePack.preview, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: tr('EduBoard Course Pack'), extensions: ['json'] }]
+    })
+    if (canceled || !filePaths[0]) return null
+    const filePath = filePaths[0]
+    const pack = parseCoursePack(await readFile(filePath, 'utf-8'))
+    return {
+      filePath,
+      id: pack.id,
+      name: pack.name,
+      description: pack.description ?? null,
+      subject: pack.subject ?? null,
+      terms: pack.terms,
+      counts: {
+        standards: pack.standards?.length ?? 0,
+        rubrics: pack.rubrics?.length ?? 0,
+        resources: pack.resources?.length ?? 0,
+        studentFields: pack.studentFields?.length ?? 0,
+        assessments: pack.assessments?.length ?? 0,
+        homework: pack.homework?.length ?? 0,
+        lessons: pack.lessons?.length ?? 0
+      }
+    }
+  })
+  handle(
+    IpcChannels.coursePack.apply,
+    async (_e, filePath: string, termBindings: Record<string, string>) => {
+      const pack = parseCoursePack(await readFile(String(filePath), 'utf-8'))
+      const safeBindings = Object.fromEntries(
+        Object.entries(termBindings ?? {}).map(([termKey, classId]) => [
+          String(termKey),
+          String(classId)
+        ])
+      )
+      // Course Pack installation can create many records and bind existing classes, so
+      // take the same recovery point as other bulk/destructive changes.
+      backupService.createBackup()
+      return coursePacksRepo.installCoursePack({ pack, termBindings: safeBindings })
+    }
+  )
 
   // --- Password protection --------------------------------------------------------------
   handle(IpcChannels.security.status, () => security.getSecurityStatus())
