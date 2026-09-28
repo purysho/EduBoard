@@ -28,6 +28,79 @@ export const courseGroups = sqliteTable('course_groups', {
   createdAt: text('created_at').notNull()
 })
 
+export const coursePacks = sqliteTable(
+  'course_packs',
+  {
+    id: text('id').primaryKey(),
+    packId: text('pack_id').notNull(),
+    revision: integer('revision').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    courseGroupId: text('course_group_id')
+      .notNull()
+      .references(() => courseGroups.id, { onDelete: 'cascade' }),
+    sourceJson: text('source_json').notNull(),
+    importedAt: text('imported_at').notNull()
+  },
+  (t) => ({
+    packIdUnique: uniqueIndex('course_packs_pack_id_unique').on(t.packId),
+    courseGroupIdx: index('course_packs_course_group_idx').on(t.courseGroupId)
+  })
+)
+
+export const coursePackTerms = sqliteTable(
+  'course_pack_terms',
+  {
+    id: text('id').primaryKey(),
+    coursePackId: text('course_pack_id')
+      .notNull()
+      .references(() => coursePacks.id, { onDelete: 'cascade' }),
+    termKey: text('term_key').notNull(),
+    termId: text('term_id').references(() => terms.id, { onDelete: 'set null' }),
+    sortOrder: integer('sort_order').notNull().default(0)
+  },
+  (t) => ({
+    packTermUnique: uniqueIndex('course_pack_terms_pack_key_unique').on(t.coursePackId, t.termKey),
+    packIdx: index('course_pack_terms_pack_idx').on(t.coursePackId)
+  })
+)
+
+export const curriculumSessions = sqliteTable(
+  'curriculum_sessions',
+  {
+    id: text('id').primaryKey(),
+    coursePackId: text('course_pack_id')
+      .notNull()
+      .references(() => coursePacks.id, { onDelete: 'cascade' }),
+    sessionKey: text('session_key').notNull(),
+    termKey: text('term_key').notNull(),
+    sequence: integer('sequence').notNull(),
+    title: text('title').notNull(),
+    durationMinutes: integer('duration_minutes'),
+    optional: integer('optional', { mode: 'boolean' }).notNull().default(false),
+    objectives: text('objectives'),
+    framework: text('framework'),
+    materials: text('materials'),
+    activities: text('activities'),
+    homework: text('homework'),
+    standardCodes: text('standard_codes', { mode: 'json' }).$type<string[]>().notNull(),
+    assessmentKeys: text('assessment_keys', { mode: 'json' }).$type<string[]>().notNull(),
+    resourceKeys: text('resource_keys', { mode: 'json' }).$type<string[]>().notNull()
+  },
+  (t) => ({
+    sessionKeyUnique: uniqueIndex('curriculum_sessions_pack_key_unique').on(
+      t.coursePackId,
+      t.sessionKey
+    ),
+    sessionPositionUnique: uniqueIndex('curriculum_sessions_pack_term_sequence_unique').on(
+      t.coursePackId,
+      t.termKey,
+      t.sequence
+    ),
+    packIdx: index('curriculum_sessions_pack_idx').on(t.coursePackId, t.termKey, t.sequence)
+  })
+)
+
 export const students = sqliteTable('students', {
   id: text('id').primaryKey(),
   firstName: text('first_name').notNull(),
