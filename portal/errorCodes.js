@@ -21,7 +21,7 @@ const PORTAL_ERROR_CODES = {
   'PT-1003': {
     area: 'Signing in',
     meaning: 'Too many attempts from this network or for this account; paused for a few minutes.',
-    fix: 'Wait 15 minutes. If a whole school shares one internet address, raise RATE_LOGIN_PER_IP in the Portal’s .env.'
+    fix: 'Wait 15 minutes. Only failed logins count toward the network’s limit; if a whole school shares one internet address and still hits it, raise RATE_LOGIN_PER_IP in the Portal’s .env.'
   },
   'PT-1004': {
     area: 'Signing in',
