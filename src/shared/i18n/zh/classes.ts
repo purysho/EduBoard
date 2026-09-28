@@ -641,5 +641,27 @@ export const CLASSES: Record<string, string> = {
   'Import {n} scores': '导入 {n} 个成绩',
   '{n} rows': '{n} 行',
   '{n} scores to save': '将保存 {n} 个成绩',
-  '{n} replace scores already there': '{n} 个会替换已有成绩'
+  '{n} replace scores already there': '{n} 个会替换已有成绩',
+  Scores: '成绩',
+  'Notes and contacts': '记录和联系',
+  'Report comments': '成绩单评语',
+  phone: '电话',
+  email: '邮件',
+  'in person': '面谈',
+  other: '其他',
+  'Parent contact ({how})': '联系家长（{how}）',
+  'Positive note': '表扬记录',
+  'Joined the class': '加入班级',
+  '{name}: excused': '{name}：免考',
+  '{name}: {points} / {max} ({pct}%)': '{name}：{points} / {max}（{pct}%）',
+  'follow-up needed': '需要跟进',
+  'Handed in “{title}” · {grade}': '已提交“{title}” · {grade}',
+  'Handed in “{title}”': '已提交“{title}”',
+  'Message from {who}': '来自 {who} 的消息',
+  'Your message to {who}': '你发给 {who} 的消息',
+  Timeline: '时间线',
+  'Everything recorded about {name}, newest first, from every class: absences and lateness, scores, class points, notes and parent contacts, homework, report comments and Portal messages.':
+    '关于{name}的所有记录，按时间从新到旧，涵盖所有班级：缺勤和迟到、成绩、课堂积分、记录和家长联系、作业、成绩单评语以及学生门户消息。',
+  'Nothing recorded yet.': '还没有记录。',
+  'Show older ({n} more)': '显示更早的记录（还有 {n} 条）'
 }

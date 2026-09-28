@@ -21,6 +21,7 @@ import { StudentClassRow } from './StudentClassRow'
 import { StudentLogPanel } from './StudentLogPanel'
 import { MergeStudentsModal } from './MergeStudentsModal'
 import { PrivacyCard } from './PrivacyCard'
+import { StudentTimeline } from './StudentTimeline'
 import { tr } from '@shared/i18n'
 
 export function StudentProfilePage(): React.JSX.Element {
@@ -145,6 +146,8 @@ export function StudentProfilePage(): React.JSX.Element {
 
         <StudentLogPanel studentId={student.id} />
       </div>
+
+      <StudentTimeline student={student} />
 
       <StudentFormModal open={editOpen} onClose={() => setEditOpen(false)} student={student} />
       {mergeOpen && (

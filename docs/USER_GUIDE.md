@@ -117,6 +117,10 @@ For a whole class at once, skip manual entry — see [Importing a roster](#impor
 
 ---
 
+
+### A student's timeline
+
+At the bottom of a student's page, **Timeline** lists everything recorded about them, newest first and grouped by month, across every class they're in: absences and lateness (with any note), scores, class points (a line a day), log notes and parent contacts (marked when a follow-up is still needed), homework handed in and its grade, report card comments, when they joined each class, and, when the Portal is connected, messages with their family. Click the chips above it to show or hide each kind, and choose a class to see just that class. It's the view to open before a parent meeting.
 ## Setting up grading
 
 Each class has its own grading scale, in **that class's Settings tab** (not the app-wide Settings page):

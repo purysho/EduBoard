@@ -53,6 +53,7 @@ import type {
   PortalInviteBatchWithInvites,
   PortalMessageThread,
   ClassPost,
+  StudentTimelineEvent,
   PostReplySlip,
   ReportCardDelivery,
   ReportCardSendProgress,
@@ -482,6 +483,10 @@ export interface EduBoardApi {
     send(accountId: string, body: string): Promise<void>
     markRead(accountId: string): Promise<void>
     translate(messageId: string, targetLang: string): Promise<string>
+  }
+  /** One student's record in date order, across all their classes. */
+  studentTimeline: {
+    get(studentId: string): Promise<StudentTimelineEvent[]>
   }
   /** Scores from a spreadsheet into a class's gradebook: read the file for the preview,
    * then write what the teacher confirmed. */

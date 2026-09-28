@@ -287,6 +287,9 @@ export const IpcChannels = {
     markRead: 'portalMessages:markRead',
     translate: 'portalMessages:translate'
   },
+  studentTimeline: {
+    get: 'studentTimeline:get'
+  },
   scoreImport: {
     read: 'scoreImport:read',
     apply: 'scoreImport:apply'

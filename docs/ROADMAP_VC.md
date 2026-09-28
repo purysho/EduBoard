@@ -102,6 +102,11 @@ Effort: S = days, M = 1–3 weeks, L = a month or more, for one developer.
 - **Posting to DingTalk and WeCom groups** by robot webhook.
 - **Seating chart with points and needs icons.**
 - An **opt-in anonymous usage count**, for the retention numbers in section 5.
+- A **privacy notice and data processing terms** a school can sign (edu-board.com/privacy, /data-processing).
+- **Private report delivery** on the Portal, with who has opened each report card (P0 item 2).
+- **Notices with a reply slip (回执)**: "I've read this" or yes / no, who hasn't replied, and a reminder (P0 item 3).
+- **Score import** from a spreadsheet, with a preview before anything is saved (P1 item 6).
+- A **student timeline** on each student's page (P1 item 8).
 
 ### What to build next, in order
 

@@ -579,6 +579,40 @@ export interface PostReplySlip {
   question: string | null
 }
 
+/** One thing on a student's timeline, from any of their classes. Each kind fills in its
+ * own fields; the screen words it. */
+export type StudentTimelineKind =
+  'enrolled' | 'attendance' | 'score' | 'points' | 'note' | 'homework' | 'comment'
+
+export interface StudentTimelineEvent {
+  kind: StudentTimelineKind
+  /** The day it happened (YYYY-MM-DD), and a full time for ordering within the day. */
+  date: string
+  at: string
+  classId: string | null
+  className: string | null
+  /** attendance: the code's label and what it counts as. */
+  attendanceLabel?: string
+  attendanceCountsAs?: AttendanceStatus
+  /** score: the assessment, points out of max, or excused. */
+  assessmentName?: string
+  pointsEarned?: number | null
+  maxScore?: number
+  excused?: boolean
+  /** points: the day's class points by category. */
+  pointItems?: { name: string; total: number }[]
+  /** note: the log entry. */
+  logType?: StudentLogType
+  contactMethod?: ContactMethod | null
+  followUpNeeded?: boolean
+  followUpDone?: boolean
+  /** homework: what was handed in, and its grade. */
+  homeworkTitle?: string
+  homeworkGrade?: string | null
+  /** note, comment, attendance, homework feedback: the words themselves. */
+  text?: string | null
+}
+
 /** One report card title sent to a class's families on the Portal, and who has
  * opened it. A student's family has seen it once any login linked to them opened it. */
 export interface ReportCardDelivery {

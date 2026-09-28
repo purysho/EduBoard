@@ -1,4 +1,5 @@
 import { AppError } from '@shared/errorCodes'
+import { studentTimeline } from '../services/studentTimeline'
 import { applyScoreImport, readScoreSheet } from '../services/scoreImport'
 import type { ScoreImportRequest } from '@shared/scoreImport'
 import { reportCardSendProgress, sendReportCards } from '../services/reportCardDelivery'
@@ -1082,6 +1083,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.portalMessages.translate, (_e, messageId: string, targetLang: string) =>
     translateMessage(messageId, targetLang)
   )
+  handle(IpcChannels.studentTimeline.get, (_e, studentId: string) => studentTimeline(studentId))
   handle(IpcChannels.scoreImport.read, (_e, filePath: string, sheetIndex?: number) =>
     readScoreSheet(filePath, sheetIndex ?? 0)
   )
