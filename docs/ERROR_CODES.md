@@ -105,7 +105,7 @@ after changing either.
 | --- | --- | --- |
 | PT-1001 | Not signed in, or the session has ended. | Sign in again. If it keeps happening, check the browser allows cookies for the Portal. |
 | PT-1002 | Wrong username or password. | Check the username. The teacher can reset the password (EduBoard → a class → Portal, or approve a reset request on the Dashboard). |
-| PT-1003 | Too many attempts from this network or for this account; paused for a few minutes. | Wait 15 minutes. Only failed logins count toward the network's limit; if a whole school shares one internet address and still hits it, raise RATE_LOGIN_PER_IP in the Portal’s .env. |
+| PT-1003 | Too many attempts from this network or for this account; paused for a few minutes. | Wait 15 minutes. Only failed logins count toward the network’s limit; if a whole school shares one internet address and still hits it, raise RATE_LOGIN_PER_IP in the Portal’s .env. |
 | PT-1004 | A password reset request was sent without a username. | Type the username first. |
 | PT-1005 | The password reset request doesn’t exist any more, or the teacher hasn’t approved it. | Ask again, and ask the teacher to approve it on EduBoard’s Dashboard. |
 | PT-1006 | The new password or username isn’t acceptable (too short, or taken). | Read the message: it says what’s needed. |
