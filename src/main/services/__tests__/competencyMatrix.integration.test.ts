@@ -4,7 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { closeDb, initDb, setDbPathForTesting } from '../../db/client'
-import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
+import { DEFAULT_GRADE_THRESHOLDS, type Student } from '@shared/types'
 import { createStudent } from '../../repositories/students'
 import { createClass } from '../../repositories/classes'
 import { enrollStudent } from '../../repositories/enrollments'
@@ -29,7 +29,7 @@ afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true })
 })
 
-function makeStudent(firstName: string, lastName: string) {
+function makeStudent(firstName: string, lastName: string): Student {
   return createStudent({
     firstName,
     lastName,
