@@ -1,8 +1,8 @@
 import { AppError } from '@shared/errorCodes'
 import { addDays } from '@shared/dates'
 import { and, asc, eq, gte } from 'drizzle-orm'
-import { getDb } from '../db/client'
-import { lessonPlans } from '../db/schema'
+import { getDb, getSqlite } from '../db/client'
+import { lessonPlanResources, lessonPlans } from '../db/schema'
 import { newId, nowIso } from '../db/util'
 import type { LessonPlan } from '@shared/types'
 import type { CreateLessonPlanInput, UpdateLessonPlanInput } from '@shared/inputs'
@@ -39,6 +39,7 @@ export function createLessonPlan(input: CreateLessonPlanInput): LessonPlan {
     id: newId(),
     createdAt: now,
     updatedAt: now,
+    originalDate: input.date,
     status: 'planned',
     ...input
   }
@@ -59,6 +60,38 @@ export function updateLessonPlan(id: string, patch: UpdateLessonPlanInput): Less
 
 export function deleteLessonPlan(id: string): void {
   getDb().delete(lessonPlans).where(eq(lessonPlans.id, id)).run()
+}
+
+/** Resource-library ids explicitly attached to one lesson plan. */
+export function listLessonResourceIds(lessonPlanId: string): string[] {
+  return (
+    getSqlite()
+      .prepare(
+        'SELECT resource_id AS resourceId FROM lesson_plan_resources WHERE lesson_plan_id = ? ORDER BY resource_id'
+      )
+      .all(lessonPlanId) as { resourceId: string }[]
+  ).map((row) => row.resourceId)
+}
+
+/** Adds one link without disturbing links a teacher may have added locally. */
+export function linkLessonResource(lessonPlanId: string, resourceId: string): void {
+  getSqlite()
+    .prepare(
+      'INSERT OR IGNORE INTO lesson_plan_resources (lesson_plan_id, resource_id) VALUES (?, ?)'
+    )
+    .run(lessonPlanId, resourceId)
+}
+
+/** Replaces the resource set when a teacher explicitly edits a lesson's attachments. */
+export function setLessonResources(lessonPlanId: string, resourceIds: string[]): void {
+  const sqlite = getSqlite()
+  sqlite.transaction(() => {
+    sqlite.prepare('DELETE FROM lesson_plan_resources WHERE lesson_plan_id = ?').run(lessonPlanId)
+    const add = sqlite.prepare(
+      'INSERT OR IGNORE INTO lesson_plan_resources (lesson_plan_id, resource_id) VALUES (?, ?)'
+    )
+    for (const resourceId of [...new Set(resourceIds)]) add.run(lessonPlanId, resourceId)
+  })()
 }
 
 /** Copies a class's lesson plans from the week starting `fromMonday` to the week
