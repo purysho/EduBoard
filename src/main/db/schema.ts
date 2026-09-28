@@ -377,6 +377,8 @@ export const lessonPlans = sqliteTable(
       .notNull()
       .references(() => classes.id, { onDelete: 'cascade' }),
     date: text('date').notNull(),
+    /** First scheduled date. Kept when the teacher later moves the lesson. */
+    originalDate: text('original_date'),
     weekLabel: text('week_label'),
     title: text('title').notNull(),
     objectives: text('objectives'),
@@ -572,6 +574,23 @@ export const lessonResources = sqliteTable(
   },
   (t) => ({
     standardIdx: index('lesson_resources_standard_idx').on(t.standardId)
+  })
+)
+
+export const lessonPlanResources = sqliteTable(
+  'lesson_plan_resources',
+  {
+    lessonPlanId: text('lesson_plan_id')
+      .notNull()
+      .references(() => lessonPlans.id, { onDelete: 'cascade' }),
+    resourceId: text('resource_id')
+      .notNull()
+      .references(() => lessonResources.id, { onDelete: 'cascade' })
+  },
+  (t) => ({
+    pairUnique: uniqueIndex('lesson_plan_resources_pair_unique').on(t.lessonPlanId, t.resourceId),
+    lessonIdx: index('lesson_plan_resources_lesson_idx').on(t.lessonPlanId),
+    resourceIdx: index('lesson_plan_resources_resource_idx').on(t.resourceId)
   })
 )
 
