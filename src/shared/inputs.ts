@@ -109,9 +109,11 @@ export type MarkAttendanceInput = {
 
 export type CreateLessonPlanInput = Omit<
   LessonPlan,
-  'id' | 'createdAt' | 'updatedAt' | 'status'
+  'id' | 'createdAt' | 'updatedAt' | 'status' | 'originalDate'
 > & { status?: LessonPlan['status'] }
-export type UpdateLessonPlanInput = Partial<Omit<LessonPlan, 'id' | 'classId' | 'createdAt'>>
+export type UpdateLessonPlanInput = Partial<
+  Omit<LessonPlan, 'id' | 'classId' | 'createdAt' | 'originalDate'>
+>
 
 export type CreateStandardInput = Omit<Standard, 'id' | 'createdAt'>
 export type UpdateStandardInput = Partial<Omit<Standard, 'id' | 'createdAt'>>

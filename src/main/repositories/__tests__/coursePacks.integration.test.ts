@@ -14,8 +14,8 @@ import { listStandards } from '../standards'
 import { listRubrics } from '../rubrics'
 import { listAssessmentsByClass } from '../assessments'
 import { listHomeworkAssignmentsByClass } from '../homeworkAssignments'
-import { listLessonPlansByClass } from '../lessonPlans'
-import { listLessonResources } from '../lessonResources'
+import { linkLessonResource, listLessonPlansByClass, listLessonResourceIds } from '../lessonPlans'
+import { createLessonResource, listLessonResources } from '../lessonResources'
 import { getSettings, updateSettings } from '../settingsRepo'
 import { installCoursePack } from '../coursePacks'
 
@@ -117,7 +117,8 @@ function samplePack(): CoursePack {
           offsetDays: 0,
           objectives: 'Explain one idea clearly for a non-specialist audience.',
           assessmentKey: 'presentation-1',
-          standardKeys: ['communication']
+          standardKeys: ['communication'],
+          resourceKeys: ['model-explanation']
         }
       ],
       resources: [
@@ -140,6 +141,12 @@ describe('Course Packs', () => {
     const raw = JSON.parse(JSON.stringify(samplePack()))
     raw.lessons[0].standardKeys = ['does-not-exist']
     expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
+  })
+
+  it('rejects a lesson linked to an unknown resource', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.lessons[0].resourceKeys = ['does-not-exist']
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown resource key/i)
   })
 
   it('rejects a resource linked to an unknown standard', () => {
@@ -188,11 +195,14 @@ describe('Course Packs', () => {
       dueDate: '2026-09-22',
       status: 'draft'
     })
-    expect(listLessonPlansByClass(cls.id)[0]).toMatchObject({
+    const installedLesson = listLessonPlansByClass(cls.id)[0]
+    expect(installedLesson).toMatchObject({
       title: 'Explain an idea clearly',
       date: '2026-09-07',
+      originalDate: '2026-09-07',
       standards: 'ENG-01'
     })
+    expect(listLessonResourceIds(installedLesson.id)).toEqual([listLessonResources()[0].id])
 
     const updatedClass = getClass(cls.id)!
     expect(updatedClass.courseGroupId).toBe(result.courseGroupId)
@@ -207,7 +217,10 @@ describe('Course Packs', () => {
       firstClassDates: { t1: '2026-09-08' }
     })
 
-    expect(listLessonPlansByClass(cls.id)[0].date).toBe('2026-09-08')
+    expect(listLessonPlansByClass(cls.id)[0]).toMatchObject({
+      date: '2026-09-08',
+      originalDate: '2026-09-08'
+    })
     expect(listAssessmentsByClass(cls.id)[0].assessmentDate).toBe('2026-09-22')
     expect(listHomeworkAssignmentsByClass(cls.id)[0].dueDate).toBe('2026-09-23')
   })
@@ -245,7 +258,28 @@ describe('Course Packs', () => {
     expect(listLessonResources().filter((r) => r.title === 'Model explanation')).toHaveLength(1)
     expect(getSettings().studentFields.filter((field) => field.id === 'english-goal')).toHaveLength(1)
     expect(listHomeworkAssignmentsByClass(cls.id)).toHaveLength(1)
+    const lesson = listLessonPlansByClass(cls.id)[0]
     expect(listLessonPlansByClass(cls.id)).toHaveLength(1)
+    expect(listLessonResourceIds(lesson.id)).toHaveLength(1)
+
+    // A local teacher link survives Course Pack re-import; the pack only adds its own
+    // missing links and never replaces the lesson's whole resource set.
+    const packResource = listLessonResources().find((item) => item.title === 'Model explanation')!
+    const local = createLessonResource({
+      title: 'Teacher local note',
+      type: 'note',
+      url: null,
+      filePath: null,
+      notes: 'Added after the pack import.',
+      tags: ['local'],
+      standardId: null,
+      classId: cls.id,
+      shareWithStudents: false,
+      studyGuide: null
+    })
+    linkLessonResource(lesson.id, local.id)
+    installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
+    expect(new Set(listLessonResourceIds(lesson.id))).toEqual(new Set([packResource.id, local.id]))
   })
 
   it('rolls the whole install back if materialisation fails', () => {
