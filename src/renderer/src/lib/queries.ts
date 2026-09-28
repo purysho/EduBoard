@@ -712,14 +712,6 @@ export function useAnalyticsOverview() {
   })
 }
 
-export function useCompetencyMatrix(classId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.competencyMatrix(classId ?? ''),
-    queryFn: () => api().competencies.matrix(classId!),
-    enabled: !!classId
-  })
-}
-
 // ---- Settings & backups -----------------------------------------------------------------
 
 export function useSettings() {
