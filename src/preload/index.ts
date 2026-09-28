@@ -261,7 +261,8 @@ const api: EduBoardApi = {
   },
   coursePack: {
     preview: () => invoke(IpcChannels.coursePack.preview),
-    apply: (filePath, termBindings) => invoke(IpcChannels.coursePack.apply, filePath, termBindings)
+    apply: (filePath, termBindings, firstClassDates) =>
+      invoke(IpcChannels.coursePack.apply, filePath, termBindings, firstClassDates)
   },
   security: {
     status: () => invoke(IpcChannels.security.status),
