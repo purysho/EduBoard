@@ -671,5 +671,19 @@ export const CLASSES: Record<string, string> = {
   'Showing all {n} days.': '显示全部 {n} 天。',
   'Showing the last {shown} of {n} days.': '显示最近 {shown} 天（共 {n} 天）。',
   'Show recent days only': '只显示最近几天',
-  'Show all days': '显示全部日期'
+  'Show all days': '显示全部日期',
+  Competencies: '能力证据',
+  'No rubric-linked standards yet': '还没有与评分量规关联的标准',
+  'Link Standards to rubric criteria, attach those rubrics to an assessment or homework task, then grade student work. EduBoard will build the competency evidence matrix automatically.':
+    '把标准关联到评分量规的评价维度，将量规用于测评或作业，然后为学生作品评分。EduBoard 会自动生成能力证据矩阵。',
+  'Competency evidence': '能力证据',
+  'Each cell shows the latest rubric level actually recorded for that student and Standard. The evidence count includes assessment and rubric-graded homework criteria.':
+    '每个单元格显示该学生在对应标准上最近一次实际记录的量规等级。证据数量包括测评和使用量规评分的作业评价维度。',
+  'Not yet evidenced': '尚无证据',
+  '{n} evidence item(s)': '{n} 条证据',
+  'Latest: {source}': '最近证据：{source}',
+  'No rubric evidence recorded': '尚未记录量规证据',
+  'This view does not calculate a separate mastery grade. It reflects the rubric evidence already stored in EduBoard, so changing a rubric score changes this matrix too.':
+    '此视图不会另行计算“掌握度”成绩。它直接反映 EduBoard 中已有的评分量规证据，因此修改量规评分也会同步改变此矩阵。'
+
 }
