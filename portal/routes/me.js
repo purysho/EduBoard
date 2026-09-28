@@ -515,15 +515,66 @@ router.get('/posts', (req, res) => {
     for (const r of rows) markRead.run(r.id, req.accountId, now)
   })()
 
+  // A reply slip is answered per child: which of this account's children are in the
+  // post's class, and what was answered for each.
+  const childrenIn = db.prepare(
+    `SELECT s.id, s.first_name, s.last_name, r.answer, r.replied_at
+     FROM students s
+     JOIN enrollments e ON e.student_id = s.id AND e.class_id = ? AND e.status = 'active'
+     LEFT JOIN post_replies r ON r.post_id = ? AND r.student_id = s.id
+     WHERE s.id IN (${studentIds.map(() => '?').join(',')})
+     ORDER BY s.first_name`
+  )
   res.json(
     rows.map((r) => ({
       id: r.id,
       className: r.class_name,
       body: r.body,
       hasImage: !!r.image_path,
-      createdAt: r.created_at
+      createdAt: r.created_at,
+      ...(r.reply_kind
+        ? {
+            replyKind: r.reply_kind,
+            replyQuestion: r.reply_question || null,
+            replyFor: childrenIn.all(r.class_id, r.id, ...studentIds).map((c) => ({
+              studentId: c.id,
+              name: `${c.first_name} ${c.last_name}`,
+              answer: c.answer || null,
+              repliedAt: c.replied_at || null
+            }))
+          }
+        : {})
     }))
   )
+})
+
+// Answer a post's reply slip for one child: 'ack' ("I've read this") or 'yes' / 'no'.
+// Answering again changes the answer.
+router.post('/posts/:id/reply', (req, res) => {
+  const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
+  const { studentId, answer } = req.body || {}
+  if (!post || !post.reply_kind)
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
+  const allowed = post.reply_kind === 'ack' ? ['ack'] : ['yes', 'no']
+  if (!allowed.includes(answer)) {
+    return res.status(400).json({ error: 'That isn’t an answer to this notice.', code: 'PT-5003' })
+  }
+  const enrolled =
+    getLinkedStudentIds(req.accountId).includes(studentId) &&
+    db
+      .prepare(
+        "SELECT 1 FROM enrollments WHERE student_id = ? AND class_id = ? AND status = 'active'"
+      )
+      .get(studentId, post.class_id)
+  if (!enrolled) return res.status(403).json({ error: 'Not your class', code: 'PT-3001' })
+  const now = new Date().toISOString()
+  db.prepare(
+    `INSERT INTO post_replies (post_id, student_id, account_id, answer, replied_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT (post_id, student_id) DO UPDATE
+       SET answer = excluded.answer, account_id = excluded.account_id, replied_at = excluded.replied_at`
+  ).run(post.id, studentId, req.accountId, answer, now)
+  res.json({ ok: true, answer, repliedAt: now })
 })
 
 router.get('/posts/:id/image', (req, res) => {

@@ -560,6 +560,23 @@ export interface ClassPost {
   audience?: number
   notSeen?: string[]
   noLogin?: number
+  /** The reply slip (回执), when the post asks for one: families confirm they've read it
+   * ('ack') or answer a yes / no question. Missing from older Portals. */
+  replyKind?: PostReplyKind
+  replyQuestion?: string | null
+  replies?: { ack: number; yes: number; no: number }
+  answeredYes?: string[]
+  answeredNo?: string[]
+  /** Students with a Portal login whose family hasn't replied yet. */
+  notReplied?: string[]
+}
+
+export type PostReplyKind = 'ack' | 'yesno'
+
+/** What a new Class Story post asks families to reply, if anything. */
+export interface PostReplySlip {
+  kind: PostReplyKind
+  question: string | null
 }
 
 /** One report card title sent to a class's families on the Portal, and who has

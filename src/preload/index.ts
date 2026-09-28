@@ -349,9 +349,10 @@ const api: EduBoardApi = {
   },
   classPosts: {
     list: () => invoke(IpcChannels.classPosts.list),
-    create: (classId, body, imagePath) =>
-      invoke(IpcChannels.classPosts.create, classId, body, imagePath),
+    create: (classId, body, imagePath, replySlip) =>
+      invoke(IpcChannels.classPosts.create, classId, body, imagePath, replySlip),
     remove: (id) => invoke(IpcChannels.classPosts.remove, id),
+    remind: (id) => invoke(IpcChannels.classPosts.remind, id),
     pickImage: () => invoke(IpcChannels.classPosts.pickImage)
   },
   portalAccounts: {

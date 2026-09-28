@@ -382,6 +382,10 @@ Nothing about any single student goes into a newsletter.
 
 Under each Class Story post, **Seen by 24 of 30 families** shows how many students' families have opened the Portal since it went up. Click it to see who hasn't yet, and how many students have no Portal login at all (their families can't see posts). Needs the updated Portal.
 
+### Notices that need a reply (回执)
+
+When a post needs an answer, set **Ask families to reply** before posting: **“I’ve read this”** (families confirm they've read it) or **A yes / no question** (type the question, such as "May your child come on the trip?"). On the Portal the post shows **Reply needed** with the buttons, once for each of the family's children in the class; a family can change their answer. Under the post you see **Yes / No / Not replied** (or **Confirmed by 18 of 24 families**), who hasn't replied and who answered no. **Remind** sends each family that hasn't replied a short Portal message asking them to. Needs the updated Portal.
+
 ### DingTalk and WeCom group chats
 
 Most classes in China already have a parents' group on DingTalk (钉钉) or WeCom (企业微信). EduBoard can post into it through the group's robot:

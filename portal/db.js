@@ -371,6 +371,22 @@ db.exec(`
   );
 `)
 
+// Reply slips (回执) on Class Story posts: a post can ask families to confirm they've read
+// it ('ack') or answer a yes / no question ('yesno'). One reply per student, which the
+// family can change.
+ensureColumn('class_posts', 'reply_kind', 'reply_kind TEXT')
+ensureColumn('class_posts', 'reply_question', 'reply_question TEXT')
+db.exec(`
+  CREATE TABLE IF NOT EXISTS post_replies (
+    post_id TEXT NOT NULL REFERENCES class_posts(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    replied_at TEXT NOT NULL,
+    PRIMARY KEY (post_id, student_id)
+  );
+`)
+
 // Report cards the teacher sent to families: one PDF per student per title (sending the
 // same title again replaces it). Portal-owned, so a publish never touches them; they go
 // when the teacher withdraws them, or with the student or class.

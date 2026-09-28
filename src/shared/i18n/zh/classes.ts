@@ -566,5 +566,25 @@ export const CLASSES: Record<string, string> = {
   'Send {n} report cards to families?': '把 {n} 份成绩单发送给家长？',
   Withdraw: '撤回',
   none: '无',
-  Send: '发送'
+  Send: '发送',
+  'Reminder: please reply to my notice in Class Story on the Portal (Home page). Thank you!':
+    '提醒：请在学生门户的“班级动态”（首页）中回复我的通知。谢谢！',
+  'Could not send the reminders': '无法发送提醒',
+  'Ask families to reply': '请家长回复',
+  'No reply needed': '无需回复',
+  '“I’ve read this”': '“我已阅读”',
+  'A yes / no question': '是 / 否问题',
+  'The question': '问题',
+  'The question, e.g. “May your child come on the trip?”':
+    '问题，例如“您的孩子可以参加这次出行吗？”',
+  'You’ll see who has replied, and can remind the rest.': '你可以看到谁已回复，并提醒其余家长。',
+  'Confirmed by {n} of {total} families': '{total} 个家庭中已有 {n} 个确认',
+  'Yes: {n}': '是：{n}',
+  'No: {n}': '否：{n}',
+  'Not replied: {n}': '未回复：{n}',
+  'Not replied yet: {names}': '尚未回复：{names}',
+  'Answered no: {names}': '回答“否”：{names}',
+  'Reminder sent to {n} families, as a Portal message.':
+    '已通过学生门户消息向 {n} 个家庭发送提醒。',
+  'Remind {n} families': '提醒 {n} 个家庭'
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
+  PostReplySlip,
   AppSettings,
   DraftLessonPlanInput,
   SuggestCommentPhrasesInput,
@@ -1622,8 +1623,23 @@ export function useClassPosts(classId: string) {
 export function useCreateClassPost(classId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ body, imagePath }: { body: string; imagePath: string | null }) =>
-      api().classPosts.create(classId, body, imagePath),
+    mutationFn: ({
+      body,
+      imagePath,
+      replySlip = null
+    }: {
+      body: string
+      imagePath: string | null
+      replySlip?: PostReplySlip | null
+    }) => api().classPosts.create(classId, body, imagePath, replySlip),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classPosts })
+  })
+}
+
+export function useRemindUnreplied() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api().classPosts.remind(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.classPosts })
   })
 }

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Eye, Image as ImageIcon, Newspaper, Trash2 } from 'lucide-react'
-import type { ClassPost, ClassSection } from '@shared/types'
+import { BellRing, CheckSquare, Eye, Image as ImageIcon, Newspaper, Trash2 } from 'lucide-react'
+import type { ClassPost, ClassSection, PostReplyKind } from '@shared/types'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Textarea } from '@renderer/components/ui/Field'
@@ -11,6 +11,7 @@ import {
   useClassPosts,
   useCreateClassPost,
   useDeleteClassPost,
+  useRemindUnreplied,
   useSettings
 } from '@renderer/lib/queries'
 import { formatDate, ipcErrorMessage } from '@renderer/lib/format'
@@ -26,6 +27,9 @@ export function ClassStoryTab(): React.JSX.Element {
 
   const [body, setBody] = useState('')
   const [imagePath, setImagePath] = useState<string | null>(null)
+  // A reply slip (回执): families confirm they've read it, or answer yes / no.
+  const [replyKind, setReplyKind] = useState<'' | PostReplyKind>('')
+  const [replyQuestion, setReplyQuestion] = useState('')
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   // A DingTalk / WeCom group to send the post to as well (Settings → Class group chats).
   const { data: settings } = useSettings()
@@ -46,7 +50,13 @@ export function ClassStoryTab(): React.JSX.Element {
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
     if (!body.trim()) return
-    await createPost.mutateAsync({ body: body.trim(), imagePath })
+    await createPost.mutateAsync({
+      body: body.trim(),
+      imagePath,
+      replySlip: replyKind
+        ? { kind: replyKind, question: replyKind === 'yesno' ? replyQuestion.trim() || null : null }
+        : null
+    })
     setGroupStatus(null)
     if (chosenGroup) {
       try {
@@ -64,6 +74,8 @@ export function ClassStoryTab(): React.JSX.Element {
     }
     setBody('')
     setImagePath(null)
+    setReplyKind('')
+    setReplyQuestion('')
   }
 
   if (isLoading) return <Spinner />
@@ -110,6 +122,33 @@ export function ClassStoryTab(): React.JSX.Element {
                 {imagePath.split(/[/\\]/).pop()}
               </p>
             )}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
+              <label className="flex items-center gap-2">
+                {tr('Ask families to reply')}
+                <select
+                  className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-1 py-0.5 text-xs"
+                  value={replyKind}
+                  onChange={(e) => setReplyKind(e.target.value as '' | PostReplyKind)}
+                >
+                  <option value="">{tr('No reply needed')}</option>
+                  <option value="ack">{tr('“I’ve read this”')}</option>
+                  <option value="yesno">{tr('A yes / no question')}</option>
+                </select>
+              </label>
+              {replyKind === 'yesno' && (
+                <input
+                  aria-label={tr('The question')}
+                  placeholder={tr('The question, e.g. “May your child come on the trip?”')}
+                  value={replyQuestion}
+                  maxLength={300}
+                  onChange={(e) => setReplyQuestion(e.target.value)}
+                  className="min-w-72 flex-1 rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-text)]"
+                />
+              )}
+              {replyKind && (
+                <span>{tr('You’ll see who has replied, and can remind the rest.')}</span>
+              )}
+            </div>
             {groups.length > 0 && (
               <label className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                 {tr('Also send to')}
@@ -163,6 +202,7 @@ export function ClassStoryTab(): React.JSX.Element {
                       {tr('📷 Photo attached')}
                     </p>
                   )}
+                  <ReplySummary post={p} />
                   <SeenBy post={p} />
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setPendingDelete(p.id)}>
@@ -221,5 +261,76 @@ function SeenBy({ post }: { post: ClassPost }): React.JSX.Element | null {
         <p>{tr('A family has seen a post once they open the Portal after it went up.')}</p>
       </div>
     </details>
+  )
+}
+
+/** The reply slip's answers: "Yes 12 · No 3 · Not replied 9" (or "Read 18 of 24"), who
+ * hasn't replied, and a button that reminds them with a Portal message. */
+function ReplySummary({ post }: { post: ClassPost }): React.JSX.Element | null {
+  const remind = useRemindUnreplied()
+  const [note, setNote] = useState<string | null>(null)
+  if (!post.replyKind || !post.replies) return null
+  const waiting = post.notReplied ?? []
+  const answered = post.replyKind === 'ack' ? post.replies.ack : post.replies.yes + post.replies.no
+  return (
+    <div className="mt-2 rounded-md border border-[var(--color-border)] px-3 py-2 text-xs">
+      {post.replyQuestion && <p className="font-medium">{post.replyQuestion}</p>}
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <CheckSquare size={12} aria-hidden className="text-[var(--color-text-muted)]" />
+        {post.replyKind === 'ack' ? (
+          <span>
+            {tr('Confirmed by {n} of {total} families', {
+              n: post.replies.ack,
+              total: answered + waiting.length
+            })}
+          </span>
+        ) : (
+          <>
+            <span>{tr('Yes: {n}', { n: post.replies.yes })}</span>
+            <span>{tr('No: {n}', { n: post.replies.no })}</span>
+            <span>{tr('Not replied: {n}', { n: waiting.length })}</span>
+          </>
+        )}
+        {waiting.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={remind.isPending}
+            onClick={async () => {
+              try {
+                const n = await remind.mutateAsync(post.id)
+                setNote(
+                  trn(
+                    'Reminder sent to {n} family, as a Portal message.',
+                    'Reminder sent to {n} families, as a Portal message.',
+                    n
+                  )
+                )
+              } catch (err) {
+                setNote(ipcErrorMessage(err, tr('That didn’t work. Try again.')))
+              }
+            }}
+          >
+            <BellRing size={12} className="mr-1 inline" aria-hidden />
+            {trn('Remind {n} family', 'Remind {n} families', waiting.length)}
+          </Button>
+        )}
+      </p>
+      {waiting.length > 0 && (
+        <p className="mt-1 text-[var(--color-text-muted)]">
+          {tr('Not replied yet: {names}', { names: waiting.join(', ') })}
+        </p>
+      )}
+      {post.replyKind === 'yesno' && (post.answeredNo?.length ?? 0) > 0 && (
+        <p className="mt-1 text-[var(--color-text-muted)]">
+          {tr('Answered no: {names}', { names: post.answeredNo!.join(', ') })}
+        </p>
+      )}
+      {note && (
+        <p role="status" className="mt-1">
+          {note}
+        </p>
+      )}
+    </div>
   )
 }

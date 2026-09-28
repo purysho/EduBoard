@@ -53,6 +53,7 @@ import type {
   PortalInviteBatchWithInvites,
   PortalMessageThread,
   ClassPost,
+  PostReplySlip,
   ReportCardDelivery,
   ReportCardSendProgress,
   ReportCardSendResult,
@@ -493,8 +494,15 @@ export interface EduBoardApi {
   }
   classPosts: {
     list(): Promise<ClassPost[]>
-    create(classId: string, body: string, imagePath: string | null): Promise<void>
+    create(
+      classId: string,
+      body: string,
+      imagePath: string | null,
+      replySlip?: PostReplySlip | null
+    ): Promise<void>
     remove(id: string): Promise<void>
+    /** Messages every family that hasn't answered the post's reply slip; how many. */
+    remind(id: string): Promise<number>
     pickImage(): Promise<string | null>
   }
   digest: {

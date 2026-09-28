@@ -37,6 +37,7 @@ import type { DigestPreview, PublishResult } from '@shared/types'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
+  PostReplySlip,
   ReportCardDelivery,
   Student,
   PortalResetRequest,
@@ -843,7 +844,8 @@ export async function listClassPosts(): Promise<ClassPost[]> {
 export async function createClassPost(
   classId: string,
   body: string,
-  imagePath: string | null
+  imagePath: string | null,
+  replySlip: PostReplySlip | null = null
 ): Promise<void> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
 
@@ -857,9 +859,35 @@ export async function createClassPost(
   const res = await portalFetch(`${portalUrl}/api/sync/posts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
-    body: JSON.stringify({ classId, body, imageName, imageData })
+    body: JSON.stringify({
+      classId,
+      body,
+      imageName,
+      imageData,
+      replyKind: replySlip?.kind ?? null,
+      replyQuestion: replySlip?.question ?? null
+    })
   })
   if (!res.ok) throw await portalFailure(tr('Could not post'), res)
+}
+
+/** Sends a reminder message to each family that hasn't answered a post's reply slip. */
+export async function remindUnrepliedFamilies(postId: string): Promise<number> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await portalFetch(
+    `${portalUrl}/api/sync/posts/${encodeURIComponent(postId)}/remind`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+      body: JSON.stringify({
+        message: tr(
+          'Reminder: please reply to my notice in Class Story on the Portal (Home page). Thank you!'
+        )
+      })
+    }
+  )
+  if (!res.ok) throw await olderPortalOr(tr('Could not send the reminders'), res)
+  return ((await res.json()) as { reminded: number }).reminded
 }
 
 export async function deleteClassPost(id: string): Promise<void> {

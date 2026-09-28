@@ -1573,10 +1573,55 @@ async function loadClassStory() {
         <p class="desc">${esc(p.body)}</p>
         ${translateControlHtml('post', p.id)}
         ${p.hasImage ? `<img src="/api/me/posts/${encodeURIComponent(p.id)}/image" style="width:100%; border-radius:10px; margin-top:8px" />` : ''}
+        ${replySlipHtml(p)}
       </div>`
         )
         .join('')
   wireTranslateControls(box)
+  box.querySelectorAll('[data-reply]').forEach((btn) => {
+    btn.onclick = async () => {
+      btn.disabled = true
+      try {
+        await api(`/me/posts/${encodeURIComponent(btn.dataset.post)}/reply`, {
+          method: 'POST',
+          body: { studentId: btn.dataset.student, answer: btn.dataset.reply }
+        })
+        loadClassStory()
+      } catch (err) {
+        btn.disabled = false
+        alert(err.message)
+      }
+    }
+  })
+}
+
+// A notice's reply slip (回执): "I've read this", or a yes / no question, answered for
+// each of the family's children in that class. An answer can be changed.
+function replySlipHtml(p) {
+  if (!p.replyKind || !p.replyFor || !p.replyFor.length) return ''
+  const multi = p.replyFor.length > 1
+  const rows = p.replyFor
+    .map((c) => {
+      const who = multi ? `<strong>${esc(c.name)}</strong> ` : ''
+      const button = (answer, label) =>
+        `<button type="button" class="chip" data-reply="${answer}" data-post="${esc(p.id)}" data-student="${esc(c.studentId)}" aria-pressed="${c.answer === answer}" style="width:auto; margin:0">${label}</button>`
+      if (p.replyKind === 'ack') {
+        return `<div class="row" style="margin-top:8px; justify-content:flex-start; gap:8px">${who}${
+          c.answer
+            ? `<span class="pill done">${t('Replied')}</span><span class="muted">${formatWhen(c.repliedAt)}</span>`
+            : button('ack', t('I’ve read this'))
+        }</div>`
+      }
+      return `<div class="row" style="margin-top:8px; justify-content:flex-start; gap:8px; flex-wrap:wrap">${who}${button('yes', t('Yes'))}${button('no', t('No'))}${
+        c.answer ? `<span class="muted">${t('Replied')} · ${formatWhen(c.repliedAt)}</span>` : ''
+      }</div>`
+    })
+    .join('')
+  const waiting = p.replyFor.some((c) => !c.answer)
+  return `<div class="reply-slip" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border)">
+    <div class="row" style="justify-content:flex-start; gap:8px"><strong>${esc(p.replyQuestion || (p.replyKind === 'ack' ? t('Please confirm you’ve read this.') : t('Please reply.')))}</strong>${waiting ? `<span class="pill submitted">${t('Reply needed')}</span>` : ''}</div>
+    ${rows}
+  </div>`
 }
 
 // Report cards the teacher sent: listed under Grades, and a notice on Home while one

@@ -739,6 +739,7 @@ router.get('/posts', (req, res) => {
      JOIN account_students a ON a.account_id = r.account_id
      WHERE r.post_id = ?`
   )
+  const repliesTo = db.prepare('SELECT student_id, answer FROM post_replies WHERE post_id = ?')
 
   res.json(
     rows.map((r) => {
@@ -756,15 +757,73 @@ router.get('/posts', (req, res) => {
         notSeen: withLogin
           .filter((s) => !seen.has(s.id))
           .map((s) => `${s.first_name} ${s.last_name}`),
-        noLogin: students.length - withLogin.length
+        noLogin: students.length - withLogin.length,
+        ...replySummary(r, students, withLogin, repliesTo)
       }
     })
   )
 })
 
+/** A post's reply slip for the teacher: the question, how many answered what, and who
+ * (with a Portal login) hasn't replied yet. Only students still in the class count. */
+function replySummary(post, students, withLogin, repliesTo) {
+  if (!post.reply_kind) return {}
+  const inClass = new Set(students.map((s) => s.id))
+  const answers = new Map(
+    repliesTo
+      .all(post.id)
+      .filter((x) => inClass.has(x.student_id))
+      .map((x) => [x.student_id, x.answer])
+  )
+  const count = (answer) => [...answers.values()].filter((a) => a === answer).length
+  return {
+    replyKind: post.reply_kind,
+    replyQuestion: post.reply_question || null,
+    replies: { ack: count('ack'), yes: count('yes'), no: count('no') },
+    answeredYes: students.filter((s) => answers.get(s.id) === 'yes').map(fullName),
+    answeredNo: students.filter((s) => answers.get(s.id) === 'no').map(fullName),
+    notReplied: withLogin.filter((s) => !answers.has(s.id)).map(fullName)
+  }
+}
+const fullName = (s) => `${s.first_name} ${s.last_name}`
+
+// Reminds every family (with a Portal login) that hasn't answered a post's reply slip,
+// with a message in their thread with the teacher. The desktop app writes the words, in
+// the teacher's language.
+router.post('/posts/:id/remind', (req, res) => {
+  const post = db.prepare('SELECT * FROM class_posts WHERE id = ?').get(req.params.id)
+  if (!post || !ownsClass(req.teacherId, post.class_id)) {
+    return res.status(404).json({ error: 'Not found', code: 'PT-3002' })
+  }
+  const text = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 2000) : ''
+  if (!post.reply_kind || !text) {
+    return res.status(400).json({ error: 'message required', code: 'PT-5003' })
+  }
+  const accounts = db
+    .prepare(
+      `SELECT DISTINCT a.account_id FROM enrollments e
+       JOIN account_students a ON a.student_id = e.student_id
+       WHERE e.class_id = ? AND e.status = 'active'
+         AND NOT EXISTS (SELECT 1 FROM post_replies r WHERE r.post_id = ? AND r.student_id = e.student_id)`
+    )
+    .all(post.class_id, post.id)
+    .map((x) => x.account_id)
+  const insert = db.prepare(
+    "INSERT INTO messages (id, account_id, sender, body, created_at) VALUES (?, ?, 'teacher', ?, ?)"
+  )
+  const now = new Date().toISOString()
+  db.transaction(() => accounts.forEach((id) => insert.run(crypto.randomUUID(), id, text, now)))()
+  res.json({ ok: true, reminded: accounts.length })
+})
+
 router.post('/posts', (req, res) => {
   const { classId, body, imageName, imageData } = req.body
   const text = (body || '').trim()
+  const replyKind = ['ack', 'yesno'].includes(req.body.replyKind) ? req.body.replyKind : null
+  const replyQuestion =
+    replyKind === 'yesno' && typeof req.body.replyQuestion === 'string'
+      ? req.body.replyQuestion.trim().slice(0, 300) || null
+      : null
   if (!classId || !text)
     return res.status(400).json({ error: 'classId and body required', code: 'PT-5003' })
   if (!ownsClass(req.teacherId, classId))
@@ -779,23 +838,25 @@ router.post('/posts', (req, res) => {
         .status(400)
         .json({ error: 'The photo must be a PNG, JPEG, GIF or WebP image.', code: 'PT-3006' })
     }
-    const id = crypto.randomUUID()
-    const storedName = `${id}-${sanitizeFileName(imageName)}`
+    const storedName = `${crypto.randomUUID()}-${sanitizeFileName(imageName)}`
     fs.writeFileSync(path.join(POSTS_DIR, storedName), Buffer.from(imageData, 'base64'))
     imagePath = storedName
-    db.prepare(
-      'INSERT INTO class_posts (id, class_id, body, image_name, image_path, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(id, classId, text, imageName, imagePath, new Date().toISOString())
-    return res.json({ ok: true })
   }
-
-  db.prepare('INSERT INTO class_posts (id, class_id, body, created_at) VALUES (?, ?, ?, ?)').run(
-    crypto.randomUUID(),
+  const id = crypto.randomUUID()
+  db.prepare(
+    `INSERT INTO class_posts (id, class_id, body, image_name, image_path, created_at, reply_kind, reply_question)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    id,
     classId,
     text,
-    new Date().toISOString()
+    imagePath ? imageName : null,
+    imagePath,
+    new Date().toISOString(),
+    replyKind,
+    replyQuestion
   )
-  res.json({ ok: true })
+  res.json({ ok: true, id })
 })
 
 router.delete('/posts/:id', (req, res) => {

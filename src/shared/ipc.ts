@@ -297,6 +297,7 @@ export const IpcChannels = {
     list: 'classPosts:list',
     create: 'classPosts:create',
     remove: 'classPosts:remove',
+    remind: 'classPosts:remind',
     pickImage: 'classPosts:pickImage'
   },
   digest: {

@@ -4,6 +4,7 @@ import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from '
 import { readFile, writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
 import type {
+  PostReplySlip,
   PortalJoinLink,
   AiConnectionConfig,
   DraftLessonPlanInput,
@@ -80,6 +81,7 @@ import {
   withdrawReportCards,
   createClassPost,
   deleteClassPost,
+  remindUnrepliedFamilies,
   sendDigestNow,
   resetPortalPassword,
   getPortalProfile,
@@ -1089,9 +1091,15 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.classPosts.list, () => listClassPosts())
   handle(
     IpcChannels.classPosts.create,
-    (_e, classId: string, body: string, imagePath: string | null) =>
-      createClassPost(classId, body, imagePath)
+    (
+      _e,
+      classId: string,
+      body: string,
+      imagePath: string | null,
+      replySlip?: PostReplySlip | null
+    ) => createClassPost(classId, body, imagePath, replySlip ?? null)
   )
+  handle(IpcChannels.classPosts.remind, (_e, id: string) => remindUnrepliedFamilies(id))
   handle(IpcChannels.classPosts.remove, (_e, id: string) => deleteClassPost(id))
   handle(IpcChannels.classPosts.pickImage, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
