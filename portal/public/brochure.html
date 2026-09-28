@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EduBoard for schools</title>
+    <meta
+      name="description"
+      content="EduBoard for schools: a teacher's gradebook, attendance and reports, and a Portal where families see their own child's work. English and Chinese."
+    />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --ink: #151527;
+        --soft: #3b3b52;
+        --muted: #686880;
+        --line: #e2e2ec;
+        --primary: #4f46e5;
+        --primary-soft: #eceafd;
+        --bg: #f4f4f9;
+        --sans:
+          'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei',
+          'Noto Sans CJK SC', sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 15px/1.5 var(--sans);
+      }
+      .bar {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        max-width: 210mm;
+        margin: 16px auto 0;
+        padding: 0 16px;
+      }
+      .bar button {
+        font: 600 13px var(--sans);
+        padding: 6px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .bar button[aria-pressed='true'] {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      .page {
+        width: 210mm;
+        max-width: 100%;
+        min-height: 297mm;
+        margin: 16px auto;
+        padding: 16mm 15mm;
+        background: #fff;
+        box-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 18px;
+      }
+      .brand img {
+        width: 34px;
+        height: 34px;
+      }
+      .brand span {
+        margin-left: auto;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--primary);
+      }
+      h1 {
+        font-size: 27px;
+        line-height: 1.2;
+        margin: 22px 0 10px;
+        letter-spacing: -0.01em;
+      }
+      .lead {
+        font-size: 16px;
+        color: var(--soft);
+        margin: 0 0 20px;
+        max-width: 60ch;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+      .col {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 14px 6px;
+      }
+      .col h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+        color: var(--primary);
+      }
+      .col ul {
+        margin: 0;
+        padding-left: 16px;
+        font-size: 12.5px;
+        line-height: 1.42;
+        color: var(--soft);
+      }
+      .col li {
+        margin-bottom: 5px;
+      }
+      .shots {
+        display: grid;
+        grid-template-columns: 1fr 150px;
+        gap: 14px;
+        margin-top: 18px;
+        align-items: start;
+      }
+      figure {
+        margin: 0;
+      }
+      figure img {
+        width: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: top left;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      figcaption {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .stack {
+        display: grid;
+        gap: 14px;
+      }
+      .try {
+        margin-top: 18px;
+        background: var(--primary-soft);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 13.5px;
+      }
+      .try h2 {
+        font-size: 16px;
+        margin: 0 0 6px;
+      }
+      .try ol {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .try li {
+        margin-bottom: 5px;
+      }
+      .shots img {
+        height: 68mm;
+      }
+      .wide img {
+        height: 88mm;
+      }
+      code {
+        white-space: nowrap;
+        font:
+          600 13px ui-monospace,
+          Consolas,
+          monospace;
+        background: #fff;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .foot {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+      }
+      a {
+        color: var(--primary);
+      }
+      @media (max-width: 720px) {
+        .page {
+          padding: 20px 16px;
+          min-height: 0;
+        }
+        .cols,
+        .shots {
+          grid-template-columns: 1fr;
+        }
+        .shots figure.phone {
+          max-width: 260px;
+        }
+        .shots img,
+        .wide img {
+          height: auto;
+        }
+      }
+      @media print {
+        @page {
+          size: A4;
+          margin: 0;
+        }
+        body {
+          background: #fff;
+        }
+        .bar {
+          display: none;
+        }
+        .page {
+          margin: 0;
+          box-shadow: none;
+          width: 210mm;
+          height: 297mm;
+          break-after: page;
+          overflow: hidden;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <div class="lang" role="group" aria-label="Language / 语言" style="display: flex; gap: 6px">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="zh">中文</button>
+      </div>
+      <button type="button" class="print">Print / Save as PDF · 打印</button>
+    </div>
+
+    <!-- English -->
+    <div data-lang-block="en">
+      <section class="page">
+        <div class="brand"><img src="/icon.svg" alt="" />EduBoard<span>For schools</span></div>
+        <h1>Teachers keep their records. Families see their own child's progress.</h1>
+        <p class="lead">
+          EduBoard is a free app for a teacher's gradebook, attendance and reports, with a Portal
+          where students and families see their own work, grades and messages on any phone. In
+          English and Chinese.
+        </p>
+        <div class="cols">
+          <div class="col">
+            <h2>For teachers</h2>
+            <ul>
+              <li>
+                A gradebook with categories, weights, rubrics and the school's grading scale; import
+                scores from a spreadsheet.
+              </li>
+              <li>
+                Attendance with the school's own codes and QR check-in; seating chart, class points,
+                random picker, timer.
+              </li>
+              <li>
+                Report cards for the whole class at once, with a comment bank and AI suggestions the
+                teacher checks.
+              </li>
+              <li>
+                Homework with self-marking questions, exit tickets, lesson plans, letters home;
+                Word, Excel and PowerPoint export.
+              </li>
+              <li>Works without internet, on Windows, Mac and Linux.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>For families</h2>
+            <ul>
+              <li>
+                Grades with each marked assessment, a chart over time and the teacher's feedback.
+              </li>
+              <li>Homework handed in online, and due dates in the family's own calendar.</li>
+              <li>
+                Report cards as PDFs, notices with reply slips (回执), and messages with the
+                teacher, translated when needed.
+              </li>
+              <li>
+                A Study Helper that answers from the teacher's materials (the teacher sees what's
+                asked).
+              </li>
+              <li>A weekly email summary, and a copy of all their data at any time.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>For the school</h2>
+            <ul>
+              <li>
+                Student records stay on the teacher's computer, encrypted with password protection.
+              </li>
+              <li>
+                The Portal holds only what the teacher publishes: hosted in Hong Kong, or on the
+                school's own server (open source).
+              </li>
+              <li>
+                Families agree to the terms at first sign-in; the school can download the record.
+              </li>
+              <li>
+                A privacy notice, data processing terms and a security overview, ready for review.
+              </li>
+              <li>
+                A usage page: families active each week, report cards opened, notices answered.
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <div class="stack">
+            <figure>
+              <img src="/brochure/app-gradebook-en.jpg" alt="The EduBoard gradebook" />
+              <figcaption>The gradebook: every assessment and the running grade.</figcaption>
+            </figure>
+          </div>
+          <figure class="phone">
+            <img src="/brochure/portal-grades-en.jpg" alt="The Portal's Grades page on a phone" />
+            <figcaption>What a family sees on their phone.</figcaption>
+          </figure>
+        </div>
+        <div class="foot">
+          <span>edu-board.com</span><span>privacy@edu-board.com</span>
+          <span>Sample data in all pictures is made up.</span>
+        </div>
+      </section>
+      <section class="page">
+        <div class="brand"><img src="/icon.svg" alt="" />EduBoard<span>For schools</span></div>
+        <figure class="wide" style="margin-top: 18px">
+          <img src="/brochure/app-dashboard-en.jpg" alt="The EduBoard dashboard" />
+          <figcaption>
+            The dashboard: today's lessons, parent follow-ups, and students whose grades are falling
+            or below the pass mark.
+          </figcaption>
+        </figure>
+        <div class="try">
+          <h2>Try it in ten minutes</h2>
+          <ol>
+            <li>
+              Download the app at <strong>edu-board.com</strong>. In Settings → Help and updates,
+              open the <strong>Sample school</strong>: two classes of made-up students with a term
+              of scores, attendance and reports. Your own data is never touched.
+            </li>
+            <li>
+              See what families see: <strong>edu-board.com</strong> → Log in, username
+              <code>demo</code>, password <code>try-eduboard</code>.
+            </li>
+            <li>
+              For your IT and data protection review: <strong>edu-board.com/security</strong>,
+              <strong>/privacy</strong> and <strong>/data-processing</strong>.
+            </li>
+          </ol>
+        </div>
+        <div class="cols" style="margin-top: 18px">
+          <div class="col">
+            <h2>Starting with one class</h2>
+            <ul>
+              <li>A teacher installs the app and adds a class, or imports a class list.</li>
+              <li>Publishing sends the Portal only what families should see.</li>
+              <li>Families join with an invite code or QR code from the teacher.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>Working with China's tools</h2>
+            <ul>
+              <li>Posts to DingTalk and WeCom class groups.</li>
+              <li>AI through DeepSeek, Qwen or Zhipu, reachable from China.</li>
+              <li>Documents open in WPS as well as Microsoft Office.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>Honest about what's next</h2>
+            <ul>
+              <li>No outside security audit or certification yet.</li>
+              <li>Two-step sign-in and off-site backups for the hosted Portal are planned.</li>
+              <li>See edu-board.com/security for the full list.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot">
+          <span>edu-board.com</span><span>privacy@edu-board.com</span>
+          <span>Sample data in all pictures is made up.</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- 中文 -->
+    <div data-lang-block="zh" hidden>
+      <section class="page">
+        <div class="brand"><img src="/icon.svg" alt="" />EduBoard<span>学校介绍</span></div>
+        <h1>记录留在老师手里，家长看到自己孩子的进步。</h1>
+        <p class="lead">
+          EduBoard
+          是一款免费的教学应用，帮老师管理成绩册、考勤和报告；配套的学生门户让学生和家长在手机上查看自己的作业、成绩和消息。支持中文和英文。
+        </p>
+        <div class="cols">
+          <div class="col">
+            <h2>老师</h2>
+            <ul>
+              <li>成绩册：支持成绩类别、权重、评分量规和学校自己的等级标准，可从表格导入成绩。</li>
+              <li>
+                考勤：使用学校自己的考勤代码和扫码签到；还有座位表、课堂积分、随机点名和计时器。
+              </li>
+              <li>成绩单：全班一次生成，配有评语库和 AI 短语建议，老师检查后才使用。</li>
+              <li>
+                作业（含自动批改题）、出门条、教案、家长信，并可导出 Word、Excel 和 PowerPoint。
+              </li>
+              <li>无需联网即可使用，支持 Windows、Mac 和 Linux。</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>家长</h2>
+            <ul>
+              <li>成绩：每项已评分测评、成绩变化图和老师的反馈。</li>
+              <li>在线提交作业，截止日期可加入自己的手机日历。</li>
+              <li>PDF 成绩单、带回执的通知，以及与老师的消息（需要时可翻译）。</li>
+              <li>学习助手：根据老师自己的资料回答问题，老师可以看到提问内容。</li>
+              <li>每周邮件摘要，随时可下载自己的全部数据。</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>学校</h2>
+            <ul>
+              <li>学生记录保存在老师电脑上，开启密码保护后加密。</li>
+              <li>
+                学生门户只保存老师发布的内容，服务器位于香港，也可部署在学校自己的服务器上（代码开源）。
+              </li>
+              <li>家长首次登录时同意使用条款，学校可下载同意记录存档。</li>
+              <li>隐私说明、数据处理条款和安全概述，便于学校审核。</li>
+              <li>使用情况页面：每周活跃家庭、成绩单打开率、通知回执率。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="shots">
+          <div class="stack">
+            <figure>
+              <img src="/brochure/app-gradebook-zh.jpg" alt="EduBoard 成绩册" />
+              <figcaption>成绩册：每项测评和实时总成绩。</figcaption>
+            </figure>
+          </div>
+          <figure class="phone">
+            <img src="/brochure/portal-grades-zh.jpg" alt="手机上的学生门户成绩页" />
+            <figcaption>家长在手机上看到的内容。</figcaption>
+          </figure>
+        </div>
+        <div class="foot">
+          <span>edu-board.com</span><span>privacy@edu-board.com</span>
+          <span>图中的示例数据均为虚构。</span>
+        </div>
+      </section>
+      <section class="page">
+        <div class="brand"><img src="/icon.svg" alt="" />EduBoard<span>学校介绍</span></div>
+        <figure class="wide" style="margin-top: 18px">
+          <img src="/brochure/app-dashboard-zh.jpg" alt="EduBoard 工作台" />
+          <figcaption>
+            工作台：今天的课、待跟进的家长联系，以及成绩下滑或低于及格线的学生。
+          </figcaption>
+        </figure>
+        <div class="try">
+          <h2>十分钟试用</h2>
+          <ol>
+            <li>
+              在 <strong>edu-board.com</strong> 下载应用。在“设置 →
+              帮助与更新”中打开<strong>示例学校</strong>：两个班的虚构学生，含一学期的成绩、考勤和报告。不会改动你自己的数据。
+            </li>
+            <li>
+              看看家长看到什么：<strong>edu-board.com</strong> → 登录，用户名
+              <code>demo</code>，密码 <code>try-eduboard</code>。
+            </li>
+            <li>
+              供学校信息部门和数据保护审核：<strong>edu-board.com/security</strong>、<strong
+                >/privacy</strong
+              >
+              和 <strong>/data-processing</strong>。
+            </li>
+          </ol>
+        </div>
+        <div class="cols" style="margin-top: 18px">
+          <div class="col">
+            <h2>从一个班开始</h2>
+            <ul>
+              <li>老师安装应用，添加班级或导入学生名单。</li>
+              <li>发布时只把家长应该看到的内容发送到学生门户。</li>
+              <li>家长用老师给的邀请码或二维码加入。</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>适配国内工具</h2>
+            <ul>
+              <li>可发布到钉钉和企业微信班级群。</li>
+              <li>AI 可使用 DeepSeek、通义千问或智谱，国内可直接访问。</li>
+              <li>文档可用 WPS 或 Microsoft Office 打开。</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h2>坦诚说明</h2>
+            <ul>
+              <li>尚未进行外部安全审计或认证。</li>
+              <li>托管门户的两步登录和异地备份正在计划中。</li>
+              <li>完整列表见 edu-board.com/security。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="foot">
+          <span>edu-board.com</span><span>privacy@edu-board.com</span>
+          <span>图中的示例数据均为虚构。</span>
+        </div>
+      </section>
+    </div>
+    <script src="/legal.js"></script>
+  </body>
+</html>

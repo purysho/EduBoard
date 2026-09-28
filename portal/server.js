@@ -49,6 +49,7 @@ app.get(['/download', '/download/'], (_req, res) => res.sendFile(HOMEPAGE))
 app.get('/privacy', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')))
 app.get('/security', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')))
 app.get('/terms', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')))
+app.get('/brochure', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'brochure.html')))
 // Where security researchers look for a contact (RFC 9116).
 app.get('/.well-known/security.txt', (req, res) => {
   const expires = new Date(Date.now() + 180 * 86400000).toISOString()
