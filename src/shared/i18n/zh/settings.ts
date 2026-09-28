@@ -516,5 +516,25 @@ export const SETTINGS: Record<string, string> = {
   'Set by your school': '由学校设置',
   'App name: {name}': '应用名称：{name}',
   'Add your first student, or import your class list from a spreadsheet below.':
-    '添加第一位学生，或在下方从表格导入班级名单。'
+    '添加第一位学生，或在下方从表格导入班级名单。',
+  'EduBoard Course Pack': 'EduBoard 课程包',
+  'Import a Course Pack': '导入课程包',
+  'Course Packs add reusable curriculum: terms, standards, rubrics, lesson plans, assessments, homework, resources and optional student fields. They do not change school branding or publish anything to students.':
+    '课程包用于添加可重复使用的课程内容：学期、学习标准、评分量规、教案、测评、作业、资源以及可选的学生字段。它不会更改学校品牌设置，也不会自动向学生发布任何内容。',
+  'Choose Course Pack': '选择课程包',
+  'Map each pack term to one class': '将课程包的每个学期对应到一个班级',
+  'EduBoard only installs class-bound content into the classes you choose here. Use a different class for each term.':
+    'EduBoard 只会把班级相关内容安装到你在这里选择的班级中。每个学期请选择不同的班级。',
+  'Choose a class…': '选择班级…',
+  'Choose a different class for each Course Pack term.': '课程包的每个学期都请选择不同的班级。',
+  'EduBoard creates a backup immediately before installing the pack.':
+    'EduBoard 会在安装课程包前立即创建备份。',
+  'Installing…': '正在安装…',
+  'Install Course Pack': '安装课程包',
+  'Course Pack installed.': '课程包已安装。',
+  'Created: {lessons} lessons, {assessments} assessments, {homework} homework, {resources} resources. Reused existing matching items where safe.':
+    '已创建：{lessons} 个教案、{assessments} 个测评、{homework} 个作业、{resources} 个资源。对于可以安全复用的匹配项目，已使用现有内容。',
+  'Backups, password, rosters, course packs, school pack': '备份、密码、名单、课程包、学校包',
+  'backup restore password lock encryption import roster excel course pack curriculum school pack export':
+    '备份 恢复 密码 锁定 加密 导入 名单 Excel 课程包 课程 学校包 导出'
 }
