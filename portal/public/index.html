@@ -629,7 +629,7 @@ function renderLogin() {
       <strong>${t('Forgot your password?')}</strong> <a href="#" class="linklike" id="forgot">${t('Ask your teacher for a reset')}</a><br />
       <strong>${t('New here?')}</strong> ${t('Use the invite link or QR code your teacher gave you.')}<br />
       <strong>${t('Teacher?')}</strong> <a href="/download">${t('Download EduBoard')}</a><br />
-      <a href="/privacy">${t('Privacy')}</a> · <a href="/terms">${t('Terms of use')}</a>
+      <a href="/privacy">${t('Privacy')}</a> · <a href="/terms">${t('Terms of use')}</a> · <a href="${SOURCE_URL}" rel="noopener">${t('Source code')}</a>
     </p>
   `
   wirePasswordToggles()
@@ -1766,6 +1766,10 @@ function icon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`
 }
 
+// The Portal is AGPL-3.0: everyone using it can get its source (the licence's section 13).
+// A school running a changed copy points this at its own changed source.
+const SOURCE_URL = 'https://github.com/purysho/EduBoard'
+
 /** One heading per section, like a page title in an app. */
 function pageHead(title, subtitle, id = '') {
   return `<header class="page-head"><h1${id ? ` id="${id}"` : ''}>${title}</h1>${subtitle ? `<p${id ? ` id="${id}-sub"` : ''}>${subtitle}</p>` : ''}</header>`
@@ -2256,6 +2260,7 @@ function renderDashboard(me) {
            <button type="button" class="chip" onclick="location.href='/api/me/export'">${t('Download my data')}</button>
            <a class="linklike" href="/terms" target="_blank" rel="noopener">${t('Terms of use')}</a>
            <a class="linklike" href="/privacy" target="_blank" rel="noopener">${t('Privacy')}</a>
+           <a class="linklike" href="${SOURCE_URL}" target="_blank" rel="noopener">${t('Source code')}</a>
          </div>
        </div>
        <div class="section-title">${t('This device')}</div>

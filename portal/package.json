@@ -1,5 +1,6 @@
 {
   "name": "eduboard-portal",
+  "license": "AGPL-3.0-only",
   "version": "1.0.0",
   "private": true,
   "description": "EduBoard's remote student/parent Portal — a small standalone service, deployed separately from the desktop app.",

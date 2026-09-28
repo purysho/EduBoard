@@ -161,6 +161,7 @@ const ZH = {
   'Quick check — {correct}/{total} correct': '随堂小测：答对 {correct}/{total}',
   'Submit answers': '提交答案',
   Late: '迟交',
+  'Source code': '源代码',
   Calendar: '日历',
   'Add homework due dates to your phone or computer calendar. It keeps itself up to date, and ticks off work once it’s handed in.':
     '把作业截止日期添加到手机或电脑的日历中。日历会自动更新，作业提交后会打勾。',

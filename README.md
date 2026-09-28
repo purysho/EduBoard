@@ -121,4 +121,14 @@ A class defines its own grade categories and weights (or none, for a flat points
 
 ## License
 
-MIT
+Copyright (C) 2026 Purysho.
+
+EduBoard (the desktop app and the Portal) is free software under the
+[GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`): you may use, change and
+share it, but if you share a changed version, or run a changed Portal for other people to
+use over a network, you must make your changed source available to them under the same
+licence. Versions up to 0.6.0 were published under the MIT licence and stay available under
+it.
+
+For a licence on other terms (for example to build EduBoard into a closed product), contact
+privacy@edu-board.com.
