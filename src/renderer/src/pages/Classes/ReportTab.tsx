@@ -32,6 +32,7 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { useClassReport, useClassRoster } from '@renderer/lib/queries'
 import { formatDate, formatPercent, formatRate, studentFullName } from '@renderer/lib/format'
 import { ReportComments } from './ReportComments'
+import { PortalReportCards } from './PortalReportCards'
 import { ParentLettersModal } from './ParentLettersModal'
 import { tr } from '@shared/i18n'
 
@@ -293,6 +294,10 @@ export function ReportTab(): React.JSX.Element {
       </Card>
 
       {roster && <ReportComments classSection={classSection} roster={roster} />}
+      <PortalReportCards
+        classSection={classSection}
+        studentCount={roster?.filter((r) => r.enrollment.status === 'active').length ?? 0}
+      />
       <ParentLettersModal
         open={lettersOpen}
         onClose={() => setLettersOpen(false)}

@@ -341,6 +341,12 @@ const api: EduBoardApi = {
     translate: (messageId, targetLang) =>
       invoke(IpcChannels.portalMessages.translate, messageId, targetLang)
   },
+  reportCards: {
+    send: (classId, title) => invoke(IpcChannels.reportCards.send, classId, title),
+    progress: () => invoke(IpcChannels.reportCards.progress),
+    list: (classId) => invoke(IpcChannels.reportCards.list, classId),
+    withdraw: (classId, title) => invoke(IpcChannels.reportCards.withdraw, classId, title)
+  },
   classPosts: {
     list: () => invoke(IpcChannels.classPosts.list),
     create: (classId, body, imagePath) =>

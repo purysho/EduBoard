@@ -1636,6 +1636,32 @@ export function useDeleteClassPost() {
   })
 }
 
+/** Report cards sent to a class's families on the Portal, and who has opened them. */
+export function useReportCardDeliveries(classId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['portal', 'reportCards', classId],
+    queryFn: () => api().reportCards.list(classId),
+    enabled,
+    retry: false
+  })
+}
+
+export function useSendReportCards(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (title: string) => api().reportCards.send(classId, title),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['portal', 'reportCards', classId] })
+  })
+}
+
+export function useWithdrawReportCards(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (title: string) => api().reportCards.withdraw(classId, title),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['portal', 'reportCards', classId] })
+  })
+}
+
 /** Checked every minute while the Dashboard is open, so a student waiting at the
  * login page isn't kept waiting long. */
 export function usePortalResetRequests() {

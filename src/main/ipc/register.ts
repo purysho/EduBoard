@@ -1,4 +1,5 @@
 import { AppError } from '@shared/errorCodes'
+import { reportCardSendProgress, sendReportCards } from '../services/reportCardDelivery'
 import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
@@ -75,6 +76,8 @@ import {
   markMessageThreadRead,
   translateMessage,
   listClassPosts,
+  listReportCardDeliveries,
+  withdrawReportCards,
   createClassPost,
   deleteClassPost,
   sendDigestNow,
@@ -1074,6 +1077,14 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.portalMessages.translate, (_e, messageId: string, targetLang: string) =>
     translateMessage(messageId, targetLang)
+  )
+  handle(IpcChannels.reportCards.send, (_e, classId: string, title: string) =>
+    sendReportCards(classId, title)
+  )
+  handle(IpcChannels.reportCards.progress, () => reportCardSendProgress())
+  handle(IpcChannels.reportCards.list, (_e, classId: string) => listReportCardDeliveries(classId))
+  handle(IpcChannels.reportCards.withdraw, (_e, classId: string, title: string) =>
+    withdrawReportCards(classId, title)
   )
   handle(IpcChannels.classPosts.list, () => listClassPosts())
   handle(

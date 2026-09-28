@@ -562,6 +562,31 @@ export interface ClassPost {
   noLogin?: number
 }
 
+/** One report card title sent to a class's families on the Portal, and who has
+ * opened it. A student's family has seen it once any login linked to them opened it. */
+export interface ReportCardDelivery {
+  title: string
+  sentAt: string
+  /** Students it was sent to. */
+  sent: number
+  /** Of those, students with a Portal login (the others can't see it yet). */
+  audience: number
+  seenCount: number
+  students: { studentId: string; name: string; hasLogin: boolean; seenAt: string | null }[]
+}
+
+/** How sending report cards went: how many reached the Portal, and any that didn't. */
+export interface ReportCardSendResult {
+  sent: number
+  failed: { name: string; message: string }[]
+}
+
+/** While report cards are being made and sent: how far along it is. */
+export interface ReportCardSendProgress {
+  done: number
+  total: number
+}
+
 /** A QR check-in session's live state for one class — open/closed, which date it's
  * marking attendance for, and who has checked themselves in so far. Ephemeral
  * (in-memory only, like ExitTicketServerInfo's running server), not persisted. */

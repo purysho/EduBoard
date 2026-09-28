@@ -35,6 +35,7 @@ const { processProfilePhoto } = require('../services/profilePhoto')
 
 const router = express.Router()
 router.use(requireAuth)
+router.use('/report-cards', require('./reportCards').family)
 
 // Every AI call spends the teacher's own API key, so each family account gets a short
 // burst limit and a daily budget, shared across chat and translation.

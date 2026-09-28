@@ -1579,6 +1579,53 @@ async function loadClassStory() {
   wireTranslateControls(box)
 }
 
+// Report cards the teacher sent: listed under Grades, and a notice on Home while one
+// hasn't been opened. Opening the PDF is what tells the teacher it was seen.
+async function loadReportCards(multi) {
+  let cards
+  try {
+    cards = await api('/me/report-cards')
+  } catch {
+    return
+  }
+  const section = document.getElementById('report-cards-section')
+  const box = document.getElementById('report-cards')
+  const nudge = document.getElementById('report-card-nudge')
+  if (!section || !box || !cards.length) return
+  section.hidden = false
+  const fileUrl = (c) => `/api/me/report-cards/${encodeURIComponent(c.id)}/file`
+  const label = (c) => `${multi ? esc(c.studentName) + ' · ' : ''}${esc(c.className)}`
+  box.innerHTML = cards
+    .map(
+      (c) => `
+      <div class="card">
+        <div class="row"><strong>${esc(c.title)}</strong>${c.opened ? '' : `<span class="pill submitted">${t('New')}</span>`}</div>
+        <div class="row" style="margin-top:6px"><span class="muted">${label(c)} · ${formatWhen(c.sentAt)}</span>
+          <a href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
+      </div>`
+    )
+    .join('')
+  const unopened = cards.filter((c) => !c.opened)
+  if (nudge && unopened.length) {
+    const c = unopened[0]
+    nudge.innerHTML = `<div class="card" style="border-color:var(--primary)">
+      <div class="row"><strong>${esc(unopened.length > 1 ? t('{n} new report cards', { n: unopened.length }) : t('New report card'))}</strong>
+        <a href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
+      <p class="muted" style="margin:6px 0 0">${esc(c.title)} · ${label(c)}${unopened.length > 1 ? ` · <a href="#grades">${t('See all under Grades')}</a>` : ''}</p>
+    </div>`
+  }
+  // Opened: stop calling it new here too (the teacher's count updates on the server).
+  document.querySelectorAll('[data-report-card]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const card = cards.find((x) => x.id === a.dataset.reportCard)
+      if (card && !card.opened) {
+        card.opened = true
+        setTimeout(() => loadReportCards(multi), 1500)
+      }
+    })
+  )
+}
+
 // ---- Tabs, dates, "due soon" --------------------------------------------------------------
 const TABS = [
   ['home', 'Home'],
@@ -1897,6 +1944,7 @@ function renderDashboard(me) {
      <section class="panel" id="panel-home" data-panel="home">
        ${pageHead(t('Welcome back'), esc(dueSummary(allHomework)), 'greeting')}
        <div id="profile-nudge"></div>
+       <div id="report-card-nudge"></div>
        <div class="section-title">${t('Due soon')}</div>
        ${dueSoonHtml(allHomework, multi)}
        <div class="section-title">${t('Class Story')}</div>
@@ -1942,6 +1990,10 @@ function renderDashboard(me) {
 
      <section class="panel" id="panel-grades" data-panel="grades" hidden>
        ${pageHead(t('Grades'), t('Your marks and attendance in each class.'))}
+       <div id="report-cards-section" hidden>
+         <div class="section-title">${t('Report cards')}</div>
+         <div id="report-cards"></div>
+       </div>
        ${me.students
          .map(
            (s) => `
@@ -2123,6 +2175,7 @@ function renderDashboard(me) {
 
   loadProfiles(me)
   loadClassStory()
+  loadReportCards(multi)
   loadPortfolio()
   loadMaterials()
   document.getElementById('msg-lang').onchange = (e) => setReadingLanguage(e.target.value)

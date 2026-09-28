@@ -11,5 +11,6 @@ module.exports = {
   UPLOADS_DIR: path.join(DATA_DIR, 'homework-uploads'),
   SUBMISSIONS_DIR: path.join(DATA_DIR, 'submission-uploads'),
   POSTS_DIR: path.join(DATA_DIR, 'post-images'),
-  PROFILE_PHOTOS_DIR: path.join(DATA_DIR, 'profile-photos')
+  PROFILE_PHOTOS_DIR: path.join(DATA_DIR, 'profile-photos'),
+  REPORT_CARDS_DIR: path.join(DATA_DIR, 'report-cards')
 }

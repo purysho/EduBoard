@@ -14,6 +14,8 @@ const { validateFlashcards, validatePracticeQuiz } = require('../services/practi
 const { checkUpload } = require('../services/fileSafety')
 const { toTeacherView } = require('../services/profile')
 const { PROFILE_PHOTOS_DIR } = require('../paths')
+const reportCards = require('./reportCards')
+const { removeOrphanedReportCards, reportCardFilesFor } = reportCards
 
 // A practice set is stored only if it passes the same validation the desktop applies.
 // Anything else is dropped (the material still publishes), since this is rendered to
@@ -26,6 +28,7 @@ function validatedJson(validate, value) {
 
 const router = express.Router()
 router.use(requireSyncSecret)
+router.use('/report-cards', reportCards.teacher)
 
 const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR } = require('../paths')
 fs.mkdirSync(UPLOADS_DIR, { recursive: true })
@@ -358,6 +361,8 @@ router.post('/', (req, res) => {
   for (const file of previousFiles) {
     if (!writtenFiles.has(file)) fs.rmSync(path.join(UPLOADS_DIR, file), { force: true })
   }
+  // Report cards of a class or student the teacher no longer publishes go too.
+  removeOrphanedReportCards()
 
   res.json({ ok: true, needFiles, needChunks })
 })
@@ -539,6 +544,7 @@ router.post('/delete-student', (req, res) => {
     .prepare('SELECT photo_file AS f FROM student_profiles WHERE student_id = ?')
     .get(studentId)
   if (photo?.f) files.push(path.join(PROFILE_PHOTOS_DIR, photo.f))
+  files.push(...reportCardFilesFor(studentId))
 
   const tables = db
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")

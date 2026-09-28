@@ -371,6 +371,27 @@ db.exec(`
   );
 `)
 
+// Report cards the teacher sent to families: one PDF per student per title (sending the
+// same title again replaces it). Portal-owned, so a publish never touches them; they go
+// when the teacher withdraws them, or with the student or class.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS report_cards (
+    id TEXT PRIMARY KEY,
+    class_id TEXT NOT NULL,
+    student_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    published_at TEXT NOT NULL,
+    UNIQUE (class_id, student_id, title)
+  );
+  CREATE TABLE IF NOT EXISTS report_card_reads (
+    report_card_id TEXT NOT NULL REFERENCES report_cards(id) ON DELETE CASCADE,
+    account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    read_at TEXT NOT NULL,
+    PRIMARY KEY (report_card_id, account_id)
+  );
+`)
+
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
 // can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and

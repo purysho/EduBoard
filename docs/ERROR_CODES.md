@@ -42,6 +42,8 @@ after changing either.
 | EB-1007 | The Portal is an older version that doesn’t have this feature. | Update the Portal (Update-Live-Portal). |
 | EB-1008 | The Portal answered with an error. Its own code (PT-xxxx), if any, is shown in the message. | Look up the PT code in the Portal section below. Without one, check the Portal’s log: journalctl -u eduboard-portal. |
 | EB-1009 | Resetting a student’s or family’s Portal password failed. | Check the username is right and belongs to this teacher’s students, then try again. |
+| EB-1010 | Report cards are already being sent from this computer. | Wait for the first send to finish (the Report tab shows how far it has got). |
+| EB-1011 | The Portal server is older than the feature being used (for example sending report cards). | Update the Portal server (Update-Live-Portal.cmd, or portal/scripts/update-server.sh), then try again. |
 
 ### Files
 

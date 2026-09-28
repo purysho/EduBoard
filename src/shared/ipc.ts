@@ -287,6 +287,12 @@ export const IpcChannels = {
     markRead: 'portalMessages:markRead',
     translate: 'portalMessages:translate'
   },
+  reportCards: {
+    send: 'reportCards:send',
+    progress: 'reportCards:progress',
+    list: 'reportCards:list',
+    withdraw: 'reportCards:withdraw'
+  },
   classPosts: {
     list: 'classPosts:list',
     create: 'classPosts:create',

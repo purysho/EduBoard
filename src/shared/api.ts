@@ -53,6 +53,9 @@ import type {
   PortalInviteBatchWithInvites,
   PortalMessageThread,
   ClassPost,
+  ReportCardDelivery,
+  ReportCardSendProgress,
+  ReportCardSendResult,
   ScoreHistoryEntry,
   ClassReport,
   ClassRosterRow,
@@ -477,6 +480,16 @@ export interface EduBoardApi {
     send(accountId: string, body: string): Promise<void>
     markRead(accountId: string): Promise<void>
     translate(messageId: string, targetLang: string): Promise<string>
+  }
+  /** Report cards sent privately to families on the Portal (one PDF per student). */
+  reportCards: {
+    /** Makes each active student's report card and sends it under this title; sending
+     * the same title again replaces it. */
+    send(classId: string, title: string): Promise<ReportCardSendResult>
+    /** How far a send has got, or null when none is running. */
+    progress(): Promise<ReportCardSendProgress | null>
+    list(classId: string): Promise<ReportCardDelivery[]>
+    withdraw(classId: string, title: string): Promise<number>
   }
   classPosts: {
     list(): Promise<ClassPost[]>

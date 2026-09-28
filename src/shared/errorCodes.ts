@@ -105,6 +105,17 @@ export const APP_ERROR_CODES = {
     meaning: 'Resetting a student’s or family’s Portal password failed.',
     fix: 'Check the username is right and belongs to this teacher’s students, then try again.'
   },
+  'EB-1010': {
+    area: 'Portal',
+    meaning: 'Report cards are already being sent from this computer.',
+    fix: 'Wait for the first send to finish (the Report tab shows how far it has got).'
+  },
+  'EB-1011': {
+    area: 'Portal',
+    meaning:
+      'The Portal server is older than the feature being used (for example sending report cards).',
+    fix: 'Update the Portal server (Update-Live-Portal.cmd, or portal/scripts/update-server.sh), then try again.'
+  },
 
   // --- Files, imports and school packs ------------------------------------------------------
   'EB-2001': {

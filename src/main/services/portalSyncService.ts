@@ -27,11 +27,17 @@ import { getSettings, getStoredValue, setStoredValue } from '../repositories/set
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
-import { portalFailure, portalFetch } from './portalErrors'
+import {
+  describePortalFailure,
+  portalFailure,
+  portalFailureCode,
+  portalFetch
+} from './portalErrors'
 import type { DigestPreview, PublishResult } from '@shared/types'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
+  ReportCardDelivery,
   Student,
   PortalResetRequest,
   PublishStatus,
@@ -762,6 +768,66 @@ export async function markMessageThreadRead(accountId: string): Promise<void> {
     headers: { 'X-Sync-Secret': portalSyncSecret }
   })
   if (!res.ok) throw await portalFailure(tr('Could not mark read'), res)
+}
+
+/** A 404 with the Portal's "Not found" code on a route the Portal should have means the
+ * server is older than this feature. */
+async function olderPortalOr(action: string, res: Response): Promise<AppError> {
+  const text = await res.text().catch(() => '')
+  if (res.status === 404 && text.includes('PT-9001')) {
+    return new AppError(
+      'EB-1011',
+      tr(
+        '{action}: your Portal server is older than this feature. Update it (Update-Live-Portal), then try again.',
+        { action }
+      )
+    )
+  }
+  return new AppError(
+    portalFailureCode(res.status),
+    describePortalFailure(action, res.status, text)
+  )
+}
+
+/** Sends one student's report card PDF to their family on the Portal. */
+export async function uploadReportCard(input: {
+  classId: string
+  studentId: string
+  title: string
+  pdf: Buffer
+}): Promise<void> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await portalFetch(`${portalUrl}/api/sync/report-cards`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
+    body: JSON.stringify({
+      classId: input.classId,
+      studentId: input.studentId,
+      title: input.title,
+      fileData: input.pdf.toString('base64')
+    })
+  })
+  if (!res.ok) throw await olderPortalOr(tr('Could not send the report card'), res)
+}
+
+export async function listReportCardDeliveries(classId: string): Promise<ReportCardDelivery[]> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await portalFetch(
+    `${portalUrl}/api/sync/report-cards?classId=${encodeURIComponent(classId)}`,
+    { headers: { 'X-Sync-Secret': portalSyncSecret } }
+  )
+  if (!res.ok) throw await olderPortalOr(tr('Could not load the report cards sent'), res)
+  return res.json()
+}
+
+export async function withdrawReportCards(classId: string, title: string): Promise<number> {
+  const { portalUrl, portalSyncSecret } = requirePortalConfig()
+  const res = await portalFetch(
+    `${portalUrl}/api/sync/report-cards?classId=${encodeURIComponent(classId)}&title=${encodeURIComponent(title)}`,
+    { method: 'DELETE', headers: { 'X-Sync-Secret': portalSyncSecret } }
+  )
+  if (!res.ok) throw await olderPortalOr(tr('Could not withdraw the report cards'), res)
+  return ((await res.json()) as { removed: number }).removed
 }
 
 export async function listClassPosts(): Promise<ClassPost[]> {

@@ -529,5 +529,42 @@ export const CLASSES: Record<string, string> = {
   'Group chat': '群聊',
   'Needs internet. Everyone in the group sees it.': '需要联网。群里的所有人都能看到。',
   'Sent to {name}.': '已发送到 {name}。',
-  'Send to group chat': '发送到群聊'
+  'Send to group chat': '发送到群聊',
+  '{action}: your Portal server is older than this feature. Update it (Update-Live-Portal), then try again.':
+    '{action}：你的学生门户服务器版本太旧，不支持此功能。请先更新（Update-Live-Portal），然后再试。',
+  'Could not send the report card': '无法发送成绩单',
+  'Could not load the report cards sent': '无法加载已发送的成绩单',
+  'Could not withdraw the report cards': '无法撤回成绩单',
+  'Give the report cards a title first.': '请先为成绩单填写标题。',
+  'Report cards are already being sent.': '成绩单正在发送中。',
+  'Report card, {month}': '成绩单，{month}',
+  'The report cards couldn’t be sent.': '成绩单未能发送。',
+  'Send report cards to families': '把成绩单发送给家长',
+  'Each family sees only their own child’s report card, on the Portal under Grades, and you see who has opened it. It’s the same PDF as Print PDF.':
+    '每个家庭只能在学生门户的“成绩”中看到自己孩子的成绩单，你可以看到谁已打开。内容与“打印 PDF”生成的 PDF 相同。',
+  'Connect to your Portal first:': '请先连接你的学生门户：',
+  'Settings → Portal and families': '设置 → 学生门户与家长',
+  'Title families see': '家长看到的标题',
+  'Already sent with this title: sending again replaces those report cards.':
+    '已用此标题发送过：再次发送会替换这些成绩单。',
+  'For example “End of Term 1 report”.': '例如“第一学期期末成绩单”。',
+  'Making and sending report cards: {done} of {total}…': '正在生成并发送成绩单：{done} / {total}…',
+  'Sent so far': '已发送',
+  'Couldn’t reach the Portal.': '无法连接学生门户。',
+  'None sent to this class yet.': '还没有给这个班级发送过。',
+  'Opened by {seen} of {audience} families': '{audience} 个家庭中已有 {seen} 个打开',
+  'Not opened yet:': '尚未打开：',
+  'No Portal login yet:': '还没有学生门户账号：',
+  'Each student’s report card goes to their own family on the Portal as “{title}”. Check the report comments first. Sending the same title again replaces them.':
+    '每个学生的成绩单会以“{title}”为标题，发送到学生门户上他们自己的家庭。请先检查成绩单评语。用相同标题再次发送会替换它们。',
+  'Withdraw “{title}”?': '撤回“{title}”？',
+  'Families will no longer see these report cards on the Portal. Anyone who already downloaded one keeps their copy.':
+    '家长将无法再在学生门户上看到这些成绩单。已经下载的人仍会保留自己的副本。',
+  'Send {n} report cards': '发送 {n} 份成绩单',
+  '{n} report cards sent.': '已发送 {n} 份成绩单。',
+  '{n} students have no Portal login yet': '{n} 名学生还没有学生门户账号',
+  'Send {n} report cards to families?': '把 {n} 份成绩单发送给家长？',
+  Withdraw: '撤回',
+  none: '无',
+  Send: '发送'
 }
