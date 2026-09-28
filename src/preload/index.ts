@@ -259,6 +259,10 @@ const api: EduBoardApi = {
     importCss: () => invoke(IpcChannels.schoolPack.importCss),
     saveExampleCss: () => invoke(IpcChannels.schoolPack.saveExampleCss)
   },
+  coursePack: {
+    preview: () => invoke(IpcChannels.coursePack.preview),
+    apply: (filePath, termBindings) => invoke(IpcChannels.coursePack.apply, filePath, termBindings)
+  },
   security: {
     status: () => invoke(IpcChannels.security.status),
     unlock: (secret) => invoke(IpcChannels.security.unlock, secret),
