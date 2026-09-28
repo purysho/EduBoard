@@ -468,6 +468,27 @@ export const SETTINGS: Record<string, string> = {
   'Backups, password, import, school pack': '备份、密码、导入、学校配置包',
   'backup restore password lock encryption import roster excel school pack export':
     '备份 恢复 密码 锁定 加密 导入 名单 学校配置包 导出 backup password import excel pack',
+  'Course Pack': '课程包',
+  'EduBoard course pack': 'EduBoard 课程包',
+  'Import a reusable curriculum into classes you choose. A Course Pack can add terms, standards, rubrics, planned lessons, assessments and homework without changing EduBoard for other courses.':
+    '将可重复使用的课程内容导入你选择的班级。课程包可以添加学期、标准、评分量规、计划课程、测评和作业，而不会改变 EduBoard 中的其他课程。',
+  'That Course Pack couldn’t be read.': '无法读取该课程包。',
+  'Import Course Pack…': '导入课程包…',
+  'Import {name}?': '导入“{name}”？',
+  'Import Course Pack?': '导入课程包？',
+  'Course Pack imported: {created} added, {reused} already present.':
+    '课程包已导入：新增 {created} 项，已有 {reused} 项。',
+  'The Course Pack couldn’t be imported.': '无法导入课程包。',
+  Lessons: '课程',
+  'Choose the class for each term': '为每个学期选择班级',
+  'Only these classes will receive the pack. Existing students and grades are kept.':
+    '只有这些班级会接收该课程包。现有学生和成绩会保留。',
+  'Choose a class…': '选择班级…',
+  'EduBoard makes a backup immediately before importing. Re-importing the same pack reuses matching curriculum instead of creating duplicates.':
+    'EduBoard 会在导入前立即创建备份。再次导入同一课程包时，会复用匹配的课程内容，而不是创建重复项。',
+  'Backups, password, imports and packs': '备份、密码、导入与配置包',
+  'backup restore password lock encryption import roster excel school pack course pack curriculum export':
+    '备份 恢复 密码 锁定 加密 导入 名单 Excel 学校配置包 课程包 课程内容 导出 backup restore password import school course pack curriculum export',
   'Help and updates': '帮助与更新',
   'Version, updates, sample school, error report': '版本、更新、示例学校、错误报告',
   'version update help error report code log usage improve sample demo try':
