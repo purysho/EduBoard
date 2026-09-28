@@ -59,6 +59,16 @@ test('login: per-IP limit applies across usernames', async (t) => {
   assert.equal(res.status, 429)
 })
 
+test('login: a classroom signing in from one address is never throttled by its own successes', async (t) => {
+  const portal = await startPortal({ RATE_LOGIN_PER_IP: '3' })
+  t.after(portal.stop)
+  const { username, password } = await makeStudentAccount(portal)
+  for (let i = 0; i < 8; i++) {
+    const res = await portal.call('POST', '/api/auth/login', { body: { username, password } })
+    assert.equal(res.status, 200)
+  }
+})
+
 test('invite codes: guessing is throttled per IP', async (t) => {
   const portal = await startPortal({ RATE_SECRET_URL_PER_IP: '5' })
   t.after(portal.stop)

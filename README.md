@@ -125,7 +125,8 @@ Builds are unsigned until you add the relevant secrets, which is why Windows Sma
 ## How it's built
 
 The full picture, the Portal included, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md);
-contributing is explained in [CONTRIBUTING.md](CONTRIBUTING.md).
+contributing is explained in [CONTRIBUTING.md](CONTRIBUTING.md), and how it performs with a
+heavy teacher's year and a whole school's Portal in [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 - **Electron + React + TypeScript**, scaffolded with [electron-vite](https://electron-vite.org/).
 - **better-sqlite3 + Drizzle ORM** for storage — one `.db` file. On a packaged app it lives next to the executable when that's writable (portable/USB use), and falls back to the OS user-data folder otherwise (see `src/main/db/path.ts`).

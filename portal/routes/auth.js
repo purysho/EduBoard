@@ -14,14 +14,17 @@ const { RateLimiter, rateLimit, tooMany, LIMITS } = require('../rateLimit')
 
 const router = express.Router()
 
-const loginPerIp = rateLimit(LIMITS.loginPerIp)
+const loginFailuresPerIp = new RateLimiter(LIMITS.loginPerIp)
 // Keyed by the username being attempted, not by who's asking: a slow guess at one
 // account spread across many IPs still hits this. Only failures count, and a correct
 // password is refused while locked, so the lock can't be sidestepped by getting lucky.
 const loginFailures = new RateLimiter(LIMITS.loginFailuresPerUser)
 const secretUrlPerIp = rateLimit(LIMITS.secretUrlPerIp)
 
-router.post('/login', loginPerIp, (req, res) => {
+router.post('/login', (req, res) => {
+  if (loginFailuresPerIp.isBlocked(req.ip)) {
+    return tooMany(res, loginFailuresPerIp.retryAfterSec(req.ip))
+  }
   const { username, password } = req.body
   const userKey = String(username || '').toLowerCase()
   if (loginFailures.isBlocked(userKey)) {
@@ -36,6 +39,7 @@ router.post('/login', loginPerIp, (req, res) => {
   // Runs bcrypt even when the account doesn't exist, so timing doesn't reveal usernames.
   if (!verifyPassword(password || '', account?.password_hash)) {
     loginFailures.consume(userKey)
+    loginFailuresPerIp.consume(req.ip)
     return res.status(401).json({ error: 'Wrong username or password', code: 'PT-1002' })
   }
   loginFailures.reset(userKey)

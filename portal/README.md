@@ -75,9 +75,9 @@ opens the browser. See [docs/TESTING_WITHOUT_A_TERMINAL.md](../docs/TESTING_WITH
    | `PORTAL_CONSENT` | on | `off` stops asking families to agree to the terms of use at first sign-in, for a school that collects consent another way (on paper, for example). When it's on, the admin page downloads the records as a CSV. |
    | `PORTAL_HOST` | none | The Portal's own address (e.g. `portal.edu-board.com`), where the homepage's "Log in" links send students and parents when it's shown on a `HOMEPAGE_HOSTS` name. |
    | `TRUST_PROXY` | `loopback` | Which proxy to trust for the client's real IP (`X-Forwarded-For`). Keep the default when Caddy runs on the same machine. Setting it more loosely lets clients fake their IP and dodge rate limits. |
-   | `RATE_LOGIN_PER_IP` | `50` | Login attempts per IP per 15 min. Raise it if a whole computer lab shares one IP. |
+   | `RATE_LOGIN_PER_IP` | `100` | Failed logins per IP per 15 min. Successful logins never count, so a class signing in together over the school's one address isn't paused. |
    | `RATE_LOGIN_FAILS_PER_USER` | `10` | Failed logins per username per 15 min before that account is paused. |
-   | `RATE_SECRET_URL_PER_IP` | `60` | Invite-code and QR-login requests per IP per 15 min. |
+   | `RATE_SECRET_URL_PER_IP` | `300` | Invite-code and QR-login requests per IP per 15 min (joining is two requests per student; codes can't be guessed at any rate). |
    | `RATE_BAD_SECRET_PER_IP` | `20` | Wrong sync/admin secrets per IP per 15 min. Correct ones never count. |
    | `RATE_AI_PER_MINUTE` | `6` | AI chat + translation requests per student account per minute. |
    | `RATE_AI_PER_DAY` | `100` | The same, per 24 hours. These calls spend your own AI key. |
