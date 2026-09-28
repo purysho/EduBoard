@@ -1,12 +1,43 @@
 # EduBoard
 
-A local-first teacher operating system: students, classes, gradebook, rubrics, attendance, lesson plans, seating charts, exit tickets, a resource library, parent communications, and reports — all in one desktop app that runs entirely offline, with no account, no server, and no internet required.
+Teachers keep their records; families see their own child's progress.
 
-Your data lives in a single database file next to the app, so the whole thing — app and data together — can travel on a USB stick between a home laptop and a classroom computer.
+EduBoard is a desktop app for a teacher's whole working week (gradebook, attendance,
+report cards, lesson plans, classroom tools, parent contact) that keeps student records on
+the teacher's own computer and works offline. When the teacher chooses, it publishes to
+the **EduBoard Portal**, a website where each student and family sees only their own work,
+grades, report cards and messages, on any phone. Everything is in English and Chinese.
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-## Features
+**Try it:** download the app and open Settings → Help and updates → **Sample school**, or
+see what families see at [edu-board.com](https://edu-board.com) (demo login `demo` /
+`try-eduboard`). For schools: a [two-page overview](https://edu-board.com/brochure), the
+[security overview](https://edu-board.com/security), the
+[privacy notice](https://edu-board.com/privacy) and
+[data processing terms](https://edu-board.com/data-processing).
+
+## For families: the Portal
+
+- Grades with each marked assessment, a chart over time and the teacher's feedback.
+- Homework handed in online, with due dates in the family's own calendar.
+- Report cards as PDFs, notices with reply slips (回执), and messages with the teacher,
+  translated when needed.
+- A Study Helper that answers from the teacher's own materials, a weekly email summary,
+  and a copy of all their data at any time.
+
+## For schools
+
+- Student records stay on each teacher's computer, encrypted when password protection is
+  on; the Portal holds only what teachers publish, in Hong Kong or on the school's own
+  server.
+- The school's name, logo and colours in the app, set for every teacher on a computer by
+  IT ([school deployment](docs/SCHOOL_DEPLOYMENT.md)).
+- Consent records, a usage page, and the documents a data protection review asks for.
+- Works with DingTalk and WeCom groups, Word, Excel, PowerPoint and WPS, and AI providers
+  reachable from China.
+
+## For teachers
 
 - **Students** — one directory across every class, with guardian contact info and notes.
 - **Classes** — K-12, university, or club sections, each with its own grading scale (weighted categories, A–F thresholds, pass mark).
@@ -22,7 +53,10 @@ Your data lives in a single database file next to the app, so the whole thing �
 - **Student logs & parent communications** — behavior notes, quick-add entries, and a dedicated log of parent contacts (call/email/in-person) with follow-up tracking, searchable across every student.
 - **Reports** — class averages, pass rate, grade distribution, category breakdown, and attendance trend charts; printable per-student report cards (PDF).
 - **Import/export** — bring in a roster from `.xlsx`/`.csv`; export a class's full gradebook back to Excel.
-- **Backups** — one-click database backup and restore, so you always have a copy that isn't only on one laptop.
+- **Backups** — automatic daily backups, a second copy to a USB stick or cloud folder, and one-click restore.
+- **Report cards** — for the whole class at once, with a comment bank and AI phrase suggestions the teacher checks before using; sent privately to each family on the Portal.
+- **Classroom tools** — random name picker, groups, timer, class points, QR attendance check-in, and a presenting mode that hides private details on a projector.
+- **Your school's words** — its own grading scale, attendance codes, terms, student fields and templates, shared between teachers as a school pack.
 
 | Gradebook | Rubric scoring | Attendance |
 | --- | --- | --- |
@@ -51,7 +85,7 @@ Each button always grabs the newest release, no version numbers to track. Once i
 - **macOS** — pick the button for your Mac's chip (Apple menu → **About This Mac**: "Apple M1/M2/M3…" is Apple Silicon, "Intel" is Intel). Each downloads a `.dmg`; `.zip` versions are on the [Releases page](https://github.com/purysho/EduBoard/releases/latest) if you'd rather not mount a disk image.
 - **Linux** — the button above downloads the `.AppImage`: make it executable (`chmod +x EduBoard.AppImage`) and run it directly.
 
-> Builds aren't code-signed (that costs money neither of us needs to spend for a personal tool). Windows SmartScreen and macOS Gatekeeper will warn you the first time you open it — on Windows choose **More info → Run anyway**; on macOS right-click the app → **Open** the first time. Details and screenshots of both are in the [User Guide](docs/USER_GUIDE.md#installing).
+> Builds aren't code-signed yet (signing is set up and switches on once certificates are bought; see [docs/CODE_SIGNING.md](docs/CODE_SIGNING.md)). Until then Windows SmartScreen and macOS Gatekeeper warn the first time it's opened: on Windows choose **More info → Run anyway**; on macOS right-click the app → **Open** the first time. Details and screenshots of both are in the [User Guide](docs/USER_GUIDE.md#installing).
 
 ## Everyday use
 
@@ -82,13 +116,16 @@ npm run build:mac     # macOS dmg + zip (needs macOS)
 npm run build:linux   # Linux AppImage
 ```
 
-Tagging a commit `vX.Y.Z` and pushing the tag triggers [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds all three platforms on their native runners and publishes a draft GitHub Release with every installer attached — that's the intended way to cut a release, since cross-compiling a Windows/macOS build from another OS isn't reliable.
+To release: `npm version X.Y.Z --no-git-tag-version`, move the `[Unreleased]` section of the [CHANGELOG](CHANGELOG.md) under the new version, commit and push `main`, then run **Actions → Release** on `main`. [`.github/workflows/release.yml`](.github/workflows/release.yml) tags the version, builds all three platforms on their own runners (cross-compiling Windows or Mac builds isn't reliable) and publishes the GitHub Release that installed copies update from.
 
 ### Code signing
 
 Builds are unsigned until you add the relevant secrets, which is why Windows SmartScreen and macOS Gatekeeper warn on first launch (see the [User Guide](docs/USER_GUIDE.md#installing)). The release workflow and `electron-builder.yml` are already wired to sign and notarize automatically the moment the right repo secrets exist — see [`docs/CODE_SIGNING.md`](docs/CODE_SIGNING.md) for exactly what to add and where to get it. Linux AppImages don't need code signing.
 
 ## How it's built
+
+The full picture, the Portal included, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md);
+contributing is explained in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - **Electron + React + TypeScript**, scaffolded with [electron-vite](https://electron-vite.org/).
 - **better-sqlite3 + Drizzle ORM** for storage — one `.db` file. On a packaged app it lives next to the executable when that's writable (portable/USB use), and falls back to the OS user-data folder otherwise (see `src/main/db/path.ts`).

@@ -22,26 +22,26 @@ export interface Release {
 
 export type InstallKind = 'windows-installer' | 'windows-portable' | 'mac' | 'linux-appimage'
 
-/** Which release file this copy of EduBoard updates itself from. */
+/** Which release file this copy of EduBoard updates itself from. Matched by the kind of
+ * file (…-Setup.exe, …-arm64.dmg), not the product's name, so copies installed today
+ * still find their update if the app is ever renamed (docs/RENAMING.md). */
 export function pickAsset(
   kind: InstallKind,
   arch: string,
   assets: ReleaseAsset[]
 ): ReleaseAsset | null {
-  const byName = (n: string): ReleaseAsset | null => assets.find((a) => a.name === n) ?? null
+  const find = (pattern: RegExp): ReleaseAsset | null =>
+    assets.find((a) => pattern.test(a.name)) ?? null
   switch (kind) {
     case 'windows-installer':
-      return byName('EduBoard-Setup.exe')
+      return find(/-Setup\.exe$/)
     case 'windows-portable':
-      return byName('EduBoard-Portable.exe')
+      return find(/-Portable\.exe$/)
     case 'mac':
       // Older releases had one universal EduBoard.dmg; use it when there's no per-chip one.
-      return (
-        byName(arch === 'arm64' ? 'EduBoard-arm64.dmg' : 'EduBoard-x64.dmg') ??
-        byName('EduBoard.dmg')
-      )
+      return find(arch === 'arm64' ? /-arm64\.dmg$/ : /-x64\.dmg$/) ?? find(/^[^-]+\.dmg$/)
     case 'linux-appimage':
-      return byName('EduBoard.AppImage')
+      return find(/\.AppImage$/)
   }
 }
 

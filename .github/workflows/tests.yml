@@ -33,3 +33,23 @@ jobs:
       - name: Portal tests
         working-directory: portal
         run: npm test
+
+  # The real app, opened the way a teacher would: every screen with a term of sample data,
+  # grades on screen, Chinese, and password protection (tools/e2e/smoke.mjs).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx electron-vite build
+      # Playwright drives Electron directly; no browser download is needed.
+      - run: npm install --no-save playwright@1
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Smoke test
+        run: xvfb-run --auto-servernum node tools/e2e/smoke.mjs

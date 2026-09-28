@@ -1,4 +1,6 @@
 import { app, BrowserWindow } from 'electron'
+import { join } from 'path'
+import { DATA_FOLDER_NAME } from '@shared/branding'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { initDb } from './db/client'
 import { registerIpcHandlers } from './ipc/register'
@@ -19,6 +21,11 @@ import {
   isSampleSchool,
   seedSampleSchoolIfEmpty
 } from './services/sampleSchool'
+
+// Teachers' data lives in "<app data>/EduBoard" (Windows %APPDATA%, macOS Application
+// Support, Linux ~/.config). That folder is named after the product by default; pinning it
+// keeps everyone's classes where they are even if the app is renamed one day.
+if (app.isPackaged) app.setPath('userData', join(app.getPath('appData'), DATA_FOLDER_NAME))
 
 // A promise nobody waited on failed: log it with a reference (it never reached a screen).
 process.on('unhandledRejection', (reason) => {
