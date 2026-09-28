@@ -1,5 +1,5 @@
 import { addDays } from '@shared/dates'
-import type { CoursePack } from '@shared/coursePack'
+import type { CoursePack, CoursePackInstallSummary } from '@shared/coursePack'
 import type { CourseGroup, Standard, Term, RubricWithCriteria } from '@shared/types'
 import { getSqlite } from '../db/client'
 import { listCourseGroups, createCourseGroup } from './courseGroups'
@@ -10,6 +10,8 @@ import { getClass, updateClass } from './classes'
 import { listAssessmentsByClass, createAssessment } from './assessments'
 import { listHomeworkAssignmentsByClass, createHomeworkAssignment } from './homeworkAssignments'
 import { listLessonPlansByClass, createLessonPlan } from './lessonPlans'
+import { listLessonResources, createLessonResource } from './lessonResources'
+import { getSettings, updateSettings } from './settingsRepo'
 
 export interface InstallCoursePackInput {
   pack: CoursePack
@@ -17,31 +19,7 @@ export interface InstallCoursePackInput {
   termBindings: Record<string, string>
 }
 
-export interface CoursePackInstallResult {
-  courseGroupId: string
-  termIds: Record<string, string>
-  standardIds: Record<string, string>
-  rubricIds: Record<string, string>
-  assessmentIds: Record<string, string>
-  created: {
-    courseGroups: number
-    terms: number
-    standards: number
-    rubrics: number
-    assessments: number
-    homework: number
-    lessons: number
-  }
-  reused: {
-    courseGroups: number
-    terms: number
-    standards: number
-    rubrics: number
-    assessments: number
-    homework: number
-    lessons: number
-  }
-}
+export type CoursePackInstallResult = CoursePackInstallSummary
 
 const norm = (value: string): string => value.trim().toLowerCase()
 const termIdentity = (name: string, schoolYear: string): string => `${norm(name)}|${norm(schoolYear)}`
@@ -97,6 +75,8 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       terms: 0,
       standards: 0,
       rubrics: 0,
+      resources: 0,
+      studentFields: 0,
       assessments: 0,
       homework: 0,
       lessons: 0
@@ -184,6 +164,65 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       rubricRows.set(norm(source.key), rubric)
       rubricIds[source.key] = rubric.id
     }
+
+    const existingResources = listLessonResources()
+    const resourceIds: Record<string, string> = {}
+    for (const source of pack.resources ?? []) {
+      const standardId = source.standardKey
+        ? (standardRows.get(norm(source.standardKey))?.id ?? null)
+        : null
+      const existing = existingResources.find(
+        (resource) =>
+          norm(resource.title) === norm(source.title) &&
+          resource.type === source.type &&
+          (resource.url ?? null) === (source.url ?? null) &&
+          (resource.notes ?? null) === (source.notes ?? null) &&
+          resource.standardId === standardId &&
+          JSON.stringify(resource.tags) === JSON.stringify(source.tags ?? [])
+      )
+      if (existing) {
+        resourceIds[source.key] = existing.id
+        reused.resources++
+        continue
+      }
+      const resource = createLessonResource({
+        title: source.title,
+        type: source.type,
+        url: source.url ?? null,
+        filePath: null,
+        notes: source.notes ?? null,
+        tags: source.tags ?? [],
+        standardId,
+        classId: null,
+        shareWithStudents: false,
+        studyGuide: null
+      })
+      existingResources.push(resource)
+      resourceIds[source.key] = resource.id
+      created.resources++
+    }
+
+    const settings = getSettings()
+    const existingFields = settings.studentFields ?? []
+    const mergedFields = [...existingFields]
+    for (const source of pack.studentFields ?? []) {
+      const existing = existingFields.find((field) => norm(field.id) === norm(source.id))
+      if (existing) {
+        if (
+          existing.label !== source.label ||
+          Boolean(existing.onSeatingChart) !== Boolean(source.onSeatingChart)
+        ) {
+          throw new Error(
+            `Course Pack student field "${source.id}" conflicts with the existing field of that id.`
+          )
+        }
+        reused.studentFields++
+        continue
+      }
+      mergedFields.push(source)
+      created.studentFields++
+    }
+    if (created.studentFields > 0) updateSettings({ studentFields: mergedFields })
 
     // The user's selected classes are the only existing records a pack intentionally edits:
     // bind each to the reusable course group and to the matching term.
@@ -296,6 +335,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       standardIds,
       rubricIds,
       assessmentIds,
+      resourceIds,
       created,
       reused
     }
