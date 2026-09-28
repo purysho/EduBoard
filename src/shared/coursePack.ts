@@ -189,7 +189,7 @@ function asNumber(
 
 function asDate(value: unknown, label: string): string | null {
   if (value === undefined || value === null || value === '') return null
-  if (typeof value !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return invalid(label + ' must be YYYY-MM-DD.')
   }
   return value
@@ -470,5 +470,5 @@ export function parseCoursePack(json: string): CoursePack {
 }
 
 export function serializeCoursePack(pack: CoursePack): string {
-  return JSON.stringify(pack, null, 2) + '\\n'
+  return JSON.stringify(pack, null, 2) + '\n'
 }
