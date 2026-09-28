@@ -4,6 +4,7 @@ import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat } from './groupChats'
 import type { UsagePing } from './usagePing'
 import type { CssCheck } from './cssCheck'
+import type { CoursePackInstallSummary, CoursePackPreview } from './coursePack'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -400,6 +401,12 @@ export interface EduBoardApi {
     importCss(): Promise<CssCheck | null>
     /** Saves an example stylesheet with every EduBoard colour, to edit and load. */
     saveExampleCss(): Promise<boolean>
+  }
+  coursePack: {
+    /** Chooses and validates a reusable curriculum pack without changing any data. */
+    preview(): Promise<CoursePackPreview | null>
+    /** Re-reads the chosen pack, takes a backup, then installs it into explicitly mapped classes. */
+    apply(filePath: string, termBindings: Record<string, string>): Promise<CoursePackInstallSummary>
   }
   security: {
     status(): Promise<SecurityStatus>
