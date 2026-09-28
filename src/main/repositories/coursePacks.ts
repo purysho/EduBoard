@@ -198,6 +198,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
     }
 
     const assessmentIds: Record<string, string> = {}
+    const assessmentIdsByKey = new Map<string, string>()
     for (const source of pack.assessments ?? []) {
       const classId = termBindings[source.termKey] ?? termBindings[norm(source.termKey)]
       if (!classId) continue
@@ -208,6 +209,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       )
       if (existing) {
         assessmentIds[source.key] = existing.id
+        assessmentIdsByKey.set(norm(source.key), existing.id)
         reused.assessments++
         continue
       }
@@ -224,6 +226,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         sortOrder: source.sortOrder ?? 0
       })
       assessmentIds[source.key] = assessment.id
+      assessmentIdsByKey.set(norm(source.key), assessment.id)
       created.assessments++
     }
 
@@ -280,7 +283,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         activities: source.activities ?? null,
         homework: source.homework ?? null,
         linkedAssessmentId: source.assessmentKey
-          ? (assessmentIds[source.assessmentKey] ?? assessmentIds[norm(source.assessmentKey)] ?? null)
+          ? (assessmentIdsByKey.get(norm(source.assessmentKey)) ?? null)
           : null,
         standards: standards.length ? standards.join(', ') : null
       })
