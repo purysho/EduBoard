@@ -4,6 +4,7 @@ import {
   BarChart3,
   CalendarCheck,
   ClipboardList,
+  Target,
   FileCheck2,
   LayoutGrid,
   MonitorSmartphone,
@@ -23,6 +24,7 @@ const TABS = [
   // Day-to-day tabs first; occasional ones (exit tickets, seating, reports) further right.
   { to: '', label: tr('Roster'), icon: Users, end: true },
   { to: 'gradebook', label: tr('Gradebook'), icon: ClipboardList },
+  { to: 'competencies', label: tr('Competencies'), icon: Target },
   { to: 'homework', label: tr('Homework'), icon: FileCheck2 },
   { to: 'attendance', label: tr('Attendance'), icon: CalendarCheck },
   { to: 'lessons', label: tr('Lesson plans'), icon: NotebookPen },
