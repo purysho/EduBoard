@@ -12,6 +12,7 @@ interface EvidenceRow {
   standardId: string
   levelLabel: string
   updatedAt: string
+  sourceId: string
   sourceName: string
   sourceType: CompetencyEvidenceSource
 }
@@ -21,9 +22,10 @@ interface EvidenceRow {
  * EduBoard. It stores no second "mastery" copy: assessment/homework rubric evidence is
  * the source of truth, so editing a rubric score immediately changes this view.
  *
- * The cell label is deliberately the latest rubric level the teacher actually chose,
- * rather than a hidden averaging algorithm. Courses that use Emerging / Developing /
- * Secure / Strong see those states; a different course keeps its own rubric vocabulary.
+ * The cell deliberately reports the most recent evidence source rather than calculating
+ * a hidden average. When several criteria in that source map to the same standard, all
+ * selected level labels are preserved: one agreed label is shown directly, while differing
+ * labels are flagged as mixed evidence.
  */
 export function getCompetencyMatrix(classId: string): CompetencyMatrix {
   const sqlite = getSqlite()
@@ -66,6 +68,7 @@ export function getCompetencyMatrix(classId: string): CompetencyMatrix {
           rc.standard_id AS standardId,
           rl.label AS levelLabel,
           rs.updated_at AS updatedAt,
+          a.id AS sourceId,
           a.name AS sourceName,
           'assessment' AS sourceType
         FROM rubric_scores rs
@@ -81,6 +84,7 @@ export function getCompetencyMatrix(classId: string): CompetencyMatrix {
           rc.standard_id AS standardId,
           rl.label AS levelLabel,
           hrs.updated_at AS updatedAt,
+          h.id AS sourceId,
           h.title AS sourceName,
           'homework' AS sourceType
         FROM homework_rubric_scores hrs
@@ -89,7 +93,7 @@ export function getCompetencyMatrix(classId: string): CompetencyMatrix {
         JOIN homework_assignments h ON h.id = hrs.homework_assignment_id
         WHERE h.class_id = ? AND rc.standard_id IS NOT NULL
 
-        ORDER BY updatedAt ASC
+        ORDER BY updatedAt ASC, sourceType ASC, sourceId ASC
       `
     )
     .all(classId, classId) as EvidenceRow[]
@@ -103,7 +107,9 @@ export function getCompetencyMatrix(classId: string): CompetencyMatrix {
       cells.set(`${student.id}|${standard.id}`, {
         studentId: student.id,
         standardId: standard.id,
+        latestLevelLabels: [],
         latestLevelLabel: null,
+        latestEvidenceMixed: false,
         latestSourceType: null,
         latestSourceName: null,
         latestAt: null,
@@ -112,18 +118,34 @@ export function getCompetencyMatrix(classId: string): CompetencyMatrix {
     }
   }
 
+  const latestSourceKeys = new Map<string, string>()
   for (const row of rows) {
     if (!activeStudentIds.has(row.studentId) || !relevantStandardIds.has(row.standardId)) continue
     const key = `${row.studentId}|${row.standardId}`
     const cell = cells.get(key)
     if (!cell) continue
     cell.evidenceCount += 1
-    if (!cell.latestAt || row.updatedAt >= cell.latestAt) {
-      cell.latestLevelLabel = row.levelLabel
+
+    const sourceKey = `${row.sourceType}|${row.sourceId}`
+    if (!cell.latestAt || row.updatedAt > cell.latestAt) {
+      cell.latestLevelLabels = [row.levelLabel]
       cell.latestSourceType = row.sourceType
       cell.latestSourceName = row.sourceName
       cell.latestAt = row.updatedAt
+      latestSourceKeys.set(key, sourceKey)
+      continue
     }
+
+    if (row.updatedAt === cell.latestAt && latestSourceKeys.get(key) === sourceKey) {
+      if (!cell.latestLevelLabels.includes(row.levelLabel)) {
+        cell.latestLevelLabels.push(row.levelLabel)
+      }
+    }
+  }
+
+  for (const cell of cells.values()) {
+    cell.latestEvidenceMixed = cell.latestLevelLabels.length > 1
+    cell.latestLevelLabel = cell.latestLevelLabels.length === 1 ? cell.latestLevelLabels[0] : null
   }
 
   return {
