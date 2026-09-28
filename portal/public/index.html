@@ -188,6 +188,20 @@
   .ai-help { margin-top: 12px; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; background: #fff; padding: 6px; }
   a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
+  /* Every link in the Portal's own colour, never the browser's default blue. */
+  a { color: var(--primary); }
+  a:hover { color: var(--primary-dark); }
+  .field-note a, .field-note a.linklike { font-size: inherit; font-weight: 600; }
+  /* "Open (PDF)" and similar: a small button that never wraps onto two lines. */
+  a.pill-link { flex-shrink: 0; white-space: nowrap; display: inline-block; padding: 5px 12px; border: 1px solid var(--primary-line); border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: .8rem; font-weight: 600; text-decoration: none; }
+  a.pill-link:hover { background: var(--primary-line); }
+  /* A file picker in the Portal's language (the browser's own says "Choose File" in its
+     language, whatever the family picked). The real input stays focusable for keyboards. */
+  label.file-pick { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 400; min-width: 0; cursor: pointer; }
+  label.file-pick input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  label.file-pick .file-btn { flex-shrink: 0; padding: 7px 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; }
+  label.file-pick:focus-within .file-btn { outline: 2px solid var(--primary); outline-offset: 2px; }
+  label.file-pick .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; color: var(--muted); }
   .assessments { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
   .assess-list { list-style: none; margin: 0; padding: 0; }
   .assess { padding: 8px 0; border-bottom: 1px solid var(--border); }
@@ -335,6 +349,18 @@ async function clearSavedData() {
     // Storage can be unavailable (private mode); there's nothing cached to clear then.
   }
 }
+
+/** A file input with a button and "no file chosen" in the Portal's language; `attrs` are
+ * the input's own attributes (e.g. data-file accept="..."). */
+function filePicker(attrs) {
+  return `<label class="file-pick"><input type="file" ${attrs} /><span class="file-btn">${t('Choose a file')}</span><span class="file-name" data-file-name>${t('No file chosen')}</span></label>`
+}
+document.addEventListener('change', (e) => {
+  const input = e.target
+  if (!(input instanceof HTMLInputElement) || !input.closest('label.file-pick')) return
+  const name = input.closest('label.file-pick').querySelector('[data-file-name]')
+  name.textContent = input.files && input.files[0] ? input.files[0].name : t('No file chosen')
+})
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
@@ -1034,7 +1060,7 @@ function profileCardHtml(p, studentName) {
       <form data-profile-form="${id}" style="display:${open ? 'block' : 'none'}; margin-top:14px">
         <label>${t('Photo')} <span class="muted">${t('(.jpg, .png or .webp, up to 8 MB)')}</span></label>
         <div style="display:flex; gap:8px; align-items:center">
-          <input type="file" data-photo accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+          ${filePicker('data-photo accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"')}
           ${p.hasPhoto ? `<button type="button" class="chip" data-photo-remove>${t('Remove')}</button>` : ''}
         </div>
         <p class="field-note">${t("Photos are resized and cleaned (location data removed) before they're saved.")}</p>
@@ -1317,7 +1343,7 @@ function homeworkCardHtml(h, studentId) {
             <label>${t('Your answer')}</label>
             <textarea data-answer rows="3" style="width:100%; box-sizing:border-box; padding:11px; border:1px solid var(--border); border-radius:10px; font:inherit;">${esc(h.textAnswer || '')}</textarea>
             <label>${t('Attach a file')}</label>
-            <input data-file type="file" accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.csv,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.png,.jpg,.jpeg,.gif,.webp,.heic,.mp3,.m4a,.wav,.mp4,.mov,.webm" />
+            ${filePicker('data-file accept=".pdf,.doc,.docx,.odt,.rtf,.txt,.md,.csv,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.png,.jpg,.jpeg,.gif,.webp,.heic,.mp3,.m4a,.wav,.mp4,.mov,.webm"')}
             <p class="field-note">${t('Documents, images, audio or video, up to 20 MB. Programs and files with macros are refused.')}</p>
             <label class="check-row">
               <input type="checkbox" data-ai-declared ${h.aiHelpCount ? 'checked disabled' : ''} />
@@ -1717,7 +1743,7 @@ async function loadReportCards(multi) {
       <div class="card">
         <div class="row"><strong>${esc(c.title)}</strong>${c.opened ? '' : `<span class="pill submitted">${t('New')}</span>`}</div>
         <div class="row" style="margin-top:6px"><span class="muted">${label(c)} · ${formatWhen(c.sentAt)}</span>
-          <a href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
+          <a class="pill-link" href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
       </div>`
     )
     .join('')
@@ -1726,7 +1752,7 @@ async function loadReportCards(multi) {
     const c = unopened[0]
     nudge.innerHTML = `<div class="card" style="border-color:var(--primary)">
       <div class="row"><strong>${esc(unopened.length > 1 ? t('{n} new report cards', { n: unopened.length }) : t('New report card'))}</strong>
-        <a href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
+        <a class="pill-link" href="${fileUrl(c)}" target="_blank" rel="noopener" data-report-card="${esc(c.id)}">${t('Open (PDF)')}</a></div>
       <p class="muted" style="margin:6px 0 0">${esc(c.title)} · ${label(c)}${unopened.length > 1 ? ` · <a href="#grades">${t('See all under Grades')}</a>` : ''}</p>
     </div>`
   }
