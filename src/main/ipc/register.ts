@@ -58,6 +58,7 @@ import * as assignmentSubmissionsRepo from '../repositories/assignmentSubmission
 import * as seatAssignmentsRepo from '../repositories/seatAssignments'
 import * as courseGroupsRepo from '../repositories/courseGroups'
 import { getCourseGroupComposite } from '../services/compositeGrades'
+import { getCurriculumMap } from '../services/curriculumMap'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import {
   closeAttendanceCheckIn,
@@ -751,6 +752,9 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.courseGroups.getComposite, (_e, courseGroupId: string) =>
     getCourseGroupComposite(courseGroupId)
+  )
+  handle(IpcChannels.courseGroups.curriculumMap, (_e, courseGroupId: string) =>
+    getCurriculumMap(String(courseGroupId))
   )
 
   // --- Seat assignments -------------------------------------------------------------------
