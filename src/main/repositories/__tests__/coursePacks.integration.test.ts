@@ -147,6 +147,18 @@ describe('Course Packs', () => {
     expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
   })
 
+  it('rejects a resource linked to an unknown standard', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.resources[0].standardKey = 'does-not-exist'
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
+  })
+
+  it('rejects duplicate student-field ids', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.studentFields.push({ id: 'english-goal', label: 'Duplicate' })
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/duplicate student field id/i)
+  })
+
   it('installs a pack transactionally into an explicitly mapped class', () => {
     const cls = universityClass('University English A')
     const result = installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
