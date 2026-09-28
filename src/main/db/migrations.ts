@@ -767,6 +767,34 @@ const migrations: Migration[] = [
       )
       for (const [id, en, zh] of map) set.run(id, en, zh)
     }
+  },
+  {
+    id: 34,
+    name: 'curriculum_map_lesson_history_and_resources',
+    up: (db) => {
+      // Preserve where a lesson was first scheduled so the curriculum map can distinguish
+      // a moved lesson from one originally planned on its current date. Existing rows use
+      // their current date as the historical baseline.
+      //
+      // Resources are linked through a join table instead of embedding ids in lesson
+      // plans, so one library resource can support several lessons and local links can be
+      // added without changing the resource itself.
+      db.exec(`
+        ALTER TABLE lesson_plans ADD COLUMN original_date TEXT;
+        UPDATE lesson_plans SET original_date = date WHERE original_date IS NULL;
+
+        CREATE TABLE lesson_plan_resources (
+          lesson_plan_id TEXT NOT NULL REFERENCES lesson_plans(id) ON DELETE CASCADE,
+          resource_id TEXT NOT NULL REFERENCES lesson_resources(id) ON DELETE CASCADE
+        );
+        CREATE UNIQUE INDEX lesson_plan_resources_pair_unique
+          ON lesson_plan_resources(lesson_plan_id, resource_id);
+        CREATE INDEX lesson_plan_resources_lesson_idx
+          ON lesson_plan_resources(lesson_plan_id);
+        CREATE INDEX lesson_plan_resources_resource_idx
+          ON lesson_plan_resources(resource_id);
+      `)
+    }
   }
 ]
 
