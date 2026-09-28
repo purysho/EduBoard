@@ -697,6 +697,8 @@ export interface LessonPlan {
   id: string
   classId: string
   date: string
+  /** First scheduled date; null only for legacy rows before the curriculum-map migration. */
+  originalDate: string | null
   weekLabel: string | null
   title: string
   objectives: string | null
