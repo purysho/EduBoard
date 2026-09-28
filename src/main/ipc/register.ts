@@ -935,13 +935,18 @@ export function registerIpcHandlers(): void {
   })
   handle(
     IpcChannels.coursePack.apply,
-    async (_e, filePath: string, termBindings: Record<string, string>) => {
+    async (
+      _e,
+      filePath: string,
+      termBindings: Record<string, string>,
+      firstClassDates: Record<string, string> = {}
+    ) => {
       const pack = parseCoursePack(await readFile(String(filePath), 'utf-8'))
       // A successful Course Pack changes real curriculum records and class links. Keep a
       // normal EduBoard recovery point immediately before it, in addition to the install
       // transaction's automatic rollback if anything fails mid-import.
       backupService.createBackup()
-      const result = coursePacksRepo.installCoursePack({ pack, termBindings })
+      const result = coursePacksRepo.installCoursePack({ pack, termBindings, firstClassDates })
       return {
         courseGroupId: result.courseGroupId,
         created: result.created,
