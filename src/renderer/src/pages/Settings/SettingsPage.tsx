@@ -47,6 +47,7 @@ import { UsagePingPanel } from './UsagePingPanel'
 import { HelpPanel } from './HelpPanel'
 import { SampleSchoolCard } from './SampleSchoolCard'
 import { SchoolPackPanel } from './SchoolPackPanel'
+import { CoursePackPanel } from './CoursePackPanel'
 import { tr } from '@shared/i18n'
 
 interface Section {
@@ -145,14 +146,15 @@ const SECTIONS: Section[] = [
   {
     id: 'data',
     label: tr('Data and security'),
-    blurb: tr('Backups, password, import, school pack'),
-    keywords: tr('backup restore password lock encryption import roster excel school pack export'),
+    blurb: tr('Backups, password, rosters, course packs, school pack'),
+    keywords: tr('backup restore password lock encryption import roster excel course pack curriculum school pack export'),
     icon: ShieldCheck,
     content: () => (
       <>
         <BackupPanel />
         <SecurityPanel />
         <ImportPanel />
+        <CoursePackPanel />
         <SchoolPackPanel />
       </>
     )
