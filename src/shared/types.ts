@@ -233,6 +233,38 @@ export interface RubricScore {
   updatedAt: string
 }
 
+export type CompetencyEvidenceSource = 'assessment' | 'homework'
+
+export interface CompetencyMatrixStandard {
+  id: string
+  code: string
+  description: string
+}
+
+export interface CompetencyMatrixStudent {
+  id: string
+  name: string
+}
+
+export interface CompetencyEvidenceCell {
+  studentId: string
+  standardId: string
+  /** The actual rubric level most recently selected for this standard. */
+  latestLevelLabel: string | null
+  latestSourceType: CompetencyEvidenceSource | null
+  latestSourceName: string | null
+  latestAt: string | null
+  /** Number of rubric-criterion selections linked to this standard for this student. */
+  evidenceCount: number
+}
+
+export interface CompetencyMatrix {
+  classId: string
+  standards: CompetencyMatrixStandard[]
+  students: CompetencyMatrixStudent[]
+  cells: CompetencyEvidenceCell[]
+}
+
 export const HOMEWORK_QUESTION_TYPES = ['multiple_choice', 'short_answer'] as const
 export type HomeworkQuestionType = (typeof HOMEWORK_QUESTION_TYPES)[number]
 
