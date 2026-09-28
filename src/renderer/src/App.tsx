@@ -27,6 +27,7 @@ import { AnalyticsPage } from './pages/Analytics/AnalyticsPage'
 import { AuditLogPage } from './pages/AuditLog/AuditLogPage'
 import { TimetablePage } from './pages/Timetable/TimetablePage'
 import { CalendarPage } from './pages/Calendar/CalendarPage'
+import { CurriculumMapPage } from './pages/CurriculumMap/CurriculumMapPage'
 import { HomeworkTab } from './pages/Classes/HomeworkTab'
 import { ClassStoryTab } from './pages/Classes/ClassStoryTab'
 import { NotebookPage } from './pages/Notebook/NotebookPage'
@@ -77,6 +78,7 @@ function App(): React.JSX.Element {
           <Route path="/audit-log" element={<AuditLogPage />} />
           <Route path="/timetable" element={<TimetablePage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/curriculum-map" element={<CurriculumMapPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/weekly-summary" element={<WeeklySummaryPage />} />
           <Route path="/newsletter" element={<NewsletterPage />} />
