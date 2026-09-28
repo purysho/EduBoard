@@ -104,6 +104,7 @@ export const queryKeys = {
   courseGroups: ['courseGroups'] as const,
   courseGroupComposite: (courseGroupId: string) =>
     ['courseGroups', courseGroupId, 'composite'] as const,
+  curriculumMap: (courseGroupId: string) => ['courseGroups', courseGroupId, 'curriculumMap'] as const,
   exitTicketByClass: (classId: string) => ['classes', classId, 'exitTicket'] as const,
   exitTicketResponses: (exitTicketId: string) =>
     ['exitTickets', exitTicketId, 'responses'] as const,
@@ -1204,6 +1205,14 @@ export function useCourseGroupComposite(courseGroupId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.courseGroupComposite(courseGroupId ?? ''),
     queryFn: () => api().courseGroups.getComposite(courseGroupId!),
+    enabled: !!courseGroupId
+  })
+}
+
+export function useCurriculumMap(courseGroupId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.curriculumMap(courseGroupId ?? ''),
+    queryFn: () => api().courseGroups.curriculumMap(courseGroupId!),
     enabled: !!courseGroupId
   })
 }
