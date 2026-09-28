@@ -364,8 +364,6 @@ export const SETTINGS: Record<string, string> = {
   'Review and merge': '查看并合并',
   'Search by name, ID, or grade level…': '按姓名、学号或年级搜索…',
   'No students match your search': '没有符合搜索条件的学生',
-  'Add your first student, or import a roster from Settings.':
-    '添加第一名学生，或在“设置”中导入名单。',
   'Grade / cohort': '年级 / 届',
   'EduBoard is connected to this group. Posts from the teacher will appear here.':
     'EduBoard 已连接到本群。老师发布的动态将显示在这里。',
@@ -516,5 +514,7 @@ export const SETTINGS: Record<string, string> = {
   'Your school’s own name for the app (for example “Riverside Teacher Hub”), shown in the sidebar, the window title and the lock screen instead of EduBoard. Leave empty for EduBoard. Updates and Settings → Help still say EduBoard.':
     '学校为本应用起的名称（例如“河滨教师助手”），会代替 EduBoard 显示在侧边栏、窗口标题和锁定界面上。留空则显示 EduBoard。更新提示和“设置 → 帮助”中仍显示 EduBoard。',
   'Set by your school': '由学校设置',
-  'App name: {name}': '应用名称：{name}'
+  'App name: {name}': '应用名称：{name}',
+  'Add your first student, or import your class list from a spreadsheet below.':
+    '添加第一位学生，或在下方从表格导入班级名单。'
 }

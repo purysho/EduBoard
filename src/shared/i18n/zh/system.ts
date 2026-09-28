@@ -248,7 +248,6 @@ export const SYSTEM: Record<string, string> = {
     '草稿只有你能看到，发布后学生才能在门户上看到。',
   'Open Homework': '打开作业',
   'Connect the student Portal': '连接学生门户',
-  'Paste your Portal address and sync secret in Settings.': '在“设置”中粘贴门户地址和同步密钥。',
   'Open Settings': '打开设置',
   'Invite your students': '邀请学生',
   'Share a class join link (or QR code), or give a student their own link. Students sign up in a minute.':
@@ -259,8 +258,6 @@ export const SYSTEM: Record<string, string> = {
     '把阅读材料添加到“资源”并分享给班级，学生会得到学习指南、记忆卡片和测验。',
   'Open Resources': '打开资源',
   'Add an AI key': '添加 AI 密钥',
-  'Powers feedback drafts, study guides, flashcards and the student Study Helper.':
-    '用于起草评语、学习指南、记忆卡片和学生学习助手。',
   'Below the pass mark ({percent}% vs {passMark}%)': '低于及格线（{percent}%，及格线 {passMark}%）',
   'Grades down {n} points': '成绩下降了 {n} 分',
   '{n} concerns logged in 30 days': '30 天内记录了 {n} 条关注事项',
@@ -319,5 +316,15 @@ export const SYSTEM: Record<string, string> = {
   'Show the log file': '显示日志文件',
   'Copied. Paste it into a message or email.': '已复制。请粘贴到消息或邮件中。',
   'Couldn’t copy. Use “Show the log file” and send errors.log instead.':
-    '无法复制。请点“显示日志文件”，然后发送 errors.log。'
+    '无法复制。请点“显示日志文件”，然后发送 errors.log。',
+  'Where students and families sign in (needs internet). Paste its address and sync secret, from your school or your own Portal, in Settings.':
+    '学生和家长登录的网站（需要联网）。在“设置”中粘贴门户地址和同步密钥（由学校提供，或来自你自己的门户）。',
+  'Needs internet. Suggests feedback drafts, study guides, flashcards and the student Study Helper; you check everything before it’s used.':
+    '需要联网。用于建议评语草稿、学习指南、记忆卡片和学生学习助手；所有内容都由你确认后才会使用。',
+  'Connect a Portal first': '请先连接学生门户',
+  '{what} This goes through the Portal, the website where students and families sign in (needs internet). Everything else in EduBoard works without it.':
+    '{what}这项功能通过学生门户（学生和家长登录的网站，需要联网）完成。EduBoard 的其他功能不需要门户也能使用。',
+  'Open Portal settings': '打开门户设置',
+  'Families can message you, and you them, with a translation if you need one.':
+    '家长可以给你发消息，你也可以回复，需要时还可以翻译。'
 }

@@ -458,7 +458,6 @@ export const CLASSES: Record<string, string> = {
   'Student report cards': '学生成绩单',
   'Print PDF': '打印 PDF',
   'No students enrolled yet': '还没有学生',
-  'Enroll existing students or add new ones to this class.': '把已有学生添加到这个班，或新建学生。',
   Active: '在读',
   Remove: '移除',
   'Remove from class': '移出班级',
@@ -663,5 +662,10 @@ export const CLASSES: Record<string, string> = {
   'Everything recorded about {name}, newest first, from every class: absences and lateness, scores, class points, notes and parent contacts, homework, report comments and Portal messages.':
     '关于{name}的所有记录，按时间从新到旧，涵盖所有班级：缺勤和迟到、成绩、课堂积分、记录和家长联系、作业、成绩单评语以及学生门户消息。',
   'Nothing recorded yet.': '还没有记录。',
-  'Show older ({n} more)': '显示更早的记录（还有 {n} 条）'
+  'Show older ({n} more)': '显示更早的记录（还有 {n} 条）',
+  'Add students one by one, or import your class list from a spreadsheet below.':
+    '逐个添加学生，或在下方从表格导入班级名单。',
+  'Open the roster': '打开学生名单',
+  'Students and families sign in to see homework, grades and your messages. This tab gives them their join links.':
+    '学生和家长登录后可以看到作业、成绩和你的消息。这里为他们生成加入链接。'
 }

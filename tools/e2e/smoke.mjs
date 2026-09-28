@@ -112,12 +112,51 @@ async function go(page, route) {
     'the interface switches to Chinese'
   )
   await page.evaluate(() => window.api.settings.update({ uiLanguage: '' }))
+  await page.reload()
+  await page.waitForSelector('aside nav')
+
+  // A newsletter draft written here belongs to the sample school (checked in part 2).
+  await go(page, '/newsletter')
+  await page.getByLabel('Newsletter text').fill('Sample school draft')
+  await page.waitForTimeout(500)
   await close()
 }
 
 // 2. A new teacher's own data: a class, a score, and password protection.
 {
   const { page, errors, close } = await launch()
+
+  // Drafts stay with their own school's data, and are kept.
+  await go(page, '/newsletter')
+  const draft = page.getByLabel('Newsletter text')
+  check(
+    !(await draft.inputValue()).includes('Sample school draft'),
+    "the sample school's newsletter draft doesn't appear in the teacher's own data"
+  )
+  await draft.fill('My own draft')
+  await page.waitForTimeout(500)
+  await page.reload()
+  await page.waitForSelector('aside nav')
+  await go(page, '/newsletter')
+  check(
+    (await page.getByLabel('Newsletter text').inputValue()) === 'My own draft',
+    'a newsletter draft is kept'
+  )
+
+  // A new class, made through the form, opens straight away for adding students.
+  await go(page, '/classes')
+  await page
+    .getByRole('button', { name: /New class/ })
+    .first()
+    .click()
+  await page.keyboard.type('Form class')
+  await page.getByRole('button', { name: /^Save$/ }).click()
+  await page.waitForTimeout(1200)
+  check(
+    /#\/classes\/[^/]+$/.test(page.url()) && (await page.getByText('Form class').count()) > 0,
+    'saving a new class opens it'
+  )
+
   const grade = await page.evaluate(async () => {
     const api = window.api
     const cls = await api.classes.create({
@@ -175,7 +214,7 @@ async function go(page, route) {
     return { on, locked, unlocked, off, classes: classes.length }
   }, password)
   check(JSON.stringify(status.on).includes('true'), 'password protection turns on')
-  check(status.classes === 1, 'after locking and unlocking, the class is still there')
+  check(status.classes === 2, 'after locking and unlocking, the classes are still there')
   check(JSON.stringify(status.off) !== JSON.stringify(status.on), 'password protection turns off')
   check(errors.length === 0, 'no script errors in the window')
   if (errors.length) console.log('     ', errors.join(' | '))

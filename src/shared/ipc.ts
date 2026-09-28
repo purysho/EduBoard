@@ -342,7 +342,9 @@ export const IpcChannels = {
   },
   newsletter: {
     facts: 'newsletter:facts',
-    draft: 'newsletter:draft'
+    draft: 'newsletter:draft',
+    savedDraft: 'newsletter:savedDraft',
+    saveDraft: 'newsletter:saveDraft'
   },
   portalAccounts: {
     resetPassword: 'portalAccounts:resetPassword',

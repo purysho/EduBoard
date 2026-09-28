@@ -5,7 +5,8 @@ import { Card } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
 import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
-import { ipcErrorMessage } from '@renderer/lib/format'
+import { ipcErrorMessage, isPortalNotConnected } from '@renderer/lib/format'
+import { PortalNeeded } from '@renderer/components/PortalNeeded'
 import {
   useMarkPortalThreadRead,
   usePortalMessageThreads,
@@ -41,6 +42,10 @@ export function MessagesPage(): React.JSX.Element {
 
       {isLoading ? (
         <Spinner />
+      ) : isPortalNotConnected(error) ? (
+        <PortalNeeded
+          what={tr('Families can message you, and you them, with a translation if you need one.')}
+        />
       ) : isError ? (
         <p className="text-sm text-[var(--color-danger)]">
           {ipcErrorMessage(error, tr('Could not load messages.'))}

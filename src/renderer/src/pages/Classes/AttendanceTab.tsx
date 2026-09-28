@@ -82,6 +82,11 @@ export function AttendanceTab(): React.JSX.Element {
         icon={CalendarCheck}
         title={tr('No students enrolled')}
         description={tr('Enroll students from the Roster tab first.')}
+        action={
+          <Link to={`/classes/${classSection.id}`}>
+            <Button size="sm">{tr('Open the roster')}</Button>
+          </Link>
+        }
       />
     )
   }

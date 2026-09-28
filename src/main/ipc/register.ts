@@ -145,6 +145,10 @@ import {
   reportCardsDocx
 } from '../services/officeExport'
 
+/** The newsletter being written (Newsletter page), kept in the database with the rest of
+ * this school's data. */
+const NEWSLETTER_DRAFT_KEY = 'newsletter_draft'
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
   ipcMain.handle(channel, async (event, ...args) => {
@@ -1239,6 +1243,13 @@ export function registerIpcHandlers(): void {
         notes: string
       }
     ) => draftNewsletter(input)
+  )
+  handle(
+    IpcChannels.newsletter.savedDraft,
+    () => settingsRepo.getStoredValue<string>(NEWSLETTER_DRAFT_KEY) ?? ''
+  )
+  handle(IpcChannels.newsletter.saveDraft, (_e, text: unknown) =>
+    settingsRepo.setStoredValue(NEWSLETTER_DRAFT_KEY, typeof text === 'string' ? text : '')
   )
   handle(IpcChannels.portalAccounts.listResetRequests, () => listPortalResetRequests())
   handle(IpcChannels.portalAccounts.answerResetRequest, (_e, id: string, approve: boolean) =>

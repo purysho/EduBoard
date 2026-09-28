@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { ClassSection, LevelType } from '@shared/types'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
@@ -29,6 +30,7 @@ export function ClassFormModal({
   const { data: terms } = useTerms()
   const { data: settings } = useSettings()
   const createClass = useCreateClass()
+  const navigate = useNavigate()
   const updateClass = useUpdateClass()
 
   const [name, setName] = useState(classSection?.name ?? '')
@@ -63,7 +65,11 @@ export function ClassFormModal({
     if (isEdit) {
       await updateClass.mutateAsync({ id: classSection.id, patch: payload })
     } else {
-      await createClass.mutateAsync(payload)
+      const created = await createClass.mutateAsync(payload)
+      onClose()
+      // Straight into the new class: adding students is the next step.
+      navigate(`/classes/${created.id}`)
+      return
     }
     onClose()
   }
