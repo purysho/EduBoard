@@ -5,7 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': resolve(__dirname, 'src/shared'),
-      '@main': resolve(__dirname, 'src/main')
+      '@main': resolve(__dirname, 'src/main'),
+      // The tests never start Electron; see the stub for why they don't load the real one.
+      electron: resolve(__dirname, 'tools/test/electron-stub.ts')
     }
   },
   test: {
