@@ -941,7 +941,7 @@ export function useHomeworkRubricScores(
   })
 }
 
-export function useSaveHomeworkRubricScores() {
+export function useSaveHomeworkRubricScores(classId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: SaveHomeworkRubricScoresInput) => api().homeworkRubricScores.save(input),
@@ -952,7 +952,7 @@ export function useSaveHomeworkRubricScores() {
       qc.invalidateQueries({
         queryKey: queryKeys.homeworkSubmissions(vars.homeworkAssignmentId)
       })
-      qc.invalidateQueries({ queryKey: ['classes'] })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
       scheduleAutoPublishToPortal()
     }
   })
