@@ -9,7 +9,11 @@ import { listRubrics, createRubric } from './rubrics'
 import { getClass, updateClass } from './classes'
 import { listAssessmentsByClass, createAssessment } from './assessments'
 import { listHomeworkAssignmentsByClass, createHomeworkAssignment } from './homeworkAssignments'
-import { listLessonPlansByClass, createLessonPlan } from './lessonPlans'
+import {
+  createLessonPlan,
+  linkLessonResource,
+  listLessonPlansByClass
+} from './lessonPlans'
 import { listLessonResources, createLessonResource } from './lessonResources'
 import { getSettings, updateSettings } from './settingsRepo'
 
@@ -200,6 +204,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
     }
 
     const existingResources = listLessonResources()
+    const resourceRows = new Map<string, (typeof existingResources)[number]>()
     for (const source of pack.resources ?? []) {
       const standardId = source.standardKey
         ? (standardRows.get(norm(source.standardKey))?.id ?? null)
@@ -214,6 +219,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
           JSON.stringify(resource.tags) === JSON.stringify(source.tags ?? [])
       )
       if (existing) {
+        resourceRows.set(norm(source.key), existing)
         reused.resources++
         continue
       }
@@ -230,6 +236,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         studyGuide: null
       })
       existingResources.push(resource)
+      resourceRows.set(norm(source.key), resource)
       created.resources++
     }
 
@@ -347,29 +354,37 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       const existing = listLessonPlansByClass(classId).find(
         (lesson) => lesson.date === date && norm(lesson.title) === norm(source.title)
       )
-      if (existing) {
+      let lesson = existing
+      if (lesson) {
         reused.lessons++
-        continue
+      } else {
+        const standards = (source.standardKeys ?? [])
+          .map((key) => standardRows.get(norm(key))?.code)
+          .filter((code): code is string => !!code)
+        lesson = createLessonPlan({
+          classId,
+          date,
+          weekLabel: source.weekLabel ?? null,
+          title: source.title,
+          objectives: source.objectives ?? null,
+          framework: source.framework ?? null,
+          materials: source.materials ?? null,
+          activities: source.activities ?? null,
+          homework: source.homework ?? null,
+          linkedAssessmentId: source.assessmentKey
+            ? (assessmentIdsByKey.get(norm(source.assessmentKey)) ?? null)
+            : null,
+          standards: standards.length ? standards.join(', ') : null
+        })
+        created.lessons++
       }
-      const standards = (source.standardKeys ?? [])
-        .map((key) => standardRows.get(norm(key))?.code)
-        .filter((code): code is string => !!code)
-      createLessonPlan({
-        classId,
-        date,
-        weekLabel: source.weekLabel ?? null,
-        title: source.title,
-        objectives: source.objectives ?? null,
-        framework: source.framework ?? null,
-        materials: source.materials ?? null,
-        activities: source.activities ?? null,
-        homework: source.homework ?? null,
-        linkedAssessmentId: source.assessmentKey
-          ? (assessmentIdsByKey.get(norm(source.assessmentKey)) ?? null)
-          : null,
-        standards: standards.length ? standards.join(', ') : null
-      })
-      created.lessons++
+
+      // Pack links are additive. Re-import restores missing pack links but never removes a
+      // resource the teacher attached locally after import.
+      for (const resourceKey of source.resourceKeys ?? []) {
+        const resource = resourceRows.get(norm(resourceKey))
+        if (resource) linkLessonResource(lesson.id, resource.id)
+      }
     }
 
     return {
