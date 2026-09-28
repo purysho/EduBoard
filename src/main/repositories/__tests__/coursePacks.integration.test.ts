@@ -4,7 +4,8 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { closeDb, initDb, setDbPathForTesting } from '../../db/client'
-import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
+import { DEFAULT_GRADE_THRESHOLDS, type ClassSection } from '@shared/types'
+import type { CoursePack } from '@shared/coursePack'
 import { parseCoursePack } from '@shared/coursePack'
 import { createClass, getClass } from '../classes'
 import { listCourseGroups } from '../courseGroups'
@@ -29,7 +30,7 @@ afterEach(() => {
   rmSync(tempDir, { recursive: true, force: true })
 })
 
-function universityClass(name: string) {
+function universityClass(name: string): ClassSection {
   return createClass({
     name,
     subject: 'English',
@@ -45,7 +46,7 @@ function universityClass(name: string) {
   })
 }
 
-function samplePack() {
+function samplePack(): CoursePack {
   return parseCoursePack(
     JSON.stringify({
       kind: 'eduboard-course-pack',
