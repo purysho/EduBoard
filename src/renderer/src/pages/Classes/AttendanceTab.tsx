@@ -15,12 +15,17 @@ import {
   useClassroomServerInfo,
   useClassRoster,
   useCloseAttendanceCheckIn,
+  useMarkAttendance,
   useMarkAttendanceBulk,
-  useOpenAttendanceCheckIn
+  useOpenAttendanceCheckIn,
+  useSettings
 } from '@renderer/lib/queries'
+import { resolveAttendanceCodes } from '@shared/attendanceCodes'
 import { formatDate, formatRate, studentFullName, todayIso } from '@renderer/lib/format'
 import { AttendanceCell } from './AttendanceCell'
 import { tr } from '@shared/i18n'
+
+const RECENT_DAYS = 15
 
 export function AttendanceTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -31,6 +36,14 @@ export function AttendanceTab(): React.JSX.Element {
   const [exporting, setExporting] = useState(false)
   const [pendingMarkAllDate, setPendingMarkAllDate] = useState<string | null>(null)
   const markBulk = useMarkAttendanceBulk(classSection.id)
+  const markAttendance = useMarkAttendance(classSection.id)
+  const { data: settings } = useSettings()
+  const codes = useMemo(
+    () => resolveAttendanceCodes(settings?.attendanceCodes),
+    [settings?.attendanceCodes]
+  )
+  const offered = useMemo(() => codes.filter((c) => !c.hidden), [codes])
+  const [showAllDates, setShowAllDates] = useState(false)
 
   function handleMarkAllPresent(date: string): void {
     markBulk.mutate(
@@ -61,6 +74,16 @@ export function AttendanceTab(): React.JSX.Element {
     for (const r of records ?? []) set.add(r.date)
     return Array.from(set).sort()
   }, [records, extraDates])
+
+  // A term has a hundred or more school days: the register opens on the most recent ones
+  // (today and any date just added included), not the first day of term far off to the left.
+  const shownDates = useMemo(
+    () =>
+      showAllDates
+        ? dates
+        : dates.filter((d, i) => i >= dates.length - RECENT_DAYS || extraDates.includes(d)),
+    [dates, extraDates, showAllDates]
+  )
 
   const recordMap = useMemo(() => {
     const map = new Map<string, AttendanceRecord>()
@@ -116,6 +139,23 @@ export function AttendanceTab(): React.JSX.Element {
         </div>
       </div>
 
+      {dates.length > RECENT_DAYS && (
+        <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+          {showAllDates
+            ? tr('Showing all {n} days.', { n: dates.length })
+            : tr('Showing the last {shown} of {n} days.', {
+                shown: shownDates.length,
+                n: dates.length
+              })}{' '}
+          <button
+            type="button"
+            className="font-medium text-[var(--color-primary)] hover:underline"
+            onClick={() => setShowAllDates((v) => !v)}
+          >
+            {showAllDates ? tr('Show recent days only') : tr('Show all days')}
+          </button>
+        </p>
+      )}
       <div className="overflow-auto rounded-xl border border-[var(--color-border)]">
         <table className="text-sm">
           <thead className="bg-[var(--color-surface-muted)] text-xs text-[var(--color-text-muted)]">
@@ -123,7 +163,7 @@ export function AttendanceTab(): React.JSX.Element {
               <th className="sticky left-0 z-10 min-w-48 border-r border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-2.5 text-left font-medium">
                 {tr('Student')}
               </th>
-              {dates.map((date) => (
+              {shownDates.map((date) => (
                 <th key={date} className="px-1.5 py-2 text-center font-medium">
                   <button
                     onClick={() => setPendingMarkAllDate(date)}
@@ -148,13 +188,16 @@ export function AttendanceTab(): React.JSX.Element {
                     {studentFullName(row.student)}
                   </Link>
                 </td>
-                {dates.map((date) => (
+                {shownDates.map((date) => (
                   <td key={date} className="px-1.5 py-1 text-center">
                     <AttendanceCell
                       classId={classSection.id}
                       studentId={row.student.id}
                       date={date}
                       record={recordMap.get(`${row.student.id}:${date}`)}
+                      codes={codes}
+                      offered={offered}
+                      mark={markAttendance.mutateAsync}
                     />
                   </td>
                 ))}

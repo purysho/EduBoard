@@ -17,11 +17,10 @@ export function CommentPopover({
   studentId: string
   score: Score | undefined
 }): React.JSX.Element {
+  // One per gradebook cell: only the button until it's opened (see CommentPanel).
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
-  const [draft, setDraft] = useState('')
   const anchorRef = useRef<HTMLButtonElement>(null)
-  const upsertScore = useUpsertScore(classId)
 
   const hasComment = !!score?.comment
 
@@ -29,20 +28,8 @@ export function CommentPopover({
     if (!open && anchorRef.current) {
       const rect = anchorRef.current.getBoundingClientRect()
       setPosition({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 272) })
-      setDraft(score?.comment ?? '')
     }
     setOpen((o) => !o)
-  }
-
-  async function handleSave(): Promise<void> {
-    await upsertScore.mutateAsync({
-      assessmentId,
-      studentId,
-      pointsEarned: score?.pointsEarned ?? null,
-      excused: score?.excused ?? false,
-      comment: draft.trim() || null
-    })
-    setOpen(false)
   }
 
   const Icon = hasComment ? MessageSquareText : MessageSquare
@@ -59,38 +46,72 @@ export function CommentPopover({
       >
         <Icon size={11} aria-hidden />
       </button>
-      {open &&
-        position &&
-        createPortal(
-          <div
-            className="fixed z-50 w-64 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
-            style={{ top: position.top, left: position.left }}
-          >
-            <p className="mb-1.5 text-xs font-semibold">{tr('Comment')}</p>
-            <textarea
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={3}
-              placeholder={tr('A note for yourself about this grade…')}
-              className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-primary)]"
-            />
-            <div className="mt-2 flex justify-end gap-1.5">
-              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-                {tr('Cancel')}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSave}
-                disabled={upsertScore.isPending}
-              >
-                {upsertScore.isPending ? tr('Saving…') : tr('Save')}
-              </Button>
-            </div>
-          </div>,
-          document.body
-        )}
+      {open && position && (
+        <CommentPanel
+          classId={classId}
+          assessmentId={assessmentId}
+          studentId={studentId}
+          score={score}
+          position={position}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
+  )
+}
+
+function CommentPanel({
+  classId,
+  assessmentId,
+  studentId,
+  score,
+  position,
+  onClose
+}: {
+  classId: string
+  assessmentId: string
+  studentId: string
+  score: Score | undefined
+  position: { top: number; left: number }
+  onClose: () => void
+}): React.JSX.Element {
+  const [draft, setDraft] = useState(score?.comment ?? '')
+  const upsertScore = useUpsertScore(classId)
+
+  async function handleSave(): Promise<void> {
+    await upsertScore.mutateAsync({
+      assessmentId,
+      studentId,
+      pointsEarned: score?.pointsEarned ?? null,
+      excused: score?.excused ?? false,
+      comment: draft.trim() || null
+    })
+    onClose()
+  }
+
+  return createPortal(
+    <div
+      className="fixed z-50 w-64 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 shadow-lg"
+      style={{ top: position.top, left: position.left }}
+    >
+      <p className="mb-1.5 text-xs font-semibold">{tr('Comment')}</p>
+      <textarea
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={3}
+        placeholder={tr('A note for yourself about this grade…')}
+        className="w-full resize-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-primary)]"
+      />
+      <div className="mt-2 flex justify-end gap-1.5">
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          {tr('Cancel')}
+        </Button>
+        <Button variant="primary" size="sm" onClick={handleSave} disabled={upsertScore.isPending}>
+          {upsertScore.isPending ? tr('Saving…') : tr('Save')}
+        </Button>
+      </div>
+    </div>,
+    document.body
   )
 }

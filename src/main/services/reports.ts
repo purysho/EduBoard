@@ -3,12 +3,19 @@ import { listGradeCategories } from '../repositories/gradeCategories'
 import { listAssessmentsByClass } from '../repositories/assessments'
 import { listScoresByClass, listScoresByStudentAndClass } from '../repositories/scores'
 import { getRosterForClass } from '../repositories/enrollments'
-import { listAttendanceByClass } from '../repositories/attendanceRecords'
+import {
+  listAttendanceByStudentAndClass,
+  tallyAttendanceByClass
+} from '../repositories/attendanceRecords'
 import { listUpcomingLessonPlans } from '../repositories/lessonPlans'
 import { listStudents } from '../repositories/students'
 import { computeClassGrade, letterForPercent, isPassing } from './grading'
 import { gradeBands } from '@shared/gradeScales'
-import { computeAttendanceCounts } from './attendance'
+import {
+  computeAttendanceCounts,
+  countAttendanceTallies,
+  type AttendanceCounts
+} from './attendance'
 import { countsAsFor, resolveAttendanceCodes } from '@shared/attendanceCodes'
 import { getSettings } from '../repositories/settingsRepo'
 import type {
@@ -23,6 +30,7 @@ import type {
   DashboardStats,
   GradeDistributionEntry,
   GradeTrendPoint,
+  Assessment,
   Score,
   StudentClassGrade
 } from '@shared/types'
@@ -82,13 +90,28 @@ function schoolCountsAs(): (status: string) => AttendanceStatus {
   return countsAsFor(resolveAttendanceCodes(getSettings().attendanceCodes))
 }
 
-function attendanceSummaryByStudent(classId: string): Map<string, AttendanceSummary> {
-  const recordsByStudent = groupBy(listAttendanceByClass(classId), (r) => r.studentId)
-  const countsAs = schoolCountsAs()
+/** Every student's attendance in one class, read in one pass: use this, not
+ * getStudentAttendanceSummary, when going through a whole roster. */
+export function attendanceSummaryByStudent(classId: string): Map<string, AttendanceSummary> {
   const result = new Map<string, AttendanceSummary>()
-  for (const [studentId, records] of recordsByStudent) {
-    const counts = computeAttendanceCounts(records, countsAs)
+  for (const [studentId, counts] of countsPer(classId, 'student')) {
     result.set(studentId, { studentId, ...counts })
+  }
+  return result
+}
+
+/** A class's attendance counts per day or per student, from the database's tallies. */
+function countsPer(classId: string, per: 'date' | 'student'): Map<string, AttendanceCounts> {
+  const countsAs = schoolCountsAs()
+  const byKey = new Map<string, { status: string; n: number }[]>()
+  for (const t of tallyAttendanceByClass(classId, per)) {
+    const list = byKey.get(t.key) ?? []
+    list.push(t)
+    byKey.set(t.key, list)
+  }
+  const result = new Map<string, AttendanceCounts>()
+  for (const [key, tallies] of byKey) {
+    result.set(key, countAttendanceTallies(tallies, countsAs))
   }
   return result
 }
@@ -118,8 +141,22 @@ export function getClassRoster(classId: string): ClassRosterRow[] {
  * with no date sort last, since there's no meaningful position for them on a timeline. */
 export function getStudentGradeTrend(studentId: string, classId: string): GradeTrendPoint[] {
   const assessmentsById = new Map(listAssessmentsByClass(classId).map((a) => [a.id, a]))
-  const scores = listScoresByStudentAndClass(studentId, classId)
+  return trendPoints(listScoresByStudentAndClass(studentId, classId), assessmentsById)
+}
 
+/** Every student's trend in one class, read in one pass: use this, not
+ * getStudentGradeTrend, when going through a whole roster. */
+export function gradeTrendsByStudent(classId: string): Map<string, GradeTrendPoint[]> {
+  const assessmentsById = new Map(listAssessmentsByClass(classId).map((a) => [a.id, a]))
+  const scoresByStudent = groupBy(listScoresByClass(classId), (s) => s.studentId)
+  const result = new Map<string, GradeTrendPoint[]>()
+  for (const [studentId, scores] of scoresByStudent) {
+    result.set(studentId, trendPoints(scores, assessmentsById))
+  }
+  return result
+}
+
+function trendPoints(scores: Score[], assessmentsById: Map<string, Assessment>): GradeTrendPoint[] {
   const points: GradeTrendPoint[] = []
   for (const score of scores) {
     if (score.pointsEarned === null || score.excused) continue
@@ -137,9 +174,24 @@ export function getStudentGradeTrend(studentId: string, classId: string): GradeT
   return points
 }
 
+/** One student's attendance in one class (only that student's records are read). */
 export function getStudentAttendanceSummary(studentId: string, classId: string): AttendanceSummary {
-  const summary = attendanceSummaryByStudent(classId).get(studentId)
-  return summary ?? { studentId, present: 0, late: 0, absent: 0, excused: 0, rate: null }
+  const records = listAttendanceByStudentAndClass(studentId, classId)
+  if (!records.length) return { studentId, present: 0, late: 0, absent: 0, excused: 0, rate: null }
+  return { studentId, ...computeAttendanceCounts(records, schoolCountsAs()) }
+}
+
+/** A class's attendance rate for each day it was taken, oldest first. */
+function classAttendanceTrend(classId: string): { date: string; rate: number | null }[] {
+  return Array.from(countsPer(classId, 'date'))
+    .map(([date, counts]) => ({ date, rate: counts.rate }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+/** The average of the days' rates (each day counts once, however many were marked). */
+function averageOfRates(trend: { rate: number | null }[]): number | null {
+  const rates = trend.map((t) => t.rate).filter((r): r is number => r !== null)
+  return rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null
 }
 
 export function getClassReport(classId: string): ClassReport | null {
@@ -192,16 +244,8 @@ export function getClassReport(classId: string): ClassReport | null {
     }
   })
 
-  const recordsByDate = groupBy(listAttendanceByClass(classId), (r) => r.date)
-  const countsAs = schoolCountsAs()
-  const attendanceTrend = Array.from(recordsByDate.entries())
-    .map(([date, records]) => ({ date, rate: computeAttendanceCounts(records, countsAs).rate }))
-    .sort((a, b) => a.date.localeCompare(b.date))
-
-  const attendanceRates = attendanceTrend.map((t) => t.rate).filter((r): r is number => r !== null)
-  const averageAttendanceRate = attendanceRates.length
-    ? attendanceRates.reduce((a, b) => a + b, 0) / attendanceRates.length
-    : null
+  const attendanceTrend = classAttendanceTrend(classId)
+  const averageAttendanceRate = averageOfRates(attendanceTrend)
 
   return {
     classId,
@@ -238,10 +282,9 @@ export function getDashboardStats(): DashboardStats {
       }
     }
 
-    const report = getClassReport(cls.id)
-    if (report?.averageAttendanceRate !== null && report?.averageAttendanceRate !== undefined) {
-      classAttendanceRates.push(report.averageAttendanceRate)
-    }
+    // The same figure as the class report's, without building the rest of that report.
+    const attendanceRate = averageOfRates(classAttendanceTrend(cls.id))
+    if (attendanceRate !== null) classAttendanceRates.push(attendanceRate)
 
     const assessmentsList = listAssessmentsByClass(cls.id)
     const scoresList = listScoresByClass(cls.id)

@@ -667,5 +667,9 @@ export const CLASSES: Record<string, string> = {
     '逐个添加学生，或在下方从表格导入班级名单。',
   'Open the roster': '打开学生名单',
   'Students and families sign in to see homework, grades and your messages. This tab gives them their join links.':
-    '学生和家长登录后可以看到作业、成绩和你的消息。这里为他们生成加入链接。'
+    '学生和家长登录后可以看到作业、成绩和你的消息。这里为他们生成加入链接。',
+  'Showing all {n} days.': '显示全部 {n} 天。',
+  'Showing the last {shown} of {n} days.': '显示最近 {shown} 天（共 {n} 天）。',
+  'Show recent days only': '只显示最近几天',
+  'Show all days': '显示全部日期'
 }

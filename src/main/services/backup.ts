@@ -21,6 +21,8 @@ import type { BackupInfo, BackupPreview, ExtraBackupStatus } from '@shared/types
  * beyond this count are ever deleted, so a manual backup a teacher wants to keep
  * is safe as long as they don't create 30 more auto-backups after it. */
 const MAX_AUTO_BACKUPS = 10
+/** Of those, how many are simply the newest; the rest go to one per earlier day. */
+const NEWEST_KEPT = 3
 const AUTO_BACKUP_PREFIX = 'eduboard-autobackup-'
 
 /** A protected database's backup carries a copy of the key file (wrapped with that
@@ -174,11 +176,30 @@ export function pruneAutoBackups(backupsDir: string): void {
   const autoBackups = readdirSync(backupsDir)
     .filter((f) => f.startsWith(AUTO_BACKUP_PREFIX) && f.endsWith('.db'))
     .map((f) => ({ name: f, mtimeMs: statSync(join(backupsDir, f)).mtimeMs }))
-    .sort((a, b) => a.mtimeMs - b.mtimeMs)
-  const excess = autoBackups.length - MAX_AUTO_BACKUPS
-  for (let i = 0; i < excess; i++) {
-    unlinkSync(join(backupsDir, autoBackups[i].name))
-    rmSync(keyFilePathFor(join(backupsDir, autoBackups[i].name)), { force: true })
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)
+  if (autoBackups.length <= MAX_AUTO_BACKUPS) return
+
+  // A backup is taken at every launch, so a teacher who opens EduBoard five times a day
+  // would otherwise only ever have the last two days to go back to. Keep the newest few,
+  // then the newest of each earlier day (a mistake found a week later can still be
+  // undone), then fill any room left with the next newest.
+  const keep = new Set(autoBackups.slice(0, NEWEST_KEPT).map((b) => b.name))
+  const dayOf = (ms: number): string => new Date(ms).toDateString()
+  const daysKept = new Set(autoBackups.slice(0, NEWEST_KEPT).map((b) => dayOf(b.mtimeMs)))
+  for (const b of autoBackups) {
+    if (keep.size >= MAX_AUTO_BACKUPS) break
+    if (daysKept.has(dayOf(b.mtimeMs))) continue
+    daysKept.add(dayOf(b.mtimeMs))
+    keep.add(b.name)
+  }
+  for (const b of autoBackups) {
+    if (keep.size >= MAX_AUTO_BACKUPS) break
+    keep.add(b.name)
+  }
+  for (const b of autoBackups) {
+    if (keep.has(b.name)) continue
+    unlinkSync(join(backupsDir, b.name))
+    rmSync(keyFilePathFor(join(backupsDir, b.name)), { force: true })
   }
 }
 

@@ -86,6 +86,22 @@ describe('unpublished changes', () => {
 
     await publishToPortal()
     expect(getPublishStatus().upToDate).toBe(true)
+    // Asked again with nothing changed, the answer holds (it's kept, not rebuilt)…
+    expect(getPublishStatus().upToDate).toBe(true)
+
+    // …and any change still shows, a new mark as much as a name.
+    const quiz = createAssessment({
+      classId: cls.id,
+      categoryId: null,
+      name: 'Spelling',
+      description: null,
+      assessmentDate: '2026-09-15',
+      maxScore: 20
+    })
+    await publishToPortal()
+    expect(getPublishStatus().upToDate).toBe(true)
+    upsertScore({ assessmentId: quiz.id, studentId: student.id, pointsEarned: 17 })
+    expect(getPublishStatus().upToDate).toBe(false)
   }, 30_000)
 
   it('publishes marked assessments, with comments only once the teacher allows them', async () => {

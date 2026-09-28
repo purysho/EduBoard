@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, count, eq } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { attendanceRecords } from '../db/schema'
 import { newId, nowIso } from '../db/util'
@@ -25,6 +25,21 @@ export function listAttendanceByClass(classId: string): AttendanceRecord[] {
     .from(attendanceRecords)
     .where(eq(attendanceRecords.classId, classId))
     .all() as AttendanceRecord[]
+}
+
+/** How many of a class's records have each code, per day or per student: the counts
+ * without reading every record (a year's register is thousands of them). */
+export function tallyAttendanceByClass(
+  classId: string,
+  per: 'date' | 'student'
+): { key: string; status: string; n: number }[] {
+  const key = per === 'date' ? attendanceRecords.date : attendanceRecords.studentId
+  return getDb()
+    .select({ key, status: attendanceRecords.status, n: count() })
+    .from(attendanceRecords)
+    .where(eq(attendanceRecords.classId, classId))
+    .groupBy(key, attendanceRecords.status)
+    .all()
 }
 
 export function listAttendanceByStudentAndClass(

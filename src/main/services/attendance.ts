@@ -22,17 +22,29 @@ export function computeAttendanceCounts(
   /** How each record's code counts; the school's own codes map to one of the four. */
   countsAs: (status: string) => AttendanceStatus = (s) => s as AttendanceStatus
 ): AttendanceCounts {
+  return countAttendanceTallies(
+    records.map((r) => ({ status: r.status, n: 1 })),
+    countsAs
+  )
+}
+
+/** The same counts from tallies: `n` records with each code (see
+ * tallyAttendanceByClass), so a year's register needn't be read record by record. */
+export function countAttendanceTallies(
+  tallies: { status: string; n: number }[],
+  countsAs: (status: string) => AttendanceStatus = (s) => s as AttendanceStatus
+): AttendanceCounts {
   let present = 0
   let late = 0
   let absent = 0
   let excused = 0
 
-  for (const record of records) {
-    const kind = countsAs(record.status)
-    if (kind === 'present') present++
-    else if (kind === 'late') late++
-    else if (kind === 'absent') absent++
-    else if (kind === 'excused') excused++
+  for (const { status, n } of tallies) {
+    const kind = countsAs(status)
+    if (kind === 'present') present += n
+    else if (kind === 'late') late += n
+    else if (kind === 'absent') absent += n
+    else if (kind === 'excused') excused += n
   }
 
   const countedTotal = present + late + absent
