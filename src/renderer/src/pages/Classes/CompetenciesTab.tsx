@@ -31,7 +31,7 @@ export function CompetenciesTab(): React.JSX.Element {
           <h2 className="text-sm font-semibold">{tr('Competency evidence')}</h2>
           <p className="text-xs text-[var(--color-text-muted)]">
             {tr(
-              'Each cell shows the latest rubric level actually recorded for that student and Standard. The evidence count includes assessment and rubric-graded homework criteria.'
+              'Each cell shows the newest rubric evidence recorded for that student and Standard. If several criteria in that same task disagree, EduBoard shows mixed evidence instead of inventing an average.'
             )}
           </p>
         </CardHeader>
@@ -64,12 +64,22 @@ export function CompetenciesTab(): React.JSX.Element {
                   </th>
                   {matrix.standards.map((standard) => {
                     const cell = byCell.get(`${student.id}|${standard.id}`)
-                    const level = cell?.latestLevelLabel ?? tr('Not yet evidenced')
                     const source = cell?.latestSourceName
+                    const hasEvidence = !!cell && cell.evidenceCount > 0
+                    const level = !hasEvidence
+                      ? tr('Not yet evidenced')
+                      : cell.latestEvidenceMixed
+                        ? tr('Mixed evidence')
+                        : cell.latestLevelLabel
                     return (
                       <td key={standard.id} className="px-3 py-3 align-top">
                         <div className="font-medium">{level}</div>
-                        {cell && cell.evidenceCount > 0 ? (
+                        {cell?.latestEvidenceMixed && (
+                          <div className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                            {cell.latestLevelLabels.join(' · ')}
+                          </div>
+                        )}
+                        {hasEvidence ? (
                           <div className="mt-1 space-y-0.5 text-xs text-[var(--color-text-muted)]">
                             <div>
                               {tr('{n} evidence item(s)', { n: cell.evidenceCount })}
