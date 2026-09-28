@@ -88,12 +88,16 @@ const MINUTE = 60 * 1000
 // Every limit in one place, each overridable by env var for a school with unusual needs
 // (e.g. a whole lab of students behind one NAT'd IP logging in at once).
 const LIMITS = {
-  // Per client IP, across every account — the brute-force / credential-stuffing guard.
-  loginPerIp: { windowMs: 15 * MINUTE, max: envInt('RATE_LOGIN_PER_IP', 50) },
+  // Failed logins per client IP, across every account — the credential-stuffing guard.
+  // Only failures count: a school's classrooms often share one address, and a class
+  // signing in together must never be locked out by its own successful logins.
+  loginPerIp: { windowMs: 15 * MINUTE, max: envInt('RATE_LOGIN_PER_IP', 100) },
   // Failed logins per username — stops a slow, distributed guess at one account.
   loginFailuresPerUser: { windowMs: 15 * MINUTE, max: envInt('RATE_LOGIN_FAILS_PER_USER', 10) },
-  // Invite lookups/redemptions and QR logins are both "guess a secret in the URL".
-  secretUrlPerIp: { windowMs: 15 * MINUTE, max: envInt('RATE_SECRET_URL_PER_IP', 60) },
+  // Invite lookups/redemptions and QR logins are both "guess a secret in the URL". Codes
+  // carry ~60 random bits, so this is about stopping floods, not guessing: high enough for
+  // a class joining together over the school's one address (each join is two requests).
+  secretUrlPerIp: { windowMs: 15 * MINUTE, max: envInt('RATE_SECRET_URL_PER_IP', 300) },
   // Bad sync/admin secrets per IP. Only failures count, so a teacher's own heavy
   // publishing is never throttled.
   badSecretPerIp: { windowMs: 15 * MINUTE, max: envInt('RATE_BAD_SECRET_PER_IP', 20) },
