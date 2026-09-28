@@ -64,6 +64,7 @@ import type {
   ClassRosterRow,
   ClassSection,
   CourseGroup,
+  CurriculumMap,
   StudentCompositeGrade,
   DashboardStats,
   Enrollment,
@@ -355,6 +356,7 @@ export interface EduBoardApi {
     rename(id: string, name: string): Promise<CourseGroup>
     remove(id: string): Promise<void>
     getComposite(courseGroupId: string): Promise<StudentCompositeGrade[]>
+    curriculumMap(courseGroupId: string): Promise<CurriculumMap | null>
   }
   seatAssignments: {
     listByClass(classId: string): Promise<SeatAssignment[]>
