@@ -188,6 +188,29 @@
   .ai-help { margin-top: 12px; }
   img.qr { width: 180px; height: 180px; display: block; margin: 14px auto; border-radius: 10px; background: #fff; padding: 6px; }
   a.linklike { color: var(--primary); text-decoration: none; font-size: .85rem; font-weight: 600; }
+  .assessments { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .assess-list { list-style: none; margin: 0; padding: 0; }
+  .assess { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .assess:last-child { border-bottom: 0; }
+  .assess .row { gap: 10px; align-items: flex-start; }
+  .assess-name { font-weight: 600; }
+  .assess-score { white-space: nowrap; text-align: right; }
+  .assess-comment { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--primary); background: var(--surface-muted); border-radius: 6px; font-size: .88rem; line-height: 1.45; }
+  .rubric { list-style: none; margin: 6px 0 0; padding: 0; font-size: .82rem; color: var(--muted); }
+  .rubric li { display: flex; justify-content: space-between; gap: 8px; }
+  .score-chart { margin: 0 0 4px; }
+  .score-chart .plot { position: relative; height: 110px; margin: 4px 0 6px 38px; }
+  .score-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .score-chart .axis { position: absolute; left: -38px; width: 32px; text-align: right; transform: translateY(-50%); font-size: .7rem; color: var(--muted); }
+  .score-chart .grid { stroke: var(--border); stroke-width: 1; }
+  .score-chart .you { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .score-chart .dot { stroke: var(--primary); stroke-width: 8; stroke-linecap: round; }
+  .score-chart .avg { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .score-chart figcaption { font-size: .78rem; display: flex; gap: 14px; }
+  .key-you::before, .key-avg::before { content: ''; display: inline-block; width: 14px; vertical-align: middle; margin-right: 5px; }
+  .key-you::before { border-top: 2.5px solid var(--primary); }
+  .key-avg::before { border-top: 2px dashed var(--muted); }
+  .assessments details summary { cursor: pointer; color: var(--primary); font-weight: 600; font-size: .85rem; padding: 8px 0 2px; }
   a.linklike:hover { text-decoration: underline; }
   .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .dob-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr; gap: 8px; }
@@ -1748,6 +1771,68 @@ function pageHead(title, subtitle, id = '') {
   return `<header class="page-head"><h1${id ? ` id="${id}"` : ''}>${title}</h1>${subtitle ? `<p${id ? ` id="${id}-sub"` : ''}>${subtitle}</p>` : ''}</header>`
 }
 
+const fmtNum = (n) => String(Math.round(n * 10) / 10)
+
+/** How a class's scores have gone, oldest to newest, with the class average when the
+ * teacher shares it. Nothing for fewer than two scores. The scale starts at 50% (lower
+ * when a score is lower), with labelled lines so the range is never hidden. */
+function scoreChartHtml(list) {
+  const pts = list
+    .filter((a) => !a.excused && a.points != null && a.maxScore > 0)
+    .map((a) => ({ p: (a.points / a.maxScore) * 100, avg: a.classAverage, name: a.name }))
+  if (pts.length < 2) return ''
+  const lowest = Math.min(...pts.map((q) => q.p), ...pts.filter((q) => q.avg != null).map((q) => q.avg))
+  const lo = Math.max(0, Math.min(50, Math.floor((lowest - 5) / 10) * 10))
+  const W = 300, H = 100, pad = 6
+  const x = (i) => (pad + (i * (W - 2 * pad)) / (pts.length - 1)).toFixed(1)
+  const yv = (v) => pad + ((100 - Math.max(lo, Math.min(100, v))) * (H - 2 * pad)) / (100 - lo)
+  const y = (v) => yv(v).toFixed(1)
+  const avg = pts.map((q, i) => (q.avg != null ? `${x(i)},${y(q.avg)}` : null)).filter(Boolean)
+  const lines = [lo, Math.round((lo + 100) / 2), 100]
+  const dot = (cx, cy, title) => `<line class="dot" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy}" vector-effect="non-scaling-stroke"><title>${title}</title></line>`
+  const summary = t('Scores over time: from {first} to {last}', { first: Math.round(pts[0].p) + '%', last: Math.round(pts[pts.length - 1].p) + '%' })
+  return `<figure class="score-chart">
+    <div class="plot">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(summary)}">
+        ${lines.map((v) => `<line class="grid" x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" vector-effect="non-scaling-stroke"/>`).join('')}
+        ${avg.length >= 2 ? `<polyline class="avg" points="${avg.join(' ')}" vector-effect="non-scaling-stroke"/>` : ''}
+        <polyline class="you" points="${pts.map((q, i) => `${x(i)},${y(q.p)}`).join(' ')}" vector-effect="non-scaling-stroke"/>
+        ${pts.map((q, i) => dot(x(i), y(q.p), `${esc(q.name)}: ${Math.round(q.p)}%`)).join('')}
+      </svg>
+      ${lines.map((v) => `<span class="axis" style="top:${((yv(v) / H) * 100).toFixed(1)}%">${v}%</span>`).join('')}
+    </div>
+    <figcaption class="muted"><span class="key-you">${t('Your scores')}</span>${avg.length >= 2 ? `<span class="key-avg">${t('Class average')}</span>` : ''}</figcaption>
+  </figure>`
+}
+
+/** A class's marked assessments on the Grades page: the chart, the three most recent,
+ * and the rest behind "Show all". */
+function assessmentsHtml(list) {
+  if (!list || !list.length) return ''
+  const row = (a) => {
+    const when = a.date ? new Date(a.date + 'T00:00:00').toLocaleDateString(uiLocale(), { day: 'numeric', month: 'short' }) : ''
+    const meta = [a.category ? esc(a.category) : '', when].filter(Boolean).join(' · ')
+    const score = a.excused
+      ? `<span class="pill not_started">${t('Excused')}</span>`
+      : a.points != null
+        ? `<strong>${fmtNum(a.points)}/${fmtNum(a.maxScore)}</strong> <span class="muted">${Math.round((a.points / a.maxScore) * 100)}%</span>`
+        : '—'
+    return `<li class="assess">
+      <div class="row"><span><span class="assess-name">${esc(a.name)}</span>${a.late ? ` <span class="pill late">${t('Late')}</span>` : ''}${meta ? `<br><span class="muted">${meta}</span>` : ''}</span><span class="assess-score">${score}</span></div>
+      ${a.classAverage != null ? `<div class="muted">${esc(t('Class average {percent}', { percent: Math.round(a.classAverage) + '%' }))}</div>` : ''}
+      ${a.rubric && a.rubric.length ? `<ul class="rubric">${a.rubric.map((r) => `<li><span>${esc(r.criterion)}</span><span>${esc(r.level)} · ${fmtNum(r.points)}/${fmtNum(r.maxPoints)}</span></li>`).join('')}</ul>` : ''}
+      ${a.comment ? `<p class="assess-comment">${esc(a.comment)}</p>` : ''}
+    </li>`
+  }
+  const newest = [...list].reverse()
+  const older = newest.slice(3)
+  return `<div class="assessments">
+    ${scoreChartHtml(list)}
+    <ul class="assess-list">${newest.slice(0, 3).map(row).join('')}</ul>
+    ${older.length ? `<details><summary>${esc(t('Show all {count}', { count: list.length }))}</summary><ul class="assess-list">${older.map(row).join('')}</ul></details>` : ''}
+  </div>`
+}
+
 function langSwitchHtml() {
   return `<button type="button" class="lang-switch" data-lang-switch aria-label="${UI_LANG === 'zh' ? 'Switch to English' : '切换到中文'}">${UI_LANG === 'zh' ? 'English' : '中文'}</button>`
 }
@@ -2097,6 +2182,7 @@ function renderDashboard(me) {
            <div class="card">
              <div class="row"><strong>${esc(c.name)}${c.finished ? ` <span class="pill done">${t('Finished')}</span>` : ''}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
              <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? esc(t('Letter grade {letter}', { letter: c.letter })) : t('No grade yet')}</span><span class="muted">${t('Attendance {rate}', { rate: c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—' })}</span></div>
+             ${assessmentsHtml(c.assessments)}
            </div>`
            )
            .join('')}`

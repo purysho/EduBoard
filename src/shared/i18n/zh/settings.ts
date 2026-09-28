@@ -460,8 +460,8 @@ export const SETTINGS: Record<string, string> = {
     '考勤 代码 积分 类别 快速添加 记录 按钮 学生字段 过敏 用语 术语 模板 attendance points fields templates',
   'Portal and families': '学生门户与家长',
   'Portal connection, digest email, group chats': '门户连接、周报邮件、群聊',
-  'portal sync secret publish accounts password reset digest email smtp newsletter dingtalk wecom group chat':
-    '门户 同步 密钥 发布 账号 密码 重置 周报 邮件 简报 钉钉 企业微信 群聊 portal sync digest email dingtalk wecom',
+  'portal sync secret publish accounts password reset scores assessments comments class average digest email smtp newsletter dingtalk wecom group chat':
+    '门户 同步 密钥 发布 账号 密码 重置 成绩 测评 评语 班级平均 周报 邮件 简报 钉钉 企业微信 群聊 portal sync scores digest email dingtalk wecom',
   AI: 'AI',
   'Your AI key, and AI for students': '你的 AI 密钥，以及学生用的 AI',
   'ai key provider deepseek qwen zhipu anthropic ollama students study helper':
@@ -492,5 +492,17 @@ export const SETTINGS: Record<string, string> = {
   'Two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans and notes, to try EduBoard or show it to someone. It’s kept apart from your own classes, which it never reads or changes. EduBoard restarts to open it.':
     '两个虚构学生的班级，包含一个学期的成绩、考勤、课堂积分、作业、教案和记录，可以用来试用 EduBoard 或向别人演示。它与你自己的班级分开保存，从不读取或改动你的班级。打开时 EduBoard 会重新启动。',
   'Start the sample school over': '重新开始示例学校',
-  'Security overview': '安全概述'
+  'Security overview': '安全概述',
+  'Scores families see': '家长可以看到的成绩',
+  'Besides the overall grade and attendance, the Portal can show each marked assessment. Assessments nobody has been marked on yet never show. Changes reach the Portal the next time you publish.':
+    '除了总成绩和出勤，学生门户还可以显示每项已评分的测评。还没有人评分的测评不会显示。更改会在下次发布时同步到学生门户。',
+  'Show each assessment and the score': '显示每项测评及其得分',
+  'With a chart of how scores have gone, late and excused marks, and rubric levels.':
+    '包括成绩变化图、迟交和免评标记，以及评分量规的等级。',
+  'Include my comments on scores': '包括我对成绩的评语',
+  'Off unless you turn it on, since comments in the gradebook are often notes for yourself. Check them before turning this on.':
+    '默认关闭，因为成绩册里的评语常常是写给自己的备注。开启前请先检查这些评语。',
+  'Show the class average': '显示班级平均分',
+  'Only once 5 or more students have a score, so nobody’s mark can be worked out from it.':
+    '只有在 5 名或以上学生有成绩时才显示，这样无法据此推算出任何人的分数。'
 }

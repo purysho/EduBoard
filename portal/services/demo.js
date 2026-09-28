@@ -87,6 +87,7 @@ function resetDemo(now = new Date()) {
       `DELETE FROM homework_submissions WHERE homework_assignment_id IN (SELECT id FROM homework_assignments WHERE class_id = '${CLASS_ID}')`,
       `DELETE FROM homework_assignments WHERE class_id = '${CLASS_ID}'`,
       `DELETE FROM grades WHERE class_id = '${CLASS_ID}'`,
+      `DELETE FROM assessments WHERE class_id = '${CLASS_ID}'`,
       `DELETE FROM enrollments WHERE class_id = '${CLASS_ID}'`
     ]) {
       db.prepare(sql).run()
@@ -129,6 +130,43 @@ function resetDemo(now = new Date()) {
         ])
       )
     }
+    // Amy's marks on the term's assessments. The class averages are made up too (as if
+    // for a full class), since three sample students wouldn't show one.
+    const insertAssessment = db.prepare(
+      `INSERT INTO assessments (id, class_id, name, category, assessment_date, max_score, class_average, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    const insertScore = db.prepare(
+      `INSERT INTO assessment_scores (assessment_id, student_id, points, excused, late, comment, rubric)
+       VALUES (?, 'demo-s1', ?, 0, ?, ?, ?)`
+    )
+    const marks = [
+      ['demo-a1', 'Spelling quiz 1', 'Quizzes', -40, 20, 72.5, 16, 0, null, null],
+      ['demo-a2', 'Reading comprehension', 'Tests', -30, 50, 68, 41, 1, null, null],
+      ['demo-a3', 'Spelling quiz 2', 'Quizzes', -21, 20, 75, 18, 0, null, null],
+      [
+        'demo-a4',
+        'Writing: My family',
+        'Writing',
+        -12,
+        12,
+        70.8,
+        11,
+        0,
+        'Great ideas and a lovely ending. Check capital letters at the start of each sentence.',
+        [
+          { criterion: 'Ideas', level: 'Excellent', points: 4, maxPoints: 4 },
+          { criterion: 'Organisation', level: 'Excellent', points: 4, maxPoints: 4 },
+          { criterion: 'Spelling and punctuation', level: 'Good', points: 3, maxPoints: 4 }
+        ]
+      ],
+      ['demo-a5', 'Spelling quiz 3', 'Quizzes', -4, 20, 77.5, 19, 0, 'Much better!', null]
+    ]
+    marks.forEach(([id, name, category, when, max, average, points, late, comment, rubric], i) => {
+      insertAssessment.run(id, CLASS_ID, name, category, day(when).slice(0, 10), max, average, i)
+      insertScore.run(id, points, late, comment, rubric ? JSON.stringify(rubric) : null)
+    })
+
     const hw = (id, title, description, due) =>
       db
         .prepare(

@@ -155,6 +155,8 @@ router.delete('/teachers/:id', (req, res) => {
       `DELETE FROM class_posts WHERE class_id IN (${OWN_CLASSES})`,
       `DELETE FROM invites WHERE class_id IN (${OWN_CLASSES})`,
       `DELETE FROM grades WHERE class_id IN (${OWN_CLASSES}) OR student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM assessment_scores WHERE student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM assessments WHERE class_id IN (${OWN_CLASSES})`,
       `DELETE FROM enrollments WHERE class_id IN (${OWN_CLASSES}) OR student_id IN (${OWN_STUDENTS})`,
       `DELETE FROM student_profiles WHERE student_id IN (${OWN_STUDENTS})`,
       `DELETE FROM account_students WHERE student_id IN (${OWN_STUDENTS})`

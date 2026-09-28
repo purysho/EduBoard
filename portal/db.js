@@ -416,6 +416,33 @@ db.exec(`
   );
 `)
 
+// Each marked assessment and each student's score on it, as the teacher chose to share
+// them (Settings → Portal and families). Replaced by every publish, like grades.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS assessments (
+    id TEXT PRIMARY KEY,
+    class_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    category TEXT,
+    assessment_date TEXT,
+    max_score REAL NOT NULL,
+    class_average REAL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS assessments_class_idx ON assessments(class_id);
+  CREATE TABLE IF NOT EXISTS assessment_scores (
+    assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL,
+    points REAL,
+    excused INTEGER NOT NULL DEFAULT 0,
+    late INTEGER NOT NULL DEFAULT 0,
+    comment TEXT,
+    rubric TEXT,
+    PRIMARY KEY (assessment_id, student_id)
+  );
+  CREATE INDEX IF NOT EXISTS assessment_scores_student_idx ON assessment_scores(student_id);
+`)
+
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
 // can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and

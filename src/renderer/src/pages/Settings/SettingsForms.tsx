@@ -1,8 +1,13 @@
 // The settings that used to share one long form, each now its own card with its own
 // Save: you, AI for you, AI for students, the Portal connection, and the family digest.
 import { useState } from 'react'
-import { Bot, GraduationCap, Link2, Mail, UserRound } from 'lucide-react'
-import type { AiConnectionConfig, AiConnectionTestResult, AppSettings } from '@shared/types'
+import { Bot, ClipboardCheck, GraduationCap, Link2, Mail, UserRound } from 'lucide-react'
+import {
+  DEFAULT_APP_SETTINGS,
+  type AiConnectionConfig,
+  type AiConnectionTestResult,
+  type AppSettings
+} from '@shared/types'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -562,6 +567,81 @@ export function DigestCard(): React.JSX.Element | null {
           </fieldset>
         </>
       )}
+    </FormCard>
+  )
+}
+
+/** How much of each assessment families see on the Portal's Grades page. */
+export function PortalScoresCard(): React.JSX.Element | null {
+  const f = useSettingsForm(['portalScores'] as const)
+  if (!f.form) return null
+  const options = { ...DEFAULT_APP_SETTINGS.portalScores, ...f.form.portalScores }
+  const toggle = (key: keyof typeof options, on: boolean): void =>
+    f.set({ portalScores: { ...options, [key]: on } })
+  return (
+    <FormCard
+      icon={ClipboardCheck}
+      title={tr('Scores families see')}
+      description={tr(
+        'Besides the overall grade and attendance, the Portal can show each marked assessment. Assessments nobody has been marked on yet never show. Changes reach the Portal the next time you publish.'
+      )}
+      dirty={f.dirty}
+      saving={f.saving}
+      onSave={() => f.save()}
+      onUndo={f.reset}
+    >
+      <div className="col-span-2 flex flex-col gap-2 text-sm">
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={options.assessments}
+            onChange={(e) => toggle('assessments', e.target.checked)}
+          />
+          <span>
+            {tr('Show each assessment and the score')}
+            <span className="block text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'With a chart of how scores have gone, late and excused marks, and rubric levels.'
+              )}
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1"
+            disabled={!options.assessments}
+            checked={options.assessments && options.comments}
+            onChange={(e) => toggle('comments', e.target.checked)}
+          />
+          <span>
+            {tr('Include my comments on scores')}
+            <span className="block text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'Off unless you turn it on, since comments in the gradebook are often notes for yourself. Check them before turning this on.'
+              )}
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            className="mt-1"
+            disabled={!options.assessments}
+            checked={options.assessments && options.classAverage}
+            onChange={(e) => toggle('classAverage', e.target.checked)}
+          />
+          <span>
+            {tr('Show the class average')}
+            <span className="block text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'Only once 5 or more students have a score, so nobody’s mark can be worked out from it.'
+              )}
+            </span>
+          </span>
+        </label>
+      </div>
     </FormCard>
   )
 }

@@ -23,6 +23,11 @@ import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { getClassGrades, getStudentAttendanceSummary } from './reports'
 import { pointSummaries } from '../repositories/behaviourPoints'
+import {
+  portalAssessmentsForClass,
+  type PortalAssessment,
+  type PortalAssessmentScore
+} from './portalAssessments'
 import { getSettings, getStoredValue, setStoredValue } from '../repositories/settingsRepo'
 import { markAsDownloadedFromInternet, safeDownloadPath } from './untrustedFiles'
 import { checkUpload } from '@shared/fileSafety'
@@ -33,7 +38,7 @@ import {
   portalFailureCode,
   portalFetch
 } from './portalErrors'
-import type { DigestPreview, PublishResult } from '@shared/types'
+import { DEFAULT_APP_SETTINGS, type DigestPreview, type PublishResult } from '@shared/types'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   ClassPost,
@@ -192,6 +197,12 @@ function buildPublishPayload(): {
   }
 
   const withPoints = getSettings().digestOptions?.points === true
+  const scoreOptions = {
+    ...DEFAULT_APP_SETTINGS.portalScores,
+    ...getSettings().portalScores
+  }
+  const assessments: PortalAssessment[] = []
+  const assessmentScores: PortalAssessmentScore[] = []
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   for (const cls of classes) {
     const roster = getRosterForClass(cls.id)
@@ -218,6 +229,16 @@ function buildPublishPayload(): {
           : {})
       })
     }
+
+    // Each marked assessment and the active students' own scores (Settings → Portal and
+    // families decides how much of it families see).
+    const scored = portalAssessmentsForClass(
+      cls.id,
+      new Set(roster.filter((r) => r.enrollment.status === 'active').map((r) => r.student.id)),
+      scoreOptions
+    )
+    assessments.push(...scored.assessments)
+    assessmentScores.push(...scored.scores)
 
     // Drafts stay local — only an assignment the teacher explicitly published (see
     // HomeworkTab's Publish button) ever reaches the Portal, so building out homework
@@ -295,6 +316,8 @@ function buildPublishPayload(): {
     })),
     enrollments,
     grades,
+    assessments,
+    assessmentScores,
     homeworkAssignments,
     invites,
     materials,

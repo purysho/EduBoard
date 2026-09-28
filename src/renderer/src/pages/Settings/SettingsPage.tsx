@@ -37,6 +37,7 @@ import {
 import {
   DigestCard,
   PortalConnectionCard,
+  PortalScoresCard,
   ProfileCard,
   StudentAiCard,
   TeacherAiCard
@@ -115,13 +116,14 @@ const SECTIONS: Section[] = [
     label: tr('Portal and families'),
     blurb: tr('Portal connection, digest email, group chats'),
     keywords: tr(
-      'portal sync secret publish accounts password reset digest email smtp newsletter dingtalk wecom group chat'
+      'portal sync secret publish accounts password reset scores assessments comments class average digest email smtp newsletter dingtalk wecom group chat'
     ),
     icon: Globe,
     content: () => (
       <>
         <PortalConnectionCard />
         <PortalPanel />
+        <PortalScoresCard />
         <DigestCard />
         <GroupChatsPanel />
       </>

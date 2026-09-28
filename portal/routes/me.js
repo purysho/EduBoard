@@ -229,6 +229,7 @@ router.get('/', (req, res) => {
           id: c.id,
           name: c.name,
           levelType: c.level_type,
+          assessments: assessmentsFor(studentId, c.id),
           // Finished (archived at the end of term): read-only, nothing more to hand in.
           finished: !!c.finished,
           percent: c.percent,
@@ -985,6 +986,34 @@ router.delete('/qr/:id', (req, res) => {
   res.json({ ok: true })
 })
 
+// This student's marked assessments in one class, oldest first, as the teacher chose to
+// share them (see routes/sync.js).
+function assessmentsFor(studentId, classId) {
+  return db
+    .prepare(
+      `SELECT a.id, a.name, a.category, a.assessment_date, a.max_score, a.class_average,
+         s.points, s.excused, s.late, s.comment, s.rubric
+       FROM assessments a
+       JOIN assessment_scores s ON s.assessment_id = a.id AND s.student_id = ?
+       WHERE a.class_id = ?
+       ORDER BY a.sort_order`
+    )
+    .all(studentId, classId)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      category: r.category,
+      date: r.assessment_date,
+      maxScore: r.max_score,
+      classAverage: r.class_average,
+      points: r.points,
+      excused: !!r.excused,
+      late: !!r.late,
+      comment: r.comment,
+      rubric: r.rubric ? JSON.parse(r.rubric) : null
+    }))
+}
+
 // Agreeing to the terms of use and privacy notice, once per version.
 router.post('/consent', (req, res) => {
   if (isDemoAccount(req.accountId)) return res.json({ ok: true })
@@ -1016,12 +1045,16 @@ router.get('/export', (req, res) => {
         db.prepare('SELECT * FROM student_profiles WHERE student_id = ?').get(studentId)
       ),
       classes: all(
-        `SELECT c.name, e.status, g.percent, g.letter, g.attendance_rate AS attendanceRate, g.points
+        `SELECT c.id, c.name, e.status, g.percent, g.letter, g.attendance_rate AS attendanceRate, g.points
          FROM enrollments e JOIN classes c ON c.id = e.class_id
          LEFT JOIN grades g ON g.class_id = e.class_id AND g.student_id = e.student_id
          WHERE e.student_id = ?`,
         studentId
-      ).map((c) => ({ ...c, points: c.points ? JSON.parse(c.points) : null })),
+      ).map(({ id, ...c }) => ({
+        ...c,
+        points: c.points ? JSON.parse(c.points) : null,
+        assessments: assessmentsFor(studentId, id).map(({ id: _id, ...a }) => a)
+      })),
       homework: all(
         `SELECT h.title, h.due_date AS dueDate, s.status, s.submitted_at AS submittedAt,
            s.text_answer AS textAnswer, s.file_name AS fileName, s.grade, s.feedback

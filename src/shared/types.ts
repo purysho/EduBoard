@@ -804,6 +804,8 @@ export interface AppSettings {
   pointCategories: PointCategory[]
   /** What the family weekly digest includes. */
   digestOptions: DigestOptions
+  /** What families see about each assessment on the Portal's Grades page. */
+  portalScores: PortalScoreOptions
   /** The teacher's own address, for their weekly summary. */
   teacherEmail: string
   /** Letters, Class Story posts and lesson plans the teacher saved as templates. */
@@ -828,6 +830,18 @@ export interface AppSettings {
   commentBank: BankComment[]
   /** The parent letter template (see shared/letters.ts for its placeholders). */
   letterTemplate: string
+}
+
+/** What the Portal shows families about each assessment, beyond the overall grade. */
+export interface PortalScoreOptions {
+  /** Each marked assessment with the student's own score. */
+  assessments: boolean
+  /** The teacher's comment on each score. Off unless turned on: gradebook comments are
+   * often notes for the teacher. */
+  comments: boolean
+  /** The class average for each assessment, only once 5 or more students have a score (so
+   * no one's score can be worked out from it). */
+  classAverage: boolean
 }
 
 export interface LogQuickAdd {
@@ -990,6 +1004,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
     messages: true,
     points: false
   },
+  portalScores: { assessments: true, comments: false, classAverage: false },
   pointCategories: [],
   groupChats: [],
   usagePing: false,

@@ -51,6 +51,29 @@ function cleanPoints(points) {
   return list.length ? JSON.stringify(list) : null
 }
 
+// A rubric result as the desktop sends it (services/portalAssessments.ts), kept only if
+// well formed.
+function cleanRubric(rubric) {
+  if (!Array.isArray(rubric)) return null
+  const finite = (n) => typeof n === 'number' && Number.isFinite(n)
+  const list = rubric
+    .filter(
+      (r) =>
+        typeof r?.criterion === 'string' &&
+        typeof r?.level === 'string' &&
+        finite(r?.points) &&
+        finite(r?.maxPoints)
+    )
+    .slice(0, 30)
+    .map((r) => ({
+      criterion: r.criterion.slice(0, 120),
+      level: r.level.slice(0, 120),
+      points: r.points,
+      maxPoints: r.maxPoints
+    }))
+  return list.length ? JSON.stringify(list) : null
+}
+
 // Full push from the desktop app. Each table is wholesale-replaced inside one
 // transaction — the desktop app always sends its complete current state, never a
 // diff, so "replace everything" is simpler and can't drift out of sync from a missed
@@ -61,6 +84,8 @@ router.post('/', (req, res) => {
     students = [],
     enrollments = [],
     grades = [],
+    assessments = [],
+    assessmentScores = [],
     homeworkAssignments = [],
     invites = [],
     materials = [],
@@ -180,6 +205,10 @@ router.post('/', (req, res) => {
       db.prepare(`DELETE FROM grades WHERE class_id IN (${classIdPlaceholders})`).run(
         ...ownClassIds
       )
+      // Their scores go with them (ON DELETE CASCADE).
+      db.prepare(`DELETE FROM assessments WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
       db.prepare(
         `DELETE FROM homework_questions WHERE homework_assignment_id IN
            (SELECT id FROM homework_assignments WHERE class_id IN (${classIdPlaceholders}))`
@@ -244,6 +273,51 @@ router.post('/', (req, res) => {
         g.letter,
         g.attendanceRate,
         cleanPoints(g.points)
+      )
+    }
+
+    // INSERT OR IGNORE plus the check on `changes`: an id another teacher's class already
+    // uses is skipped, and no score is ever attached to an assessment this push didn't write.
+    const insertAssessment = db.prepare(
+      `INSERT OR IGNORE INTO assessments
+         (id, class_id, name, category, assessment_date, max_score, class_average, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    const writtenAssessments = new Set()
+    assessments.filter(inPushedClass).forEach((a, i) => {
+      if (typeof a.id !== 'string' || typeof a.name !== 'string') return
+      if (typeof a.maxScore !== 'number' || !(a.maxScore > 0)) return
+      const average =
+        typeof a.classAverage === 'number' && Number.isFinite(a.classAverage)
+          ? a.classAverage
+          : null
+      const written = insertAssessment.run(
+        a.id,
+        a.classId,
+        a.name.slice(0, 200),
+        typeof a.category === 'string' ? a.category.slice(0, 100) : null,
+        typeof a.date === 'string' ? a.date.slice(0, 10) : null,
+        a.maxScore,
+        average,
+        i
+      )
+      if (written.changes) writtenAssessments.add(a.id)
+    })
+    const insertScore = db.prepare(
+      `INSERT OR REPLACE INTO assessment_scores
+         (assessment_id, student_id, points, excused, late, comment, rubric)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+    for (const sc of assessmentScores) {
+      if (!writtenAssessments.has(sc.assessmentId) || !pushedStudentIds.has(sc.studentId)) continue
+      insertScore.run(
+        sc.assessmentId,
+        sc.studentId,
+        typeof sc.points === 'number' && Number.isFinite(sc.points) ? sc.points : null,
+        sc.excused ? 1 : 0,
+        sc.late ? 1 : 0,
+        typeof sc.comment === 'string' && sc.comment.trim() ? sc.comment.slice(0, 2000) : null,
+        cleanRubric(sc.rubric)
       )
     }
 
