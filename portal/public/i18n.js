@@ -460,6 +460,8 @@ const ZH = {
     '这个账户今天的 AI 使用次数已用完，24 小时内会重置。',
   'Too many photo uploads. Try again in an hour.': '上传照片次数过多，请一小时后再试。',
   'Choose a photo first': '请先选择照片',
+  'Choose a file': '选择文件',
+  'No file chosen': '未选择文件',
   'Photos must be .jpg, .png or .webp': '照片必须是 .jpg、.png 或 .webp 格式',
   'That photo is too large (8 MB max)': '照片太大（最大 8 MB）',
   "That isn't a JPEG, PNG or WebP image": '这不是 JPEG、PNG 或 WebP 图片',
