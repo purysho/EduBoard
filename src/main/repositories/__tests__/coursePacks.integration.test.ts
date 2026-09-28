@@ -166,6 +166,19 @@ describe('Course Packs', () => {
     expect(updatedClass.termId).toBe(result.termIds.t1)
   })
 
+  it('anchors relative dates to the actual first class date when supplied', () => {
+    const cls = universityClass('University English Tuesday')
+    installCoursePack({
+      pack: samplePack(),
+      termBindings: { t1: cls.id },
+      firstClassDates: { t1: '2026-09-08' }
+    })
+
+    expect(listLessonPlansByClass(cls.id)[0].date).toBe('2026-09-08')
+    expect(listAssessmentsByClass(cls.id)[0].assessmentDate).toBe('2026-09-22')
+    expect(listHomeworkAssignmentsByClass(cls.id)[0].dueDate).toBe('2026-09-23')
+  })
+
   it('is duplicate-safe when the same pack is imported again', () => {
     const cls = universityClass('University English A')
     installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
@@ -202,7 +215,7 @@ describe('Course Packs', () => {
     pack.terms[0].startDate = null
 
     expect(() => installCoursePack({ pack, termBindings: { t1: cls.id } })).toThrow(
-      /needs a start date/i
+      /needs a first class date/i
     )
     expect(listCourseGroups()).toHaveLength(0)
     expect(listTerms()).toHaveLength(0)
