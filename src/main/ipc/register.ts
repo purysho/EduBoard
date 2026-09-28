@@ -1,4 +1,6 @@
 import { AppError } from '@shared/errorCodes'
+import { applyScoreImport, readScoreSheet } from '../services/scoreImport'
+import type { ScoreImportRequest } from '@shared/scoreImport'
 import { reportCardSendProgress, sendReportCards } from '../services/reportCardDelivery'
 import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'fs/promises'
@@ -508,7 +510,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.importExport.pickImportFile, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: tr('Roster (Excel or CSV)'), extensions: ['xlsx', 'csv'] }]
+      filters: [{ name: tr('Spreadsheet (Excel or CSV)'), extensions: ['xlsx', 'csv'] }]
     })
     return canceled ? null : filePaths[0]
   })
@@ -1079,6 +1081,12 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.portalMessages.translate, (_e, messageId: string, targetLang: string) =>
     translateMessage(messageId, targetLang)
+  )
+  handle(IpcChannels.scoreImport.read, (_e, filePath: string, sheetIndex?: number) =>
+    readScoreSheet(filePath, sheetIndex ?? 0)
+  )
+  handle(IpcChannels.scoreImport.apply, (_e, request: ScoreImportRequest) =>
+    applyScoreImport(request)
   )
   handle(IpcChannels.reportCards.send, (_e, classId: string, title: string) =>
     sendReportCards(classId, title)

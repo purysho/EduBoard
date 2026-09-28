@@ -127,6 +127,7 @@ import type {
   CreatePortalInviteBatchInput
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
+import type { ScoreImportRequest, ScoreImportResult, ScoreSheet } from './scoreImport'
 import type { NewsletterFact, NewsletterStructure } from './newsletter'
 import type { NewsletterSourceChoice, WeeklySummary } from './summaries'
 
@@ -481,6 +482,12 @@ export interface EduBoardApi {
     send(accountId: string, body: string): Promise<void>
     markRead(accountId: string): Promise<void>
     translate(messageId: string, targetLang: string): Promise<string>
+  }
+  /** Scores from a spreadsheet into a class's gradebook: read the file for the preview,
+   * then write what the teacher confirmed. */
+  scoreImport: {
+    read(filePath: string, sheetIndex?: number): Promise<ScoreSheet>
+    apply(request: ScoreImportRequest): Promise<ScoreImportResult>
   }
   /** Report cards sent privately to families on the Portal (one PDF per student). */
   reportCards: {

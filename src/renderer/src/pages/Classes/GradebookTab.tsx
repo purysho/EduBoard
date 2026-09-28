@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { ClipboardList, Plus } from 'lucide-react'
+import { ClipboardList, FileSpreadsheet, Plus } from 'lucide-react'
 import type { Assessment, AssignmentSubmission, ClassSection, Score } from '@shared/types'
 import { Button } from '@renderer/components/ui/Button'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -20,6 +20,7 @@ import { formatDate, formatPercent, studentFullName } from '@renderer/lib/format
 import { AssessmentFormModal } from './AssessmentFormModal'
 import { ScoreCell } from './ScoreCell'
 import { RubricScoreCell } from './RubricScoreCell'
+import { ScoreImportModal } from './ScoreImportModal'
 import { tr } from '@shared/i18n'
 
 export function GradebookTab(): React.JSX.Element {
@@ -35,6 +36,7 @@ export function GradebookTab(): React.JSX.Element {
   const rubricsById = useMemo(() => new Map((rubrics ?? []).map((r) => [r.id, r])), [rubrics])
 
   const [showAdd, setShowAdd] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Assessment | null>(null)
 
@@ -56,7 +58,11 @@ export function GradebookTab(): React.JSX.Element {
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-end gap-2">
+        <Button variant="secondary" onClick={() => setShowImport(true)}>
+          <FileSpreadsheet size={15} className="mr-1 inline" aria-hidden />
+          {tr('Import scores')}
+        </Button>
         <Button variant="primary" onClick={() => setShowAdd(true)}>
           <Plus size={15} className="mr-1 inline" aria-hidden />
           {tr('Assessment')}
@@ -204,6 +210,15 @@ export function GradebookTab(): React.JSX.Element {
           setPendingDelete(null)
         }}
         onCancel={() => setPendingDelete(null)}
+      />
+      <ScoreImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        classId={classSection.id}
+        roster={roster ?? []}
+        assessments={assessments ?? []}
+        categories={categories ?? []}
+        scores={scores ?? []}
       />
     </div>
   )

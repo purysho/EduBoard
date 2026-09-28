@@ -341,6 +341,10 @@ const api: EduBoardApi = {
     translate: (messageId, targetLang) =>
       invoke(IpcChannels.portalMessages.translate, messageId, targetLang)
   },
+  scoreImport: {
+    read: (filePath, sheetIndex) => invoke(IpcChannels.scoreImport.read, filePath, sheetIndex),
+    apply: (request) => invoke(IpcChannels.scoreImport.apply, request)
+  },
   reportCards: {
     send: (classId, title) => invoke(IpcChannels.reportCards.send, classId, title),
     progress: () => invoke(IpcChannels.reportCards.progress),

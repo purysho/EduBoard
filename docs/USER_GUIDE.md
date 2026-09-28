@@ -150,6 +150,17 @@ Click an assessment's name in the column header to edit it, or "remove" undernea
 
 ---
 
+### Importing scores from a spreadsheet
+
+**Import scores** at the top of the Gradebook brings in scores from an exam system or a colleague's spreadsheet (.xlsx or .csv, with headings in row 1 and a row per student).
+
+1. **Choose a spreadsheet.** For a workbook with several sheets, pick the sheet.
+2. **Where are the students?** EduBoard picks a student number column if the sheet has one, otherwise a name column (Mai Chen, Chen Mai, "Chen, Mai" and 陈麦 all match), otherwise first and last name columns. Change it if it guessed wrong.
+3. **Which columns are scores?** Every column that's mostly scores is ticked. Each goes into the assessment with the same name, or **A new assessment** (name it, and set what it's out of; a heading like "Unit test (/50)" or "期中（满分120）" fills that in). Untick a column to leave it out.
+4. **Check what will change:** how many rows matched, rows that didn't match a student, cells left out and why (not a score, more than the maximum, below zero), and every score it would replace, old → new. Nothing is saved until you click **Import**.
+
+"EX" or 免考 in a cell marks the student excused; a percentage such as 85% becomes points out of the maximum. Imported scores keep their history, like scores typed into the gradebook, so the score history shows what the import changed.
+
 ## Grading with rubrics
 
 **Rubrics** (in the sidebar) is a reusable library, separate from any one class — build a rubric once and attach it to assessments in any class.

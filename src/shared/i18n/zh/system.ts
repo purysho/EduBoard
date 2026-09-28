@@ -3,7 +3,7 @@ export const SYSTEM: Record<string, string> = {
   'Choose the classes to carry on.': '请选择要继续开设的班级。',
   'Invalid week': '无效的周',
   'Choose a second place for backups': '选择第二个备份位置',
-  'Roster (Excel or CSV)': '学生名单（Excel 或 CSV）',
+  'Spreadsheet (Excel or CSV)': '表格（Excel 或 CSV）',
   'CSV file': 'CSV 文件',
   'Excel Workbook': 'Excel 工作簿',
   'This assignment has no rubric linked.': '这份作业没有关联评分量规。',
