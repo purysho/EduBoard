@@ -711,6 +711,40 @@ export interface LessonPlan {
   updatedAt: string
 }
 
+export interface CurriculumMapResource {
+  id: string
+  title: string
+  type: LessonResourceType
+}
+
+export interface CurriculumMapLesson {
+  id: string
+  date: string
+  weekLabel: string | null
+  title: string
+  status: LessonPlanStatus
+  objectives: string | null
+  materials: string | null
+  standardCodes: string[]
+  linkedAssessment: { id: string; name: string } | null
+  resources: CurriculumMapResource[]
+}
+
+export interface CurriculumMapClass {
+  classId: string
+  className: string
+  termId: string | null
+  termName: string | null
+  termStartDate: string | null
+  lessons: CurriculumMapLesson[]
+}
+
+export interface CurriculumMap {
+  courseGroupId: string
+  courseGroupName: string
+  classes: CurriculumMapClass[]
+}
+
 export const AI_PROVIDERS = ['deepseek', 'qwen', 'zhipu', 'anthropic', 'custom'] as const
 export type AiProvider = (typeof AI_PROVIDERS)[number]
 
