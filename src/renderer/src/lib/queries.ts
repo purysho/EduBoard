@@ -71,7 +71,6 @@ export const queryKeys = {
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
   competencyMatrix: (classId: string) => ['competencies', classId] as const,
-  competencyMatrix: (classId: string) => ['classes', classId, 'competencies'] as const,
   allScheduleSlots: ['scheduleSlots'] as const,
   homeworkAssignments: (classId: string) => ['classes', classId, 'homework'] as const,
   allHomeworkAssignments: ['homeworkAssignments', 'all'] as const,
@@ -390,6 +389,7 @@ export function useUpdateAssessment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.assessments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.competencyMatrix(classId) })
     }
   })
 }
