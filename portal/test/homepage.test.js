@@ -88,7 +88,8 @@ test('the privacy notice and data processing terms are served in both languages'
   t.after(portal.stop)
   for (const [route, en, zh] of [
     ['/privacy', /<h1>Privacy notice<\/h1>/, /<h1>隐私说明<\/h1>/],
-    ['/data-processing', /<h1>Data processing terms<\/h1>/, /<h1>数据处理条款<\/h1>/]
+    ['/data-processing', /<h1>Data processing terms<\/h1>/, /<h1>数据处理条款<\/h1>/],
+    ['/security', /<h1>Security overview<\/h1>/, /<h1>安全概述<\/h1>/]
   ]) {
     const page = await get(portal.url + route, 'edu-board.com')
     assert.equal(page.status, 200, route)
@@ -99,4 +100,14 @@ test('the privacy notice and data processing terms are served in both languages'
   const home = await get(portal.url + '/download', 'edu-board.com')
   assert.match(home.body, /href="\/privacy"/)
   assert.match(home.body, /href="\/data-processing"/)
+})
+
+test('security.txt names a contact and the security page', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const txt = await get(portal.url + '/.well-known/security.txt', 'edu-board.com')
+  assert.equal(txt.status, 200)
+  assert.match(txt.body, /^Contact: mailto:privacy@edu-board\.com$/m)
+  assert.match(txt.body, /^Expires: \d{4}-/m)
+  assert.match(txt.body, /^Policy: https:\/\/edu-board\.com\/security$/m)
 })

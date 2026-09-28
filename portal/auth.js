@@ -82,7 +82,9 @@ function issueSessionCookie(res, accountId) {
   const token = sign({ accountId, sv: row?.session_version ?? 0, exp: Date.now() + SESSION_TTL_MS })
   res.cookie('eduboard_session', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Over HTTPS (Caddy in front says so, and only a trusted proxy is believed), the
+    // cookie is never sent over plain http:// — whether or not NODE_ENV is set.
+    secure: process.env.NODE_ENV === 'production' || !!res.req?.secure,
     sameSite: 'lax',
     maxAge: SESSION_TTL_MS
   })

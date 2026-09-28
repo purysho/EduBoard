@@ -491,5 +491,6 @@ export const SETTINGS: Record<string, string> = {
   'Sample school': '示例学校',
   'Two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans and notes, to try EduBoard or show it to someone. It’s kept apart from your own classes, which it never reads or changes. EduBoard restarts to open it.':
     '两个虚构学生的班级，包含一个学期的成绩、考勤、课堂积分、作业、教案和记录，可以用来试用 EduBoard 或向别人演示。它与你自己的班级分开保存，从不读取或改动你的班级。打开时 EduBoard 会重新启动。',
-  'Start the sample school over': '重新开始示例学校'
+  'Start the sample school over': '重新开始示例学校',
+  'Security overview': '安全概述'
 }

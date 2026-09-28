@@ -8,12 +8,14 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 - **A public demo login on the Portal** (`PORTAL_DEMO=1`; `Set-Up-Homepage.cmd` turns it on): username `demo`, password `try-eduboard`, for anyone to see what families see. It's a made-up class under its own demo teacher, with a report card, a notice to answer and a message. Its password, email and QR logins can't be changed (PT-1009), it resets every day, and it's left out of the admin page's usage numbers. The homepage's new **Try it first** section shows the login and points to the app's sample school.
 - **Sample school** (Settings → Help and updates, or the getting-started checklist): EduBoard reopens on two classes of made-up students with a term of scores, attendance, class points, homework, lesson plans, notes and report comments, to try it or show it to a school. It lives in its own folder; the teacher's own classes are never read or changed, and a banner offers **Back to my classes** and **Start over**. No backups or usage pings are made from it.
+- **Portal usage on the admin page** (portal address /admin.html): teachers publishing, students with a login, families and teachers active each week (last 12 weeks), share of report cards opened, notices answered, Class Story posts seen and work handed in. **Copy as text** puts it all in an email or a pitch. It's worked out only from what the Portal already keeps for its features; nothing new is recorded.
+- **Security overview** at edu-board.com/security (English and Chinese, printable): how the app and the Portal protect student data, how portal.edu-board.com is run, and what isn't done yet, for a school's IT or data protection review. Linked from the homepage ("For your IT and data protection review"), the privacy pages and Settings → Help and updates. The Portal also answers `/.well-known/security.txt`.
 
 ### Fixed
 
+- **The Portal's sign-in cookie is marked Secure, and browsers are told to stay on HTTPS (HSTS), whenever the Portal is reached over HTTPS.** Both used to depend on `NODE_ENV=production`, which the live Portal didn't have set.
+- **The privacy notice named the wrong cipher** for the app's password protection: it's ChaCha20-Poly1305 (SQLite3 Multiple Ciphers), not AES-256. `SECURITY.md` is up to date again (it still said there was no update mechanism and no server).
 - "Students to check on" said "Below the pass mark (60% vs 60%)" for a student on 59.6%; it now shows the decimal when rounding would hide the gap.
-
-- **Portal usage on the admin page** (portal address /admin.html): teachers publishing, students with a login, families and teachers active each week (last 12 weeks), share of report cards opened, notices answered, Class Story posts seen and work handed in. **Copy as text** puts it all in an email or a pitch. It's worked out only from what the Portal already keeps for its features; nothing new is recorded.
 
 ## [0.6.0] — 2026-09-28
 

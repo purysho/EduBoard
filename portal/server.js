@@ -18,7 +18,7 @@ function parseTrustProxy(value) {
 }
 app.set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY))
 
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.set({
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
@@ -26,7 +26,8 @@ app.use((_req, res, next) => {
     'Referrer-Policy': 'no-referrer',
     'Cross-Origin-Opener-Policy': 'same-origin'
   })
-  if (process.env.NODE_ENV === 'production') {
+  // Any request that arrived over HTTPS tells the browser to keep using HTTPS.
+  if (process.env.NODE_ENV === 'production' || req.secure) {
     res.set('Strict-Transport-Security', 'max-age=15552000')
   }
   next()
@@ -46,6 +47,21 @@ const homepageHosts = (process.env.HOMEPAGE_HOSTS || '')
 app.get(['/download', '/download/'], (_req, res) => res.sendFile(HOMEPAGE))
 // The privacy notice and the data processing terms a school can sign (both languages).
 app.get('/privacy', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')))
+app.get('/security', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'security.html')))
+// Where security researchers look for a contact (RFC 9116).
+app.get('/.well-known/security.txt', (req, res) => {
+  const expires = new Date(Date.now() + 180 * 86400000).toISOString()
+  res
+    .type('text/plain')
+    .send(
+      [
+        'Contact: mailto:privacy@edu-board.com',
+        `Expires: ${expires}`,
+        'Preferred-Languages: en, zh',
+        `Policy: https://${req.get('host')}/security`
+      ].join('\n') + '\n'
+    )
+})
 app.get('/data-processing', (_req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'data-processing.html'))
 )

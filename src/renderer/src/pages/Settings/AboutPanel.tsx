@@ -182,6 +182,15 @@ export function AboutPanel(): React.JSX.Element {
             >
               {tr('Data processing terms for schools')}
             </a>
+            {' · '}
+            <a
+              href={`${SITE_URL}/security?lang=${uiLanguage()}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-primary)] hover:underline"
+            >
+              {tr('Security overview')}
+            </a>
           </p>
         </CardBody>
 

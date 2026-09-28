@@ -47,53 +47,51 @@
 
         <h2>1. Who is responsible</h2>
         <p>
-          The school, or the teacher when they use EduBoard on their own, decides what
-          information about students goes into EduBoard and is responsible for it (the
-          "controller"; 个人信息处理者 under China's Personal Information Protection Law).
+          The school, or the teacher when they use EduBoard on their own, decides what information
+          about students goes into EduBoard and is responsible for it (the "controller";
+          个人信息处理者 under China's Personal Information Protection Law).
         </p>
         <p>
           EduBoard is made by an independent developer ("we", "us"). We run
           <strong>edu-board.com</strong> and the Portal at <strong>portal.edu-board.com</strong>.
           When a school uses portal.edu-board.com, we keep its data on its behalf and follow its
           instructions (we are its "processor"; 受托人). Schools can sign our
-          <a href="/data-processing">data processing terms</a>. A school that runs the Portal on
-          its own server is responsible for that server, and we have no access to it.
+          <a href="/data-processing">data processing terms</a>. A school that runs the Portal on its
+          own server is responsible for that server, and we have no access to it.
         </p>
         <p>
-          Questions: <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>. For
-          anything about a particular student, ask their teacher or school first: they hold the
-          records.
+          Questions: <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>. For anything
+          about a particular student, ask their teacher or school first: they hold the records.
         </p>
 
         <h2>2. The EduBoard app (for teachers)</h2>
         <p>
-          <strong>What it keeps:</strong> what the teacher enters. That is classes; students
-          (names, student numbers, date of birth, guardians' names and contact details, notes,
-          and the teacher's own extra fields such as allergies); grades; attendance; class
-          points; log notes; lesson plans; report card comments; letters and messages. It is kept
-          in a file on the teacher's computer and in any backups the teacher makes. With password
-          protection turned on, the file and its backups are encrypted (AES-256).
+          <strong>What it keeps:</strong> what the teacher enters. That is classes; students (names,
+          student numbers, date of birth, guardians' names and contact details, notes, and the
+          teacher's own extra fields such as allergies); grades; attendance; class points; log
+          notes; lesson plans; report card comments; letters and messages. It is kept in a file on
+          the teacher's computer and in any backups the teacher makes. With password protection
+          turned on, the file and its backups are encrypted (256-bit ChaCha20-Poly1305).
         </p>
         <p>
-          <strong>What leaves the computer.</strong> Only the following, and only once the
-          teacher has set it up:
+          <strong>What leaves the computer.</strong> Only the following, and only once the teacher
+          has set it up:
         </p>
         <ul>
           <li>
-            <strong>Publishing to the Portal:</strong> class names, students' names, student
-            numbers and dates of birth (used to check a family's invite code), grades and
-            attendance rates, homework, materials the teacher chooses to share, Class Story posts
-            and the teacher's messages. It goes over an encrypted connection (HTTPS) to the Portal
-            address the teacher enters. Guardians' contact details, notes, log notes and extra
-            fields are never sent.
+            <strong>Publishing to the Portal:</strong> class names, students' names, student numbers
+            and dates of birth (used to check a family's invite code), grades and attendance rates,
+            homework, materials the teacher chooses to share, Class Story posts and the teacher's
+            messages. It goes over an encrypted connection (HTTPS) to the Portal address the teacher
+            enters. Guardians' contact details, notes, log notes and extra fields are never sent.
           </li>
           <li>
-            <strong>AI suggestions</strong> (they need internet): when the teacher asks for one,
-            the text it needs goes to the AI provider the teacher chose (DeepSeek, Qwen, Zhipu,
+            <strong>AI suggestions</strong> (they need internet): when the teacher asks for one, the
+            text it needs goes to the AI provider the teacher chose (DeepSeek, Qwen, Zhipu,
             Anthropic, or one the teacher enters, which can run on their own computer) with the
-            teacher's own key. For report comment phrases that is the student's name, class,
-            grade, trend, attendance and the teacher's recent notes. Nothing is sent until the
-            teacher clicks, and the teacher checks every suggestion.
+            teacher's own key. For report comment phrases that is the student's name, class, grade,
+            trend, attendance and the teacher's recent notes. Nothing is sent until the teacher
+            clicks, and the teacher checks every suggestion.
           </li>
           <li>
             <strong>Group chats:</strong> a Class Story post or newsletter the teacher chooses to
@@ -101,8 +99,8 @@
           </li>
           <li>
             <strong>Updates:</strong> the app asks the Portal or GitHub for the newest version and
-            downloads it. Like any website, the server sees the computer's internet address.
-            Nothing about students is sent.
+            downloads it. Like any website, the server sees the computer's internet address. Nothing
+            about students is sent.
           </li>
           <li>
             <strong>Help improve EduBoard</strong> (off unless the teacher turns it on): once a
@@ -126,17 +124,17 @@
             and, if the teacher turns it on, each child's class points for the past week.
           </li>
           <li>
-            Accounts: a username, the password (stored only in scrambled form, as a bcrypt hash),
-            an email address if the family adds one for the weekly digest, and which children
-            the account belongs to.
+            Accounts: a username, the password (stored only in scrambled form, as a bcrypt hash), an
+            email address if the family adds one for the weekly digest, and which children the
+            account belongs to.
           </li>
           <li>
-            What students and families add: homework answers and uploaded files; messages with
-            the teacher; a profile (preferred name, pronouns, photo, goals, birthday, which the
-            teacher sees only as a day and month and only if the student chooses; "private
-            notes" are never shown to the teacher); questions asked to the Study Helper and its
-            answers, which the teacher can see (students are told this); which Class Story posts
-            were seen, and replies to notices that ask for one; and requests to reset a password.
+            What students and families add: homework answers and uploaded files; messages with the
+            teacher; a profile (preferred name, pronouns, photo, goals, birthday, which the teacher
+            sees only as a day and month and only if the student chooses; "private notes" are never
+            shown to the teacher); questions asked to the Study Helper and its answers, which the
+            teacher can see (students are told this); which Class Story posts were seen, and replies
+            to notices that ask for one; and requests to reset a password.
           </li>
         </ul>
         <p>
@@ -144,10 +142,10 @@
           messages, and the teacher can see what was handed in and read. For nothing else.
         </p>
         <p>
-          <strong>Who sees it:</strong> a student or family sees only their own children and
-          their classes' shared material. The teacher sees their own classes. Whoever runs the
-          server can reach the database to keep it working and to make backups, and does not
-          otherwise look at it.
+          <strong>Who sees it:</strong> a student or family sees only their own children and their
+          classes' shared material. The teacher sees their own classes. Whoever runs the server can
+          reach the database to keep it working and to make backups, and does not otherwise look at
+          it.
         </p>
         <p>
           <strong>AI on the Portal:</strong> the Study Helper and translations of messages and
@@ -155,26 +153,25 @@
           another). The question, and the class material it is about, are sent to that provider.
         </p>
         <p>
-          <strong>Email:</strong> the weekly digest goes through the teacher's own email account
-          to families who gave an email address.
+          <strong>Email:</strong> the weekly digest goes through the teacher's own email account to
+          families who gave an email address.
         </p>
         <p>
           <strong>Cookies:</strong> one, which keeps you signed in. No analytics, advertising or
           third-party scripts; the pages load nothing from other websites.
         </p>
         <p>
-          <strong>How long:</strong> grades, homework and posts are replaced each time the
-          teacher publishes. A student the teacher removes is removed from the Portal with their
-          work, and so is their account with its messages unless it also belongs to a brother or
-          sister. On portal.edu-board.com, backups are kept on the same
-          server and the oldest is deleted once there are 14.
+          <strong>How long:</strong> grades, homework and posts are replaced each time the teacher
+          publishes. A student the teacher removes is removed from the Portal with their work, and
+          so is their account with its messages unless it also belongs to a brother or sister. On
+          portal.edu-board.com, backups are kept on the same server and the oldest is deleted once
+          there are 14.
         </p>
 
         <h2>4. edu-board.com</h2>
         <p>
-          The homepage sets no cookies and has no analytics. It remembers your language in your
-          own browser. Downloads come from GitHub through our server. The server keeps no log of
-          visits.
+          The homepage sets no cookies and has no analytics. It remembers your language in your own
+          browser. Downloads come from GitHub through our server. The server keeps no log of visits.
         </p>
 
         <h2>5. Where the data is</h2>
@@ -190,44 +187,44 @@
           </li>
         </ul>
         <p>
-          For schools in mainland China: under the Personal Information Protection Law, Hong
-          Kong is outside the mainland. A school whose data must stay in the mainland can run the
-          Portal on its own mainland server (it is free and open source) and use DeepSeek, Qwen,
-          Zhipu or an AI model on its own computer.
+          For schools in mainland China: under the Personal Information Protection Law, Hong Kong is
+          outside the mainland. A school whose data must stay in the mainland can run the Portal on
+          its own mainland server (it is free and open source) and use DeepSeek, Qwen, Zhipu or an
+          AI model on its own computer.
         </p>
 
         <h2>6. Children</h2>
         <p>
-          Most of this information is about children. The school decides what is kept and gets
-          any consent that is needed from parents or guardians. (China's law requires a
-          guardian's consent for a child under 14, and similar laws elsewhere have similar
-          rules.) The Portal asks a child for nothing beyond what it needs to sign in; everything
-          else in a profile is optional.
+          Most of this information is about children. The school decides what is kept and gets any
+          consent that is needed from parents or guardians. (China's law requires a guardian's
+          consent for a child under 14, and similar laws elsewhere have similar rules.) The Portal
+          asks a child for nothing beyond what it needs to sign in; everything else in a profile is
+          optional.
         </p>
 
         <h2>7. Keeping it safe</h2>
         <ul>
           <li>
-            The Portal uses HTTPS only, stores passwords as bcrypt hashes, limits sign-in
-            attempts, and signs an account out everywhere when its password is reset. Invite and
-            QR sign-in links can be cancelled.
+            The Portal uses HTTPS only, stores passwords as bcrypt hashes, limits sign-in attempts,
+            and signs an account out everywhere when its password is reset. Invite and QR sign-in
+            links can be cancelled.
           </li>
           <li>
             The app can encrypt its database and backups, lock itself when left idle, and hide
             private details while the screen is shown to a class.
           </li>
           <li>
-            If something goes wrong with a school's data on portal.edu-board.com, we tell the
-            school without delay (within 48 hours of finding out) and help it inform families and
-            the authorities.
+            If something goes wrong with a school's data on portal.edu-board.com, we tell the school
+            without delay (within 48 hours of finding out) and help it inform families and the
+            authorities.
           </li>
         </ul>
 
         <h2>8. Your rights</h2>
         <p>
-          You can ask to see, correct, download or delete information about you or your child,
-          and to know how it is used. Because the school holds the records, ask the teacher or
-          school; they can do all of this in EduBoard. You can also write to
+          You can ask to see, correct, download or delete information about you or your child, and
+          to know how it is used. Because the school holds the records, ask the teacher or school;
+          they can do all of this in EduBoard. You can also write to
           <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a> about
           portal.edu-board.com, and we will work with the school to answer. You can change your
           Portal password yourself under Account.
@@ -235,8 +232,8 @@
 
         <h2>9. Changes</h2>
         <p>
-          When this notice changes, the date at the top changes. Before an important change to
-          how portal.edu-board.com handles data, we tell the schools that use it.
+          When this notice changes, the date at the top changes. Before an important change to how
+          portal.edu-board.com handles data, we tell the schools that use it.
         </p>
       </article>
 
@@ -248,23 +245,27 @@
           <strong>简要说明</strong>
           <ul>
             <li>
-              EduBoard
-              应用把所有内容都保存在老师自己的电脑上。我们（EduBoard 的开发者）从不从中收到学生姓名、成绩或任何其他信息。
+              EduBoard 应用把所有内容都保存在老师自己的电脑上。我们（EduBoard
+              的开发者）从不从中收到学生姓名、成绩或任何其他信息。
             </li>
             <li>
               学生门户（学生和家长登录的网站）只保存老师发布的内容，以及学生和家长自己添加的内容。无论由学校还是由我们运行，它都只为学校保存这些信息，不作他用。
             </li>
-            <li>不投放广告，不出售数据，不做跟踪或统计分析。唯一的 Cookie 用于保持你在学生门户的登录状态。</li>
+            <li>
+              不投放广告，不出售数据，不做跟踪或统计分析。唯一的 Cookie
+              用于保持你在学生门户的登录状态。
+            </li>
           </ul>
         </div>
 
         <h2>1. 谁负责</h2>
         <p>
-          学校（或独自使用 EduBoard
-          的老师）决定把哪些学生信息放进 EduBoard，并对这些信息负责（即《个人信息保护法》中的“个人信息处理者”）。
+          学校（或独自使用 EduBoard 的老师）决定把哪些学生信息放进
+          EduBoard，并对这些信息负责（即《个人信息保护法》中的“个人信息处理者”）。
         </p>
         <p>
-          EduBoard 由一位独立开发者制作（下称“我们”）。我们运营 <strong>edu-board.com</strong> 和位于
+          EduBoard 由一位独立开发者制作（下称“我们”）。我们运营
+          <strong>edu-board.com</strong> 和位于
           <strong>portal.edu-board.com</strong> 的学生门户。学校使用 portal.edu-board.com
           时，我们代表学校保存其数据并按学校的指示处理（即“受托人”）。学校可以签署我们的<a
             href="/data-processing"
@@ -272,20 +273,25 @@
           >。在自己服务器上运行学生门户的学校自行负责该服务器，我们无法访问。
         </p>
         <p>
-          如有疑问：<a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>。涉及某个学生的事项，请先联系其老师或学校：记录由他们保管。
+          如有疑问：<a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a
+          >。涉及某个学生的事项，请先联系其老师或学校：记录由他们保管。
         </p>
 
         <h2>2. EduBoard 应用（老师使用）</h2>
         <p>
-          <strong>保存的内容：</strong>老师录入的内容，包括班级；学生（姓名、学号、出生日期、监护人姓名和联系方式、备注，以及老师自建的字段，如过敏信息）；成绩；考勤；课堂积分；记录；教案；成绩单评语；信件和消息。这些内容保存在老师电脑上的一个文件中，以及老师自己做的备份里。开启密码保护后，该文件及其备份都会加密（AES-256）。
+          <strong>保存的内容：</strong
+          >老师录入的内容，包括班级；学生（姓名、学号、出生日期、监护人姓名和联系方式、备注，以及老师自建的字段，如过敏信息）；成绩；考勤；课堂积分；记录；教案；成绩单评语；信件和消息。这些内容保存在老师电脑上的一个文件中，以及老师自己做的备份里。开启密码保护后，该文件及其备份都会加密（256
+          位 ChaCha20-Poly1305）。
         </p>
         <p><strong>哪些内容会离开电脑：</strong>只有以下几项，并且只有在老师设置之后：</p>
         <ul>
           <li>
-            <strong>发布到学生门户：</strong>班级名称、学生姓名、学号和出生日期（用于核对家长的邀请码）、成绩和出勤率、作业、老师选择分享的资料、班级动态以及老师的消息。通过加密连接（HTTPS）发送到老师填写的学生门户地址。监护人的联系方式、备注、记录和自建字段从不发送。
+            <strong>发布到学生门户：</strong
+            >班级名称、学生姓名、学号和出生日期（用于核对家长的邀请码）、成绩和出勤率、作业、老师选择分享的资料、班级动态以及老师的消息。通过加密连接（HTTPS）发送到老师填写的学生门户地址。监护人的联系方式、备注、记录和自建字段从不发送。
           </li>
           <li>
-            <strong>AI 建议</strong>（需要联网）：老师请求建议时，所需文字会用老师自己的密钥发送给老师选择的 AI
+            <strong>AI 建议</strong
+            >（需要联网）：老师请求建议时，所需文字会用老师自己的密钥发送给老师选择的 AI
             服务商（DeepSeek、通义千问、智谱，Anthropic，或老师填写的服务，可以运行在老师自己的电脑上）。成绩单评语短语需要学生姓名、班级、成绩、趋势、出勤和老师最近的记录。老师点击之前不会发送任何内容，每条建议都由老师检查。
           </li>
           <li><strong>群聊：</strong>老师选择发送到钉钉或企业微信群的班级动态或简报。</li>
@@ -294,10 +300,12 @@
             查询最新版本并下载。和任何网站一样，服务器能看到这台电脑的网络地址。不会发送任何学生信息。
           </li>
           <li>
-            <strong>帮助改进 EduBoard</strong>（除非老师开启，否则关闭）：每周一次，发送一个随机编号、应用版本、操作系统、语言，以及大致的班级数和学生数（例如“10–29”）。不保存姓名、学校或网络地址。设置中会准确显示发送的内容。
+            <strong>帮助改进 EduBoard</strong
+            >（除非老师开启，否则关闭）：每周一次，发送一个随机编号、应用版本、操作系统、语言，以及大致的班级数和学生数（例如“10–29”）。不保存姓名、学校或网络地址。设置中会准确显示发送的内容。
           </li>
           <li>
-            <strong>出门条和签到：</strong>学生的手机通过教室 Wi-Fi 连接到老师的电脑，数据只在本地网络中传输。
+            <strong>出门条和签到：</strong>学生的手机通过教室 Wi-Fi
+            连接到老师的电脑，数据只在本地网络中传输。
           </li>
         </ul>
         <p>以上内容中，我们只会收到更新查询，以及（开启时）每周一次的计数。</p>
@@ -305,19 +313,24 @@
         <h2>3. 学生门户（学生和家长使用）</h2>
         <p><strong>保存的内容：</strong></p>
         <ul>
-          <li>来自老师的：上面“发布到学生门户”中列出的内容；老师发送成绩单时，每个孩子的成绩单（PDF）以及家长打开它的时间；如果老师开启，还包括每个孩子过去一周的课堂积分。</li>
           <li>
-            账号：用户名、密码（只以加密散列形式保存，即 bcrypt 散列）、家长为接收每周周报而填写的邮箱（如有），以及该账号对应哪些孩子。
+            来自老师的：上面“发布到学生门户”中列出的内容；老师发送成绩单时，每个孩子的成绩单（PDF）以及家长打开它的时间；如果老师开启，还包括每个孩子过去一周的课堂积分。
+          </li>
+          <li>
+            账号：用户名、密码（只以加密散列形式保存，即 bcrypt
+            散列）、家长为接收每周周报而填写的邮箱（如有），以及该账号对应哪些孩子。
           </li>
           <li>
             学生和家长添加的：作业答案和上传的文件；与老师的消息；个人资料（常用名、代词、照片、目标、生日：老师只能看到月和日，且只有学生选择分享时才能看到；“私人笔记”永远不会给老师看）；向学习助手提出的问题及其回答，老师可以查看（学生会被告知这一点）；看过哪些班级动态，以及对需要回复的通知的回复；以及重置密码的请求。
           </li>
         </ul>
         <p>
-          <strong>用途：</strong>让学生和家长看到自己的作业、成绩和消息，让老师看到哪些作业已交、哪些内容已读。不作其他用途。
+          <strong>用途：</strong
+          >让学生和家长看到自己的作业、成绩和消息，让老师看到哪些作业已交、哪些内容已读。不作其他用途。
         </p>
         <p>
-          <strong>谁能看到：</strong>学生或家长只能看到自己的孩子及其班级分享的资料。老师只能看到自己的班级。服务器的运营者为维持运行和备份可以访问数据库，除此之外不会查看。
+          <strong>谁能看到：</strong
+          >学生或家长只能看到自己的孩子及其班级分享的资料。老师只能看到自己的班级。服务器的运营者为维持运行和备份可以访问数据库，除此之外不会查看。
         </p>
         <p>
           <strong>学生门户中的 AI：</strong>学习助手以及消息和课业内容的翻译，使用老师选择的 AI
@@ -325,17 +338,20 @@
         </p>
         <p><strong>邮件：</strong>每周周报通过老师自己的邮箱账号，发送给填写了邮箱的家长。</p>
         <p>
-          <strong>Cookie：</strong>只有一个，用于保持登录状态。没有统计分析、广告或第三方脚本；页面不会从其他网站加载任何内容。
+          <strong>Cookie：</strong
+          >只有一个，用于保持登录状态。没有统计分析、广告或第三方脚本；页面不会从其他网站加载任何内容。
         </p>
         <p>
-          <strong>保存多久：</strong>每次老师发布时，成绩、作业和动态都会被替换。老师删除某个学生后，该学生及其作业会从学生门户删除；其账号和消息也会删除，除非该账号还属于兄弟姐妹。在
+          <strong>保存多久：</strong
+          >每次老师发布时，成绩、作业和动态都会被替换。老师删除某个学生后，该学生及其作业会从学生门户删除；其账号和消息也会删除，除非该账号还属于兄弟姐妹。在
           portal.edu-board.com 上，备份保存在同一台服务器上，超过 14 份时删除最旧的一份。
         </p>
 
         <h2>4. edu-board.com</h2>
         <p>
-          主页不设置 Cookie，也没有统计分析。它只在你自己的浏览器里记住你选择的语言。下载文件通过我们的服务器从 GitHub
-          获取。服务器不保存访问记录。
+          主页不设置
+          Cookie，也没有统计分析。它只在你自己的浏览器里记住你选择的语言。下载文件通过我们的服务器从
+          GitHub 获取。服务器不保存访问记录。
         </p>
 
         <h2>5. 数据存放在哪里</h2>
@@ -345,7 +361,9 @@
             portal.edu-board.com 和 edu-board.com：位于香港的服务器（VPS.do）。Cloudflare
             只负责告诉浏览器这些地址指向哪台服务器，数据不经过它。
           </li>
-          <li>AI 服务商在其所在地：DeepSeek、通义千问（阿里云）和智谱在中国大陆；Anthropic 在美国。</li>
+          <li>
+            AI 服务商在其所在地：DeepSeek、通义千问（阿里云）和智谱在中国大陆；Anthropic 在美国。
+          </li>
         </ul>
         <p>
           中国大陆的学校请注意：根据《个人信息保护法》，香港属于境外。数据必须留在境内的学校，可以在自己的境内服务器上运行学生门户（免费且开源），并使用
@@ -360,7 +378,8 @@
         <h2>7. 安全保护</h2>
         <ul>
           <li>
-            学生门户只使用 HTTPS，以 bcrypt 散列保存密码，限制登录尝试次数，并在重置密码时让该账号在所有设备上退出登录。邀请链接和二维码登录链接可以撤销。
+            学生门户只使用 HTTPS，以 bcrypt
+            散列保存密码，限制登录尝试次数，并在重置密码时让该账号在所有设备上退出登录。邀请链接和二维码登录链接可以撤销。
           </li>
           <li>应用可以加密数据库和备份，闲置时自动锁定，并在向全班展示屏幕时隐藏私密信息。</li>
           <li>
@@ -373,11 +392,15 @@
         <p>
           你可以要求查阅、更正、下载或删除与你或你孩子有关的信息，也可以了解这些信息的用途。由于记录由学校保管，请联系老师或学校，他们可以在
           EduBoard 中完成这些操作。关于 portal.edu-board.com，你也可以写信至
-          <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a>，我们会与学校一起答复。你可以在学生门户的“账号”中自行修改密码。
+          <a href="mailto:privacy@edu-board.com">privacy@edu-board.com</a
+          >，我们会与学校一起答复。你可以在学生门户的“账号”中自行修改密码。
         </p>
 
         <h2>9. 变更</h2>
-        <p>本说明变更时，顶部的日期会随之更新。portal.edu-board.com 处理数据的方式发生重要变化之前，我们会告知使用它的学校。</p>
+        <p>
+          本说明变更时，顶部的日期会随之更新。portal.edu-board.com
+          处理数据的方式发生重要变化之前，我们会告知使用它的学校。
+        </p>
       </article>
 
       <footer>
@@ -385,6 +408,8 @@
         <a href="/download" data-lang-block="zh" hidden>EduBoard 主页</a>
         <a href="/data-processing" data-lang-block="en">Data processing terms for schools</a>
         <a href="/data-processing" data-lang-block="zh" hidden>学校数据处理条款</a>
+        <a href="/security" data-lang-block="en">Security overview</a>
+        <a href="/security" data-lang-block="zh" hidden>安全概述</a>
       </footer>
     </div>
     <script src="/legal.js"></script>

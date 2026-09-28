@@ -221,3 +221,21 @@ test('request bodies are size-limited per route and only read after authenticati
   const realSync = await portal.sync('', { classes: [], pad: 'z'.repeat(5 * 1024 * 1024) })
   assert.equal(realSync.status, 200, 'a real teacher can still send a large sync')
 })
+
+test('over HTTPS the browser is told to stay on HTTPS, and the sign-in cookie is Secure', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const { username, password } = await makeStudentAccount(portal)
+  const login = (proto) =>
+    portal.call('POST', '/api/auth/login', {
+      body: { username, password },
+      headers: proto ? { 'X-Forwarded-Proto': proto } : {}
+    })
+  const https = await login('https')
+  assert.match(https.headers.get('strict-transport-security') || '', /max-age=/)
+  assert.match(https.headers.get('set-cookie'), /;\s*Secure/i)
+  // Plain http (a local test Portal) still works: no HSTS, no Secure flag.
+  const http = await login(null)
+  assert.equal(http.headers.get('strict-transport-security'), null)
+  assert.doesNotMatch(http.headers.get('set-cookie'), /;\s*Secure/i)
+})

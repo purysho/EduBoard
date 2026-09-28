@@ -1,45 +1,62 @@
 # Security Policy
 
+A plain-language overview of how EduBoard protects student data, for a school's IT or
+data protection review, is at **https://edu-board.com/security** (English and Chinese),
+with the [privacy notice](https://edu-board.com/privacy) and the
+[data processing terms](https://edu-board.com/data-processing) beside it.
+
 ## Supported versions
 
-EduBoard is a single-user desktop app with no built-in update mechanism — only the
-latest release is supported. If you find a security issue, please update to the
-[latest release](https://github.com/purysho/EduBoard/releases/latest) first and confirm
-it's still reproducible there before reporting.
+Only the latest release is supported. The desktop app updates itself (it downloads new
+versions in the background and installs them the next time it opens), and a Portal is
+updated with `portal/scripts/update-server.sh`. Please check that an issue still happens
+on the [latest release](https://github.com/purysho/EduBoard/releases/latest) before
+reporting it.
 
 ## Reporting a vulnerability
 
-Please **do not** open a public GitHub issue for a security vulnerability. Instead, use
+Please **do not** open a public GitHub issue for a security vulnerability. Use
 [GitHub's private vulnerability reporting](https://github.com/purysho/EduBoard/security/advisories/new)
-for this repository (Security tab → Report a vulnerability). This opens a private
-conversation with the maintainer rather than a public issue.
+(Security tab → Report a vulnerability), or write to privacy@edu-board.com.
 
 Include, where relevant:
 
-- What version of EduBoard you're running, and your OS.
+- The EduBoard version (desktop app or Portal) and your system.
 - Steps to reproduce, or a minimal example.
 - What you'd expect to happen instead.
 
+Please don't test against other people's accounts or data, including on
+portal.edu-board.com; run a Portal locally (`portal/scripts/local-test.js`) instead. The
+public demo login (username `demo`) is shared, so leave it usable for others.
+
 ## Scope and context
 
-EduBoard is a local-first, offline desktop app: it has no server, no account system, and
-does not transmit data over the network on its own (the one exception is the optional
-**Exit ticket** feature, which starts a small HTTP server bound to your local network so
-students' devices on the same classroom WiFi can submit responses — it's never reachable
-from the internet, and is off unless a teacher explicitly starts a session).
+EduBoard has two parts:
 
-With **password protection** on (Settings), the database and its backups are encrypted
-(SQLite3 Multiple Ciphers, via `better-sqlite3-multiple-ciphers`). The encryption key is
-random and stored next to the database only wrapped (AES-256-GCM, scrypt) by the teacher's
-password and by a one-time recovery key.
+- **The desktop app** keeps a teacher's data in a database on their own computer. It
+  connects to the network only for what the teacher sets up: publishing to their Portal,
+  AI suggestions with their own key, DingTalk / WeCom group posts, update checks, and an
+  anonymous weekly count that is off unless turned on. The **Exit ticket** feature runs a
+  small HTTP server on the classroom network while a session is open. With **password
+  protection** on, the database and its backups are encrypted with a random key
+  (ChaCha20-Poly1305, via SQLite3 Multiple Ciphers / `better-sqlite3-multiple-ciphers`);
+  that key is stored next to the database only wrapped (AES-256-GCM, scrypt) by the
+  teacher's password and by a one-time recovery key.
+- **The Portal** (`portal/`) is a Node/Express server where students and families sign
+  in. It holds what teachers publish and what families add, behind bcrypt passwords,
+  signed session cookies, per-family access checks on every request, rate limits and
+  upload content checks.
 
-Given that scope, the security issues most worth reporting are things like:
+The issues most worth reporting:
 
-- A way to read or write files outside the app's own data directory.
-- A way for the exit-ticket local server to be reached or exploited from outside the
-  local network it's bound to.
-- Anything that would let imported data (a roster `.xlsx`/`.csv`, a restored backup)
-  execute code rather than just populate the database.
+- A way for one family or student to see or change another's data on the Portal, or for
+  one teacher to reach another teacher's classes.
+- A way around sign-in, session, rate-limit or upload checks on the Portal.
+- A way to read or write files outside the app's or the Portal's own data folders.
+- A way for the exit-ticket server to be reached or exploited from outside the classroom
+  network.
+- Anything that would let imported data (a roster or score spreadsheet, a school pack, a
+  restored backup) run code rather than just fill in the database.
 
-General bugs, feature requests, and UI issues belong in the
-[issue tracker](https://github.com/purysho/EduBoard/issues) instead.
+General bugs, feature requests and UI issues belong in the
+[issue tracker](https://github.com/purysho/EduBoard/issues).
