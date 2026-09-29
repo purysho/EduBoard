@@ -540,4 +540,24 @@ describe('Course Packs', () => {
     }
     expect(listLessonPlansByClass(cls.id)).toHaveLength(0)
   })
+
+  it('installs the optional CET/IELTS bridge pack with Support and Stretch on each clinic', () => {
+    const cls = universityClass('Exam bridge')
+    const pack = parseCoursePack(
+      readFileSync(
+        join(process.cwd(), 'course-packs', 'exam-bridge-pack.coursepack.json'),
+        'utf8'
+      )
+    )
+    installCoursePack({
+      pack,
+      termBindings: { bridge: cls.id },
+      firstClassDates: { bridge: '2026-10-12' }
+    })
+    const lessons = listLessonPlansByClass(cls.id)
+    expect(lessons).toHaveLength(10)
+    expect(lessons[0]).toMatchObject({ date: '2026-10-12' })
+    expect(lessons.every((l) => l.support && l.stretch)).toBe(true)
+    expect(listAssessmentsByClass(cls.id).map((a) => a.name)).toContain('Half mock')
+  })
 })
