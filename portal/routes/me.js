@@ -29,6 +29,7 @@ const {
 } = require('../services/aiUsage')
 const { buildStudyHelperRequest, cleanFieldOfStudy, isMode } = require('../services/studyHelper')
 const { ftsQuery } = require('../services/searchText')
+const review = require('../services/review')
 const { rateLimit, LIMITS } = require('../rateLimit')
 const { submissionTiming, DEFAULT_TIMEZONE } = require('../services/deadlines')
 const { checkUpload } = require('../services/fileSafety')
@@ -769,7 +770,10 @@ router.get('/materials', (req, res) => {
       className: r.class_name,
       studyGuide: r.study_guide,
       flashcards: r.flashcards ? JSON.parse(r.flashcards) : null,
-      practiceQuiz: r.practice_quiz ? JSON.parse(r.practice_quiz) : null
+      // Each question's review key, so answers here count toward spaced review.
+      practiceQuiz: r.practice_quiz
+        ? JSON.parse(r.practice_quiz).map((q) => ({ ...q, key: review.itemKey(q.question) }))
+        : null
     }))
   )
 })
@@ -884,6 +888,33 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
       return res.status(503).json({ error: err.message, code: 'PT-4001' })
     res.status(502).json({ error: 'AI request failed. Try again in a moment.', code: 'PT-4002' })
   }
+})
+
+// Spaced review (services/review.js): today's cards for one student, and each answer.
+router.get('/review', (req, res) => {
+  const { studentId, today } = req.query
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  res.json(review.todaysReview(studentId, review.studentToday(today)))
+})
+
+router.post('/review/answer', (req, res) => {
+  const { studentId, materialId, kind, key, correct, today } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  if (isDemoAccount(req.accountId)) return res.json({ ok: true })
+  const next = review.recordAnswer(
+    studentId,
+    { materialId: String(materialId), kind: String(kind), key: String(key), correct },
+    review.studentToday(today)
+  )
+  if (!next)
+    return res
+      .status(404)
+      .json({ error: 'That card is no longer in your classes', code: 'PT-3002' })
+  res.json(next)
 })
 
 // A student's own Study Helper history (one assignment's, or the general one), so the
@@ -1068,6 +1099,12 @@ router.get('/export', (req, res) => {
       answers: all(
         `SELECT q.prompt, a.answer, a.correct FROM homework_question_answers a
          JOIN homework_questions q ON q.id = a.homework_question_id WHERE a.student_id = ?`,
+        studentId
+      ),
+      review: all(
+        `SELECT m.title AS material, r.kind, r.box, r.due_on AS dueOn, r.times_right AS timesRight,
+           r.times_wrong AS timesWrong FROM review_items r LEFT JOIN materials m ON m.id = r.material_id
+         WHERE r.student_id = ?`,
         studentId
       ),
       reportCards: all(

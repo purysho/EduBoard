@@ -517,6 +517,12 @@ router.post('/materials/:id/chunks', (req, res) => {
   res.json({ ok: true })
 })
 
+// How this teacher's students are doing with spaced review: per material, the cards and
+// questions they miss most (services/review.js).
+router.get('/review-stats', (req, res) => {
+  res.json(require('../services/review').teacherReviewStats(req.teacherId))
+})
+
 // Students who joined through a class link and aren't in the desktop app yet, with the
 // classes they joined. The desktop imports them under these same ids, so their Portal
 // accounts stay attached.

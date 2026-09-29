@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { PortalReviewStats } from '@shared/aiUsage'
 import type { AiMaterialKind, LessonResource } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
@@ -39,6 +40,41 @@ export function PracticeSetModal({
   const update = useUpdateLessonResource()
   const approve = useApproveAiMaterial()
   const [editing, setEditing] = useState<string | null>(null)
+  // How students are doing with these cards in spaced review on the Portal, if any.
+  const [review, setReview] = useState<PortalReviewStats | null>(null)
+  useEffect(() => {
+    if (kind === 'guide') return
+    let cancelled = false
+    window.api.portalSync
+      .reviewStats()
+      .then((all) => !cancelled && setReview(all.find((m) => m.materialId === resource.id) ?? null))
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [kind, resource.id])
+  const reviewOf = (itemKind: 'card' | 'question', text: string): React.JSX.Element | null => {
+    const item = review?.items.find((i) => i.kind === itemKind && i.text === text)
+    if (!item) return null
+    const attempts = item.right + item.wrong
+    const hard = attempts >= 3 && item.wrong / attempts >= 0.5
+    return (
+      <p
+        className={
+          'mt-1 text-xs ' +
+          (hard ? 'font-medium text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]')
+        }
+      >
+        {tr('Review: missed {wrong} of {attempts} answers · learned by {learned} of {students}', {
+          wrong: item.wrong,
+          attempts,
+          learned: item.learned,
+          students: item.students
+        })}
+        {hard ? ' · ' + tr('worth re-teaching') : ''}
+      </p>
+    )
+  }
 
   const label =
     kind === 'guide'
@@ -65,6 +101,19 @@ export function PracticeSetModal({
     } else {
       clear.mutate({ resourceId: resource.id, kind }, { onSuccess: onClose })
     }
+  }
+  // With review results, the most-missed items come first: what to re-teach.
+  function sortByMissed<T>(
+    list: T[] | null,
+    textOf: (item: T) => string,
+    itemKind: 'card' | 'question'
+  ): T[] | null {
+    if (!list || !review) return list
+    const missRate = (item: T): number => {
+      const r = review.items.find((i) => i.kind === itemKind && i.text === textOf(item))
+      return r && r.right + r.wrong ? r.wrong / (r.right + r.wrong) : -1
+    }
+    return [...list].sort((a, b) => missRate(b) - missRate(a))
   }
   const setApproved = (value: boolean): void =>
     approve.mutate({ resourceId: resource.id, kind: approvalKey[kind], approved: value })
@@ -129,6 +178,14 @@ export function PracticeSetModal({
             )}
           </p>
         )}
+        {review && review.students > 0 && (
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {tr(
+              '{n} students review these on the Portal (spaced review). The ones they miss most are listed first and marked.',
+              { n: review.students }
+            )}
+          </p>
+        )}
         {!exists && !drafting && (
           <p className="text-[var(--color-text-muted)]">{tr('Nothing generated yet.')}</p>
         )}
@@ -164,13 +221,14 @@ export function PracticeSetModal({
               </Button>
             </div>
           ))}
-        {cards?.map((c, i) => (
+        {sortByMissed(cards, (c) => c.front, 'card')?.map((c, i) => (
           <div key={i} className="rounded-lg border border-[var(--color-border)] p-2.5">
             <p className="font-medium">{c.front}</p>
             <p className="mt-1 text-[var(--color-text-muted)]">{c.back}</p>
+            {reviewOf('card', c.front)}
           </div>
         ))}
-        {questions?.map((q, i) => (
+        {sortByMissed(questions, (q) => q.question, 'question')?.map((q, i) => (
           <div key={i} className="rounded-lg border border-[var(--color-border)] p-2.5">
             <p className="font-medium">
               {i + 1}. {q.question}
@@ -191,6 +249,7 @@ export function PracticeSetModal({
               ))}
             </ul>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">{q.explanation}</p>
+            {reviewOf('question', q.question)}
           </div>
         ))}
       </div>

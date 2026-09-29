@@ -251,5 +251,11 @@ export const PAGES: Record<string, string> = {
   'Drafted by AI. Read it, correct anything wrong, then approve it. Students don’t see it until you do.':
     '由 AI 起草。请阅读并改正错误之处，然后批准。在你批准之前学生看不到。',
   'Save and approve': '保存并批准',
-  'AI draft to check': '待检查的 AI 草稿'
+  'AI draft to check': '待检查的 AI 草稿',
+  'Could not load review results': '无法加载复习结果',
+  'Review: missed {wrong} of {attempts} answers · learned by {learned} of {students}':
+    '复习：{attempts} 次作答中答错 {wrong} 次 · {students} 人中 {learned} 人已掌握',
+  'worth re-teaching': '值得再讲一遍',
+  '{n} students review these on the Portal (spaced review). The ones they miss most are listed first and marked.':
+    '{n} 名学生在门户上复习这些内容（间隔复习）。最常答错的排在前面并有标记。'
 }

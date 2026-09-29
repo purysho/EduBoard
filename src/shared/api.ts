@@ -8,7 +8,7 @@ import type { CssCheck } from './cssCheck'
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
 import type { SetupProgress } from './setupChecklist'
-import type { PortalAiInteraction } from './aiUsage'
+import type { PortalAiInteraction, PortalReviewStats } from './aiUsage'
 import type { DigestPreview, PortalJoinLink, PortalJoinLinksOverview, PublishResult } from './types'
 import type {
   FeedbackDraft,
@@ -529,6 +529,8 @@ export interface EduBoardApi {
     publish(): Promise<PublishResult>
     pullSubmissions(): Promise<number>
     aiActivity(studentId: string, homeworkId: string | null): Promise<PortalAiInteraction[]>
+    /** Spaced-review results per material; [] without a Portal or on an older one. */
+    reviewStats(): Promise<PortalReviewStats[]>
     /** Whether anything has changed here since the last publish. */
     status(): Promise<PublishStatus>
   }

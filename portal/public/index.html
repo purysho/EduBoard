@@ -249,6 +249,10 @@
   .notif-pill { display: inline-block; margin-bottom: 14px; padding: 8px 14px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: .85rem; font-weight: 600; text-decoration: none; }
   .flashcard { cursor: pointer; min-height: 110px; display: flex; flex-direction: column; justify-content: center; background: var(--surface-muted); box-shadow: none; }
   .flashcard.flipped { background: var(--success-soft); }
+  .review-boxes { display: flex; gap: 6px; align-items: flex-end; height: 56px; }
+  .review-boxes span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: .72rem; color: var(--muted); }
+  .review-boxes b { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--primary-soft); margin-bottom: 2px; }
+  .review-boxes span:nth-child(n+4) b { background: var(--success-soft); }
 
   /* ---- First-login tour ---------------------------------------------------------------- */
   .tour { position: fixed; inset: 0; z-index: 50; background: rgb(2 6 23 / .45); display: flex; align-items: center; justify-content: center; padding: 16px 16px 16px calc(var(--sidebar-w) + 16px); }
@@ -1557,7 +1561,7 @@ async function loadMaterials() {
     el.onclick = () => renderFlashcards(document.getElementById('practice-' + el.dataset.practiceCards), items[el.dataset.practiceCards].flashcards)
   })
   box.querySelectorAll('[data-practice-quiz]').forEach((el) => {
-    el.onclick = () => renderPracticeQuiz(document.getElementById('practice-' + el.dataset.practiceQuiz), items[el.dataset.practiceQuiz].practiceQuiz)
+    el.onclick = () => renderPracticeQuiz(document.getElementById('practice-' + el.dataset.practiceQuiz), items[el.dataset.practiceQuiz].practiceQuiz, items[el.dataset.practiceQuiz].id)
   })
 
   box.querySelectorAll('[data-toggle]').forEach((el) => {
@@ -1575,6 +1579,158 @@ async function loadMaterials() {
       speak(detail.querySelector('[data-guide-text]').textContent, el)
     }
   })
+}
+
+// ---- Spaced review (services/review.js) ---------------------------------------------------
+// Flashcards and practice questions come back just before they'd be forgotten: right moves a
+// card up a box (1, 2, 4, 8, 16 days), wrong sends it back to box 1. A day's review mixes
+// topics. What's due is worked out on the server, so it follows the student to any device.
+
+/** 'YYYY-MM-DD' as a short local date: "Mon 6 Oct". */
+function formatDay(ymd) {
+  return parseDay(ymd).toLocaleDateString(uiLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+/** Today on this device, as YYYY-MM-DD (the server accepts it within a day of its own). */
+function localToday() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function loadReviewNudge(me) {
+  const box = document.getElementById('review-nudge')
+  if (!box || !me.students.length) return
+  let data
+  try {
+    data = await api(`/me/review?studentId=${encodeURIComponent(me.students[0].studentId)}&today=${localToday()}`)
+  } catch {
+    return
+  }
+  if (!data.items.length) return (box.innerHTML = '')
+  box.innerHTML = `
+    <div class="card accent">
+      <strong>${t('{n} cards to review today', { n: data.items.length })}</strong>
+      <p class="muted" style="margin:4px 0 0">${t('A few minutes of recall now saves hours of rereading later.')}</p>
+      <div class="chip-row"><button class="chip" data-review-go>${t('Start review')}</button></div>
+    </div>`
+  box.querySelector('[data-review-go]').onclick = () => showTab('study')
+}
+
+async function loadReview(root) {
+  const studentId = root.dataset.student
+  let data
+  try {
+    data = await api(`/me/review?studentId=${encodeURIComponent(studentId)}&today=${localToday()}`)
+  } catch (err) {
+    root.innerHTML = `<p class="error">${esc(tError(err.message))}</p>`
+    return
+  }
+  if (!data.total) {
+    root.innerHTML = `<p class="muted" style="margin:0">${t('When your teacher shares flashcards or practice questions, they come back here for review, a little and often.')}</p>`
+    return
+  }
+  const learned = data.boxes[3] + data.boxes[4]
+  const learning = data.boxes[0] + data.boxes[1] + data.boxes[2]
+  const summary = `<p class="muted" style="margin:0 0 8px">${t('{learned} learned · {learning} still learning · {fresh} not started', {
+    learned,
+    learning,
+    fresh: data.newCount
+  })}</p>
+    ${learned + learning === 0 ? '' : `<div class="review-boxes" aria-hidden="true">${data.boxes
+      .map((n, i) => `<span title="${esc(t('Box {box}', { box: i + 1 }))}"><b style="height:${Math.min(100, 12 + n * 6)}%"></b>${n}</span>`)
+      .join('')}</div>`}`
+  if (!data.items.length) {
+    root.innerHTML = `${summary}<p style="margin:8px 0 0"><strong>${t('All done for today.')}</strong> ${
+      data.nextDueOn ? esc(t('Next review: {date}', { date: formatDay(data.nextDueOn) })) : ''
+    }</p>`
+    return
+  }
+  root.innerHTML = `${summary}
+    <p style="margin:8px 0">${t('{due} due today, {fresh} new', { due: Math.min(data.dueCount, data.items.length), fresh: Math.max(0, data.items.length - data.dueCount) })}</p>
+    <button data-review-start>${t('Start review ({n})', { n: data.items.length })}</button>`
+  root.querySelector('[data-review-start]').onclick = () => runReview(root, studentId, data.items)
+}
+
+/** One review session: each item once, answers recorded; anything missed comes round once
+ * more at the end for practice (not recorded again). */
+function runReview(root, studentId, items) {
+  const queue = items.map((item) => ({ item, retry: false }))
+  let right = 0
+  let answered = 0
+  let offline = false
+
+  const record = async (item, correct) => {
+    try {
+      await api('/me/review/answer', {
+        method: 'POST',
+        body: { studentId, materialId: item.materialId, kind: item.kind, key: item.key, correct, today: localToday() }
+      })
+    } catch {
+      offline = true
+    }
+  }
+
+  const finish = () => {
+    root.innerHTML = `
+      <p style="margin:0 0 6px"><strong>${t('Review done: {right} of {total} right.', { right, total: answered })}</strong></p>
+      <p class="muted" style="margin:0 0 10px">${
+        offline
+          ? t('Some answers couldn’t be saved without internet; those cards will come back.')
+          : t('The ones you knew come back later; the ones you missed come back tomorrow.')
+      }</p>
+      <button class="secondary" data-review-again>${t('Close')}</button>`
+    root.querySelector('[data-review-again]').onclick = () => loadReview(root)
+  }
+
+  const next = () => {
+    const current = queue.shift()
+    if (!current) return finish()
+    const { item, retry } = current
+    const head = `<p class="muted" style="margin:0 0 6px; font-size:.75rem">${esc(item.className)} · ${esc(item.materialTitle)}${
+      retry ? ` · ${t('one more try')}` : ''
+    } · ${t('{n} left', { n: queue.length + 1 })}</p>`
+    const answer = (correct) => {
+      if (!retry) {
+        answered++
+        if (correct) right++
+        record(item, correct)
+      }
+      if (!correct && !retry) queue.push({ item, retry: true })
+    }
+    if (item.kind === 'card') {
+      root.innerHTML = `${head}
+        <div class="card flashcard"><p class="desc" style="margin:0; font-size:1rem">${esc(item.card.front)}</p></div>
+        <p class="field-note">${t('Say or write your answer first, then check.')}</p>
+        <button data-show>${t('Show answer')}</button>`
+      root.querySelector('[data-show]').onclick = () => {
+        root.innerHTML = `${head}
+          <div class="card flashcard"><p class="desc" style="margin:0 0 8px">${esc(item.card.front)}</p><p class="desc" style="margin:0; font-size:1rem"><strong>${esc(item.card.back)}</strong></p></div>
+          <div style="display:flex; gap:8px; margin-top:8px">
+            <button class="secondary" data-no>${t('Not yet')}</button>
+            <button data-yes>${t('I knew it')}</button>
+          </div>`
+        root.querySelector('[data-no]').onclick = () => { answer(false); next() }
+        root.querySelector('[data-yes]').onclick = () => { answer(true); next() }
+      }
+    } else {
+      const q = item.question
+      root.innerHTML = `${head}
+        <p style="margin:0 0 8px; font-weight:600">${esc(q.question)}</p>
+        ${q.options.map((o, i) => `<button class="secondary" style="text-align:left; margin:4px 0" data-option="${i}">${esc(o)}</button>`).join('')}`
+      root.querySelectorAll('[data-option]').forEach((el) => {
+        el.onclick = () => {
+          const correct = Number(el.dataset.option) === q.answerIndex
+          answer(correct)
+          root.innerHTML = `${head}
+            <p style="margin:0 0 8px; font-weight:600">${esc(q.question)}</p>
+            <p class="desc">${correct ? t('✅ Correct.') : t('❌ Answer: {answer}.', { answer: q.options[q.answerIndex] })} ${esc(q.explanation)}</p>
+            <button data-next>${t('Next')}</button>`
+          root.querySelector('[data-next]').onclick = next
+        }
+      })
+    }
+  }
+  next()
 }
 
 // Self-study flashcards: one card at a time, tap to flip. Nothing is sent to the server;
@@ -1610,9 +1766,10 @@ function renderFlashcards(container, cards) {
   draw()
 }
 
-// Self-study practice quiz, checked in the browser. Unlike homework Quick Checks it's
-// not graded or recorded: the answers are meant to be seen once you check.
-function renderPracticeQuiz(container, questions) {
+// Self-study practice quiz, checked in the browser. Unlike homework Quick Checks it's not
+// graded: the answers are meant to be seen once you check. Each answer does count toward
+// the student's spaced review, so a missed question comes back.
+function renderPracticeQuiz(container, questions, materialId) {
   container.innerHTML = `
     <form class="card" data-practice-form>
       ${questions
@@ -1641,10 +1798,21 @@ function renderPracticeQuiz(container, questions) {
   form.onsubmit = (e) => {
     e.preventDefault()
     let right = 0
+    // With one student on this login, each answered question counts toward their spaced
+    // review, so the missed ones come back (a parent with several children: not recorded).
+    const onlyStudent = document.querySelectorAll('[data-review-root]').length === 1
+      ? document.querySelector('[data-review-root]').dataset.student
+      : null
     questions.forEach((q, qi) => {
       const picked = form.querySelector(`input[name="pq-${qi}"]:checked`)
       const correct = picked && Number(picked.value) === q.answerIndex
       if (correct) right++
+      if (picked && onlyStudent && q.key && materialId) {
+        api('/me/review/answer', {
+          method: 'POST',
+          body: { studentId: onlyStudent, materialId, kind: 'question', key: q.key, correct: !!correct, today: localToday() }
+        }).catch(() => {})
+      }
       const explain = form.querySelector(`[data-question="${qi}"] [data-explain]`)
       explain.style.display = 'block'
       explain.textContent = `${correct ? t('✅ Correct.') : t('❌ Answer: {answer}.', { answer: q.options[q.answerIndex] })} ${q.explanation}`
@@ -1886,7 +2054,10 @@ function showTab(id) {
   // Loading the thread marks the teacher's messages as read, so only do it when the
   // student actually opens Messages. Otherwise the unread count would vanish unseen.
   if (id === 'messages') loadMessages()
-  if (id === 'study') document.querySelectorAll('[data-panel="study"] [data-ai-chat-root]').forEach(loadAiHistory)
+  if (id === 'study') {
+    document.querySelectorAll('[data-panel="study"] [data-ai-chat-root]').forEach(loadAiHistory)
+    document.querySelectorAll('[data-review-root]').forEach(loadReview)
+  }
 }
 
 function setupTabs() {
@@ -2154,6 +2325,7 @@ function renderDashboard(me) {
      <section class="panel" id="panel-home" data-panel="home">
        ${pageHead(t('Welcome back'), esc(dueSummary(allHomework)), 'greeting')}
        <div id="profile-nudge"></div>
+       <div id="review-nudge"></div>
        <div id="report-card-nudge"></div>
        <div class="section-title">${t('Due soon')}</div>
        ${dueSoonHtml(allHomework, multi)}
@@ -2181,6 +2353,13 @@ function renderDashboard(me) {
 
      <section class="panel" id="panel-study" data-panel="study" hidden>
        ${pageHead(t('Study'), t('Your teacher’s materials, flashcards and practice quizzes, and an AI Study Helper.'))}
+       ${me.students
+         .map(
+           (s) => `
+         <div class="section-title">${t('Today’s review')}${multi ? ` · ${esc(s.studentName)}` : ''}</div>
+         <div class="card" data-review-root data-student="${esc(s.studentId)}">${t('Loading…')}</div>`
+         )
+         .join('')}
        <div style="display:none">
          <div class="section-title">${t('Materials')}</div>
          <div id="materials"></div>
@@ -2404,6 +2583,7 @@ function renderDashboard(me) {
   loadReportCards(multi)
   loadPortfolio()
   loadMaterials()
+  loadReviewNudge(me)
   document.getElementById('msg-lang').onchange = (e) => setReadingLanguage(e.target.value)
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()

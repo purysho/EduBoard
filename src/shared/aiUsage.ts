@@ -37,6 +37,24 @@ export function aiUsageReasons(s: SubmissionAiFacts): string[] {
 }
 
 /** One Study Helper exchange, as the teacher sees it. */
+/** How students are doing with spaced review of one material's flashcards or practice
+ * questions (portal/services/review.js), most-missed first. */
+export interface PortalReviewStats {
+  materialId: string
+  title: string
+  /** Students who have reviewed anything from this material. */
+  students: number
+  items: {
+    kind: 'card' | 'question'
+    text: string
+    students: number
+    right: number
+    wrong: number
+    /** Students who have it in box 4 or 5 (answered right several times, days apart). */
+    learned: number
+  }[]
+}
+
 export interface PortalAiInteraction {
   id: string
   homeworkId: string | null

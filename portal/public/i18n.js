@@ -49,6 +49,32 @@ function defaultReadingLanguage() {
 }
 
 const ZH = {
+  // Spaced review
+  'Today’s review': '今日复习',
+  '{n} cards to review today': '今天有 {n} 张卡片要复习',
+  'A few minutes of recall now saves hours of rereading later.':
+    '现在花几分钟回忆，能省下以后几个小时的重读。',
+  'Start review': '开始复习',
+  'When your teacher shares flashcards or practice questions, they come back here for review, a little and often.':
+    '老师分享的抽认卡和练习题会出现在这里，少量多次地复习。',
+  '{learned} learned · {learning} still learning · {fresh} not started':
+    '已掌握 {learned} · 学习中 {learning} · 未开始 {fresh}',
+  'Box {box}': '第 {box} 盒',
+  'All done for today.': '今天的复习完成了。',
+  'Next review: {date}': '下次复习：{date}',
+  '{due} due today, {fresh} new': '今天到期 {due} 张，新卡 {fresh} 张',
+  'Start review ({n})': '开始复习（{n}）',
+  'Review done: {right} of {total} right.': '复习完成：{total} 题答对 {right} 题。',
+  'Some answers couldn’t be saved without internet; those cards will come back.':
+    '部分答案因没有网络未能保存，这些卡片会再次出现。',
+  'The ones you knew come back later; the ones you missed come back tomorrow.':
+    '答对的会过一段时间再出现，答错的明天再出现。',
+  'one more try': '再试一次',
+  '{n} left': '还剩 {n} 张',
+  'Say or write your answer first, then check.': '先说出或写下你的答案，再查看。',
+  'Show answer': '显示答案',
+  'Not yet': '还没记住',
+  'I knew it': '我记得',
   // Page and navigation
   'EduBoard Portal': 'EduBoard 学生门户',
   Home: '首页',

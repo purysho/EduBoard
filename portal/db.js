@@ -325,6 +325,23 @@ if (
   })()
 }
 ensureColumn('student_profiles', 'field_of_study', 'field_of_study TEXT')
+// Spaced review (services/review.js): each student's Leitner box for each flashcard and
+// practice question they've answered.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS review_items (
+    student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    material_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    item_key TEXT NOT NULL,
+    box INTEGER NOT NULL,
+    due_on TEXT NOT NULL,
+    times_right INTEGER NOT NULL DEFAULT 0,
+    times_wrong INTEGER NOT NULL DEFAULT 0,
+    last_answered_at TEXT NOT NULL,
+    PRIMARY KEY (student_id, material_id, kind, item_key)
+  );
+  CREATE INDEX IF NOT EXISTS review_items_material_idx ON review_items(material_id);
+`)
 // Which Study Helper mode a question was asked in (services/studyHelper.js); NULL = help.
 ensureColumn('ai_interactions', 'mode', 'mode TEXT')
 ensureColumn('teachers', 'app_name', 'app_name TEXT')

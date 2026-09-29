@@ -3,7 +3,7 @@ import { createHash } from 'crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import type { PortalAiInteraction } from '@shared/aiUsage'
+import type { PortalAiInteraction, PortalReviewStats } from '@shared/aiUsage'
 import { getSqlite } from '../db/client'
 import { listClasses } from '../repositories/classes'
 import { mergeStudents } from '../repositories/studentMerge'
@@ -783,6 +783,23 @@ export async function sendTeacherMessage(accountId: string, body: string): Promi
     body: JSON.stringify({ accountId, body })
   })
   if (!res.ok) throw await portalFailure(tr('Could not send message'), res)
+}
+
+/** How students are doing with spaced review, per material. Nothing when there's no
+ * Portal, or it's one from before spaced review. */
+export async function getReviewStats(): Promise<PortalReviewStats[]> {
+  let config
+  try {
+    config = requirePortalConfig()
+  } catch {
+    return []
+  }
+  const res = await portalFetch(`${config.portalUrl}/api/sync/review-stats`, {
+    headers: { 'X-Sync-Secret': config.portalSyncSecret }
+  })
+  if (res.status === 404) return []
+  if (!res.ok) throw await portalFailure(tr('Could not load review results'), res)
+  return (await res.json()) as PortalReviewStats[]
 }
 
 /** Every question a student asked the Portal's Study Helper and the answers, optionally

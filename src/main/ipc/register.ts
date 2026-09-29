@@ -79,6 +79,7 @@ import {
   pullSubmissionsFromPortal,
   getStudentsWithPortalAccounts,
   getStudentAiActivity,
+  getReviewStats,
   pushSubmissionGrade,
   pushSubmissionPortfolio,
   downloadSubmissionFile,
@@ -1211,6 +1212,7 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.portalSync.publish, () => publishToPortal())
   handle(IpcChannels.portalSync.status, () => getPublishStatus())
   handle(IpcChannels.portalSync.pullSubmissions, () => pullSubmissionsFromPortal())
+  handle(IpcChannels.portalSync.reviewStats, () => getReviewStats())
   handle(IpcChannels.portalSync.aiActivity, (_e, studentId: string, homeworkId: string | null) =>
     getStudentAiActivity(String(studentId), homeworkId ? String(homeworkId) : null)
   )
