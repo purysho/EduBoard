@@ -12,9 +12,11 @@ import type {
   PostReplySlip,
   PortalJoinLink,
   AiConnectionConfig,
+  AiMaterialKind,
   DraftLessonPlanInput,
   SuggestCommentPhrasesInput
 } from '@shared/types'
+import { AI_MATERIAL_KINDS } from '@shared/types'
 
 import * as studentsRepo from '../repositories/students'
 import * as portalJoinLinksRepo from '../repositories/portalJoinLinks'
@@ -766,6 +768,19 @@ export function registerIpcHandlers(): void {
     IpcChannels.notebook.clearPracticeSet,
     (_e, resourceId: string, kind: 'flashcards' | 'quiz') =>
       clearPracticeSet(resourceId, kind === 'quiz' ? 'quiz' : 'flashcards')
+  )
+  handle(
+    IpcChannels.notebook.approveAiMaterial,
+    (_e, resourceId: string, kind: string, approved: boolean) => {
+      if (!(AI_MATERIAL_KINDS as readonly string[]).includes(kind)) {
+        throw new AppError('EB-0004', `Unknown AI material "${kind}"`)
+      }
+      return lessonResourcesRepo.setLessonResourceAiApproval(
+        resourceId,
+        kind as AiMaterialKind,
+        approved === true
+      )
+    }
   )
   handle(IpcChannels.notebook.draftStudyGuide, (_e, resourceId: string) =>
     draftStudyGuide(resourceId)

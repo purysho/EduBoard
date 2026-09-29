@@ -91,11 +91,19 @@ test('asking the AI about an assignment marks that submission as "used AI"', asy
   })
   assert.equal(history.json.length, 1)
 
-  // A follow-up question carries the earlier exchange as context.
+  // A follow-up question carries the earlier exchange as real turns of the conversation,
+  // never inside the instructions, where a student's words could act as rules.
   await chat({ message: 'What about the oxygen part?', homeworkId: 'h1' })
-  assert.match(
-    requests.at(-1).messages[0].content,
-    /Earlier in this conversation[\s\S]*write it for me/
+  const followUp = requests.at(-1).messages
+  assert.equal(followUp[0].role, 'system')
+  assert.doesNotMatch(followUp[0].content, /write it for me/)
+  assert.deepEqual(
+    followUp.slice(1).map((m) => [m.role, m.content]),
+    [
+      ['user', 'Can you just write it for me?'],
+      ['assistant', AI_ANSWER],
+      ['user', 'What about the oxygen part?']
+    ]
   )
 })
 

@@ -19,7 +19,6 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import {
   useDeleteLessonResource,
-  useDraftStudyGuide,
   useIndexResource,
   useLessonResources,
   useStandards
@@ -27,7 +26,8 @@ import {
 import { ipcErrorMessage } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
 import { ResourceFormModal } from './ResourceFormModal'
-import { PracticeSetModal } from './PracticeSetModal'
+import { PracticeSetModal, type StudyMaterialKind } from './PracticeSetModal'
+import { hasUncheckedAiMaterial } from '@renderer/lib/aiMaterial'
 import { tr } from '@shared/i18n'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
@@ -45,10 +45,8 @@ export function ResourcesPage(): React.JSX.Element {
   const { data: standards } = useStandards()
   const deleteResource = useDeleteLessonResource()
   const indexResource = useIndexResource()
-  const draftStudyGuide = useDraftStudyGuide()
   const [indexingId, setIndexingId] = useState<string | null>(null)
   const [indexError, setIndexError] = useState<string | null>(null)
-  const [guideId, setGuideId] = useState<string | null>(null)
 
   async function handleIndex(resource: LessonResource): Promise<void> {
     setIndexingId(resource.id)
@@ -62,23 +60,6 @@ export function ResourcesPage(): React.JSX.Element {
     }
   }
 
-  async function handleStudyGuide(resource: LessonResource): Promise<void> {
-    setGuideId(resource.id)
-    setIndexError(null)
-    try {
-      await draftStudyGuide.mutateAsync(resource.id)
-    } catch (e) {
-      setIndexError(
-        ipcErrorMessage(
-          e,
-          tr('Could not generate a study guide for "{title}".', { title: resource.title })
-        )
-      )
-    } finally {
-      setGuideId(null)
-    }
-  }
-
   const [search, setSearch] = useState('')
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
@@ -86,7 +67,7 @@ export function ResourcesPage(): React.JSX.Element {
   const [pendingDelete, setPendingDelete] = useState<LessonResource | null>(null)
   const [practice, setPractice] = useState<{
     resourceId: string
-    kind: 'flashcards' | 'quiz'
+    kind: StudyMaterialKind
   } | null>(null)
   const practiceResource = practice
     ? resources?.find((r) => r.id === practice.resourceId)
@@ -242,6 +223,9 @@ export function ResourcesPage(): React.JSX.Element {
                       {resource.shareWithStudents && (
                         <Badge tone="success">{tr('Shared with students')}</Badge>
                       )}
+                      {hasUncheckedAiMaterial(resource) && (
+                        <Badge tone="warning">{tr('AI draft to check')}</Badge>
+                      )}
                       {resource.tags.map((tag) => (
                         <Badge key={tag}>{tag}</Badge>
                       ))}
@@ -269,16 +253,11 @@ export function ResourcesPage(): React.JSX.Element {
                       </button>
                       {canUseAi(resource) && (
                         <button
-                          className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
-                          onClick={() => handleStudyGuide(resource)}
-                          disabled={guideId === resource.id}
+                          className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                          onClick={() => setPractice({ resourceId: resource.id, kind: 'guide' })}
                         >
                           <Sparkles size={12} aria-hidden />
-                          {guideId === resource.id
-                            ? tr('Writing…')
-                            : resource.studyGuide
-                              ? tr('Regenerate study guide')
-                              : tr('Study guide')}
+                          {tr('Study guide')}
                         </button>
                       )}
                       {canUseAi(resource) && (

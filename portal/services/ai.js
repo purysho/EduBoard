@@ -33,6 +33,9 @@ function saveAiSettings(teacherId, { provider, apiKey, customBaseUrl, customMode
   ).run(teacherId, provider || 'zhipu', apiKey || '', customBaseUrl || '', customModel || '')
 }
 
+/** The conversation: one question, or earlier turns ({ role, content }) ending in one. */
+const asMessages = (user) => (Array.isArray(user) ? user : [{ role: 'user', content: user }])
+
 async function completeAnthropic(apiKey, system, user, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -45,7 +48,7 @@ async function completeAnthropic(apiKey, system, user, maxTokens) {
       model: 'claude-opus-5',
       max_tokens: maxTokens,
       system,
-      messages: [{ role: 'user', content: user }]
+      messages: asMessages(user)
     })
   })
   if (!res.ok) throw new Error(`AI provider error ${res.status}: ${await res.text()}`)
@@ -64,10 +67,7 @@ async function completeOpenAiCompatible(baseUrl, model, apiKey, system, user, ma
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user }
-      ]
+      messages: [{ role: 'system', content: system }, ...asMessages(user)]
     })
   })
   if (!res.ok) throw new Error(`AI provider error ${res.status}: ${await res.text()}`)

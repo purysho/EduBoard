@@ -83,6 +83,7 @@ import type {
   StudentLogEntry,
   ParentCommunicationEntry,
   LessonResource,
+  AiMaterialKind,
   AssignmentSubmission,
   SeatAssignment,
   ExitTicket,
@@ -356,6 +357,12 @@ export interface EduBoardApi {
     /** Returns how many cards/questions were saved. */
     draftPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<number>
     clearPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<void>
+    /** The teacher has checked (or withdrawn) an AI draft; only approved ones reach students. */
+    approveAiMaterial(
+      resourceId: string,
+      kind: AiMaterialKind,
+      approved: boolean
+    ): Promise<LessonResource>
   }
   courseGroups: {
     list(): Promise<CourseGroup[]>

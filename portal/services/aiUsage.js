@@ -20,10 +20,10 @@ const MIN_MATCHING_RUNS = 4
 const SHINGLE = 6
 const LOOKBACK_DAYS = 120
 
-function recordInteraction({ accountId, studentId, homeworkId, question, reply }) {
+function recordInteraction({ accountId, studentId, homeworkId, question, reply, mode }) {
   db.prepare(
-    `INSERT INTO ai_interactions (id, account_id, student_id, homework_id, question, reply, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO ai_interactions (id, account_id, student_id, homework_id, question, reply, created_at, mode)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     crypto.randomUUID(),
     accountId,
@@ -31,20 +31,21 @@ function recordInteraction({ accountId, studentId, homeworkId, question, reply }
     homeworkId || null,
     String(question).slice(0, MAX_STORED_CHARS),
     String(reply).slice(0, MAX_STORED_CHARS),
-    new Date().toISOString()
+    new Date().toISOString(),
+    mode && mode !== 'help' ? mode : null
   )
 }
 
 /** The last few exchanges in the same conversation (same assignment, or the general
- * Study Helper), oldest first, so follow-up questions make sense to the model. */
-function recentConversation(studentId, homeworkId, limit = 4) {
+ * Study Helper, in the same mode), oldest first, so follow-ups make sense to the model. */
+function recentConversation(studentId, homeworkId, limit = 4, mode = 'help') {
   return db
     .prepare(
       `SELECT question, reply FROM ai_interactions
-       WHERE student_id = ? AND homework_id IS ?
+       WHERE student_id = ? AND homework_id IS ? AND mode IS ?
        ORDER BY created_at DESC LIMIT ?`
     )
-    .all(studentId, homeworkId || null, limit)
+    .all(studentId, homeworkId || null, mode && mode !== 'help' ? mode : null, limit)
     .reverse()
 }
 
@@ -64,6 +65,7 @@ function listInteractions(studentId, homeworkId) {
     homeworkId: r.homework_id,
     question: r.question,
     reply: r.reply,
+    mode: r.mode || 'help',
     createdAt: r.created_at
   }))
 }

@@ -191,9 +191,10 @@ function buildPublishPayload(): {
       id: resource.id,
       classId: resource.classId,
       title: resource.title,
-      studyGuide: resource.studyGuide,
-      flashcards: resource.flashcards,
-      practiceQuiz: resource.practiceQuiz,
+      // Only what the teacher has checked reaches students.
+      studyGuide: resource.aiApproved?.studyGuide ? resource.studyGuide : null,
+      flashcards: resource.aiApproved?.flashcards ? resource.flashcards : null,
+      practiceQuiz: resource.aiApproved?.practiceQuiz ? resource.practiceQuiz : null,
       chunksHash: sha256(JSON.stringify(chunks))
     })
     materialChunks.set(resource.id, chunks)

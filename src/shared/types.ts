@@ -433,7 +433,15 @@ export interface LessonResource {
    * only through notebookService.draftPracticeSet, never by the edit form. */
   flashcards: Flashcard[] | null
   practiceQuiz: PracticeQuestion[] | null
+  /** Which of the three AI drafts above the teacher has checked. Students only see an
+   * approved one; drafting a new version needs checking again. */
+  aiApproved: AiApproval
 }
+
+/** The AI-drafted study materials a resource can carry. */
+export const AI_MATERIAL_KINDS = ['studyGuide', 'flashcards', 'practiceQuiz'] as const
+export type AiMaterialKind = (typeof AI_MATERIAL_KINDS)[number]
+export type AiApproval = Partial<Record<AiMaterialKind, boolean>>
 
 export const EXIT_TICKET_QUESTION_TYPES = ['text', 'choice'] as const
 export type ExitTicketQuestionType = (typeof EXIT_TICKET_QUESTION_TYPES)[number]

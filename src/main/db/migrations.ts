@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { indexTerms } from '@shared/searchText'
 
 // Hand-rolled, append-only migrations instead of drizzle-kit's generated SQL files.
 // Reasoning: drizzle-kit's migration folder is a dev-time artifact that would need to be
@@ -794,6 +795,48 @@ const migrations: Migration[] = [
         CREATE INDEX lesson_plan_resources_resource_idx
           ON lesson_plan_resources(resource_id);
       `)
+    }
+  },
+  {
+    id: 35,
+    name: 'lesson_resources_ai_approval',
+    up: (db) => {
+      // Students only see an AI study guide, flashcard set or practice quiz the teacher
+      // has checked. What was already published stays published: it counts as checked.
+      db.exec(`
+        ALTER TABLE lesson_resources ADD COLUMN ai_approved TEXT NOT NULL DEFAULT '{}';
+        UPDATE lesson_resources SET ai_approved = json_object(
+          'studyGuide', json(CASE WHEN study_guide IS NOT NULL THEN 'true' ELSE 'false' END),
+          'flashcards', json(CASE WHEN flashcards IS NOT NULL THEN 'true' ELSE 'false' END),
+          'practiceQuiz', json(CASE WHEN practice_quiz IS NOT NULL THEN 'true' ELSE 'false' END)
+        );
+      `)
+    }
+  },
+  {
+    id: 36,
+    name: 'resource_chunks_chinese_search',
+    up: (db) => {
+      // Chinese has no spaces, so the index saw a whole sentence as one word and Chinese
+      // questions found nothing. The shown text stays as it is; a second column holds
+      // the search terms, every Chinese character on its own (shared/searchText.ts). A
+      // virtual table can't gain a column, so it's rebuilt.
+      const rows = db
+        .prepare('SELECT resource_id, chunk_index, text FROM resource_chunks')
+        .all() as { resource_id: string; chunk_index: number; text: string }[]
+      db.exec(`
+        DROP TABLE resource_chunks;
+        CREATE VIRTUAL TABLE resource_chunks USING fts5(
+          resource_id UNINDEXED,
+          chunk_index UNINDEXED,
+          text UNINDEXED,
+          terms
+        );
+      `)
+      const insert = db.prepare(
+        'INSERT INTO resource_chunks (resource_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
+      )
+      for (const r of rows) insert.run(r.resource_id, r.chunk_index, r.text, indexTerms(r.text))
     }
   }
 ]

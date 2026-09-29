@@ -1,6 +1,6 @@
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
-import type { ExitTicketQuestion } from '@shared/types'
+import type { AiApproval, ExitTicketQuestion } from '@shared/types'
 
 // NOTE: this file defines the Drizzle ORM shape of the database for typed queries.
 // The actual DDL used to create/evolve the tables lives in ./migrations.ts — the two
@@ -570,7 +570,11 @@ export const lessonResources = sqliteTable(
     shareWithStudents: integer('share_with_students', { mode: 'boolean' }).notNull().default(false),
     studyGuide: text('study_guide'),
     flashcards: text('flashcards', { mode: 'json' }).$type<Flashcard[] | null>(),
-    practiceQuiz: text('practice_quiz', { mode: 'json' }).$type<PracticeQuestion[] | null>()
+    practiceQuiz: text('practice_quiz', { mode: 'json' }).$type<PracticeQuestion[] | null>(),
+    aiApproved: text('ai_approved', { mode: 'json' })
+      .notNull()
+      .$type<AiApproval>()
+      .$defaultFn(() => ({}))
   },
   (t) => ({
     standardIdx: index('lesson_resources_standard_idx').on(t.standardId)

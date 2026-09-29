@@ -179,10 +179,12 @@ db.exec(`
   -- FTS5 keyword index over each material's chunks, mirroring the desktop app's own
   -- resource_chunks table/search — lets /me/ai/chat ground its answers in the material's
   -- actual text and cite which chunk supported each claim.
+  -- text is what's shown; terms is what's searched (services/searchText.js).
   CREATE VIRTUAL TABLE IF NOT EXISTS material_chunks USING fts5(
     material_id UNINDEXED,
     chunk_index UNINDEXED,
-    text
+    text UNINDEXED,
+    terms
   );
 
   -- One row per teacher's own AI key/provider — see portalSyncService.publishToPortal on
@@ -299,6 +301,32 @@ ensureColumn('digest_settings', 'newsletter', 'newsletter TEXT')
 ensureColumn('digest_settings', 'newsletter_until', 'newsletter_until TEXT')
 ensureColumn('digest_settings', 'teacher_email', 'teacher_email TEXT')
 // The name and logo each teacher's app sent, and which the Portal shows (services/branding.js).
+// A Portal from before Chinese search indexed the text itself; rebuild the index with
+// the search terms (services/searchText.js) beside it. A virtual table can't gain a column.
+if (
+  !db
+    .prepare('PRAGMA table_info(material_chunks)')
+    .all()
+    .some((c) => c.name === 'terms')
+) {
+  const { indexTerms } = require('./services/searchText')
+  const rows = db.prepare('SELECT material_id, chunk_index, text FROM material_chunks').all()
+  db.transaction(() => {
+    db.exec(`
+      DROP TABLE material_chunks;
+      CREATE VIRTUAL TABLE material_chunks USING fts5(
+        material_id UNINDEXED, chunk_index UNINDEXED, text UNINDEXED, terms
+      );
+    `)
+    const insert = db.prepare(
+      'INSERT INTO material_chunks (material_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
+    )
+    for (const r of rows) insert.run(r.material_id, r.chunk_index, r.text, indexTerms(r.text))
+  })()
+}
+ensureColumn('student_profiles', 'field_of_study', 'field_of_study TEXT')
+// Which Study Helper mode a question was asked in (services/studyHelper.js); NULL = help.
+ensureColumn('ai_interactions', 'mode', 'mode TEXT')
 ensureColumn('teachers', 'app_name', 'app_name TEXT')
 ensureColumn('teachers', 'app_logo', 'app_logo BLOB')
 ensureColumn('teachers', 'branding_at', 'branding_at TEXT')

@@ -8,7 +8,9 @@ const TEXT_LIMITS = {
   goals: 600,
   teacherNote: 600,
   preferredLanguage: 40,
-  privateNotes: 5000
+  privateNotes: 5000,
+  // Their subject or major, so the Study Helper takes examples from it.
+  fieldOfStudy: 80
 }
 
 /** 'YYYY-MM-DD' for a real calendar date between 1900 and today, else null. */
@@ -61,7 +63,8 @@ const COLUMNS = {
   goals: 'goals',
   teacherNote: 'teacher_note',
   preferredLanguage: 'preferred_language',
-  privateNotes: 'private_notes'
+  privateNotes: 'private_notes',
+  fieldOfStudy: 'field_of_study'
 }
 
 /** The student's own view of their profile: everything. */
@@ -77,6 +80,7 @@ function toOwnerView(studentId, row) {
     teacherNote: row?.teacher_note ?? null,
     preferredLanguage: row?.preferred_language ?? null,
     privateNotes: row?.private_notes ?? null,
+    fieldOfStudy: row?.field_of_study ?? null,
     hasPhoto: !!row?.photo_file,
     updatedAt: row?.updated_at ?? null
   }
@@ -94,6 +98,7 @@ function toTeacherView(studentId, row) {
     goals: row.goals,
     teacherNote: row.teacher_note,
     preferredLanguage: row.preferred_language,
+    fieldOfStudy: row.field_of_study ?? null,
     hasPhoto: !!row.photo_file,
     updatedAt: row.updated_at
   }

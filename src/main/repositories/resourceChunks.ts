@@ -1,4 +1,5 @@
 import { getSqlite } from '../db/client'
+import { ftsQuery, indexTerms } from '@shared/searchText'
 
 // resource_chunks is an FTS5 virtual table (see migration 14) — Drizzle's sqlite-core
 // has no typed support for virtual tables, so this repository talks to it with raw SQL
@@ -15,9 +16,9 @@ export function replaceResourceChunks(resourceId: string, chunks: string[]): voi
   const run = db.transaction(() => {
     db.prepare('DELETE FROM resource_chunks WHERE resource_id = ?').run(resourceId)
     const insert = db.prepare(
-      'INSERT INTO resource_chunks (resource_id, chunk_index, text) VALUES (?, ?, ?)'
+      'INSERT INTO resource_chunks (resource_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
     )
-    chunks.forEach((text, i) => insert.run(resourceId, i, text))
+    chunks.forEach((text, i) => insert.run(resourceId, i, text, indexTerms(text)))
   })
   run()
 }
@@ -54,15 +55,10 @@ export function searchResourceChunks(
   limit: number
 ): ResourceChunkMatch[] {
   const db = getSqlite()
-  // FTS5 query syntax treats bare punctuation as an error, and a raw user question can
-  // contain anything — wrap each word in double quotes so it's always a safe phrase
-  // match, OR'd together (closer to "any of these words" than a strict phrase search).
-  const ftsQuery = query
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word) => `"${word.replace(/"/g, '""')}"`)
-    .join(' OR ')
-  if (!ftsQuery) return []
+  // Every word (and Chinese character pair) quoted, so punctuation can't break the query,
+  // and any of them may match (shared/searchText.ts).
+  const match = ftsQuery(query)
+  if (!match) return []
 
   const scopeClause =
     resourceIds && resourceIds.length
@@ -74,7 +70,7 @@ export function searchResourceChunks(
        WHERE resource_chunks MATCH ? ${scopeClause}
        ORDER BY rank LIMIT ?`
     )
-    .all(ftsQuery, ...(resourceIds ?? []), limit) as {
+    .all(match, ...(resourceIds ?? []), limit) as {
     resource_id: string
     chunk_index: number
     text: string

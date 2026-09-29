@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   PostReplySlip,
+  AiMaterialKind,
   AppSettings,
   DraftLessonPlanInput,
   SuggestCommentPhrasesInput,
@@ -1198,6 +1199,26 @@ export function useDraftStudyGuide() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (resourceId: string) => api().notebook.draftStudyGuide(resourceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+/** The teacher has checked an AI draft (or withdrawn it); only approved ones are published. */
+export function useApproveAiMaterial() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      resourceId,
+      kind,
+      approved
+    }: {
+      resourceId: string
+      kind: AiMaterialKind
+      approved: boolean
+    }) => api().notebook.approveAiMaterial(resourceId, kind, approved),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
       scheduleAutoPublishToPortal()

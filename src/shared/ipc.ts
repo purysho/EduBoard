@@ -185,7 +185,8 @@ export const IpcChannels = {
     ask: 'notebook:ask',
     draftStudyGuide: 'notebook:draftStudyGuide',
     draftPracticeSet: 'notebook:draftPracticeSet',
-    clearPracticeSet: 'notebook:clearPracticeSet'
+    clearPracticeSet: 'notebook:clearPracticeSet',
+    approveAiMaterial: 'notebook:approveAiMaterial'
   },
   courseGroups: {
     list: 'courseGroups:list',

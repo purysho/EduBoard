@@ -14,6 +14,7 @@ const { validateFlashcards, validatePracticeQuiz } = require('../services/practi
 const { checkUpload } = require('../services/fileSafety')
 const { toTeacherView } = require('../services/profile')
 const { saveTeacherBranding } = require('../services/branding')
+const { indexTerms } = require('../services/searchText')
 const { PROFILE_PHOTOS_DIR } = require('../paths')
 const reportCards = require('./reportCards')
 const { removeOrphanedReportCards, reportCardFilesFor } = reportCards
@@ -385,7 +386,7 @@ router.post('/', (req, res) => {
       'INSERT INTO materials (id, class_id, title, study_guide, flashcards, practice_quiz, chunks_hash) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
     const insertChunk = db.prepare(
-      'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
+      'INSERT INTO material_chunks (material_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
     )
     for (const m of materials.filter(inPushedClass)) {
       insertMaterial.run(
@@ -399,13 +400,15 @@ router.post('/', (req, res) => {
       )
       if (Array.isArray(m.chunks)) {
         // An older desktop app sends the text inline.
-        m.chunks.forEach((text, i) => insertChunk.run(m.id, i, String(text)))
+        m.chunks.forEach((text, i) =>
+          insertChunk.run(m.id, i, String(text), indexTerms(String(text)))
+        )
       } else if (isSha256(m.chunksHash)) {
         const previous = previousChunks.get(m.id)
         // Only text that actually arrived counts: a material whose upload never
         // happened (or failed) is asked for again.
         if (previous?.hash === m.chunksHash && previous.texts.length > 0) {
-          previous.texts.forEach((text, i) => insertChunk.run(m.id, i, text))
+          previous.texts.forEach((text, i) => insertChunk.run(m.id, i, text, indexTerms(text)))
         } else {
           needChunks.push(m.id)
         }
@@ -505,11 +508,11 @@ router.post('/materials/:id/chunks', (req, res) => {
       .json({ error: 'This isn’t the text that was published. Publish again.', code: 'PT-5002' })
   }
   const insert = db.prepare(
-    'INSERT INTO material_chunks (material_id, chunk_index, text) VALUES (?, ?, ?)'
+    'INSERT INTO material_chunks (material_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
   )
   db.transaction(() => {
     db.prepare('DELETE FROM material_chunks WHERE material_id = ?').run(material.id)
-    chunks.forEach((text, i) => insert.run(material.id, i, text))
+    chunks.forEach((text, i) => insert.run(material.id, i, text, indexTerms(text)))
   })()
   res.json({ ok: true })
 })

@@ -240,5 +240,16 @@ export const PAGES: Record<string, string> = {
   'These assessments exist in the selected curriculum but are not linked to a lesson plan yet.':
     '这些测评已存在于所选课程中，但尚未关联到具体课程计划。',
   'No date': '无日期',
-  'No taught lesson yet for:': '以下标准还没有已完成的课程：'
+  'No taught lesson yet for:': '以下标准还没有已完成的课程：',
+  'Withdraw from students': '从学生端撤回',
+  'Approve for students': '批准给学生使用',
+  'Drafted by AI from this resource’s text (needs internet). Nothing is shown to students until you approve it.':
+    '由 AI 根据此资源的文字起草（需要联网）。在你批准之前，学生看不到任何内容。',
+  'Approved: students see this with the resource.': '已批准：学生会随此资源看到它。',
+  'Approved: students see it once the resource is shared with a class.':
+    '已批准：资源分享给班级后，学生即可看到。',
+  'Drafted by AI. Read it, correct anything wrong, then approve it. Students don’t see it until you do.':
+    '由 AI 起草。请阅读并改正错误之处，然后批准。在你批准之前学生看不到。',
+  'Save and approve': '保存并批准',
+  'AI draft to check': '待检查的 AI 草稿'
 }
