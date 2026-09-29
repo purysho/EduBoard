@@ -328,7 +328,7 @@ describe('Course Packs', () => {
       terms: 2,
       standards: 9,
       rubrics: 5,
-      resources: 5,
+      resources: 40,
       studentFields: 9,
       assessments: 10,
       homework: 0,
@@ -367,7 +367,7 @@ describe('Course Packs', () => {
       terms: 2,
       standards: 9,
       rubrics: 5,
-      resources: 5,
+      resources: 40,
       studentFields: 9,
       assessments: 10,
       homework: 0,
@@ -375,7 +375,7 @@ describe('Course Packs', () => {
     })
     expect(listLessonPlansByClass(t1.id)).toHaveLength(15)
     expect(listLessonPlansByClass(t2.id)).toHaveLength(19)
-    expect(listLessonResources()).toHaveLength(5)
+    expect(listLessonResources()).toHaveLength(40)
   })
 
   it('rolls the whole install back if materialisation fails', () => {
