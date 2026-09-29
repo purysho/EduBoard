@@ -540,5 +540,12 @@ export const SETTINGS: Record<string, string> = {
   'Set by your school': '由学校设置',
   'App name: {name}': '应用名称：{name}',
   'Add your first student, or import your class list from a spreadsheet below.':
-    '添加第一位学生，或在下方从表格导入班级名单。'
+    '添加第一位学生，或在下方从表格导入班级名单。',
+  '1. Preview': '1. 预览',
+  '2. Map terms': '2. 映射学期',
+  '3. Import safely': '3. 安全导入',
+  'already used for another term': '已用于另一个学期',
+  'Use a different class for each term in this Course Pack.':
+    '请为此课程包中的每个学期选择不同的班级。'
+
 }
