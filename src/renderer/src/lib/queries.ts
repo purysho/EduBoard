@@ -67,6 +67,9 @@ export const queryKeys = {
     ['students', studentId, 'classes', classId, 'attendance'] as const,
   attendanceCheckInStatus: (classId: string) => ['classes', classId, 'attendanceCheckIn'] as const,
   lessonPlans: (classId: string) => ['classes', classId, 'lessonPlans'] as const,
+  lessonPlanResourceIds: (lessonPlanId: string) => ['lessonPlans', lessonPlanId, 'resources'] as const,
+  curriculumMap: (scopeType: 'courseGroup' | 'class', scopeId: string) =>
+    ['curriculumMap', scopeType, scopeId] as const,
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,
   dashboardStats: ['dashboardStats'] as const,
   analyticsOverview: ['analyticsOverview'] as const,
@@ -572,6 +575,37 @@ export function useLessonPlans(classId: string | undefined) {
   })
 }
 
+export function useLessonPlanResourceIds(lessonPlanId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.lessonPlanResourceIds(lessonPlanId ?? ''),
+    queryFn: () => api().lessonPlans.resourceIds(lessonPlanId!),
+    enabled: !!lessonPlanId
+  })
+}
+
+export function useSetLessonPlanResources() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ lessonPlanId, resourceIds }: { lessonPlanId: string; resourceIds: string[] }) =>
+      api().lessonPlans.setResources(lessonPlanId, resourceIds),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonPlanResourceIds(vars.lessonPlanId) })
+      qc.invalidateQueries({ queryKey: ['curriculumMap'] })
+    }
+  })
+}
+
+export function useCurriculumMap(
+  scopeType: 'courseGroup' | 'class' | undefined,
+  scopeId: string | undefined
+) {
+  return useQuery({
+    queryKey: queryKeys.curriculumMap(scopeType ?? 'class', scopeId ?? ''),
+    queryFn: () => api().curriculumMap.get(scopeType!, scopeId!),
+    enabled: !!scopeType && !!scopeId
+  })
+}
+
 export function useUpcomingLessonPlans(limit = 5) {
   return useQuery({
     queryKey: [...queryKeys.upcomingLessonPlans, limit],
@@ -587,6 +621,7 @@ export function useCreateLessonPlan(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.lessonPlans(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.upcomingLessonPlans })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({ queryKey: ['curriculumMap'] })
     }
   })
 }
@@ -600,6 +635,7 @@ export function useUpdateLessonPlan(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.lessonPlans(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.upcomingLessonPlans })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({ queryKey: ['curriculumMap'] })
     }
   })
 }
@@ -612,6 +648,7 @@ export function useDeleteLessonPlan(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.lessonPlans(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.upcomingLessonPlans })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({ queryKey: ['curriculumMap'] })
     }
   })
 }
