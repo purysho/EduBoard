@@ -314,6 +314,35 @@ describe('Course Packs', () => {
     expect(getClass(cls.id)?.courseGroupId).toBeNull()
   })
 
+  it('rejects mapping two required terms onto the same class', () => {
+    const cls = universityClass('One class cannot represent two terms')
+    const pack = samplePack()
+    pack.terms.push({
+      key: 't2',
+      name: 'Term 2',
+      schoolYear: '2026-27',
+      startDate: '2027-02-01',
+      endDate: '2027-06-30',
+      sortOrder: 2
+    })
+    pack.lessons!.push({
+      key: 'session-2',
+      termKey: 't2',
+      title: 'Second term lesson',
+      offsetDays: 0,
+      standardKeys: ['communication']
+    })
+
+    expect(() =>
+      installCoursePack({
+        pack,
+        termBindings: { t1: cls.id, t2: cls.id }
+      })
+    ).toThrow(/different EduBoard class/i)
+    expect(listCourseGroups()).toHaveLength(0)
+    expect(getClass(cls.id)?.courseGroupId).toBeNull()
+  })
+
   it('never applies class-bound curriculum without an explicit class mapping', () => {
     universityClass('Unrelated primary class')
     expect(() => installCoursePack({ pack: samplePack(), termBindings: {} })).toThrow(

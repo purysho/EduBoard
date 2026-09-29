@@ -38,9 +38,12 @@ export function CoursePackPanel(): React.JSX.Element {
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const selectedClassIds = Object.values(bindings).filter(Boolean)
+  const hasDuplicateClass = new Set(selectedClassIds).size !== selectedClassIds.length
   const ready =
     !!preview &&
     preview.terms.length > 0 &&
+    !hasDuplicateClass &&
     preview.terms.every(
       (term) => Boolean(bindings[term.key]) && Boolean(firstClassDates[term.key])
     )
@@ -164,6 +167,21 @@ export function CoursePackPanel(): React.JSX.Element {
             </div>
 
             <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                {[tr('1. Preview'), tr('2. Map terms'), tr('3. Import safely')].map((step, index) => (
+                  <div
+                    key={step}
+                    className={`rounded-md border px-2 py-2 text-center ${
+                      index === 1
+                        ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] font-medium'
+                        : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
+                    }`}
+                  >
+                    {step}
+                  </div>
+                ))}
+              </div>
+
               <div>
                 <h3 className="font-medium">{tr('Choose the class for each term')}</h3>
                 <p className="text-xs text-[var(--color-text-muted)]">
@@ -193,12 +211,18 @@ export function CoursePackPanel(): React.JSX.Element {
                       className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-sm"
                     >
                       <option value="">{tr('Choose a class…')}</option>
-                      {classes.map((cls) => (
-                        <option key={cls.id} value={cls.id}>
-                          {cls.name}
-                          {cls.subject ? ` · ${cls.subject}` : ''}
-                        </option>
-                      ))}
+                      {classes.map((cls) => {
+                        const selectedElsewhere = Object.entries(bindings).some(
+                          ([key, classId]) => key !== term.key && classId === cls.id
+                        )
+                        return (
+                          <option key={cls.id} value={cls.id} disabled={selectedElsewhere}>
+                            {cls.name}
+                            {cls.subject ? ` · ${cls.subject}` : ''}
+                            {selectedElsewhere ? ` · ${tr('already used for another term')}` : ''}
+                          </option>
+                        )
+                      })}
                     </select>
                   </label>
                   <label className="block space-y-1">
@@ -220,6 +244,12 @@ export function CoursePackPanel(): React.JSX.Element {
                 </div>
               ))}
             </div>
+
+            {hasDuplicateClass && (
+              <p className="rounded-md border border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)] p-2.5 text-xs">
+                {tr('Use a different class for each term in this Course Pack.')}
+              </p>
+            )}
 
             <p className="rounded-md bg-[var(--color-surface-muted)] p-2.5 text-xs text-[var(--color-text-muted)]">
               {tr(

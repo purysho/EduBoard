@@ -53,6 +53,8 @@ export function CurriculumMapPage(): React.JSX.Element {
   const scope = splitScope(effectiveSelected)
   const { data: map, isLoading: loadingMap } = useCurriculumMap(scope?.type, scope?.id)
   const loading = loadingGroups || loadingClasses
+  const standardsWithoutTaughtLessons =
+    map?.standardCoverage.filter((row) => row.lessonCount > 0 && row.taughtCount === 0) ?? []
 
   return (
     <div>
@@ -124,7 +126,7 @@ export function CurriculumMapPage(): React.JSX.Element {
             />
           ) : (
             <div className="space-y-5">
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 {[
                   [tr('Lessons'), map.summary.total],
                   [tr('Taught'), map.summary.taught],
@@ -180,6 +182,20 @@ export function CurriculumMapPage(): React.JSX.Element {
                       <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
                         {tr('Counts reflect lesson status; planned lessons are not treated as taught.')}
                       </p>
+                      {!!standardsWithoutTaughtLessons.length && (
+                        <div className="mt-3 rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)] p-2.5">
+                          <div className="text-xs font-medium">
+                            {tr('No taught lesson yet for:')}
+                          </div>
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {standardsWithoutTaughtLessons.map((row) => (
+                              <Badge key={row.code} tone="neutral">
+                                {row.code} · {row.plannedCount + row.skippedCount}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
