@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import type { Assessment, LessonPlan, LessonPlanStatus } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
@@ -61,14 +61,14 @@ export function LessonPlanFormModal({
   const [homework, setHomework] = useState(plan?.homework ?? initialDraft?.homework ?? '')
   const [linkedAssessmentId, setLinkedAssessmentId] = useState(plan?.linkedAssessmentId ?? '')
   const [status, setStatus] = useState<LessonPlanStatus>(plan?.status ?? 'planned')
-  const [resourceIds, setResourceIds] = useState<string[]>([])
-
-  useEffect(() => {
-    if (savedResourceIds) setResourceIds(savedResourceIds)
-  }, [savedResourceIds])
+  const [resourceIdsOverride, setResourceIdsOverride] = useState<string[] | null>(null)
+  const resourceIds = resourceIdsOverride ?? savedResourceIds ?? []
 
   const saving =
-    createPlan.isPending || updatePlan.isPending || setResources.isPending || (isEdit && resourceIdsLoading)
+    createPlan.isPending ||
+    updatePlan.isPending ||
+    setResources.isPending ||
+    (isEdit && resourceIdsLoading)
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
@@ -205,10 +205,10 @@ export function LessonPlanFormModal({
                         type="checkbox"
                         checked={checked}
                         onChange={(event) =>
-                          setResourceIds((current) =>
+                          setResourceIdsOverride((current) =>
                             event.target.checked
-                              ? [...current, resource.id]
-                              : current.filter((id) => id !== resource.id)
+                              ? [...(current ?? resourceIds), resource.id]
+                              : (current ?? resourceIds).filter((id) => id !== resource.id)
                           )
                         }
                       />
