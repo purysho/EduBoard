@@ -526,4 +526,18 @@ describe('Course Packs', () => {
       expect.objectContaining({ code: 'EB-2008' })
     )
   })
+
+  it('refuses a first class date that isn’t a real date', () => {
+    const cls = universityClass('Bad date')
+    for (const date of ['2026-02-30', 'next Monday']) {
+      expect(() =>
+        installCoursePack({
+          pack: samplePack(),
+          termBindings: { t1: cls.id },
+          firstClassDates: { t1: date }
+        })
+      ).toThrow(expect.objectContaining({ code: 'EB-2008' }))
+    }
+    expect(listLessonPlansByClass(cls.id)).toHaveLength(0)
+  })
 })

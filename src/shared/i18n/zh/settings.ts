@@ -578,5 +578,6 @@ export const SETTINGS: Record<string, string> = {
   'unknown rubric key {key}': '未知的评分量规键 {key}',
   'duplicate student field id {id}': '学生字段 id 重复：{id}',
   'unknown resource key {key}': '未知的资源键 {key}',
-  'unknown assessment key {key}': '未知的测评键 {key}'
+  'unknown assessment key {key}': '未知的测评键 {key}',
+  'The first class date for “{term}” isn’t a valid date.': '“{term}”的第一次上课日期无效。'
 }

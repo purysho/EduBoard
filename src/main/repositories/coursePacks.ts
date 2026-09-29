@@ -89,6 +89,13 @@ function rubricShape(
   )
 }
 
+/** A YYYY-MM-DD date that exists (not 2026-02-30). */
+function isRealDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const d = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value
+}
+
 function neededBindingKeys(pack: CoursePack): Set<string> {
   return new Set(
     [...(pack.lessons ?? []), ...(pack.assessments ?? []), ...(pack.homework ?? [])].map((x) =>
@@ -147,6 +154,15 @@ function validateBindings(pack: CoursePack, bindings: Record<string, string>): v
 export function installCoursePack(input: InstallCoursePackInput): CoursePackInstallResult {
   const { pack, termBindings, firstClassDates = {}, publishHomework = false } = input
   validateBindings(pack, termBindings)
+  for (const term of pack.terms) {
+    const date = firstClassDates[term.key]
+    if (date && !isRealDate(date)) {
+      throw new AppError(
+        'EB-2008',
+        tr('The first class date for “{term}” isn’t a valid date.', { term: term.name })
+      )
+    }
+  }
 
   return getSqlite().transaction(() => {
     const created = {
