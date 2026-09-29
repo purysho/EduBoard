@@ -70,7 +70,9 @@ export const IpcChannels = {
     create: 'lessonPlans:create',
     update: 'lessonPlans:update',
     remove: 'lessonPlans:remove',
-    copyWeek: 'lessonPlans:copyWeek'
+    copyWeek: 'lessonPlans:copyWeek',
+    resourceIds: 'lessonPlans:resourceIds',
+    setResources: 'lessonPlans:setResources'
   },
   scheduleSlots: {
     listByClass: 'scheduleSlots:listByClass',
@@ -92,6 +94,9 @@ export const IpcChannels = {
   },
   competencies: {
     matrix: 'competencies:matrix'
+  },
+  curriculumMap: {
+    get: 'curriculumMap:get'
   },
   settings: {
     get: 'settings:get',
