@@ -1,4 +1,6 @@
 import { isSafeExternalUrl } from './externalUrl'
+import { AppError } from './errorCodes'
+import { tr } from './i18n'
 import {
   LESSON_RESOURCE_TYPES,
   type HomeworkAssignmentStatus,
@@ -104,12 +106,18 @@ export interface CoursePack {
 }
 
 const MAX_ITEMS = 500
+
+/** A pack that can't be used (EB-2007); `detail` says where, so it can be fixed. */
+function invalid(detail: string): never {
+  throw new AppError('EB-2007', tr('This Course Pack can’t be used: {detail}', { detail }))
+}
+const field = (label: string): string => tr('{field} is missing or not valid', { field: label })
 const keyPattern = /^[a-z0-9][a-z0-9._:-]{0,63}$/i
 const datePattern = /^\d{4}-\d{2}-\d{2}$/
 
 function requiredString(value: unknown, label: string, max = 200): string {
   if (typeof value !== 'string' || !value.trim() || value.length > max) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return value.trim()
 }
@@ -118,7 +126,7 @@ function optionalString(value: unknown, label: string, max = 5000): string | nul
   if (value === undefined) return undefined
   if (value === null) return null
   if (typeof value !== 'string' || value.length > max) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return value
 }
@@ -126,20 +134,20 @@ function optionalString(value: unknown, label: string, max = 5000): string | nul
 /** A resource link: a web page or email address only, since it will be opened on click. */
 function webUrl(value: unknown, label: string): string | null | undefined {
   const out = optionalString(value, label, 2000)
-  if (out && !isSafeExternalUrl(out)) throw new Error(`Invalid course pack: ${label}`)
+  if (out && !isSafeExternalUrl(out)) invalid(field(label))
   return out
 }
 
 function key(value: unknown, label: string): string {
   const out = requiredString(value, label, 64)
-  if (!keyPattern.test(out)) throw new Error(`Invalid course pack: ${label}`)
+  if (!keyPattern.test(out)) invalid(field(label))
   return out
 }
 
 function date(value: unknown, label: string): string | null {
   if (value === null) return null
   if (typeof value !== 'string' || !datePattern.test(value)) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return value
 }
@@ -148,7 +156,7 @@ function integer(value: unknown, label: string, fallback?: number): number | und
   if (value === undefined && fallback !== undefined) return fallback
   if (value === undefined) return undefined
   if (!Number.isInteger(value) || Math.abs(Number(value)) > 10_000) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return Number(value)
 }
@@ -157,7 +165,7 @@ function number(value: unknown, label: string, fallback?: number): number | unde
   if (value === undefined && fallback !== undefined) return fallback
   if (value === undefined) return undefined
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 10_000) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return value
 }
@@ -165,17 +173,16 @@ function number(value: unknown, label: string, fallback?: number): number | unde
 function array(value: unknown, label: string): unknown[] {
   if (value === undefined) return []
   if (!Array.isArray(value) || value.length > MAX_ITEMS) {
-    throw new Error(`Invalid course pack: ${label}`)
+    invalid(field(label))
   }
   return value
 }
 
-function uniqueKeys<T extends { key: string }>(items: T[], label: string): void {
+function uniqueKeys<T extends { key: string }>(items: T[]): void {
   const seen = new Set<string>()
   for (const item of items) {
     const normalized = item.key.toLowerCase()
-    if (seen.has(normalized))
-      throw new Error(`Invalid course pack: duplicate ${label} key ${item.key}`)
+    if (seen.has(normalized)) invalid(tr('the key {key} is used twice', { key: item.key }))
     seen.add(normalized)
   }
 }
@@ -185,10 +192,10 @@ export function parseCoursePack(json: string): CoursePack {
   try {
     raw = JSON.parse(json)
   } catch {
-    throw new Error('Invalid course pack: unreadable JSON')
+    invalid(tr('the file isn’t readable (it isn’t valid JSON)'))
   }
   if (!raw || raw.kind !== 'eduboard-course-pack' || raw.version !== 1) {
-    throw new Error('Invalid course pack: unsupported kind or version')
+    invalid(tr('it isn’t an EduBoard Course Pack, or it was made for a newer EduBoard'))
   }
 
   const terms = array(raw.terms, 'terms').map((item, index): CoursePackTerm => {
@@ -202,8 +209,8 @@ export function parseCoursePack(json: string): CoursePack {
       sortOrder: integer(x?.sortOrder, `terms[${index}].sortOrder`)
     }
   })
-  if (!terms.length) throw new Error('Invalid course pack: at least one term is required')
-  uniqueKeys(terms, 'term')
+  if (!terms.length) invalid(tr('it has no terms'))
+  uniqueKeys(terms)
 
   const standards = array(raw.standards, 'standards').map((item, index): CoursePackStandard => {
     const x = item as Record<string, unknown>
@@ -214,7 +221,7 @@ export function parseCoursePack(json: string): CoursePack {
       subject: optionalString(x?.subject, `standards[${index}].subject`, 120)
     }
   })
-  uniqueKeys(standards, 'standard')
+  uniqueKeys(standards)
 
   const standardKeys = new Set(standards.map((s) => s.key.toLowerCase()))
   const rubrics = array(raw.rubrics, 'rubrics').map((item, index): CoursePackRubric => {
@@ -226,7 +233,7 @@ export function parseCoursePack(json: string): CoursePack {
           ? null
           : key(c.standardKey, `rubrics[${index}].criteria[${ci}].standardKey`)
       if (standardKey && !standardKeys.has(standardKey.toLowerCase())) {
-        throw new Error(`Invalid course pack: unknown standard key ${standardKey}`)
+        invalid(tr('unknown standard key {key}', { key: standardKey }))
       }
       const levels = array(c?.levels, `rubrics[${index}].criteria[${ci}].levels`).map(
         (level, li) => {
@@ -246,8 +253,7 @@ export function parseCoursePack(json: string): CoursePack {
           }
         }
       )
-      if (!levels.length)
-        throw new Error(`Invalid course pack: rubric criterion ${ci + 1} has no levels`)
+      if (!levels.length) invalid(tr('rubric criterion {n} has no levels', { n: ci + 1 }))
       return {
         name: requiredString(c?.name, `rubrics[${index}].criteria[${ci}].name`, 120),
         description: optionalString(
@@ -259,8 +265,7 @@ export function parseCoursePack(json: string): CoursePack {
         levels
       }
     })
-    if (!criteria.length)
-      throw new Error(`Invalid course pack: rubric ${index + 1} has no criteria`)
+    if (!criteria.length) invalid(tr('rubric {n} has no criteria', { n: index + 1 }))
     return {
       key: key(x?.key, `rubrics[${index}].key`),
       name: requiredString(x?.name, `rubrics[${index}].name`, 120),
@@ -268,21 +273,19 @@ export function parseCoursePack(json: string): CoursePack {
       criteria
     }
   })
-  uniqueKeys(rubrics, 'rubric')
+  uniqueKeys(rubrics)
   const rubricKeys = new Set(rubrics.map((r) => r.key.toLowerCase()))
   const termKeys = new Set(terms.map((t) => t.key.toLowerCase()))
 
   const checkTermKey = (value: unknown, label: string): string => {
     const out = key(value, label)
-    if (!termKeys.has(out.toLowerCase()))
-      throw new Error(`Invalid course pack: unknown term key ${out}`)
+    if (!termKeys.has(out.toLowerCase())) invalid(tr('unknown term key {key}', { key: out }))
     return out
   }
   const checkRubricKey = (value: unknown, label: string): string | null => {
     if (value === undefined || value === null) return null
     const out = key(value, label)
-    if (!rubricKeys.has(out.toLowerCase()))
-      throw new Error(`Invalid course pack: unknown rubric key ${out}`)
+    if (!rubricKeys.has(out.toLowerCase())) invalid(tr('unknown rubric key {key}', { key: out }))
     return out
   }
 
@@ -305,7 +308,7 @@ export function parseCoursePack(json: string): CoursePack {
       }
     }
   )
-  uniqueKeys(assessments, 'assessment')
+  uniqueKeys(assessments)
   const assessmentKeys = new Set(assessments.map((a) => a.key.toLowerCase()))
 
   const homework = array(raw.homework, 'homework').map(
@@ -313,7 +316,7 @@ export function parseCoursePack(json: string): CoursePack {
       const x = item as Record<string, unknown>
       const status = x?.status === undefined ? 'draft' : x.status
       if (status !== 'draft' && status !== 'published') {
-        throw new Error(`Invalid course pack: homework[${index}].status`)
+        invalid(field(`homework[${index}].status`))
       }
       return {
         key: key(x?.key, `homework[${index}].key`),
@@ -330,21 +333,21 @@ export function parseCoursePack(json: string): CoursePack {
       }
     }
   )
-  uniqueKeys(homework, 'homework')
+  uniqueKeys(homework)
 
   const resources = array(raw.resources, 'resources').map(
     (item, index): CoursePackResourceTemplate => {
       const x = item as Record<string, unknown>
       const type = requiredString(x?.type, `resources[${index}].type`, 20) as LessonResourceType
       if (!(LESSON_RESOURCE_TYPES as readonly string[]).includes(type)) {
-        throw new Error(`Invalid course pack: resources[${index}].type`)
+        invalid(field(`resources[${index}].type`))
       }
       const standardKey =
         x?.standardKey === undefined || x?.standardKey === null
           ? null
           : key(x.standardKey, `resources[${index}].standardKey`)
       if (standardKey && !standardKeys.has(standardKey.toLowerCase())) {
-        throw new Error(`Invalid course pack: unknown standard key ${standardKey}`)
+        invalid(tr('unknown standard key {key}', { key: standardKey }))
       }
       const tags = array(x?.tags, `resources[${index}].tags`).map((tag, ti) =>
         requiredString(tag, `resources[${index}].tags[${ti}]`, 80)
@@ -360,7 +363,7 @@ export function parseCoursePack(json: string): CoursePack {
       }
     }
   )
-  uniqueKeys(resources, 'resource')
+  uniqueKeys(resources)
   const resourceKeys = new Set(resources.map((resource) => resource.key.toLowerCase()))
 
   const studentFields = array(raw.studentFields, 'studentFields').map(
@@ -377,7 +380,7 @@ export function parseCoursePack(json: string): CoursePack {
   for (const field of studentFields) {
     const normalized = field.id.toLowerCase()
     if (seenStudentFields.has(normalized)) {
-      throw new Error(`Invalid course pack: duplicate student field id ${field.id}`)
+      invalid(tr('duplicate student field id {id}', { id: field.id }))
     }
     seenStudentFields.add(normalized)
   }
@@ -388,7 +391,7 @@ export function parseCoursePack(json: string): CoursePack {
       (v, si) => {
         const out = key(v, `lessons[${index}].standardKeys[${si}]`)
         if (!standardKeys.has(out.toLowerCase())) {
-          throw new Error(`Invalid course pack: unknown standard key ${out}`)
+          invalid(tr('unknown standard key {key}', { key: out }))
         }
         return out
       }
@@ -397,7 +400,7 @@ export function parseCoursePack(json: string): CoursePack {
       (v, ri) => {
         const out = key(v, `lessons[${index}].resourceKeys[${ri}]`)
         if (!resourceKeys.has(out.toLowerCase())) {
-          throw new Error(`Invalid course pack: unknown resource key ${out}`)
+          invalid(tr('unknown resource key {key}', { key: out }))
         }
         return out
       }
@@ -407,7 +410,7 @@ export function parseCoursePack(json: string): CoursePack {
         ? null
         : key(x.assessmentKey, `lessons[${index}].assessmentKey`)
     if (assessmentKey && !assessmentKeys.has(assessmentKey.toLowerCase())) {
-      throw new Error(`Invalid course pack: unknown assessment key ${assessmentKey}`)
+      invalid(tr('unknown assessment key {key}', { key: assessmentKey }))
     }
     return {
       key: key(x?.key, `lessons[${index}].key`),
@@ -425,7 +428,7 @@ export function parseCoursePack(json: string): CoursePack {
       resourceKeys: resourceKeysForLesson
     }
   })
-  uniqueKeys(lessons, 'lesson')
+  uniqueKeys(lessons)
 
   return {
     kind: 'eduboard-course-pack',

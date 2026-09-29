@@ -490,7 +490,7 @@ export function registerIpcHandlers(): void {
     IpcChannels.curriculumMap.get,
     (_e, scopeType: 'courseGroup' | 'class', scopeId: string) => {
       if (scopeType !== 'courseGroup' && scopeType !== 'class') {
-        throw new AppError('EB-0004', 'Invalid curriculum map scope.')
+        throw new AppError('EB-0004', tr('Choose a course or a class for the curriculum map.'))
       }
       return getCurriculumMap(scopeType, String(scopeId))
     }
@@ -963,6 +963,7 @@ export function registerIpcHandlers(): void {
         studentFields: pack.studentFields?.length ?? 0,
         assessments: pack.assessments?.length ?? 0,
         homework: pack.homework?.length ?? 0,
+        publishedHomework: (pack.homework ?? []).filter((h) => h.status === 'published').length,
         lessons: pack.lessons?.length ?? 0
       }
     }
@@ -973,14 +974,20 @@ export function registerIpcHandlers(): void {
       _e,
       filePath: string,
       termBindings: Record<string, string>,
-      firstClassDates: Record<string, string> = {}
+      firstClassDates: Record<string, string> = {},
+      options: { publishHomework?: boolean } = {}
     ) => {
       const pack = parseCoursePack(await readFile(String(filePath), 'utf-8'))
       // A successful Course Pack changes real curriculum records and class links. Keep a
       // normal EduBoard recovery point immediately before it, in addition to the install
       // transaction's automatic rollback if anything fails mid-import.
       backupService.createBackup()
-      const result = coursePacksRepo.installCoursePack({ pack, termBindings, firstClassDates })
+      const result = coursePacksRepo.installCoursePack({
+        pack,
+        termBindings,
+        firstClassDates,
+        publishHomework: options?.publishHomework === true
+      })
       return {
         courseGroupId: result.courseGroupId,
         created: result.created,

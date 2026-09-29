@@ -430,6 +430,8 @@ export interface EduBoardApi {
         studentFields: number
         assessments: number
         homework: number
+        /** Of that homework, how much the pack marks as published (goes to students). */
+        publishedHomework: number
         lessons: number
       }
     } | null>
@@ -437,7 +439,9 @@ export interface EduBoardApi {
     apply(
       filePath: string,
       termBindings: Record<string, string>,
-      firstClassDates?: Record<string, string>
+      firstClassDates?: Record<string, string>,
+      /** publishHomework: the teacher chose "Publish now"; otherwise homework arrives as drafts. */
+      options?: { publishHomework?: boolean }
     ): Promise<{
       courseGroupId: string
       created: Record<string, number>

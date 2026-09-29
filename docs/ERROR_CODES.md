@@ -55,6 +55,8 @@ after changing either.
 | EB-2004 | A resource file couldn’t be read (too large, an unsupported type, or damaged). | Save the file as PDF, Word (.docx) or plain text, under the size limit, and add it again. |
 | EB-2005 | A resource’s text couldn’t be read: it has no file or web address, or the web page couldn’t be fetched. | Edit the resource and attach the file or fix its web address; open the address in a browser to check it works. |
 | EB-2006 | EduBoard refused to open a handed-in file because it isn’t what its name says, or isn’t a type it opens safely. | Ask the student to save the work as PDF, Word, an image or plain text and hand it in again. |
+| EB-2007 | The chosen file can’t be used as a Course Pack: it isn’t readable, isn’t a Course Pack (or is for a newer EduBoard), or something in it is missing, not valid or refers to something the pack doesn’t have. The message names the place, e.g. lessons[3].standardKeys[0]. | Ask whoever made the pack for a corrected copy, or fix the named place in the .json file and import it again. Nothing was changed. |
+| EB-2008 | The Course Pack can’t be installed as chosen: a term has no class or no first class date, the same class was chosen for two terms, a chosen class no longer exists, or one of the pack’s student fields clashes with a field already set up. | Read the message: it names the term or field. Choose a class and first date for every term (a different class each), or rename the clashing student field in Settings → Class lists. Nothing was changed. |
 
 ### Updates
 

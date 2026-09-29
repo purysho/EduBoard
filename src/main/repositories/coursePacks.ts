@@ -1,4 +1,6 @@
 import { addDays } from '@shared/dates'
+import { AppError } from '@shared/errorCodes'
+import { tr } from '@shared/i18n'
 import type { CoursePack } from '@shared/coursePack'
 import type { CourseGroup, Standard, Term, RubricWithCriteria } from '@shared/types'
 import { getSqlite } from '../db/client'
@@ -20,6 +22,9 @@ export interface InstallCoursePackInput {
   /** Optional term key -> actual first class date. Relative curriculum dates use this
    * rather than assuming the institution's teaching week begins on the class weekday. */
   firstClassDates?: Record<string, string>
+  /** Homework the pack marks as published goes straight to students on the Portal. Only
+   * when the teacher chose "Publish now"; otherwise everything arrives as a draft. */
+  publishHomework?: boolean
 }
 
 export interface CoursePackInstallResult {
@@ -64,11 +69,24 @@ function dateFromOffset(
   if (offset === null || offset === undefined) return null
   const anchor = firstClassDate || term.startDate
   if (!anchor) {
-    throw new Error(
-      `Course Pack term "${term.name}" needs a first class date before relative lesson/assessment dates can be installed.`
+    throw new AppError(
+      'EB-2008',
+      tr('“{term}” needs a first class date, so its lessons and assessments get dates.', {
+        term: term.name
+      })
     )
   }
   return addDays(anchor, offset)
+}
+
+/** What makes two rubrics the same rubric: their criteria, and each one's levels and points,
+ * in order (descriptions aside, which a teacher may reword). */
+function rubricShape(
+  criteria: { name: string; levels: { label: string; points: number }[] }[]
+): string {
+  return JSON.stringify(
+    criteria.map((c) => [norm(c.name), c.levels.map((l) => [norm(l.label), l.points])])
+  )
 }
 
 function neededBindingKeys(pack: CoursePack): Set<string> {
@@ -85,16 +103,29 @@ function validateBindings(pack: CoursePack, bindings: Record<string, string>): v
 
   for (const key of neededBindingKeys(pack)) {
     const term = terms.get(key)
-    if (!term) throw new Error(`Course Pack uses unknown term key ${key}.`)
+    if (!term) throw new AppError('EB-2007', tr('unknown term key {key}', { key }))
     const classId = bindings[term.key] ?? bindings[key]
-    if (!classId) throw new Error(`Choose an EduBoard class for Course Pack term "${term.name}".`)
-    if (!getClass(classId))
-      throw new Error(`The selected class for "${term.name}" no longer exists.`)
+    if (!classId) {
+      throw new AppError(
+        'EB-2008',
+        tr('Choose an EduBoard class for “{term}”.', { term: term.name })
+      )
+    }
+    if (!getClass(classId)) {
+      throw new AppError(
+        'EB-2008',
+        tr('The class chosen for “{term}” no longer exists. Choose another.', { term: term.name })
+      )
+    }
 
     const previousTerm = usedClassIds.get(classId)
     if (previousTerm) {
-      throw new Error(
-        `Choose a different EduBoard class for "${term.name}". The same class is already assigned to "${previousTerm}".`
+      throw new AppError(
+        'EB-2008',
+        tr(
+          'Choose a different EduBoard class for “{term}”: that class is already chosen for “{other}”.',
+          { term: term.name, other: previousTerm }
+        )
       )
     }
     usedClassIds.set(classId, term.name)
@@ -114,7 +145,7 @@ function validateBindings(pack: CoursePack, bindings: Record<string, string>): v
  * silent loss of local edits.
  */
 export function installCoursePack(input: InstallCoursePackInput): CoursePackInstallResult {
-  const { pack, termBindings, firstClassDates = {} } = input
+  const { pack, termBindings, firstClassDates = {}, publishHomework = false } = input
   validateBindings(pack, termBindings)
 
   return getSqlite().transaction(() => {
@@ -183,15 +214,25 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       standardIds[source.key] = standard.id
     }
 
-    const existingRubrics = new Map(listRubrics().map((r) => [norm(r.name), r] as const))
+    // A rubric is reused only when it's the same rubric: same name and the same criteria and
+    // levels. A teacher's own, different rubric that happens to share the name is left alone;
+    // the pack's is added as "Name (Pack)" (and found under that name on a re-import).
+    const existingRubrics = listRubrics()
     const rubricRows = new Map<string, RubricWithCriteria>()
     const rubricIds: Record<string, string> = {}
     for (const source of pack.rubrics ?? []) {
-      let rubric = existingRubrics.get(norm(source.name))
+      const shape = rubricShape(source.criteria)
+      const packName = `${source.name} (${pack.name})`
+      const sameRubric = (name: string): RubricWithCriteria | undefined =>
+        existingRubrics.find(
+          (r) => norm(r.name) === norm(name) && rubricShape(r.criteria) === shape
+        )
+      let rubric = sameRubric(source.name) ?? sameRubric(packName)
       if (rubric) reused.rubrics++
       else {
+        const nameTaken = existingRubrics.some((r) => norm(r.name) === norm(source.name))
         rubric = createRubric({
-          name: source.name,
+          name: nameTaken ? packName : source.name,
           description: source.description ?? null,
           criteria: source.criteria.map((criterion) => ({
             name: criterion.name,
@@ -206,7 +247,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
             }))
           }))
         })
-        existingRubrics.set(norm(source.name), rubric)
+        existingRubrics.push(rubric)
         created.rubrics++
       }
       rubricRows.set(norm(source.key), rubric)
@@ -260,8 +301,12 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
           existing.label !== source.label ||
           Boolean(existing.onSeatingChart) !== Boolean(source.onSeatingChart)
         ) {
-          throw new Error(
-            `Course Pack student field "${source.id}" conflicts with the existing field of that id.`
+          throw new AppError(
+            'EB-2008',
+            tr(
+              'The pack’s student field “{field}” clashes with a field you already have with that id. Rename yours in Settings → Class lists, then import again.',
+              { field: source.id }
+            )
           )
         }
         reused.studentFields++
@@ -345,7 +390,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         filePath: null,
         fileName: null,
         topic: source.topic ?? null,
-        status: source.status ?? 'draft',
+        status: publishHomework && source.status === 'published' ? 'published' : 'draft',
         rubricId: source.rubricKey ? (rubricRows.get(norm(source.rubricKey))?.id ?? null) : null
       })
       created.homework++
@@ -360,7 +405,12 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         source.offsetDays,
         firstClassDates[source.termKey] ?? firstClassDates[norm(source.termKey)]
       )
-      if (!date) throw new Error(`Lesson "${source.title}" needs a first class date.`)
+      if (!date) {
+        throw new AppError(
+          'EB-2008',
+          tr('Lesson “{lesson}” needs a first class date for its term.', { lesson: source.title })
+        )
+      }
       const existing = listLessonPlansByClass(classId).find(
         (lesson) =>
           norm(lesson.title) === norm(source.title) &&

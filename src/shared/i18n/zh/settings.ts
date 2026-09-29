@@ -546,5 +546,37 @@ export const SETTINGS: Record<string, string> = {
   '3. Import safely': '3. 安全导入',
   'already used for another term': '已用于另一个学期',
   'Use a different class for each term in this Course Pack.':
-    '请为此课程包中的每个学期选择不同的班级。'
+    '请为此课程包中的每个学期选择不同的班级。',
+  'Choose a course or a class for the curriculum map.': '请为课程规划选择一门课程或一个班级。',
+  '“{term}” needs a first class date, so its lessons and assessments get dates.':
+    '“{term}”需要设置第一次上课的日期，课程和测评才能排上日期。',
+  'unknown term key {key}': '未知的学期键 {key}',
+  'Choose an EduBoard class for “{term}”.': '请为“{term}”选择一个 EduBoard 班级。',
+  'The class chosen for “{term}” no longer exists. Choose another.':
+    '为“{term}”选择的班级已不存在，请另选一个。',
+  'Choose a different EduBoard class for “{term}”: that class is already chosen for “{other}”.':
+    '请为“{term}”选择另一个 EduBoard 班级：该班级已用于“{other}”。',
+  'The pack’s student field “{field}” clashes with a field you already have with that id. Rename yours in Settings → Class lists, then import again.':
+    '课程包中的学生字段“{field}”与你已有的同名字段冲突。请在“设置 → 班级列表”中重命名你的字段，然后重新导入。',
+  'Lesson “{lesson}” needs a first class date for its term.':
+    '课程“{lesson}”需要为其学期设置第一次上课的日期。',
+  'This pack has {n} homework ready for students': '此课程包中有 {n} 项作业已设为向学生发布',
+  'Save as drafts': '保存为草稿',
+  'Only you see them. Publish each one from the class’s Homework tab when it’s ready.':
+    '只有你能看到。准备好后，在班级的“作业”页逐项发布。',
+  'Students see them on the Portal straight away.': '学生会立即在学生门户上看到。',
+  'This Course Pack can’t be used: {detail}': '无法使用此课程包：{detail}',
+  '{field} is missing or not valid': '{field} 缺失或无效',
+  'the key {key} is used twice': '键 {key} 重复使用',
+  'the file isn’t readable (it isn’t valid JSON)': '文件无法读取（不是有效的 JSON）',
+  'it isn’t an EduBoard Course Pack, or it was made for a newer EduBoard':
+    '这不是 EduBoard 课程包，或是为更新版本的 EduBoard 制作的',
+  'it has no terms': '其中没有任何学期',
+  'unknown standard key {key}': '未知的标准键 {key}',
+  'rubric criterion {n} has no levels': '评分量规第 {n} 项指标没有等级',
+  'rubric {n} has no criteria': '第 {n} 个评分量规没有指标',
+  'unknown rubric key {key}': '未知的评分量规键 {key}',
+  'duplicate student field id {id}': '学生字段 id 重复：{id}',
+  'unknown resource key {key}': '未知的资源键 {key}',
+  'unknown assessment key {key}': '未知的测评键 {key}'
 }

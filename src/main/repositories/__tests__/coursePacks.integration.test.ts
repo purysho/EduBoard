@@ -11,7 +11,7 @@ import { createClass, getClass } from '../classes'
 import { listCourseGroups } from '../courseGroups'
 import { listTerms } from '../terms'
 import { listStandards } from '../standards'
-import { listRubrics } from '../rubrics'
+import { createRubric, listRubrics } from '../rubrics'
 import { listAssessmentsByClass } from '../assessments'
 import { listHomeworkAssignmentsByClass } from '../homeworkAssignments'
 import {
@@ -466,5 +466,64 @@ describe('Course Packs', () => {
       /choose an EduBoard class/i
     )
     expect(listCourseGroups()).toHaveLength(0)
+  })
+
+  it('imports homework the pack marks as published as a draft, unless the teacher chose Publish now', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.homework[0].status = 'published'
+    const pack = parseCoursePack(JSON.stringify(raw))
+
+    const drafted = universityClass('Drafted')
+    installCoursePack({ pack, termBindings: { t1: drafted.id } })
+    expect(listHomeworkAssignmentsByClass(drafted.id)[0].status).toBe('draft')
+
+    const published = universityClass('Published')
+    installCoursePack({ pack, termBindings: { t1: published.id }, publishHomework: true })
+    expect(listHomeworkAssignmentsByClass(published.id)[0].status).toBe('published')
+  })
+
+  it('never takes over a different rubric that happens to share the pack rubric’s name', () => {
+    // The teacher's own "Presentation", with different criteria.
+    const own = createRubric({
+      name: 'Presentation',
+      description: null,
+      criteria: [
+        {
+          name: 'Eye contact',
+          description: null,
+          standardId: null,
+          levels: [{ label: 'Good', points: 10, description: null }]
+        }
+      ]
+    })
+    const cls = universityClass('Rubric clash')
+    installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
+
+    const rubrics = listRubrics()
+    const packRubric = rubrics.find((r) => r.name === 'Presentation (Sample Applied English)')
+    expect(packRubric).toBeDefined()
+    expect(rubrics.find((r) => r.id === own.id)?.criteria[0].name).toBe('Eye contact')
+    expect(listAssessmentsByClass(cls.id)[0].rubricId).toBe(packRubric!.id)
+
+    // A re-import finds the pack's rubric under its new name instead of adding another.
+    installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
+    expect(listRubrics()).toHaveLength(2)
+  })
+
+  it('reuses an identical rubric already in EduBoard', () => {
+    installCoursePack({ pack: samplePack(), termBindings: { t1: universityClass('First').id } })
+    installCoursePack({ pack: samplePack(), termBindings: { t1: universityClass('Second').id } })
+    expect(listRubrics().map((r) => r.name)).toEqual(['Presentation'])
+  })
+
+  it('reports problems with EduBoard error codes', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.lessons[0].resourceKeys = ['does-not-exist']
+    expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(
+      expect.objectContaining({ code: 'EB-2007' })
+    )
+    expect(() => installCoursePack({ pack: samplePack(), termBindings: {} })).toThrow(
+      expect.objectContaining({ code: 'EB-2008' })
+    )
   })
 })

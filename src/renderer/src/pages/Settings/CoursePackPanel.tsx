@@ -22,6 +22,7 @@ interface CoursePackPreview {
     studentFields: number
     assessments: number
     homework: number
+    publishedHomework: number
     lessons: number
   }
 }
@@ -37,6 +38,9 @@ export function CoursePackPanel(): React.JSX.Element {
   const [firstClassDates, setFirstClassDates] = useState<Record<string, string>>({})
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Homework the pack marks as published would reach students on the Portal at once, so
+  // the teacher chooses; drafts unless they say otherwise.
+  const [publishHomework, setPublishHomework] = useState(false)
 
   const selectedClassIds = Object.values(bindings).filter(Boolean)
   const hasDuplicateClass = new Set(selectedClassIds).size !== selectedClassIds.length
@@ -74,6 +78,7 @@ export function CoursePackPanel(): React.JSX.Element {
                 if (!pack) return
                 setClasses(allClasses.filter((cls) => !cls.archived))
                 setBindings({})
+                setPublishHomework(false)
                 setFirstClassDates(
                   Object.fromEntries(pack.terms.map((term) => [term.key, term.startDate ?? '']))
                 )
@@ -111,7 +116,8 @@ export function CoursePackPanel(): React.JSX.Element {
                   const result = await window.api.coursePack.apply(
                     preview.filePath,
                     bindings,
-                    firstClassDates
+                    firstClassDates,
+                    { publishHomework }
                   )
                   const created = Object.values(result.created).reduce((sum, n) => sum + n, 0)
                   const reused = Object.values(result.reused).reduce((sum, n) => sum + n, 0)
@@ -245,6 +251,48 @@ export function CoursePackPanel(): React.JSX.Element {
                 </div>
               ))}
             </div>
+
+            {preview.counts.publishedHomework > 0 && (
+              <fieldset className="space-y-2 rounded-md border border-[var(--color-border)] p-3">
+                <legend className="px-1 text-xs font-medium">
+                  {tr('This pack has {n} homework ready for students', {
+                    n: preview.counts.publishedHomework
+                  })}
+                </legend>
+                <label className="flex items-start gap-2">
+                  <input
+                    type="radio"
+                    name="course-pack-homework"
+                    className="mt-0.5"
+                    checked={!publishHomework}
+                    onChange={() => setPublishHomework(false)}
+                  />
+                  <span>
+                    <span className="block font-medium">{tr('Save as drafts')}</span>
+                    <span className="block text-xs text-[var(--color-text-muted)]">
+                      {tr(
+                        'Only you see them. Publish each one from the class’s Homework tab when it’s ready.'
+                      )}
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2">
+                  <input
+                    type="radio"
+                    name="course-pack-homework"
+                    className="mt-0.5"
+                    checked={publishHomework}
+                    onChange={() => setPublishHomework(true)}
+                  />
+                  <span>
+                    <span className="block font-medium">{tr('Publish now')}</span>
+                    <span className="block text-xs text-[var(--color-text-muted)]">
+                      {tr('Students see them on the Portal straight away.')}
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
+            )}
 
             {hasDuplicateClass && (
               <p className="rounded-md border border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)] p-2.5 text-xs">

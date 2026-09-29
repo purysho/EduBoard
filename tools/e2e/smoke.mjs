@@ -57,6 +57,7 @@ async function go(page, route) {
   const tabs = [
     '',
     'gradebook',
+    'competencies',
     'attendance',
     'lessons',
     'seating',
@@ -84,6 +85,7 @@ async function go(page, route) {
     '/audit-log',
     '/timetable',
     '/calendar',
+    '/curriculum',
     '/weekly-summary',
     '/newsletter',
     ...['general', 'appearance', 'grading', 'lists', 'portal', 'ai', 'data', 'help'].map(
