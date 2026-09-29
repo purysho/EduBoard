@@ -4,6 +4,8 @@ import { tr } from './i18n'
 // claim a step is done when it isn't, and it keeps up as the teacher works.
 
 export interface SetupProgress {
+  /** Terms set up (Settings → Grading and reports). */
+  termCount: number
   classCount: number
   activeEnrollmentCount: number
   publishedHomeworkCount: number
@@ -32,6 +34,18 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
   const cls = p.firstClassId ? `/classes/${p.firstClassId}` : null
   // In the order a teacher can do them: the Portal before anything that goes on it.
   return [
+    // Terms first: a class is created in a term, and reports and "Start next term" go by them.
+    {
+      id: 'terms',
+      title: tr('Set up your terms'),
+      description: tr(
+        'Name this school year’s terms and their dates, so classes, reports and next term’s copies line up.'
+      ),
+      done: p.termCount > 0,
+      optional: false,
+      to: '/settings?section=grading&focus=terms',
+      actionLabel: tr('Add terms')
+    },
     {
       id: 'class',
       title: tr('Create your first class'),

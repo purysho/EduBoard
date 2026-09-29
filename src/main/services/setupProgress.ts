@@ -20,6 +20,7 @@ export function getSetupProgress(): SetupProgress {
       : Boolean(settings.aiApiKey.trim())
 
   return {
+    termCount: count('SELECT COUNT(*) AS n FROM terms'),
     classCount: count('SELECT COUNT(*) AS n FROM classes WHERE archived = 0'),
     activeEnrollmentCount: count(
       `SELECT COUNT(*) AS n FROM enrollments e JOIN classes c ON c.id = e.class_id

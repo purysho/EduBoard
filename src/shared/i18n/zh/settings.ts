@@ -579,5 +579,32 @@ export const SETTINGS: Record<string, string> = {
   'duplicate student field id {id}': '学生字段 id 重复：{id}',
   'unknown resource key {key}': '未知的资源键 {key}',
   'unknown assessment key {key}': '未知的测评键 {key}',
-  'The first class date for “{term}” isn’t a valid date.': '“{term}”的第一次上课日期无效。'
+  'The first class date for “{term}” isn’t a valid date.': '“{term}”的第一次上课日期无效。',
+  'Save a copy of this style': '保存此样式的副本',
+  'No terms yet: set them up': '还没有学期：去设置',
+  'Style library': '样式库',
+  'Ready-made looks for the whole app. Using one replaces the school stylesheet below; “Save a copy” gives you the .css file to change and load back.':
+    '适用于整个应用的现成外观。使用其中一个会替换下方的学校样式表；“保存副本”会给你 .css 文件，可修改后再载入。',
+  'In use': '使用中',
+  'Use this': '使用此样式',
+  'Save a copy': '保存副本',
+  'Set up your terms': '设置学期',
+  'Name this school year’s terms and their dates, so classes, reports and next term’s copies line up.':
+    '为本学年的各个学期命名并设定日期，让班级、报告和下学期的复制内容都对得上。',
+  'Add terms': '添加学期',
+  Forest: '森林',
+  'Deep green on warm cream, with classic headings.': '暖米色底配深绿色，经典标题字体。',
+  Ocean: '海洋',
+  'Teal and cool blue, light and airy.': '青色与冷蓝色，明亮通透。',
+  Sunset: '日落',
+  'Warm orange and peach, with round buttons.': '暖橙与桃色，圆角按钮。',
+  Chalkboard: '黑板',
+  'A dark green board with chalk-white writing, always.': '深绿色黑板配粉笔白字，始终如此。',
+  'Paper and ink': '纸与墨',
+  'Lined paper, ink blue and a book font.': '横线纸、墨水蓝和书本字体。',
+  'Big and bold': '大字醒目',
+  'Larger text and stronger lines, for a projector or classroom screen.':
+    '更大的文字和更粗的线条，适合投影仪或教室屏幕。',
+  'Calm grey': '沉静灰',
+  'Quiet greys with black, nothing bright.': '安静的灰色配黑色，没有鲜艳色彩。'
 }

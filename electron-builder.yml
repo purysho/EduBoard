@@ -27,6 +27,8 @@ nsis:
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  # Removes the shortcuts EduBoard renamed to the school's name (see the file).
+  include: build/installer.nsh
 portable:
   artifactName: ${productName}-Portable.${ext}
 mac:

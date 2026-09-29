@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { setupComplete, setupSteps, type SetupProgress } from '../setupChecklist'
 
 const fresh: SetupProgress = {
+  termCount: 0,
   classCount: 0,
   activeEnrollmentCount: 0,
   publishedHomeworkCount: 0,
@@ -40,6 +41,7 @@ describe('setupSteps', () => {
   it('counts as complete without the optional extras', () => {
     const steps = setupSteps({
       ...fresh,
+      termCount: 2,
       classCount: 1,
       activeEnrollmentCount: 1,
       publishedHomeworkCount: 1,
@@ -49,5 +51,22 @@ describe('setupSteps', () => {
     })
     expect(setupComplete(steps)).toBe(true)
     expect(steps.filter((s) => s.optional && !s.done).map((s) => s.id)).toEqual(['materials', 'ai'])
+  })
+
+  it('asks for terms first, and isn’t complete until there is one', () => {
+    const steps = setupSteps(fresh)
+    expect(steps[0]).toMatchObject({ id: 'terms', done: false, optional: false })
+    expect(steps[0].to).toBe('/settings?section=grading&focus=terms')
+    const allButTerms = setupSteps({
+      ...fresh,
+      classCount: 1,
+      activeEnrollmentCount: 1,
+      publishedHomeworkCount: 1,
+      portalConnected: true,
+      inviteBatchCount: 1,
+      firstClassId: 'c1'
+    })
+    expect(setupComplete(allButTerms)).toBe(false)
+    expect(setupSteps({ ...fresh, termCount: 1 })[0].done).toBe(true)
   })
 })

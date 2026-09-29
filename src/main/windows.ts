@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { BrowserWindow, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import { isSafeExternalUrl } from '@shared/externalUrl'
 import icon from '../../resources/icon.png?asset'
@@ -56,10 +56,13 @@ export function createMainWindow(): BrowserWindow {
 }
 
 /** The school's logo as the window's (and taskbar's) icon, or EduBoard's own when there's
- * none. macOS shows the program's icon in the Dock whatever the window says. */
+ * none. On macOS windows have no icon: the logo goes on the Dock while EduBoard is open. */
 export function applyWindowIcon(schoolLogo: string): void {
-  if (process.platform === 'darwin') return
   const image = schoolLogo ? nativeImage.createFromDataURL(schoolLogo) : null
+  if (process.platform === 'darwin') {
+    app.dock?.setIcon(image && !image.isEmpty() ? image : nativeImage.createFromPath(icon))
+    return
+  }
   for (const win of BrowserWindow.getAllWindows()) {
     if (image && !image.isEmpty()) win.setIcon(image)
     else if (process.platform === 'linux' || schoolLogo === '') win.setIcon(icon)

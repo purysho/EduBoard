@@ -1,5 +1,6 @@
 import { AppError } from '@shared/errorCodes'
 import { isSampleSchool, leaveSampleSchool, openSampleSchool } from '../services/sampleSchool'
+import { applyShortcutBranding } from '../services/shortcutBranding'
 import { studentTimeline } from '../services/studentTimeline'
 import { applyScoreImport, readScoreSheet } from '../services/scoreImport'
 import type { ScoreImportRequest } from '@shared/scoreImport'
@@ -153,6 +154,11 @@ import {
 /** The newsletter being written (Newsletter page), kept in the database with the rest of
  * this school's data. */
 const NEWSLETTER_DRAFT_KEY = 'newsletter_draft'
+
+/** The school's name and logo on the Windows shortcuts; the sample school leaves them be. */
+function brandShortcuts(): void {
+  if (!isSampleSchool()) applyShortcutBranding(settingsRepo.getSettings())
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
@@ -510,6 +516,7 @@ export function registerIpcHandlers(): void {
     const saved = settingsRepo.updateSettings(patch)
     if (patch && 'appDisplayName' in patch) saveUiPrefs({ appName: saved.appDisplayName })
     if (patch && 'schoolLogo' in patch) applyWindowIcon(saved.schoolLogo)
+    if (patch && ('appDisplayName' in patch || 'schoolLogo' in patch)) brandShortcuts()
     if (patch && 'usagePing' in patch) usagePingSettingChanged(saved.usagePing === true)
     return saved
   })
@@ -911,6 +918,9 @@ export function registerIpcHandlers(): void {
       saveUiPrefs({ appName: plan.settings.appDisplayName })
     }
     if (plan.settings.schoolLogo !== undefined) applyWindowIcon(plan.settings.schoolLogo)
+    if (plan.settings.appDisplayName !== undefined || plan.settings.schoolLogo !== undefined) {
+      brandShortcuts()
+    }
     // New words only show once screens reload.
     return { changes: plan.changes, reload: !!plan.settings.terminology }
   })
@@ -925,14 +935,18 @@ export function registerIpcHandlers(): void {
     settingsRepo.updateSettings({ customCss: sanitizeCss(css) })
     return checkCss(css, MAX_CSS_CHARS)
   })
-  handle(IpcChannels.schoolPack.saveExampleCss, async () => {
+  handle(IpcChannels.schoolPack.saveExampleCss, async (_e, css?: unknown, fileName?: unknown) => {
+    const own = typeof css === 'string' && css.trim() ? css : null
     const { canceled, filePath } = await showSaveDialogOnTop({
-      title: tr('Save an example stylesheet'),
-      defaultPath: 'eduboard-school.css',
+      title: own ? tr('Save a copy of this style') : tr('Save an example stylesheet'),
+      defaultPath:
+        typeof fileName === 'string' && /^[\w .-]{1,80}\.css$/.test(fileName)
+          ? fileName
+          : 'eduboard-school.css',
       filters: [{ name: tr('Stylesheet'), extensions: ['css'] }]
     })
     if (canceled || !filePath) return false
-    await writeFile(filePath, exampleStylesheet(), 'utf-8')
+    await writeFile(filePath, own ? sanitizeCss(own) : exampleStylesheet(), 'utf-8')
     return true
   })
 

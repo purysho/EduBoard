@@ -266,7 +266,7 @@ const api: EduBoardApi = {
     preview: () => invoke(IpcChannels.schoolPack.preview),
     apply: (filePath) => invoke(IpcChannels.schoolPack.apply, filePath),
     importCss: () => invoke(IpcChannels.schoolPack.importCss),
-    saveExampleCss: () => invoke(IpcChannels.schoolPack.saveExampleCss)
+    saveExampleCss: (css, fileName) => invoke(IpcChannels.schoolPack.saveExampleCss, css, fileName)
   },
   coursePack: {
     preview: () => invoke(IpcChannels.coursePack.preview),

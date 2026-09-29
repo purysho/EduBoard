@@ -412,7 +412,8 @@ export interface EduBoardApi {
     /** Loads a school stylesheet and says what it changes, or null if none was chosen. */
     importCss(): Promise<CssCheck | null>
     /** Saves an example stylesheet with every EduBoard colour, to edit and load. */
-    saveExampleCss(): Promise<boolean>
+    /** With css: saves that stylesheet (a style from the library) instead of the example. */
+    saveExampleCss(css?: string, fileName?: string): Promise<boolean>
   }
   coursePack: {
     /** Chooses and validates a curriculum pack without changing the database. */

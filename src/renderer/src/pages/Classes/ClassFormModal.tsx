@@ -124,6 +124,18 @@ export function ClassFormModal({
               </option>
             ))}
           </Select>
+          {terms && terms.length === 0 && (
+            <button
+              type="button"
+              className="mt-1 text-xs font-medium text-[var(--color-primary)] hover:underline"
+              onClick={() => {
+                onClose()
+                navigate('/settings?section=grading&focus=terms')
+              }}
+            >
+              {tr('No terms yet: set them up')}
+            </button>
+          )}
         </FormRow>
         <FormRow label={tr('Schedule')} hint={tr('e.g. Mon/Wed/Fri 9:00–9:50')}>
           <Input value={schedule} onChange={(e) => setSchedule(e.target.value)} />

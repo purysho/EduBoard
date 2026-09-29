@@ -8,6 +8,7 @@ import { useManagedBranding, useSettings, useUpdateSettings } from '@renderer/li
 import { cleanAppName, MAX_APP_NAME, PRODUCT_NAME, type BrandingKey } from '@shared/branding'
 import { ACCENT_PRESETS, isHexColour, whiteTextContrast } from '@renderer/lib/appearance'
 import { cn } from '@renderer/lib/cn'
+import { styleLibrary } from '@shared/styleLibrary'
 import { tr, trn } from '@shared/i18n'
 
 const MAX_LOGO_PX = 256
@@ -241,6 +242,84 @@ export function AppearancePanel(): React.JSX.Element | null {
               )}
             </p>
           )}
+        </section>
+
+        <section>
+          <h3 className="mb-1 font-medium">{tr('Style library')}</h3>
+          <p className="mb-2 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'Ready-made looks for the whole app. Using one replaces the school stylesheet below; “Save a copy” gives you the .css file to change and load back.'
+            )}
+          </p>
+          <fieldset
+            disabled={locked('customCss')}
+            className="grid grid-cols-2 gap-2 lg:grid-cols-4"
+          >
+            {styleLibrary().map((style) => {
+              const inUse = settings.customCss.trim() === style.css.trim()
+              return (
+                <div
+                  key={style.id}
+                  className={cn(
+                    'flex flex-col rounded-lg border p-2',
+                    inUse
+                      ? 'border-[var(--color-primary)] ring-1 ring-[var(--color-primary)]'
+                      : 'border-[var(--color-border)]'
+                  )}
+                >
+                  {/* A small picture of the style: page, a card, a button and some text. */}
+                  <div
+                    aria-hidden
+                    className="mb-2 h-16 rounded-md p-1.5"
+                    style={{ background: style.swatch.bg }}
+                  >
+                    <div className="h-full rounded" style={{ background: style.swatch.surface }}>
+                      <div className="flex h-full flex-col justify-between p-1.5">
+                        <div
+                          className="h-1.5 w-3/4 rounded-full"
+                          style={{ background: style.swatch.text }}
+                        />
+                        <div
+                          className="h-1.5 w-1/2 rounded-full opacity-50"
+                          style={{ background: style.swatch.text }}
+                        />
+                        <div
+                          className="h-3 w-10 rounded"
+                          style={{ background: style.swatch.primary }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium">{style.name}</p>
+                  <p className="mb-2 flex-1 text-xs text-[var(--color-text-muted)]">
+                    {style.description}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    <Button
+                      variant={inUse ? 'secondary' : 'primary'}
+                      size="sm"
+                      disabled={inUse}
+                      onClick={() => {
+                        set({ customCss: style.css })
+                        setCssNote(null)
+                      }}
+                    >
+                      {inUse ? tr('In use') : tr('Use this')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        window.api.schoolPack.saveExampleCss(style.css, `eduboard-${style.id}.css`)
+                      }
+                    >
+                      {tr('Save a copy')}
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </fieldset>
         </section>
 
         <section>

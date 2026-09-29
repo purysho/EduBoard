@@ -7,6 +7,7 @@ import { registerIpcHandlers } from './ipc/register'
 import { initUiLanguage, syncUiPrefsWithSettings } from './i18n'
 import { getSettings } from './repositories/settingsRepo'
 import { applyWindowIcon, createMainWindow } from './windows'
+import { applyShortcutBranding } from './services/shortcutBranding'
 import { applyManagedSchoolPack } from './services/managedSchoolPack'
 import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
@@ -60,6 +61,8 @@ app.whenReady().then(() => {
     if (installing) return
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
     applyWindowIcon(getSettings().schoolLogo)
+    // The desktop and Start menu shortcuts carry the school's name and logo too (Windows).
+    if (!isSampleSchool()) applyShortcutBranding(getSettings())
     carryOn()
   }
   const carryOn = (): void => {

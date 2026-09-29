@@ -137,7 +137,7 @@ export function TermsPanel(): React.JSX.Element {
   }
 
   return (
-    <Card>
+    <Card id="settings-terms" className="scroll-mt-4">
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <CalendarRange size={15} className="text-[var(--color-text-muted)]" aria-hidden />

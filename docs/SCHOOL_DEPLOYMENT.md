@@ -7,14 +7,19 @@ teacher can also just download EduBoard and use it on their own.
 
 | | How | Who can change it |
 | --- | --- | --- |
-| **The app's name** (e.g. "Riverside Teacher Hub"), shown in the sidebar, the window title and the lock screen | Settings → Appearance → App name | The teacher, unless the school locks it (below) |
-| **Logo**: sidebar, window and taskbar icon, report cards and printouts | Settings → Appearance → School logo | Same |
+| **The app's name** (e.g. "Riverside Teacher Hub"), shown in the sidebar, the window title, the lock screen and, on Windows, the desktop and Start menu shortcuts | Settings → Appearance → App name | The teacher, unless the school locks it (below) |
+| **Logo**: sidebar, window and taskbar icon, the desktop, Start menu and pinned taskbar shortcuts (Windows), the Dock while EduBoard is open (Mac), report cards and printouts | Settings → Appearance → School logo | Same |
 | **Colour** and a **stylesheet** (fonts, background, colours) | Settings → Appearance | Same |
 | **School name** | Settings → You and your school | Same |
 | Grading scale, pass mark, terms, attendance codes, class points, report card layout, comment bank, letter template, templates, the school's own words | Set them up once, then Settings → Data and security → School pack → Export | Each teacher, after it's applied |
 
-The branding is decorative. The program itself, its installer, its updates, Settings → Help
-and edu-board.com still say EduBoard, so teachers can always find help and updates. The
+The branding is decorative. The program itself, its installer, its updates, Windows' list of
+installed apps, Settings → Help and edu-board.com still say EduBoard, so teachers can always
+find help and updates. On Windows, EduBoard renames its own shortcuts when the name or logo
+changes (an update's new "EduBoard" shortcut is folded back in at the next start, and
+uninstalling removes the renamed ones). A pinned taskbar icon keeps its pin and may show the
+new logo only after the computer restarts. The Mac Dock shows the logo only while the app is
+open; the Mac program's name can't change. The
 Portal families use stays at the address the school chooses.
 
 ## Options for a whole school

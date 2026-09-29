@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Brush,
@@ -187,7 +187,15 @@ export function SettingsPage(): React.JSX.Element {
   const location = useLocation()
   const [query, setQuery] = useState('')
 
-  const asked = new URLSearchParams(location.search).get('section') ?? 'general'
+  const params = new URLSearchParams(location.search)
+  const asked = params.get('section') ?? 'general'
+  // "focus" scrolls to one card in the section (e.g. the Getting started step for terms).
+  const focus = params.get('focus')
+  useEffect(() => {
+    if (!focus || isLoading) return
+    const el = document.getElementById(`settings-${focus}`)
+    el?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [focus, isLoading])
   const current = SECTIONS.find((s) => s.id === (ALIASES[asked] ?? asked)) ?? SECTIONS[0]
 
   const matches = useMemo(() => {
