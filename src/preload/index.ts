@@ -80,7 +80,10 @@ const api: EduBoardApi = {
     update: (id, patch) => invoke(IpcChannels.lessonPlans.update, id, patch),
     remove: (id) => invoke(IpcChannels.lessonPlans.remove, id),
     copyWeek: (classId, fromMonday, toMonday) =>
-      invoke(IpcChannels.lessonPlans.copyWeek, classId, fromMonday, toMonday)
+      invoke(IpcChannels.lessonPlans.copyWeek, classId, fromMonday, toMonday),
+    resourceIds: (lessonPlanId) => invoke(IpcChannels.lessonPlans.resourceIds, lessonPlanId),
+    setResources: (lessonPlanId, resourceIds) =>
+      invoke(IpcChannels.lessonPlans.setResources, lessonPlanId, resourceIds)
   },
   scheduleSlots: {
     listByClass: (classId) => invoke(IpcChannels.scheduleSlots.listByClass, classId),
@@ -105,6 +108,9 @@ const api: EduBoardApi = {
   },
   competencies: {
     matrix: (classId) => invoke(IpcChannels.competencies.matrix, classId)
+  },
+  curriculumMap: {
+    get: (scopeType, scopeId) => invoke(IpcChannels.curriculumMap.get, scopeType, scopeId)
   },
   settings: {
     get: () => invoke(IpcChannels.settings.get),
