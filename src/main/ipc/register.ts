@@ -434,13 +434,11 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.lessonPlans.resourceIds, (_e, lessonPlanId: string) =>
     lessonPlansRepo.listLessonResourceIds(String(lessonPlanId))
   )
-  handle(
-    IpcChannels.lessonPlans.setResources,
-    (_e, lessonPlanId: string, resourceIds: string[]) =>
-      lessonPlansRepo.setLessonResources(
-        String(lessonPlanId),
-        Array.isArray(resourceIds) ? resourceIds.map(String) : []
-      )
+  handle(IpcChannels.lessonPlans.setResources, (_e, lessonPlanId: string, resourceIds: string[]) =>
+    lessonPlansRepo.setLessonResources(
+      String(lessonPlanId),
+      Array.isArray(resourceIds) ? resourceIds.map(String) : []
+    )
   )
 
   // --- Schedule slots (Timetable) ------------------------------------------------------------

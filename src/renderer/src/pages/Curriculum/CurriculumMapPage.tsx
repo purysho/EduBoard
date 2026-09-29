@@ -180,7 +180,9 @@ export function CurriculumMapPage(): React.JSX.Element {
                     <div className="border-b border-[var(--color-border)] px-4 py-3">
                       <h2 className="text-sm font-semibold">{tr('Standard coverage')}</h2>
                       <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-                        {tr('Counts reflect lesson status; planned lessons are not treated as taught.')}
+                        {tr(
+                          'Counts reflect lesson status; planned lessons are not treated as taught.'
+                        )}
                       </p>
                       {!!standardsWithoutTaughtLessons.length && (
                         <div className="mt-3 rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)] p-2.5">
@@ -254,11 +256,19 @@ export function CurriculumMapPage(): React.JSX.Element {
                           <thead className="bg-[var(--color-surface-muted)] text-xs text-[var(--color-text-muted)]">
                             <tr>
                               <th className="w-32 px-4 py-2 text-left font-medium">{tr('Date')}</th>
-                              <th className="w-24 px-3 py-2 text-left font-medium">{tr('Status')}</th>
+                              <th className="w-24 px-3 py-2 text-left font-medium">
+                                {tr('Status')}
+                              </th>
                               <th className="px-3 py-2 text-left font-medium">{tr('Lesson')}</th>
-                              <th className="w-44 px-3 py-2 text-left font-medium">{tr('Standards')}</th>
-                              <th className="w-44 px-3 py-2 text-left font-medium">{tr('Assessment')}</th>
-                              <th className="w-52 px-3 py-2 text-left font-medium">{tr('Resources')}</th>
+                              <th className="w-44 px-3 py-2 text-left font-medium">
+                                {tr('Standards')}
+                              </th>
+                              <th className="w-44 px-3 py-2 text-left font-medium">
+                                {tr('Assessment')}
+                              </th>
+                              <th className="w-52 px-3 py-2 text-left font-medium">
+                                {tr('Resources')}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>

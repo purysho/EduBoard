@@ -44,9 +44,7 @@ export function CoursePackPanel(): React.JSX.Element {
     !!preview &&
     preview.terms.length > 0 &&
     !hasDuplicateClass &&
-    preview.terms.every(
-      (term) => Boolean(bindings[term.key]) && Boolean(firstClassDates[term.key])
-    )
+    preview.terms.every((term) => Boolean(bindings[term.key]) && Boolean(firstClassDates[term.key]))
 
   return (
     <Card>
@@ -77,9 +75,7 @@ export function CoursePackPanel(): React.JSX.Element {
                 setClasses(allClasses.filter((cls) => !cls.archived))
                 setBindings({})
                 setFirstClassDates(
-                  Object.fromEntries(
-                    pack.terms.map((term) => [term.key, term.startDate ?? ''])
-                  )
+                  Object.fromEntries(pack.terms.map((term) => [term.key, term.startDate ?? '']))
                 )
                 setPreview(pack)
               } catch (err) {
@@ -168,18 +164,20 @@ export function CoursePackPanel(): React.JSX.Element {
 
             <div className="space-y-3">
               <div className="grid grid-cols-3 gap-2 text-xs">
-                {[tr('1. Preview'), tr('2. Map terms'), tr('3. Import safely')].map((step, index) => (
-                  <div
-                    key={step}
-                    className={`rounded-md border px-2 py-2 text-center ${
-                      index === 1
-                        ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] font-medium'
-                        : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
-                    }`}
-                  >
-                    {step}
-                  </div>
-                ))}
+                {[tr('1. Preview'), tr('2. Map terms'), tr('3. Import safely')].map(
+                  (step, index) => (
+                    <div
+                      key={step}
+                      className={`rounded-md border px-2 py-2 text-center ${
+                        index === 1
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] font-medium'
+                          : 'border-[var(--color-border)] text-[var(--color-text-muted)]'
+                      }`}
+                    >
+                      {step}
+                    </div>
+                  )
+                )}
               </div>
 
               <div>
@@ -192,7 +190,10 @@ export function CoursePackPanel(): React.JSX.Element {
               </div>
 
               {preview.terms.map((term) => (
-                <div key={term.key} className="space-y-2 rounded-md border border-[var(--color-border)] p-3">
+                <div
+                  key={term.key}
+                  className="space-y-2 rounded-md border border-[var(--color-border)] p-3"
+                >
                   <span className="block text-xs font-medium">
                     {term.name} · {term.schoolYear}
                   </span>

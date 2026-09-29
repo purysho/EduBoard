@@ -147,7 +147,9 @@ const SECTIONS: Section[] = [
     id: 'data',
     label: tr('Data and security'),
     blurb: tr('Backups, password, imports and packs'),
-    keywords: tr('backup restore password lock encryption import roster excel school pack course pack curriculum export'),
+    keywords: tr(
+      'backup restore password lock encryption import roster excel school pack course pack curriculum export'
+    ),
     icon: ShieldCheck,
     content: () => (
       <>

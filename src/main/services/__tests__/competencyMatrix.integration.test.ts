@@ -4,11 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { closeDb, initDb, setDbPathForTesting } from '../../db/client'
-import {
-  DEFAULT_GRADE_THRESHOLDS,
-  type CompetencyEvidenceCell,
-  type Student
-} from '@shared/types'
+import { DEFAULT_GRADE_THRESHOLDS, type CompetencyEvidenceCell, type Student } from '@shared/types'
 import { createStudent } from '../../repositories/students'
 import { createClass } from '../../repositories/classes'
 import { enrollStudent } from '../../repositories/enrollments'
@@ -156,10 +152,7 @@ describe('competency evidence matrix', () => {
     expect(matrix.standards.map((standard) => standard.code)).toEqual(['ENG-01', 'ENG-02'])
     expect(matrix.students.map((student) => student.name)).toEqual(['Ada Lovelace', 'Grace Hopper'])
 
-    const cell = (
-      studentId: string,
-      standardId: string
-    ): CompetencyEvidenceCell | undefined =>
+    const cell = (studentId: string, standardId: string): CompetencyEvidenceCell | undefined =>
       matrix.cells.find((item) => item.studentId === studentId && item.standardId === standardId)
 
     expect(cell(ada.id, speaking.id)).toMatchObject({

@@ -12,18 +12,25 @@ import { getClass, listClassesByCourseGroup } from '../repositories/classes'
 import { listCourseGroups } from '../repositories/courseGroups'
 import { listTerms } from '../repositories/terms'
 import { listAssessmentsByClass } from '../repositories/assessments'
-import {
-  listLessonPlansByClass,
-  listLessonResourceIds
-} from '../repositories/lessonPlans'
+import { listLessonPlansByClass, listLessonResourceIds } from '../repositories/lessonPlans'
 import { listLessonResources } from '../repositories/lessonResources'
 
 function parseStandards(value: string | null): string[] {
   if (!value) return []
-  return [...new Set(value.split(',').map((part) => part.trim()).filter(Boolean))]
+  return [
+    ...new Set(
+      value
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+    )
+  ]
 }
 
-function resolveScope(scopeType: CurriculumMapScopeType, scopeId: string): {
+function resolveScope(
+  scopeType: CurriculumMapScopeType,
+  scopeId: string
+): {
   name: string
   classes: ClassSection[]
 } {

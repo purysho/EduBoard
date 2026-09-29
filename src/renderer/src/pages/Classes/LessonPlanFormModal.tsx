@@ -51,7 +51,9 @@ export function LessonPlanFormModal({
   const updatePlan = useUpdateLessonPlan(classId)
   const setResources = useSetLessonPlanResources()
   const { data: resources } = useLessonResources()
-  const { data: savedResourceIds, isLoading: resourceIdsLoading } = useLessonPlanResourceIds(plan?.id)
+  const { data: savedResourceIds, isLoading: resourceIdsLoading } = useLessonPlanResourceIds(
+    plan?.id
+  )
 
   const [date, setDate] = useState(plan?.date ?? todayIso())
   const [title, setTitle] = useState(plan?.title ?? initialDraft?.title ?? '')

@@ -67,7 +67,8 @@ export const queryKeys = {
     ['students', studentId, 'classes', classId, 'attendance'] as const,
   attendanceCheckInStatus: (classId: string) => ['classes', classId, 'attendanceCheckIn'] as const,
   lessonPlans: (classId: string) => ['classes', classId, 'lessonPlans'] as const,
-  lessonPlanResourceIds: (lessonPlanId: string) => ['lessonPlans', lessonPlanId, 'resources'] as const,
+  lessonPlanResourceIds: (lessonPlanId: string) =>
+    ['lessonPlans', lessonPlanId, 'resources'] as const,
   curriculumMap: (scopeType: 'courseGroup' | 'class', scopeId: string) =>
     ['curriculumMap', scopeType, scopeId] as const,
   upcomingLessonPlans: ['lessonPlans', 'upcoming'] as const,

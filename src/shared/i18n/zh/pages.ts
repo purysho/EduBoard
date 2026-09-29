@@ -239,8 +239,6 @@ export const PAGES: Record<string, string> = {
   'Unplaced assessments': '未安排到课程中的测评',
   'These assessments exist in the selected curriculum but are not linked to a lesson plan yet.':
     '这些测评已存在于所选课程中，但尚未关联到具体课程计划。',
-  'No date': '无日期'
-,
+  'No date': '无日期',
   'No taught lesson yet for:': '以下标准还没有已完成的课程：'
-
 }

@@ -163,8 +163,14 @@ describe('Course Packs', () => {
   it('accepts web links on resources but rejects links that could run a program', () => {
     const raw = JSON.parse(JSON.stringify(samplePack()))
     raw.resources[0].url = 'https://example.org/model'
-    expect(parseCoursePack(JSON.stringify(raw)).resources?.[0].url).toBe('https://example.org/model')
-    for (const url of ['file://\\\\attacker\\share\\run.exe', 'ms-msdt:/id x', 'javascript:alert(1)']) {
+    expect(parseCoursePack(JSON.stringify(raw)).resources?.[0].url).toBe(
+      'https://example.org/model'
+    )
+    for (const url of [
+      'file://\\\\attacker\\share\\run.exe',
+      'ms-msdt:/id x',
+      'javascript:alert(1)'
+    ]) {
       raw.resources[0].url = url
       expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/resources\[0\]\.url/)
     }
@@ -200,7 +206,10 @@ describe('Course Packs', () => {
       type: 'note',
       tags: ['speaking', 'model']
     })
-    expect(getSettings().studentFields).toContainEqual({ id: 'english-goal', label: 'English goal' })
+    expect(getSettings().studentFields).toContainEqual({
+      id: 'english-goal',
+      label: 'English goal'
+    })
     expect(listAssessmentsByClass(cls.id)[0]).toMatchObject({
       name: 'Presentation 1',
       assessmentDate: '2026-09-21'
@@ -271,7 +280,9 @@ describe('Course Packs', () => {
     expect(listStandards()).toHaveLength(1)
     expect(listAssessmentsByClass(cls.id)).toHaveLength(1)
     expect(listLessonResources().filter((r) => r.title === 'Model explanation')).toHaveLength(1)
-    expect(getSettings().studentFields.filter((field) => field.id === 'english-goal')).toHaveLength(1)
+    expect(getSettings().studentFields.filter((field) => field.id === 'english-goal')).toHaveLength(
+      1
+    )
     expect(listHomeworkAssignmentsByClass(cls.id)).toHaveLength(1)
     const lesson = listLessonPlansByClass(cls.id)[0]
     expect(listLessonPlansByClass(cls.id)).toHaveLength(1)

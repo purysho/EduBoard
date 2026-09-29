@@ -38,9 +38,9 @@ export function CompetenciesTab(): React.JSX.Element {
             <div className="max-w-2xl">
               <h2 className="text-sm font-semibold">{tr('Competency evidence')}</h2>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {tr(
-              'Each cell shows the newest rubric evidence recorded for that student and Standard. If several criteria in that same task disagree, EduBoard shows mixed evidence instead of inventing an average.'
-            )}
+                {tr(
+                  'Each cell shows the newest rubric evidence recorded for that student and Standard. If several criteria in that same task disagree, EduBoard shows mixed evidence instead of inventing an average.'
+                )}
               </p>
             </div>
             <label className="relative w-full max-w-xs">
@@ -88,7 +88,10 @@ export function CompetenciesTab(): React.JSX.Element {
             </thead>
             <tbody>
               {visibleStudents.map((student) => (
-                <tr key={student.id} className="border-b border-[var(--color-border)] last:border-b-0">
+                <tr
+                  key={student.id}
+                  className="border-b border-[var(--color-border)] last:border-b-0"
+                >
                   <th className="sticky left-0 z-10 bg-[var(--color-surface)] px-3 py-3 text-left font-medium">
                     {student.name}
                   </th>
@@ -111,9 +114,7 @@ export function CompetenciesTab(): React.JSX.Element {
                         )}
                         {hasEvidence ? (
                           <div className="mt-1 space-y-0.5 text-xs text-[var(--color-text-muted)]">
-                            <div>
-                              {tr('{n} evidence item(s)', { n: cell.evidenceCount })}
-                            </div>
+                            <div>{tr('{n} evidence item(s)', { n: cell.evidenceCount })}</div>
                             {source && (
                               <div title={source} className="max-w-44 truncate">
                                 {tr('Latest: {source}', { source })}

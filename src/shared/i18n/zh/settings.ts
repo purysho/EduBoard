@@ -547,5 +547,4 @@ export const SETTINGS: Record<string, string> = {
   'already used for another term': '已用于另一个学期',
   'Use a different class for each term in this Course Pack.':
     '请为此课程包中的每个学期选择不同的班级。'
-
 }
