@@ -364,7 +364,9 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
       )
       if (!date) throw new Error(`Lesson "${source.title}" needs a first class date.`)
       const existing = listLessonPlansByClass(classId).find(
-        (lesson) => lesson.date === date && norm(lesson.title) === norm(source.title)
+        (lesson) =>
+          norm(lesson.title) === norm(source.title) &&
+          (lesson.originalDate === date || lesson.date === date)
       )
       let lesson = existing
       if (lesson) {
