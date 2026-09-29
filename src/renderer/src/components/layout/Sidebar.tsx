@@ -15,6 +15,7 @@ import {
   History,
   Layers,
   LayoutGrid,
+  Map,
   MessageCircle,
   MessageSquare,
   Settings2,
@@ -49,6 +50,7 @@ const navGroups: {
     items: [
       { to: '/calendar', label: tr('Calendar'), icon: Calendar },
       { to: '/timetable', label: tr('Timetable'), icon: CalendarDays },
+      { to: '/curriculum', label: tr('Curriculum'), icon: Map },
       { to: '/resources', label: tr('Resources'), icon: FolderOpen },
       { to: '/notebook', label: tr('Notebook'), icon: BookOpenText }
     ]
