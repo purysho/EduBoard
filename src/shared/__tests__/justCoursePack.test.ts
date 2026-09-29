@@ -16,6 +16,7 @@ describe('JUST Applied Academic & Professional English Course Pack', () => {
     expect(pack.rubrics).toHaveLength(5)
     expect(pack.lessons).toHaveLength(34)
     expect(pack.assessments).toHaveLength(10)
+    expect(pack.resources).toHaveLength(40)
     expect(pack.studentFields).toHaveLength(9)
   })
 
@@ -28,6 +29,42 @@ describe('JUST Applied Academic & Professional English Course Pack', () => {
     expect(t1).toHaveLength(15)
     expect(t2).toHaveLength(19)
     expect(flex.map((lesson) => lesson.key)).toEqual(['t2-13', 't2-15', 't2-16'])
+  })
+
+  it('ships a complete teaching-material layer for every planned session', () => {
+    const pack = parseCoursePack(readFileSync(packPath, 'utf8'))
+    const lessonKeys = new Set(pack.lessons?.map((lesson) => lesson.key) ?? [])
+    const kitKeys = new Set(
+      (pack.resources ?? [])
+        .map((resource) => resource.key)
+        .filter((key) => key.startsWith('kit-'))
+        .map((key) => key.slice(4))
+    )
+
+    expect(kitKeys).toEqual(lessonKeys)
+    expect(pack.resources?.map((resource) => resource.key)).toContain('university-activity-bank')
+
+    for (const lesson of pack.lessons ?? []) {
+      expect(lesson.resourceKeys).toContain(`kit-${lesson.key}`)
+      expect(lesson.resourceKeys).toContain('poa-spine')
+      expect(lesson.resourceKeys).toContain('support-core-stretch')
+      expect(lesson.materials).toContain('Linked lesson kit:')
+      expect(lesson.homework?.trim().length).toBeGreaterThan(0)
+
+      const stages = lesson.activities?.split('\n').filter(Boolean) ?? []
+      expect(stages).toHaveLength(8)
+      expect(stages[0]).toMatch(/^Retrieval:/)
+      expect(stages[1]).toMatch(/^Output challenge:/)
+      expect(stages[7]).toMatch(/^Exit ticket:/)
+
+      const kit = pack.resources?.find((resource) => resource.key === `kit-${lesson.key}`)
+      expect(kit?.type).toBe('note')
+      expect(kit?.notes).toContain('CORE INPUT / CASE')
+      expect(kit?.notes).toContain('STUDENT TASK SHEET')
+      expect(kit?.notes).toContain('SUPPORT')
+      expect(kit?.notes).toContain('STRETCH')
+      expect(kit?.notes).toContain('FEEDBACK / EXIT')
+    }
   })
 
   it('keeps the university curriculum in the pack rather than requiring university-only EduBoard data', () => {
