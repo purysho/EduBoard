@@ -1,6 +1,7 @@
 import { is } from '@electron-toolkit/utils'
 import { BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
+import { isSafeExternalUrl } from '@shared/externalUrl'
 import icon from '../../resources/icon.png?asset'
 
 const preloadPath = join(__dirname, '../preload/index.js')
@@ -36,8 +37,10 @@ export function createMainWindow(): BrowserWindow {
   })
 
   win.on('ready-to-show', () => win.show())
+  // Links that would open a new window go to the system browser instead, and only web
+  // and email links at all (see isSafeExternalUrl).
   win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    if (isSafeExternalUrl(details.url)) void shell.openExternal(details.url)
     return { action: 'deny' }
   })
   loadAppRoute(win, '/').catch((err) => {

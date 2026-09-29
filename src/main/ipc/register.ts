@@ -119,6 +119,7 @@ import {
   sanitizeCss
 } from '@shared/schoolPack'
 import { parseCoursePack } from '@shared/coursePack'
+import { isSafeExternalUrl } from '@shared/externalUrl'
 import { checkCss, exampleStylesheet } from '@shared/cssCheck'
 import { getDeviceSyncStatus } from '../services/deviceSync'
 import * as importExportService from '../services/importExport'
@@ -723,7 +724,13 @@ export function registerIpcHandlers(): void {
     return canceled || !filePaths[0] ? null : filePaths[0]
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
-  handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => shell.openExternal(url))
+  handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => {
+    // Only web pages and email: a resource's link may come from a shared Course Pack.
+    if (!isSafeExternalUrl(url)) {
+      throw new AppError('EB-0004', tr('Only web (http/https) and email links can be opened.'))
+    }
+    return shell.openExternal(url.trim())
+  })
 
   // --- Notebook (chat with your Resources library) ------------------------------------------
   handle(IpcChannels.notebook.indexResource, (_e, resourceId: string) => indexResource(resourceId))

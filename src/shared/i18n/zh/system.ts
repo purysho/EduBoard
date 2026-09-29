@@ -326,5 +326,7 @@ export const SYSTEM: Record<string, string> = {
     '{what}这项功能通过学生门户（学生和家长登录的网站，需要联网）完成。EduBoard 的其他功能不需要门户也能使用。',
   'Open Portal settings': '打开门户设置',
   'Families can message you, and you them, with a translation if you need one.':
-    '家长可以给你发消息，你也可以回复，需要时还可以翻译。'
+    '家长可以给你发消息，你也可以回复，需要时还可以翻译。',
+  'Only web (http/https) and email links can be opened.':
+    '只能打开网页（http/https）和电子邮件链接。'
 }

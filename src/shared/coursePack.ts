@@ -1,3 +1,4 @@
+import { isSafeExternalUrl } from './externalUrl'
 import { LESSON_RESOURCE_TYPES, type HomeworkAssignmentStatus, type LessonResourceType, type StudentField } from './types'
 
 export interface CoursePackTerm {
@@ -115,6 +116,13 @@ function optionalString(value: unknown, label: string, max = 5000): string | nul
     throw new Error(`Invalid course pack: ${label}`)
   }
   return value
+}
+
+/** A resource link: a web page or email address only, since it will be opened on click. */
+function webUrl(value: unknown, label: string): string | null | undefined {
+  const out = optionalString(value, label, 2000)
+  if (out && !isSafeExternalUrl(out)) throw new Error(`Invalid course pack: ${label}`)
+  return out
 }
 
 function key(value: unknown, label: string): string {
@@ -323,7 +331,7 @@ export function parseCoursePack(json: string): CoursePack {
         key: key(x?.key, `resources[${index}].key`),
         title: requiredString(x?.title, `resources[${index}].title`, 160),
         type,
-        url: optionalString(x?.url, `resources[${index}].url`, 2000),
+        url: webUrl(x?.url, `resources[${index}].url`),
         notes: optionalString(x?.notes, `resources[${index}].notes`, 5000),
         tags,
         standardKey

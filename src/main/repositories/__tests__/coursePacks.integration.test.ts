@@ -160,6 +160,16 @@ describe('Course Packs', () => {
     expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/unknown standard key/i)
   })
 
+  it('accepts web links on resources but rejects links that could run a program', () => {
+    const raw = JSON.parse(JSON.stringify(samplePack()))
+    raw.resources[0].url = 'https://example.org/model'
+    expect(parseCoursePack(JSON.stringify(raw)).resources?.[0].url).toBe('https://example.org/model')
+    for (const url of ['file://\\\\attacker\\share\\run.exe', 'ms-msdt:/id x', 'javascript:alert(1)']) {
+      raw.resources[0].url = url
+      expect(() => parseCoursePack(JSON.stringify(raw))).toThrow(/resources\[0\]\.url/)
+    }
+  })
+
   it('rejects duplicate student-field ids', () => {
     const raw = JSON.parse(JSON.stringify(samplePack()))
     raw.studentFields.push({ id: 'english-goal', label: 'Duplicate' })
