@@ -5,6 +5,7 @@
 // skimming on their phone wants "what do I need to know this week," not a transcript.
 const db = require('../db')
 const { sendMail, markDigestSent, getDigestSettings, digestOptions } = require('./mailer')
+const { brandName } = require('./branding')
 
 function esc(s) {
   return String(s ?? '').replace(
@@ -18,7 +19,7 @@ function esc(s) {
 const WORDS = {
   en: {
     title: 'Weekly update',
-    subject: 'Your weekly EduBoard update',
+    subject: (name) => `Your weekly ${name} update`,
     class: 'Class',
     grade: 'Grade',
     attendance: 'Attendance',
@@ -35,7 +36,7 @@ const WORDS = {
   },
   zh: {
     title: '每周简报',
-    subject: 'EduBoard 每周简报',
+    subject: (name) => `${name} 每周简报`,
     class: '班级',
     grade: '成绩',
     attendance: '出勤率',
@@ -269,7 +270,7 @@ async function sendAllDigests(teacherId) {
       await sendMail(
         teacherId,
         account.email,
-        wordsFor(getDigestSettings(teacherId)).subject,
+        wordsFor(getDigestSettings(teacherId)).subject(brandName()),
         buildDigestHtml(account, teacherId)
       )
       sent++

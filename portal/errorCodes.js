@@ -220,6 +220,12 @@ const PORTAL_ERROR_CODES = {
     meaning: 'A usage ping wasn’t in the expected form, or the Portal isn’t accepting new copies.',
     fix: 'Nothing for a teacher to do; the app tries again next week.'
   },
+  'PT-6007': {
+    area: 'Administration',
+    meaning:
+      'The Portal’s name and logo can only follow the teachers’ apps, one teacher, or EduBoard.',
+    fix: 'Refresh the admin page and choose again (the teacher may have been removed).'
+  },
   'PT-9001': {
     area: 'Server',
     meaning:

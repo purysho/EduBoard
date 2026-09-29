@@ -606,5 +606,10 @@ export const SETTINGS: Record<string, string> = {
   'Larger text and stronger lines, for a projector or classroom screen.':
     '更大的文字和更粗的线条，适合投影仪或教室屏幕。',
   'Calm grey': '沉静灰',
-  'Quiet greys with black, nothing bright.': '安静的灰色配黑色，没有鲜艳色彩。'
+  'Quiet greys with black, nothing bright.': '安静的灰色配黑色，没有鲜艳色彩。',
+  'Show this app’s name and logo on the Portal': '在学生门户上显示本应用的名称和标志',
+  'Families see “EduBoard Portal”. Give the app a name and logo in Settings → Appearance and the Portal shows them after your next publish.':
+    '家长目前看到的是“EduBoard 学生门户”。在“设置 → 外观”中为应用设置名称和标志，下次发布后门户就会显示它们。',
+  'After your next publish, families see “{appName}” (and your logo) instead of “EduBoard Portal”. If other teachers share this Portal, it does so when all their apps have this name too (a school pack does that), or when the Portal’s admin chooses it.':
+    '下次发布后，家长看到的将是“{appName}”（以及你的标志），而不是“EduBoard 学生门户”。如果其他老师也使用这个门户，则需要他们的应用也使用同一名称（学校配置包可以做到），或由门户管理员选择它。'
 }

@@ -298,6 +298,16 @@ ensureColumn('digest_settings', 'language', "language TEXT NOT NULL DEFAULT 'en'
 ensureColumn('digest_settings', 'newsletter', 'newsletter TEXT')
 ensureColumn('digest_settings', 'newsletter_until', 'newsletter_until TEXT')
 ensureColumn('digest_settings', 'teacher_email', 'teacher_email TEXT')
+// The name and logo each teacher's app sent, and which the Portal shows (services/branding.js).
+ensureColumn('teachers', 'app_name', 'app_name TEXT')
+ensureColumn('teachers', 'app_logo', 'app_logo BLOB')
+ensureColumn('teachers', 'branding_at', 'branding_at TEXT')
+db.exec(`
+  CREATE TABLE IF NOT EXISTS portal_branding (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    choice TEXT NOT NULL DEFAULT 'auto'
+  );
+`)
 // A student who forgot their password asks here; their teacher approves in the desktop
 // app; then the same browser (holding secret_hash's secret) sets a new password.
 db.exec(`

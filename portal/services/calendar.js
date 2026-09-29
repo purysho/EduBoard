@@ -4,15 +4,16 @@
 const db = require('../db')
 const { hashToken, newRandomToken } = require('../auth')
 const { escapeText, fold } = require('./ics')
+const { brandName } = require('./branding')
 
 const WORDS = {
   en: {
-    calendar: 'EduBoard homework',
+    calendar: (name) => `${name} homework`,
     handedIn: 'Handed in',
     notYet: 'Not handed in yet'
   },
   zh: {
-    calendar: 'EduBoard 作业',
+    calendar: (name) => `${name} 作业`,
     handedIn: '已提交',
     notYet: '尚未提交'
   }
@@ -42,7 +43,7 @@ function buildCalendar(accountId, lang, portalUrl) {
     'PRODID:-//EduBoard//Portal//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:${escapeText(w.calendar)}`,
+    `X-WR-CALNAME:${escapeText(w.calendar(brandName()))}`,
     'REFRESH-INTERVAL;VALUE=DURATION:PT4H',
     'X-PUBLISHED-TTL:PT4H'
   ]

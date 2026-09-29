@@ -53,6 +53,8 @@ import type {
   PortalStudentProfile
 } from '@shared/types'
 import { tr, uiLanguage } from '@shared/i18n'
+import { cleanAppName } from '@shared/branding'
+import { squareLogoPng } from './logoImage'
 
 export class PortalNotConfiguredError extends AppError {
   constructor() {
@@ -340,7 +342,14 @@ function buildPublishPayload(): {
     teacherEmail: settings.teacherEmail,
     // Due dates end at midnight in this zone (see src/shared/deadlines.ts), so the
     // Portal's Late/Missing labels match what the teacher sees here.
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    // This app's name and logo, which the Portal can show families instead of EduBoard's
+    // (portal/services/branding.js). Empty when the teacher turned that off.
+    appName: settings.portalBranding !== false ? cleanAppName(settings.appDisplayName) : '',
+    appLogo:
+      settings.portalBranding !== false
+        ? (squareLogoPng(settings.schoolLogo, 256)?.toString('base64') ?? '')
+        : ''
   }
   return { body, attachmentPaths, materialChunks, skipped }
 }

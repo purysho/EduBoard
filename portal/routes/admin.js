@@ -9,6 +9,7 @@ const fs = require('fs')
 const path = require('path')
 const db = require('../db')
 const { requireAdminSecret, newRandomToken, hashToken } = require('../auth')
+const branding = require('../services/branding')
 const { UPLOADS_DIR, SUBMISSIONS_DIR, POSTS_DIR, PROFILE_PHOTOS_DIR } = require('../paths')
 
 const router = express.Router()
@@ -84,6 +85,19 @@ router.get('/consents', (_req, res) => {
 
 // A basic roster of who's using this Portal and how much they've published — the seed
 // of a school-level admin view (see EduBoardRoadMap.MD Phase 6), not a full dashboard.
+// Which name and logo the Portal shows families (services/branding.js).
+router.get('/branding', (_req, res) => res.json(branding.adminBranding()))
+router.put('/branding', (req, res) => {
+  const choice = req.body?.choice
+  if (typeof choice !== 'string' || !branding.isValidChoice(choice)) {
+    return res
+      .status(400)
+      .json({ error: 'Choose automatic, EduBoard, or a teacher', code: 'PT-6007' })
+  }
+  branding.setChoice(choice)
+  res.json(branding.adminBranding())
+})
+
 router.get('/teachers', (_req, res) => {
   const teachers = db
     .prepare(

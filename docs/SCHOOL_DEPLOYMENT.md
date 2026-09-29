@@ -7,11 +7,20 @@ teacher can also just download EduBoard and use it on their own.
 
 | | How | Who can change it |
 | --- | --- | --- |
-| **The app's name** (e.g. "Riverside Teacher Hub"), shown in the sidebar, the window title, the lock screen and, on Windows, the desktop and Start menu shortcuts | Settings → Appearance → App name | The teacher, unless the school locks it (below) |
+| **The app's name** (e.g. "Riverside Teacher Hub"), shown in the sidebar, the window title, the lock screen, on Windows the desktop and Start menu shortcuts, and on the Portal families use (below) | Settings → Appearance → App name | The teacher, unless the school locks it (below) |
 | **Logo**: sidebar, window and taskbar icon, the desktop, Start menu and pinned taskbar shortcuts (Windows), the Dock while EduBoard is open (Mac), report cards and printouts | Settings → Appearance → School logo | Same |
 | **Colour** and a **stylesheet** (fonts, background, colours) | Settings → Appearance | Same |
 | **School name** | Settings → You and your school | Same |
 | Grading scale, pass mark, terms, attendance codes, class points, report card layout, comment bank, letter template, templates, the school's own words | Set them up once, then Settings → Data and security → School pack → Export | Each teacher, after it's applied |
+
+**On the Portal.** When a teacher publishes, the app sends its name and logo (Settings →
+Portal and families → "Show this app's name and logo on the Portal", on unless turned off).
+The Portal then shows them to families: the page title and header, the icon when it's added
+to a phone's home screen, the weekly email's subject and the homework calendar's name. A
+Portal with one teacher follows that teacher's app. With several teachers it follows the
+name all their apps share (a school pack gives them the same one); if they differ it says
+EduBoard Portal until the Portal's admin page (`/admin.html` → Portal name and logo) picks
+one teacher's, so no single teacher can rename the Portal for everyone.
 
 The branding is decorative. The program itself, its installer, its updates, Windows' list of
 installed apps, Settings → Help and edu-board.com still say EduBoard, so teachers can always

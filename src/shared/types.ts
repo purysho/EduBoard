@@ -905,6 +905,9 @@ export interface AppSettings {
   /** Send an anonymous weekly "still using it" ping (shared/usagePing.ts). Off unless
    * the teacher turns it on. */
   usagePing: boolean
+  /** Send this app's name and logo when publishing, for the Portal to show families
+   * (portal/services/branding.js). On unless the teacher turns it off. */
+  portalBranding: boolean
   /** DingTalk / WeCom class groups the teacher can post to (robot webhooks). */
   groupChats: GroupChat[]
   /** What class points are for; empty means EduBoard's five. */
@@ -1116,6 +1119,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   pointCategories: [],
   groupChats: [],
   usagePing: false,
+  portalBranding: true,
   teacherEmail: '',
   savedTemplates: [],
   reportCard: {},

@@ -9,6 +9,7 @@ import {
   type AppSettings
 } from '@shared/types'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
+import { displayAppName, PRODUCT_NAME } from '@shared/branding'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
@@ -389,8 +390,10 @@ export function StudentAiCard(): React.JSX.Element | null {
 }
 
 export function PortalConnectionCard(): React.JSX.Element | null {
-  const f = useSettingsForm(['portalUrl', 'portalSyncSecret'] as const)
+  const f = useSettingsForm(['portalUrl', 'portalSyncSecret', 'portalBranding'] as const)
+  const { data: settings } = useSettings()
   if (!f.form) return null
+  const appName = displayAppName(settings)
   const form = f.form
   const urlError = portalUrlProblem(form.portalUrl)
   return (
@@ -436,6 +439,26 @@ export function PortalConnectionCard(): React.JSX.Element | null {
           onChange={(e) => f.set({ portalSyncSecret: e.target.value })}
         />
       </FormRow>
+      <div className="col-span-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.portalBranding !== false}
+            onChange={(e) => f.set({ portalBranding: e.target.checked })}
+          />
+          {tr('Show this app’s name and logo on the Portal')}
+        </label>
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+          {appName === PRODUCT_NAME
+            ? tr(
+                'Families see “EduBoard Portal”. Give the app a name and logo in Settings → Appearance and the Portal shows them after your next publish.'
+              )
+            : tr(
+                'After your next publish, families see “{appName}” (and your logo) instead of “EduBoard Portal”. If other teachers share this Portal, it does so when all their apps have this name too (a school pack does that), or when the Portal’s admin chooses it.',
+                { appName }
+              )}
+        </p>
+      </div>
     </FormCard>
   )
 }

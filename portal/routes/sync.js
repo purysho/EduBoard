@@ -13,6 +13,7 @@ const { isValidTimeZone } = require('../services/deadlines')
 const { validateFlashcards, validatePracticeQuiz } = require('../services/practiceSets')
 const { checkUpload } = require('../services/fileSafety')
 const { toTeacherView } = require('../services/profile')
+const { saveTeacherBranding } = require('../services/branding')
 const { PROFILE_PHOTOS_DIR } = require('../paths')
 const reportCards = require('./reportCards')
 const { removeOrphanedReportCards, reportCardFilesFor } = reportCards
@@ -103,8 +104,13 @@ router.post('/', (req, res) => {
     digestOptions,
     digestLanguage,
     teacherEmail,
-    timeZone
+    timeZone,
+    appName,
+    appLogo
   } = req.body
+
+  // The name and logo of the teacher's app, which the Portal may show (services/branding.js).
+  saveTeacherBranding(req.teacherId, { appName, appLogo })
 
   // The teacher's own IANA time zone, which decides when a due date ends (see
   // services/deadlines.js). An unrecognised value is ignored, never stored.

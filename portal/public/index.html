@@ -85,6 +85,8 @@
   .topbar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
   body.app-mode .topbar { display: none; }
   .badge { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; flex-shrink: 0; }
+  .badge.has-logo { background: transparent; }
+  .badge img { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; }
   .brand { font-weight: 700; font-size: 1rem; letter-spacing: -.01em; }
   .wrap { max-width: 480px; margin: 32px auto; padding: 28px 24px 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
   @media (max-width: 560px) { .wrap { margin: 0; border: none; border-radius: 0; min-height: calc(100vh - 61px); } }
@@ -263,10 +265,11 @@
   }
 </style>
 <script src="/i18n.js"></script>
+<script src="/branding.js"></script>
 </head>
 <body>
 <div class="topbar">
-  <div class="badge">EB</div><div class="brand" id="brand">EduBoard Portal</div>
+  <div class="badge">EB</div><div class="brand" id="brand" data-brand="full">EduBoard Portal</div>
   <!-- Shows the language you'd switch TO, written in that language, so it's findable by
        someone who can't read the current one. -->
   <button type="button" class="lang-switch" id="lang-switch"></button>
@@ -274,7 +277,7 @@
 <div class="wrap" id="app">Loading…</div>
 <script>
 const app = document.getElementById('app')
-document.getElementById('brand').textContent = t('EduBoard Portal')
+applyBranding()
 app.textContent = t('Loading…')
 {
   const switcher = document.getElementById('lang-switch')
@@ -371,7 +374,6 @@ function esc(s) {
 // tab left open, and the count is also reflected in the browser tab title so it's
 // visible even when the Portal isn't the focused tab.
 let notificationPollTimer = null
-const BASE_TITLE = document.title
 
 function startNotificationPolling() {
   if (notificationPollTimer) return
@@ -388,7 +390,7 @@ async function updateNotificationBadge() {
   } catch {
     return
   }
-  document.title = unread > 0 ? `(${unread}) ${BASE_TITLE}` : BASE_TITLE
+  setTitleCount(unread)
   el.innerHTML =
     unread > 0
       ? `<a href="#messages" class="notif-pill">${esc(unread === 1 ? t('1 new message from your teacher') : t('{n} new messages from your teacher', { n: unread }))}</a>`
@@ -2132,7 +2134,7 @@ function renderDashboard(me) {
   app.innerHTML = `
   <div class="shell">
     <aside class="sidebar">
-      <div class="side-brand"><div class="badge">EB</div><div class="brand">${t('EduBoard Portal')}</div></div>
+      <div class="side-brand">${badgeHtml()}<div class="brand" data-brand="full">${esc(brandName())}</div></div>
       <nav class="side-nav" aria-label="${t('Sections')}">${TABS.map((tab) => navButton('nav-item', tab)).join('')}</nav>
       <div class="side-foot">
         ${langSwitchHtml()}
@@ -2141,7 +2143,7 @@ function renderDashboard(me) {
     </aside>
     <div class="main">
       <header class="appbar">
-        <div class="badge">EB</div><div class="brand">EduBoard</div>
+        ${badgeHtml()}<div class="brand" data-brand="short">${esc(brandShortName())}</div>
         ${langSwitchHtml()}
         <button type="button" class="icon-btn" data-tab="account" aria-label="${t('Account')}"><span class="user-avatar">${icon('account')}</span></button>
       </header>

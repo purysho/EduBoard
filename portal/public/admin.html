@@ -154,9 +154,11 @@ async function renderDashboard(newTeacher) {
           : '<p class="hint" style="margin:0">No teachers yet.</p>'
       }
     </div>
+    <div class="card" id="branding"></div>
     <div class="card" id="adoption"></div>
     <div class="card" id="usage"></div>`
 
+  renderBranding()
   renderAdoption()
   renderUsage()
   document.getElementById('signout').onclick = () => { setSecret(null); renderSignIn() }
@@ -189,6 +191,52 @@ async function renderDashboard(newTeacher) {
       if (!ok) return
       await adminApi('DELETE', '/teachers/' + encodeURIComponent(btn.dataset.remove))
       renderDashboard()
+    }
+  })
+}
+
+// The name and logo families see (services/branding.js): what the teachers' apps agree
+// on, one teacher's, or EduBoard's own.
+async function renderBranding() {
+  const box = document.getElementById('branding')
+  let data
+  try {
+    data = await adminApi('GET', '/branding')
+  } catch (err) {
+    box.innerHTML = `<p class="error">${esc(err.message)}</p>`
+    return
+  }
+  const shown = data.current.name || 'EduBoard Portal'
+  const option = (value, label) =>
+    `<label style="display:flex; gap:8px; align-items:center; margin:6px 0; font-weight:400">
+       <input type="radio" name="brand-choice" value="${esc(value)}" ${data.choice === value ? 'checked' : ''} style="width:auto; margin:0" />
+       <span>${label}</span>
+     </label>`
+  box.innerHTML = `
+    <strong>Portal name and logo</strong>
+    <p class="hint" style="margin:4px 0 8px">Families now see
+      ${data.current.logo ? `<img src="${esc(data.current.logo)}" alt="" style="width:20px; height:20px; vertical-align:middle; border-radius:5px" />` : ''}
+      <strong>${esc(shown)}</strong>. Each teacher's desktop app sends its own name and logo when it publishes (Settings → Portal and families).</p>
+    ${option('auto', 'Automatic: the name all the teachers’ apps share (EduBoard if they differ)')}
+    ${data.teachers
+      .filter((t) => t.appName)
+      .map((t) =>
+        option(
+          'teacher:' + t.id,
+          `${esc(t.name)}’s app: <strong>${esc(t.appName)}</strong>${t.hasLogo ? ' with its logo' : ''}`
+        )
+      )
+      .join('')}
+    ${option('eduboard', 'EduBoard Portal')}
+    <p class="error" id="brand-err"></p>`
+  box.querySelectorAll('input[name="brand-choice"]').forEach((input) => {
+    input.onchange = async () => {
+      try {
+        await adminApi('PUT', '/branding', { choice: input.value })
+        renderBranding()
+      } catch (err) {
+        document.getElementById('brand-err').textContent = err.message
+      }
     }
   })
 }

@@ -104,6 +104,41 @@ app.get('/login', (req, res) => {
   if (portalHost) return res.redirect(`https://${portalHost}/`)
   res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
+// The Portal's name and logo (services/branding.js): the teachers' app name, or EduBoard.
+// Public, since the sign-in screen shows them.
+const branding = require('./services/branding')
+app.get('/api/branding', (_req, res) => {
+  res.set('Cache-Control', 'no-cache').json(branding.publicBranding())
+})
+app.get('/api/branding/logo', (_req, res) => {
+  const { logo } = branding.currentBranding()
+  if (!logo) return res.status(404).json({ error: 'Not found', code: 'PT-9001' })
+  res
+    .set({ 'Cache-Control': 'no-cache', 'Content-Security-Policy': "default-src 'none'" })
+    .type('image/png')
+    .send(logo)
+})
+// The home-screen app's name and icon follow it too.
+const baseManifest = JSON.parse(
+  require('fs').readFileSync(path.join(__dirname, 'public', 'manifest.json'), 'utf-8')
+)
+app.get('/manifest.json', (_req, res) => {
+  const { name, logo } = branding.publicBranding()
+  const manifest = { ...baseManifest }
+  const side = logo ? branding.currentBranding().logo.readUInt32BE(16) : 0
+  if (name) {
+    manifest.name = name
+    manifest.short_name = name.length > 12 ? name.slice(0, 12).trim() : name
+  }
+  if (logo) {
+    // Only the logo: phones prefer a "maskable" icon, and EduBoard's would win.
+    manifest.icons = [{ src: logo, sizes: `${side}x${side}`, type: 'image/png', purpose: 'any' }]
+  }
+  res
+    .set('Cache-Control', 'no-cache')
+    .type('application/manifest+json')
+    .send(JSON.stringify(manifest))
+})
 app.use(express.static(path.join(__dirname, 'public')))
 
 // Request bodies are only read after the caller has proven who they are, and only as

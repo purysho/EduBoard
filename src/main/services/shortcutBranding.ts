@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, unlinkSync, writeFileSync }
 import { createHash } from 'crypto'
 import { basename, join } from 'path'
 import { displayAppName, PRODUCT_NAME } from '@shared/branding'
+import { squareImage } from './logoImage'
 
 /** Renamed shortcuts, one path per line in UTF-16, for the uninstaller (build/installer.nsh). */
 export const BRANDED_LIST_FILE = 'branded-shortcuts.txt'
@@ -118,26 +119,6 @@ function logoIco(schoolLogo: string): string | null {
     writeFileSync(file, ico)
   }
   return file
-}
-
-/** The image centred on a transparent square, so a wide logo isn't squashed. */
-function squareImage(image: Electron.NativeImage, side: number): Electron.NativeImage {
-  const { width, height } = image.getSize()
-  const scale = side / Math.max(width, height)
-  const fitted = image.resize({
-    width: Math.max(1, Math.round(width * scale)),
-    height: Math.max(1, Math.round(height * scale)),
-    quality: 'best'
-  })
-  const { width: w, height: h } = fitted.getSize()
-  const src = fitted.toBitmap() // BGRA, 4 bytes a pixel
-  const out = Buffer.alloc(side * side * 4) // transparent
-  const left = Math.floor((side - w) / 2)
-  const top = Math.floor((side - h) / 2)
-  for (let y = 0; y < h; y++) {
-    src.copy(out, ((top + y) * side + left) * 4, y * w * 4, (y + 1) * w * 4)
-  }
-  return nativeImage.createFromBitmap(out, { width: side, height: side })
 }
 
 function shortcutFolders(): { folder: string; pinned: boolean }[] {

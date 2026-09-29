@@ -166,6 +166,7 @@ after changing either.
 | PT-6001 | The admin secret is wrong. | Use ADMIN_SECRET from the Portal’s .env file. If it isn’t set, add it and restart the Portal. |
 | PT-6002 | A teacher’s name is missing or too long. | Type a name of up to 100 characters. |
 | PT-6003 | That teacher doesn’t exist (already removed). | Refresh the admin page. |
+| PT-6007 | The Portal’s name and logo can only follow the teachers’ apps, one teacher, or EduBoard. | Refresh the admin page and choose again (the teacher may have been removed). |
 
 ### Downloads and updates
 

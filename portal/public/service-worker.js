@@ -5,10 +5,11 @@
 // from cache" and show an honest "last synced" banner; a service worker serving stale
 // JSON silently would hide that from the student.
 // Bump when the shell's behaviour changes; activate() deletes every other cache name.
-const SHELL_CACHE = 'eduboard-shell-v5'
+const SHELL_CACHE = 'eduboard-shell-v6'
 const SHELL_ASSETS = [
   '/',
   '/i18n.js',
+  '/branding.js',
   '/manifest.json',
   '/icon.svg',
   '/icon-192.png',
