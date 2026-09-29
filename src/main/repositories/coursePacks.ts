@@ -48,6 +48,8 @@ export interface CoursePackInstallResult {
     terms: number
     standards: number
     rubrics: number
+    resources: number
+    studentFields: number
     assessments: number
     homework: number
     lessons: number
@@ -82,12 +84,22 @@ function neededBindingKeys(pack: CoursePack): Set<string> {
 
 function validateBindings(pack: CoursePack, bindings: Record<string, string>): void {
   const terms = new Map(pack.terms.map((t) => [norm(t.key), t]))
+  const usedClassIds = new Map<string, string>()
+
   for (const key of neededBindingKeys(pack)) {
     const term = terms.get(key)
     if (!term) throw new Error(`Course Pack uses unknown term key ${key}.`)
     const classId = bindings[term.key] ?? bindings[key]
     if (!classId) throw new Error(`Choose an EduBoard class for Course Pack term "${term.name}".`)
     if (!getClass(classId)) throw new Error(`The selected class for "${term.name}" no longer exists.`)
+
+    const previousTerm = usedClassIds.get(classId)
+    if (previousTerm) {
+      throw new Error(
+        `Choose a different EduBoard class for "${term.name}". The same class is already assigned to "${previousTerm}".`
+      )
+    }
+    usedClassIds.set(classId, term.name)
   }
 }
 
