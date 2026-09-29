@@ -204,5 +204,41 @@ export const PAGES: Record<string, string> = {
   'No scheduled classes yet': '还没有安排课程',
   "Add a class's weekly meeting time above to build out the timetable.":
     '在上方添加班级每周的上课时间，生成课程表。',
-  'Remove slot': '删除时间段'
+  'Remove slot': '删除时间段',
+  Curriculum: '课程规划',
+  'Curriculum Map': '课程地图',
+  'Track what was planned, taught, moved or skipped across a whole course or one class.':
+    '查看整个课程或单个班级中哪些课已计划、已完成、已调整日期或已跳过。',
+  'No curriculum to map yet': '还没有可查看的课程规划',
+  'Add a class and lesson plans first.': '请先添加班级和课程计划。',
+  'Curriculum scope': '课程范围',
+  'Course groups combine linked term classes into one sequence. Choose a class to inspect only that term or section.':
+    '课程组会把不同学期中关联的班级合并为一个连续课程。选择单个班级可只查看该学期或教学班。',
+  'Course groups': '课程组',
+  Archived: '已归档',
+  'No mapped lessons yet': '还没有已映射的课程',
+  'Add lesson plans to this class or course to build the map.':
+    '请为这个班级或课程添加课程计划，以生成课程地图。',
+  Lessons: '课程',
+  Taught: '已完成',
+  Planned: '已计划',
+  Skipped: '已跳过',
+  Moved: '已调整日期',
+  'Next planned lesson': '下一节计划课程',
+  'Open lesson plans': '打开课程计划',
+  'Standard coverage': '标准覆盖',
+  'Counts reflect lesson status; planned lessons are not treated as taught.':
+    '统计依据课程状态；已计划的课程不会被视为已经完成。',
+  Standard: '标准',
+  Lesson: '课程',
+  Assessment: '测评',
+  Resources: '资源',
+  'Moved from {date}': '原计划日期：{date}',
+  Next: '下一节',
+  'Edit lesson plans': '编辑课程计划',
+  'Unplaced assessments': '未安排到课程中的测评',
+  'These assessments exist in the selected curriculum but are not linked to a lesson plan yet.':
+    '这些测评已存在于所选课程中，但尚未关联到具体课程计划。',
+  'No date': '无日期'
+
 }

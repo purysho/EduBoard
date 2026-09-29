@@ -3,7 +3,13 @@ import type { Assessment, LessonPlan, LessonPlanStatus } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { DateSelect, FormRow, Input, Select, Textarea } from '@renderer/components/ui/Field'
-import { useCreateLessonPlan, useUpdateLessonPlan } from '@renderer/lib/queries'
+import {
+  useCreateLessonPlan,
+  useLessonPlanResourceIds,
+  useLessonResources,
+  useSetLessonPlanResources,
+  useUpdateLessonPlan
+} from '@renderer/lib/queries'
 import { todayIso } from '@renderer/lib/format'
 import { tr } from '@shared/i18n'
 import { TemplatePicker } from '@renderer/components/TemplatePicker'
@@ -43,6 +49,9 @@ export function LessonPlanFormModal({
   const isEdit = !!plan
   const createPlan = useCreateLessonPlan(classId)
   const updatePlan = useUpdateLessonPlan(classId)
+  const setResources = useSetLessonPlanResources()
+  const { data: resources } = useLessonResources()
+  const { data: savedResourceIds, isLoading: resourceIdsLoading } = useLessonPlanResourceIds(plan?.id)
 
   const [date, setDate] = useState(plan?.date ?? todayIso())
   const [title, setTitle] = useState(plan?.title ?? initialDraft?.title ?? '')
@@ -52,8 +61,14 @@ export function LessonPlanFormModal({
   const [homework, setHomework] = useState(plan?.homework ?? initialDraft?.homework ?? '')
   const [linkedAssessmentId, setLinkedAssessmentId] = useState(plan?.linkedAssessmentId ?? '')
   const [status, setStatus] = useState<LessonPlanStatus>(plan?.status ?? 'planned')
+  const [resourceIdsOverride, setResourceIdsOverride] = useState<string[] | null>(null)
+  const resourceIds = resourceIdsOverride ?? savedResourceIds ?? []
 
-  const saving = createPlan.isPending || updatePlan.isPending
+  const saving =
+    createPlan.isPending ||
+    updatePlan.isPending ||
+    setResources.isPending ||
+    (isEdit && resourceIdsLoading)
 
   async function handleSubmit(e: FormEvent): Promise<void> {
     e.preventDefault()
@@ -72,11 +87,10 @@ export function LessonPlanFormModal({
       status
     }
 
-    if (isEdit) {
-      await updatePlan.mutateAsync({ id: plan.id, patch: payload })
-    } else {
-      await createPlan.mutateAsync(payload)
-    }
+    const saved = isEdit
+      ? await updatePlan.mutateAsync({ id: plan.id, patch: payload })
+      : await createPlan.mutateAsync(payload)
+    await setResources.mutateAsync({ lessonPlanId: saved.id, resourceIds })
     onClose()
   }
 
@@ -169,6 +183,50 @@ export function LessonPlanFormModal({
             ))}
           </Select>
         </FormRow>
+        <div className="col-span-2">
+          <FormRow
+            label={tr('Linked resources')}
+            hint={tr('Optional — materials from your Resources library used in this lesson')}
+          >
+            {!resources?.length ? (
+              <p className="text-sm text-[var(--color-text-muted)]">
+                {tr('No resources in the library yet.')}
+              </p>
+            ) : (
+              <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-[var(--color-border)] p-2">
+                {resources.map((resource) => {
+                  const checked = resourceIds.includes(resource.id)
+                  return (
+                    <label
+                      key={resource.id}
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-[var(--color-surface-muted)]"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) =>
+                          setResourceIdsOverride((current) =>
+                            event.target.checked
+                              ? [...(current ?? resourceIds), resource.id]
+                              : (current ?? resourceIds).filter((id) => id !== resource.id)
+                          )
+                        }
+                      />
+                      <span className="min-w-0 flex-1 truncate">{resource.title}</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {resource.type === 'link'
+                          ? tr('Link')
+                          : resource.type === 'file'
+                            ? tr('File')
+                            : tr('Note')}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          </FormRow>
+        </div>
       </form>
     </Modal>
   )

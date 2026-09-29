@@ -107,6 +107,7 @@ import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
 import { getTodayOverview, getWatchList } from '../services/today'
 import { getCompetencyMatrix } from '../services/competencyMatrix'
+import { getCurriculumMap } from '../services/curriculumMap'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
 import { saveUiPrefs } from '../i18n'
 import { resolveAttendanceCodes } from '@shared/attendanceCodes'
@@ -429,6 +430,17 @@ export function registerIpcHandlers(): void {
       return lessonPlansRepo.copyWeekOfPlans(String(classId), fromMonday, toMonday)
     }
   )
+  handle(IpcChannels.lessonPlans.resourceIds, (_e, lessonPlanId: string) =>
+    lessonPlansRepo.listLessonResourceIds(String(lessonPlanId))
+  )
+  handle(
+    IpcChannels.lessonPlans.setResources,
+    (_e, lessonPlanId: string, resourceIds: string[]) =>
+      lessonPlansRepo.setLessonResources(
+        String(lessonPlanId),
+        Array.isArray(resourceIds) ? resourceIds.map(String) : []
+      )
+  )
 
   // --- Schedule slots (Timetable) ------------------------------------------------------------
   handle(IpcChannels.scheduleSlots.listByClass, (_e, classId: string) =>
@@ -474,6 +486,15 @@ export function registerIpcHandlers(): void {
   // --- Competency evidence ---------------------------------------------------------------
   handle(IpcChannels.competencies.matrix, (_e, classId: string) =>
     getCompetencyMatrix(String(classId))
+  )
+  handle(
+    IpcChannels.curriculumMap.get,
+    (_e, scopeType: 'courseGroup' | 'class', scopeId: string) => {
+      if (scopeType !== 'courseGroup' && scopeType !== 'class') {
+        throw new AppError('EB-0004', 'Invalid curriculum map scope.')
+      }
+      return getCurriculumMap(scopeType, String(scopeId))
+    }
   )
 
   // --- Settings -----------------------------------------------------------------------------

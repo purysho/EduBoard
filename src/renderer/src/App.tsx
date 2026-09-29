@@ -36,6 +36,7 @@ import { ClassLettersPrintPage } from './pages/Print/ClassLettersPrintPage'
 import { PortalInviteBatchPrintPage } from './pages/Print/PortalInviteBatchPrintPage'
 import { WeeklySummaryPage, WeeklySummaryPrintPage } from './pages/WeeklySummary/WeeklySummaryPage'
 import { NewsletterPage } from './pages/Newsletter/NewsletterPage'
+import { CurriculumMapPage } from './pages/Curriculum/CurriculumMapPage'
 
 function App(): React.JSX.Element {
   return (
@@ -77,6 +78,7 @@ function App(): React.JSX.Element {
           <Route path="/audit-log" element={<AuditLogPage />} />
           <Route path="/timetable" element={<TimetablePage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/curriculum" element={<CurriculumMapPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/weekly-summary" element={<WeeklySummaryPage />} />
           <Route path="/newsletter" element={<NewsletterPage />} />
