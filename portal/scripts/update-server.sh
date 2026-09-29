@@ -104,7 +104,8 @@ ensure_node_22
 ensure_native_build_tools
 
 # ---- 3. New code --------------------------------------------------------------------------
-WORK="$(mktemp -d)"
+# Next to the Portal (not /tmp), so moving the new packages into place is a quick rename.
+WORK="$(mktemp -d "$(dirname "$PORTAL_DIR")/.eduboard-update.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 if [ -n "${EDUBOARD_TARBALL:-}" ]; then
   say "Using $EDUBOARD_TARBALL"
@@ -133,15 +134,24 @@ tar -xzf "$WORK/src.tar.gz" -C "$WORK"
 NEW_PORTAL="$(find "$WORK" -mindepth 2 -maxdepth 2 -type d -name portal | head -1)"
 [ -f "$NEW_PORTAL/server.js" ] || fail "The download didn't contain a Portal; nothing was changed."
 
+# ---- 3b. Dependencies, installed and checked before anything live changes -------------------
+# In the download, not the live folder: if this fails, the running Portal is untouched.
+say "Installing dependencies (this can take a minute)"
+(cd "$NEW_PORTAL" && npm ci --omit=dev --no-audit --no-fund) ||
+  fail "Installing dependencies failed; the running Portal wasn't changed. (Backup: $BACKUP)"
+(cd "$NEW_PORTAL" && node -e "require('better-sqlite3'); require('sharp')") ||
+  fail "The new version's database or image library won't load on this server; the running Portal wasn't changed."
+
 say "Installing the new code into $PORTAL_DIR"
 # Copy file by file so the data folder, .env and node_modules are never touched.
 (cd "$NEW_PORTAL" && tar -cf - --exclude=./data --exclude=./node_modules --exclude=./local-test --exclude=./.env .) |
   (cd "$PORTAL_DIR" && tar -xf -)
 
-# ---- 4. Dependencies -----------------------------------------------------------------------
-say "Installing dependencies (this can take a minute)"
-(cd "$PORTAL_DIR" && npm ci --omit=dev --no-audit --no-fund) ||
-  fail "Installing dependencies failed. Your data is safe; the backup is $BACKUP."
+# ---- 4. Dependencies (already installed and checked above): swap them in ---------------------
+rm -rf "$PORTAL_DIR/node_modules.old"
+[ -d "$PORTAL_DIR/node_modules" ] && mv "$PORTAL_DIR/node_modules" "$PORTAL_DIR/node_modules.old"
+mv "$NEW_PORTAL/node_modules" "$PORTAL_DIR/node_modules"
+rm -rf "$PORTAL_DIR/node_modules.old"
 # The service may run as a different user than root; keep the code readable by it.
 OWNER="$(stat -c %U "$PORTAL_DIR")"
 if [ "$OWNER" != "root" ]; then chown -R --from=root "$OWNER" "$PORTAL_DIR" 2>/dev/null || true; fi

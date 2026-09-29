@@ -5,6 +5,7 @@ rem (if you choose) signing in with this computer's key instead of a password. I
 rem updates the Portal, then runs portal/scripts/harden-server.sh on the server. Safe to
 rem run again.
 setlocal
+set "TRIES=0"
 title Lock down the EduBoard Portal server
 
 where ssh >nul 2>nul
@@ -34,14 +35,34 @@ ssh-keygen -q -t ed25519 -N "" -C "eduboard-%COMPUTERNAME%" -f "%KEYFILE%"
 if errorlevel 1 goto :failed
 :have_key
 set /p KEY=<"%KEYFILE%.pub"
+rem A number for this run, so reconnecting shows this run's result and never an older one.
+set "RUN=%RANDOM%%RANDOM%"
 
 echo.
 echo   Connecting to root@%HOST% ...
 echo   If asked for a password, type the server's root password (from VPS.do).
 echo   Nothing appears while you type it; that's normal. Then press Enter.
 echo.
-ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "S=/opt/eduboard/portal/scripts/update-server.sh; if curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh -o /tmp/eb-update.sh; then :; elif [ -f $S ]; then cp $S /tmp/eb-update.sh; else exit 1; fi && EDUBOARD_BRANCH=main bash /tmp/eb-update.sh && EB_SSH_KEY='%KEY%' bash /opt/eduboard/portal/scripts/harden-server.sh"
+ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 root@%HOST% "S=/opt/eduboard/portal/scripts/update-server.sh; if curl -fsSL https://raw.githubusercontent.com/purysho/EduBoard/main/portal/scripts/update-server.sh -o /tmp/eb-update.sh; then :; elif [ -f $S ]; then cp $S /tmp/eb-update.sh; else exit 1; fi && EDUBOARD_BRANCH=main bash /tmp/eb-update.sh && EB_SSH_KEY='%KEY%' bash /opt/eduboard/portal/scripts/harden-server.sh start %RUN%"
+rem 255 is SSH's own "the connection failed"; anything else is the server's answer.
+if errorlevel 255 goto :reconnect
 if errorlevel 1 goto :failed
+goto :hardened
+
+:reconnect
+rem Turning the firewall on can cut the connection it's turned on over. The lock-down
+rem carries on by itself on the server, so connect again and show how it finished.
+set /a TRIES+=1
+if %TRIES% gtr 3 goto :failed
+echo.
+echo   The connection dropped (turning the firewall on can do that). The server carries
+echo   on by itself; connecting again to see how it finished ...
+timeout /t 10 /nobreak >nul
+ssh -o ConnectTimeout=15 root@%HOST% "bash /opt/eduboard/portal/scripts/harden-server.sh wait %RUN%"
+if errorlevel 255 goto :reconnect
+if errorlevel 1 goto :failed
+
+:hardened
 
 echo.
 echo   Checking this computer can now sign in with its key ...

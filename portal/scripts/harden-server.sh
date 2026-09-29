@@ -7,6 +7,9 @@
 #                                       as its own user instead of root
 #   bash harden-server.sh lock-ssh      turn off password sign-in over SSH (keys only).
 #                                       Refuses unless root already has a key to sign in with.
+#   bash harden-server.sh start [run]   the same, run apart from this SSH session (so turning
+#                                       the firewall on can't cut it short), showing its log
+#   bash harden-server.sh wait [run]    after reconnecting: show that run's log and result
 #   bash harden-server.sh allow-passwords
 #                                       undo lock-ssh, e.g. from VPS.do's web console after
 #                                       losing the computer that had the key
@@ -19,6 +22,8 @@
 set -euo pipefail
 
 MODE="${1:-harden}"
+# start/wait: the run number Harden-Server.cmd picked, so "wait" never shows an older run.
+RUN_ID="${2:-}"
 PORTAL_DIR="${PORTAL_DIR:-/opt/eduboard/portal}"
 SCHOOL_TZ="${EB_SCHOOL_TZ:-Asia/Shanghai}"
 SSHD_DROPIN=/etc/ssh/sshd_config.d/10-eduboard.conf
@@ -89,6 +94,69 @@ if [ "$MODE" = allow-passwords ]; then
   reload_sshd || fail "SSH didn't reload; check: sshd -t"
   ok "done: passwords work again ($(sshd_setting passwordauthentication))"
   exit 0
+fi
+
+# ---- start / wait: a run that survives the SSH connection dropping ----------------------------
+# Turning the firewall on can cut the SSH session it arrives over (ufw warns it "may disrupt
+# existing ssh connections"), and then everything after it would never run. So
+# Harden-Server.cmd uses "start": the hardening runs on its own, apart from the session,
+# writing to $LOG, and this session just shows the log as it grows. If the connection drops,
+# "wait" (after reconnecting) shows the whole log and ends with the run's result.
+LOG=/var/log/eduboard-harden.log
+LOCK=/run/eduboard-harden.lock
+EXIT_MARK='EDUBOARD-HARDEN-EXIT'
+
+if [ "$MODE" = harden-logged ]; then
+  set +e
+  bash "$0" harden >>"$LOG" 2>&1
+  echo "$EXIT_MARK $?" >>"$LOG"
+  exit 0
+fi
+
+if [ "$MODE" = start ]; then
+  if flock -n "$LOCK" true; then
+    printf 'run %s\n' "$RUN_ID" >"$LOG"
+    # Its own systemd unit where there is one (entirely outside this SSH session, whatever
+    # the server does to a session's processes when it ends), else setsid + nohup; flock:
+    # never two runs at once.
+    if command -v systemd-run >/dev/null && [ -d /run/systemd/system ]; then
+      systemd-run --quiet --collect --unit="eduboard-harden-$$" \
+        --setenv=EB_SSH_KEY="${EB_SSH_KEY:-}" --setenv=EB_SCHOOL_TZ="$SCHOOL_TZ" \
+        --setenv=PORTAL_DIR="$PORTAL_DIR" \
+        flock -n "$LOCK" bash "$(readlink -f "$0")" harden-logged
+    else
+      setsid nohup flock -n "$LOCK" bash "$0" harden-logged >/dev/null 2>&1 </dev/null &
+    fi
+    sleep 1
+  else
+    echo "    a lock-down run is already going; showing it"
+  fi
+  MODE=wait
+fi
+
+if [ "$MODE" = wait ]; then
+  [ -f "$LOG" ] || fail "No lock-down run has been started on this server."
+  if [ -n "$RUN_ID" ] && [ "$(head -1 "$LOG")" != "run $RUN_ID" ]; then
+    fail "The connection dropped before the lock-down started. Run Harden-Server.cmd again."
+  fi
+  shown=1
+  for _ in $(seq 1 1800); do
+    total="$(wc -l <"$LOG")"
+    if [ "$total" -gt "$shown" ]; then
+      sed -n "$((shown + 1)),${total}p" "$LOG" | grep -v "^$EXIT_MARK" || true
+      shown="$total"
+    fi
+    code="$(sed -n "s/^$EXIT_MARK //p" "$LOG" | tail -1)"
+    [ -n "$code" ] && exit "$code"
+    # No result and no run holding the lock: it was stopped (the server restarted?).
+    if flock -n "$LOCK" true && [ -z "$(sed -n "s/^$EXIT_MARK //p" "$LOG")" ]; then
+      sleep 1
+      [ -n "$(sed -n "s/^$EXIT_MARK //p" "$LOG")" ] && continue
+      fail "The lock-down run stopped before finishing. Run Harden-Server.cmd again."
+    fi
+    sleep 1
+  done
+  fail "Still running after 30 minutes; see $LOG on the server."
 fi
 
 [ "$MODE" = harden ] || fail "Unknown option: $MODE (use lock-ssh or allow-passwords)"
