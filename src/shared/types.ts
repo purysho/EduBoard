@@ -570,6 +570,8 @@ export interface PortalStudentProfile {
   goals: string | null
   teacherNote: string | null
   preferredLanguage: string | null
+  /** The subject or major the student gave the Study Helper (null on an older Portal). */
+  fieldOfStudy?: string | null
   /** A data: URL of the student's (Portal-re-encoded) photo, or null. */
   photoDataUrl: string | null
   updatedAt: string

@@ -49,6 +49,32 @@ function defaultReadingLanguage() {
 }
 
 const ZH = {
+  // Study Helper modes
+  'How should the Study Helper work?': '学习助手应该怎样帮你？',
+  'Examples from: {field}': '举例来自：{field}',
+  Change: '修改',
+  'Add your subject or major': '填写你的学科或专业',
+  'so examples come from what you study.': '这样举例就会来自你学的内容。',
+  'e.g. EV Engineering, Fine Art, International Relations': '例如：新能源汽车工程、美术、国际关系',
+  'Help me understand': '帮我理解',
+  'Explains simply, with examples from your subject, and checks you followed.':
+    '用简单的话解释，举你专业的例子，并确认你听懂了。',
+  'Explain the main idea of this week’s topic simply': '用简单的话解释本周主题的核心概念',
+  'Teach it back': '讲给它听',
+  'The Feynman technique: you explain a topic in plain words, it finds the gaps.':
+    '费曼学习法：你用简单的话讲解一个主题，它帮你找出没弄懂的地方。',
+  'I want to explain a topic in my own words': '我想用自己的话讲解一个主题',
+  'Quiz me': '考考我',
+  'Questions to answer from memory, one at a time, mixing topics.':
+    '凭记忆回答问题，一次一题，混合不同主题。',
+  Tutorial: '导师辅导',
+  'Like an Oxford tutorial: bring a claim or essay plan and defend it.':
+    '像牛津导师课一样：带来一个观点或论文提纲，为它辩护。',
+  'I want to test an argument': '我想检验一个论点',
+  'Solve step by step': '一步步解题',
+  'Pólya’s four steps for a problem: hints, never the answer.':
+    '波利亚解题四步法：给提示，不给答案。',
+  'Help me work through a problem': '帮我一步步解决一道题',
   // Spaced review
   'Today’s review': '今日复习',
   '{n} cards to review today': '今天有 {n} 张卡片要复习',

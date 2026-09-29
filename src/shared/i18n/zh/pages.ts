@@ -257,5 +257,6 @@ export const PAGES: Record<string, string> = {
     '复习：{attempts} 次作答中答错 {wrong} 次 · {students} 人中 {learned} 人已掌握',
   'worth re-teaching': '值得再讲一遍',
   '{n} students review these on the Portal (spaced review). The ones they miss most are listed first and marked.':
-    '{n} 名学生在门户上复习这些内容（间隔复习）。最常答错的排在前面并有标记。'
+    '{n} 名学生在门户上复习这些内容（间隔复习）。最常答错的排在前面并有标记。',
+  'Subject or major': '学科或专业'
 }

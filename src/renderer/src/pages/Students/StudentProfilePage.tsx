@@ -248,6 +248,7 @@ function PortalProfileCard({ studentId }: { studentId: string }): React.JSX.Elem
         {profile.bio && <p className="whitespace-pre-wrap">{profile.bio}</p>}
         <DetailRow label={tr('Birthday')} value={birthday} />
         <DetailRow label={tr('Preferred language')} value={profile.preferredLanguage} />
+        <DetailRow label={tr('Subject or major')} value={profile.fieldOfStudy ?? null} />
         {profile.goals && (
           <div>
             <p className="text-xs font-medium text-[var(--color-text-muted)]">

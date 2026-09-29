@@ -149,7 +149,7 @@
   button.secondary:hover:not(:disabled) { background: var(--surface-muted); }
   button.chip { width: auto; margin: 0; padding: 7px 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 999px; font-size: .82rem; font-weight: 600; }
   button.chip:hover:not(:disabled) { background: var(--surface-muted); }
-  button.chip[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
+  button.chip[aria-pressed="true"], button.chip[aria-checked="true"] { background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary); }
   .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .error { color: var(--danger); font-size: .85rem; margin-top: 10px; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
@@ -907,17 +907,30 @@ function setupInstall() {
 }
 
 // ---- AI chat (Study Helper and per-assignment help) ----------------------------------------
-const QUICK_PROMPTS = [
-  'Quiz me on what we covered this week',
-  'Explain the main idea simply',
-  'Check my understanding: I’ll explain it and you tell me what I missed'
+// Ways the Study Helper can work with a student (services/studyHelper.js), each a
+// well-tested way to learn, with a first message to get it going.
+const HELPER_MODES = [
+  { id: 'help', label: 'Help me understand', about: 'Explains simply, with examples from your subject, and checks you followed.', start: 'Explain the main idea of this week’s topic simply' },
+  { id: 'teach-back', label: 'Teach it back', about: 'The Feynman technique: you explain a topic in plain words, it finds the gaps.', start: 'I want to explain a topic in my own words' },
+  { id: 'quiz', label: 'Quiz me', about: 'Questions to answer from memory, one at a time, mixing topics.', start: 'Quiz me on what we covered this week' },
+  { id: 'tutorial', label: 'Tutorial', about: 'Like an Oxford tutorial: bring a claim or essay plan and defend it.', start: 'I want to test an argument' },
+  { id: 'solve', label: 'Solve step by step', about: 'Pólya’s four steps for a problem: hints, never the answer.', start: 'Help me work through a problem' }
 ]
 
 function aiChatHtml(studentId, homeworkId, withPrompts = false) {
   return `
-    <div data-ai-chat-root data-student="${esc(studentId)}" data-homework="${esc(homeworkId || '')}">
+    <div data-ai-chat-root data-student="${esc(studentId)}" data-homework="${esc(homeworkId || '')}" data-mode="help">
+      ${
+        withPrompts
+          ? `<div class="chip-row" style="margin-top:0" role="radiogroup" aria-label="${esc(t('How should the Study Helper work?'))}">${HELPER_MODES.map(
+              (m) => `<button type="button" class="chip" role="radio" aria-checked="${m.id === 'help'}" data-ai-mode="${m.id}">${esc(t(m.label))}</button>`
+            ).join('')}</div>
+            <p class="field-note" data-ai-mode-about style="margin:6px 0 8px">${esc(t(HELPER_MODES[0].about))}</p>
+            <p class="field-note" data-field-of-study style="margin:0 0 8px"></p>`
+          : ''
+      }
       <div class="ai-chat" data-ai-log></div>
-      ${withPrompts ? `<div class="chip-row" style="margin-top:0">${QUICK_PROMPTS.map((q) => `<button type="button" class="chip" data-ai-prompt="${esc(t(q))}">${esc(t(q))}</button>`).join('')}</div>` : ''}
+      ${withPrompts ? `<div class="chip-row"><button type="button" class="chip" data-ai-start>${esc(t(HELPER_MODES[0].start))}</button></div>` : ''}
       <form data-ai-form style="margin-top:10px">
         <textarea rows="2" maxlength="2000" placeholder="${t("Ask about your homework or a topic you're stuck on…")}"></textarea>
         <button type="submit">${t('Ask')}</button>
@@ -941,6 +954,45 @@ function wireListenButtons(root) {
   })
 }
 
+/** "Your subject" under the Study Helper: examples come from it. Saved in the profile. */
+async function wireFieldOfStudy(chat) {
+  const line = chat.querySelector('[data-field-of-study]')
+  if (!line) return
+  const studentId = chat.dataset.student
+  let current = ''
+  try {
+    current = (await api('/me/profiles')).find((p) => p.studentId === studentId)?.fieldOfStudy || ''
+  } catch {
+    // Offline: shown as not set; it can still be typed.
+  }
+  const show = () => {
+    line.innerHTML = current
+      ? `${esc(t('Examples from: {field}', { field: current }))} · <a href="#" class="linklike" data-edit-field>${t('Change')}</a>`
+      : `<a href="#" class="linklike" data-edit-field>${t('Add your subject or major')}</a> ${esc(t('so examples come from what you study.'))}`
+    line.querySelector('[data-edit-field]').onclick = (e) => {
+      e.preventDefault()
+      line.innerHTML = `<span style="display:flex; gap:6px; align-items:center">
+        <input maxlength="80" value="${esc(current)}" placeholder="${esc(t('e.g. EV Engineering, Fine Art, International Relations'))}" style="margin:0" />
+        <button type="button" class="chip" data-save-field>${t('Save')}</button></span>`
+      const input = line.querySelector('input')
+      input.focus()
+      line.querySelector('[data-save-field]').onclick = async () => {
+        try {
+          const saved = await api(`/me/profiles/${encodeURIComponent(studentId)}`, {
+            method: 'PUT',
+            body: { fieldOfStudy: input.value.trim() }
+          })
+          current = saved.fieldOfStudy || ''
+        } catch {
+          // Keep what was there; the student can try again.
+        }
+        show()
+      }
+    }
+  }
+  show()
+}
+
 async function loadAiHistory(root) {
   if (root.dataset.loaded) return
   root.dataset.loaded = '1'
@@ -948,7 +1000,8 @@ async function loadAiHistory(root) {
   const q = new URLSearchParams({ studentId: root.dataset.student })
   if (root.dataset.homework) q.set('homeworkId', root.dataset.homework)
   try {
-    const history = await api('/me/ai/history?' + q)
+    const mode = root.dataset.mode || 'help'
+    const history = (await api('/me/ai/history?' + q)).filter((i) => (i.mode || 'help') === mode)
     log.insertAdjacentHTML('afterbegin', history.map((i) => aiBubblesHtml(i.question, i.reply)).join(''))
     wireListenButtons(log)
     log.scrollTop = log.scrollHeight
@@ -973,12 +1026,27 @@ function wireAiChats(root) {
     // The Study Helper's history loads when the Study tab is first opened (see showTab).
     const form = chat.querySelector('[data-ai-form]')
     const textarea = form.querySelector('textarea')
-    chat.querySelectorAll('[data-ai-prompt]').forEach((chip) => {
-      chip.onclick = () => {
-        textarea.value = chip.dataset.aiPrompt
+    const mode = () => HELPER_MODES.find((m) => m.id === chat.dataset.mode) || HELPER_MODES[0]
+    const start = chat.querySelector('[data-ai-start]')
+    if (start) {
+      start.onclick = () => {
+        textarea.value = t(mode().start)
         form.requestSubmit()
       }
+    }
+    // Each mode is its own conversation: switching shows that mode's history.
+    chat.querySelectorAll('[data-ai-mode]').forEach((chip) => {
+      chip.onclick = () => {
+        chat.dataset.mode = chip.dataset.aiMode
+        chat.querySelectorAll('[data-ai-mode]').forEach((c) => c.setAttribute('aria-checked', String(c === chip)))
+        chat.querySelector('[data-ai-mode-about]').textContent = t(mode().about)
+        start.textContent = t(mode().start)
+        chat.querySelector('[data-ai-log]').innerHTML = ''
+        delete chat.dataset.loaded
+        loadAiHistory(chat)
+      }
     })
+    wireFieldOfStudy(chat)
     form.onsubmit = async (e) => {
       e.preventDefault()
       const message = textarea.value.trim()
@@ -1000,7 +1068,8 @@ function wireAiChats(root) {
             studentId: chat.dataset.student,
             homeworkId: chat.dataset.homework || undefined,
             message,
-            language: readingLanguage
+            language: readingLanguage,
+            mode: chat.dataset.mode || 'help'
           }
         })
         pending.innerHTML = aiBubblesHtml(message, reply, citations)

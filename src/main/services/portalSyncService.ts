@@ -757,6 +757,7 @@ export async function getPortalProfile(studentId: string): Promise<PortalStudent
     goals: profile.goals,
     teacherNote: profile.teacherNote,
     preferredLanguage: profile.preferredLanguage,
+    fieldOfStudy: profile.fieldOfStudy ?? null,
     photoDataUrl,
     updatedAt: profile.updatedAt
   }
