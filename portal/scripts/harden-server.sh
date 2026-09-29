@@ -64,6 +64,42 @@ add_key() {
   fi
 }
 
+# Some server images come with key sign-in turned off (PubkeyAuthentication no), so a key
+# added above is never even tried: SSH answers "Permission denied (password)". Turn it on,
+# keeping passwords as they are; turning passwords off is lock-ssh, a separate choice.
+# This file sorts first in sshd_config.d, and sshd keeps the first value it reads.
+KEYS_DROPIN=/etc/ssh/sshd_config.d/01-eduboard-keys.conf
+enable_key_sign_in() {
+  local methods
+  methods="$(sshd_setting authenticationmethods)"
+  # Only "publickey" missing from a required list stops keys; "any" or none is fine.
+  local methods_block=""
+  case "$methods" in "" | any | *publickey*) ;; *) methods_block=1 ;; esac
+  if [ "$(sshd_setting pubkeyauthentication)" = yes ] && [ -z "$methods_block" ]; then
+    ok "key sign-in is on"
+    return 0
+  fi
+  if ! grep -qiE '^\s*Include\s+/etc/ssh/sshd_config\.d/' /etc/ssh/sshd_config; then
+    echo "    key sign-in is off on this server, and its SSH settings don't read"
+    echo "    /etc/ssh/sshd_config.d, so it was left as it is (see PubkeyAuthentication there)"
+    return 0
+  fi
+  mkdir -p /etc/ssh/sshd_config.d
+  {
+    echo "# Written by EduBoard's harden-server.sh: this server had key sign-in turned off."
+    echo "# Keys now work as well as passwords. Delete this file and reload SSH to undo."
+    echo "PubkeyAuthentication yes"
+    [ -n "$methods_block" ] && echo "AuthenticationMethods any"
+  } >"$KEYS_DROPIN"
+  if reload_sshd && [ "$(sshd_setting pubkeyauthentication)" = yes ]; then
+    ok "turned key sign-in on (it was off on this server); passwords still work"
+  else
+    rm -f "$KEYS_DROPIN"
+    reload_sshd || true
+    echo "    couldn't turn key sign-in on; see PubkeyAuthentication in /etc/ssh/sshd_config"
+  fi
+}
+
 # ---- lock-ssh / allow-passwords ---------------------------------------------------------------
 if [ "$MODE" = lock-ssh ]; then
   say "Turning off password sign-in over SSH"
@@ -165,6 +201,7 @@ command -v apt-get >/dev/null || fail "This script is for Debian or Ubuntu serve
 if [ -n "${EB_SSH_KEY:-}" ]; then
   say "Allowing this computer to sign in with its key"
   add_key "$EB_SSH_KEY"
+  enable_key_sign_in
 fi
 
 export DEBIAN_FRONTEND=noninteractive
@@ -293,4 +330,5 @@ say "Done"
 echo "    Firewall:        $(ufw status | head -1)"
 echo "    Sign-in blocking: $(systemctl is-active fail2ban)"
 echo "    Security updates: $(systemctl is-enabled unattended-upgrades 2>/dev/null || echo unknown)"
+echo "    SSH keys:         $(sshd_setting pubkeyauthentication)"
 echo "    SSH passwords:    $(sshd_setting passwordauthentication)"
