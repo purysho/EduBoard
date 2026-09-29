@@ -448,6 +448,8 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
           framework: source.framework ?? null,
           materials: source.materials ?? null,
           activities: source.activities ?? null,
+          support: source.support ?? null,
+          stretch: source.stretch ?? null,
           homework: source.homework ?? null,
           linkedAssessmentId: source.assessmentKey
             ? (assessmentIdsByKey.get(norm(source.assessmentKey)) ?? null)

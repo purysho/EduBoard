@@ -108,6 +108,13 @@ export function HomeworkTab(): React.JSX.Element {
 
   return (
     <div>
+      {classSection.noHomework && (
+        <p className="mb-4 rounded-lg bg-[var(--color-surface-muted)] p-3 text-sm text-[var(--color-text-muted)]">
+          {tr(
+            'This class is set to no homework (class Settings). Anything published here is optional practice; lesson plans show their consolidation task as in-class work.'
+          )}
+        </p>
+      )}
       <div className="mb-4 flex justify-end gap-2">
         {draftCount > 1 && (
           <Button variant="secondary" onClick={handlePublishAllDrafts}>

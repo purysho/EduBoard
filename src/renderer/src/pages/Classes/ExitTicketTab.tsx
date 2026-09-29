@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { Play, Plus, RotateCcw, Square, Trash2, Wifi } from 'lucide-react'
+import { Link, useOutletContext } from 'react-router-dom'
+import { Gauge, Play, Plus, RotateCcw, Square, Trash2, Wifi } from 'lucide-react'
 import type { ClassSection, ExitTicketQuestion, ExitTicketQuestionType } from '@shared/types'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -18,6 +18,8 @@ import {
 } from '@renderer/lib/queries'
 import { formatDate } from '@renderer/lib/format'
 import { tr } from '@shared/i18n'
+import { confidenceQuestion, summarizeExitTicket } from '@shared/exitTicketSummary'
+import type { ExitTicketResponse } from '@shared/types'
 
 const MAX_QUESTIONS = 3
 
@@ -67,7 +69,11 @@ export function ExitTicketTab(): React.JSX.Element {
         .map((q) => ({
           ...q,
           prompt: q.prompt.trim(),
-          options: q.type === 'choice' ? (q.options ?? []).filter(Boolean) : undefined
+          options: q.type === 'choice' ? (q.options ?? []).filter(Boolean) : undefined,
+          goodOptions:
+            q.type === 'choice'
+              ? (q.goodOptions ?? []).filter((i) => i < (q.options ?? []).filter(Boolean).length)
+              : undefined
         }))
     })
   }
@@ -130,6 +136,33 @@ export function ExitTicketTab(): React.JSX.Element {
                   placeholder={tr('Options, comma-separated (e.g. Yes, No, Not sure)')}
                 />
               )}
+              {q.type === 'choice' && (q.options ?? []).filter(Boolean).length > 0 && (
+                <div className="mt-2 text-xs text-[var(--color-text-muted)]">
+                  <p className="mb-1">
+                    {tr(
+                      'Tick the answers that show a student understood (for the re-teach check):'
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {(q.options ?? []).filter(Boolean).map((opt, oi) => (
+                      <label key={oi} className="flex items-center gap-1.5">
+                        <input
+                          type="checkbox"
+                          checked={(q.goodOptions ?? []).includes(oi)}
+                          onChange={(e) =>
+                            updateQuestion(i, {
+                              goodOptions: e.target.checked
+                                ? [...(q.goodOptions ?? []), oi]
+                                : (q.goodOptions ?? []).filter((x) => x !== oi)
+                            })
+                          }
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
 
@@ -144,6 +177,20 @@ export function ExitTicketTab(): React.JSX.Element {
               {tr('Question')}
             </Button>
             <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                setQuestions((prev) => [
+                  ...prev.filter((q) => q.prompt.trim()),
+                  confidenceQuestion(crypto.randomUUID())
+                ])
+              }
+              disabled={questions.filter((q) => q.prompt.trim()).length >= MAX_QUESTIONS}
+            >
+              <Gauge size={13} className="mr-1 inline" aria-hidden />
+              {tr('Confidence check')}
+            </Button>
+            <Button
               variant="primary"
               size="sm"
               onClick={handleSave}
@@ -154,6 +201,15 @@ export function ExitTicketTab(): React.JSX.Element {
           </div>
         </CardBody>
       </Card>
+
+      {ticket && (
+        <ResultsCard
+          classId={classSection.id}
+          ticketId={ticket.id}
+          isOpen={ticket.isOpen}
+          questions={ticket.questions}
+        />
+      )}
 
       {ticket && (
         <SessionPanel
@@ -168,6 +224,92 @@ export function ExitTicketTab(): React.JSX.Element {
         />
       )}
     </div>
+  )
+}
+
+/** What the answers say about the lesson: each choice question's spread, and a re-teach
+ * suggestion when fewer than 70% chose an answer marked as showing understanding. Stays
+ * after the session closes, until the answers are cleared. */
+function ResultsCard({
+  classId,
+  ticketId,
+  isOpen,
+  questions
+}: {
+  classId: string
+  ticketId: string
+  isOpen: boolean
+  questions: ExitTicketQuestion[]
+}): React.JSX.Element | null {
+  const { data: responses } = useExitTicketResponses(ticketId, isOpen)
+  if (!responses?.length) return null
+  const summary = summarizeExitTicket(questions, responses as ExitTicketResponse[])
+  const reteach = summary.filter((q) => q.reteach)
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-sm font-semibold">
+          {tr('What the answers say ({n} students)', { n: responses.length })}
+        </h2>
+      </CardHeader>
+      <CardBody className="space-y-4 text-sm">
+        {reteach.length > 0 && (
+          <div className="rounded-lg bg-[var(--color-warning-soft)] p-3 text-[var(--color-warning)]">
+            <p className="font-medium">
+              {tr('Worth re-teaching before moving on:')}{' '}
+              {reteach.map((q) => `“${q.prompt}”`).join(', ')}
+            </p>
+            <p className="mt-1 text-xs">
+              {tr(
+                'Fewer than 7 in 10 showed they understood. Mark the lesson “Partly taught” and move the plan back, or open the next lesson with a short recap.'
+              )}{' '}
+              <Link to={`/classes/${classId}/lessons`} className="underline">
+                {tr('Open lesson plans')}
+              </Link>
+            </p>
+          </div>
+        )}
+        {summary.map((q) => (
+          <div key={q.id}>
+            <p className="font-medium">
+              {q.prompt}{' '}
+              {q.understood !== null && (
+                <span
+                  className={
+                    'ml-1 text-xs ' +
+                    (q.reteach ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]')
+                  }
+                >
+                  {tr('{percent}% understood', { percent: Math.round(q.understood * 100) })}
+                </span>
+              )}
+            </p>
+            {q.options.map((o) => (
+              <div key={o.label} className="mt-1 flex items-center gap-2 text-xs">
+                <span className="w-48 truncate">{o.label}</span>
+                <span className="h-2 flex-1 overflow-hidden rounded bg-[var(--color-surface-muted)]">
+                  <span
+                    className="block h-full"
+                    style={{
+                      width: `${q.answered ? (o.count / q.answered) * 100 : 0}%`,
+                      background: o.good ? 'var(--color-success)' : 'var(--color-primary)'
+                    }}
+                  />
+                </span>
+                <span className="w-6 text-right">{o.count}</span>
+              </div>
+            ))}
+            {q.texts.length > 0 && (
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-[var(--color-text-muted)]">
+                {q.texts.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </CardBody>
+    </Card>
   )
 }
 

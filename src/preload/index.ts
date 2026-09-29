@@ -81,6 +81,8 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.lessonPlans.remove, id),
     copyWeek: (classId, fromMonday, toMonday) =>
       invoke(IpcChannels.lessonPlans.copyWeek, classId, fromMonday, toMonday),
+    shiftPlanned: (classId, fromDate, days) =>
+      invoke(IpcChannels.lessonPlans.shiftPlanned, classId, fromDate, days),
     resourceIds: (lessonPlanId) => invoke(IpcChannels.lessonPlans.resourceIds, lessonPlanId),
     setResources: (lessonPlanId, resourceIds) =>
       invoke(IpcChannels.lessonPlans.setResources, lessonPlanId, resourceIds)

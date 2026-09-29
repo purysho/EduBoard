@@ -15,6 +15,7 @@ import type { CurriculumMapScopeType, LessonPlanStatus } from '@shared/types'
 const STATUS_TONE = {
   planned: 'primary',
   taught: 'success',
+  partly: 'warning',
   skipped: 'neutral'
 } as const
 
@@ -32,7 +33,11 @@ function splitScope(value: string): { type: CurriculumMapScopeType; id: string }
 }
 
 function StatusBadge({ status }: { status: LessonPlanStatus }): React.JSX.Element {
-  return <Badge tone={STATUS_TONE[status]}>{tr(status)}</Badge>
+  return (
+    <Badge tone={STATUS_TONE[status]}>
+      {status === 'partly' ? tr('Partly taught: re-teach') : tr(status)}
+    </Badge>
+  )
 }
 
 export function CurriculumMapPage(): React.JSX.Element {

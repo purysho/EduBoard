@@ -69,6 +69,9 @@ export interface CoursePackLessonTemplate {
   framework?: string | null
   materials?: string | null
   activities?: string | null
+  /** The task made easier / harder (the Support and Stretch fields of a lesson plan). */
+  support?: string | null
+  stretch?: string | null
   homework?: string | null
   assessmentKey?: string | null
   standardKeys?: string[]
@@ -422,6 +425,8 @@ export function parseCoursePack(json: string): CoursePack {
       framework: optionalString(x?.framework, `lessons[${index}].framework`),
       materials: optionalString(x?.materials, `lessons[${index}].materials`),
       activities: optionalString(x?.activities, `lessons[${index}].activities`),
+      support: optionalString(x?.support, `lessons[${index}].support`),
+      stretch: optionalString(x?.stretch, `lessons[${index}].stretch`),
       homework: optionalString(x?.homework, `lessons[${index}].homework`),
       assessmentKey,
       standardKeys: standardKeysForLesson,

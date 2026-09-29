@@ -691,5 +691,43 @@ export const CLASSES: Record<string, string> = {
     '可选——从资源库中选择本节课使用的材料',
   'No resources in the library yet.': '资源库中还没有资源。',
   'Showing {shown} of {total} students': '显示 {shown} / {total} 名学生',
-  'No students match that search.': '没有学生匹配该搜索。'
+  'No students match that search.': '没有学生匹配该搜索。',
+  'Consolidation in class': '课堂巩固',
+  Support: '支持（降低难度）',
+  Stretch: '拓展（提高难度）',
+  'No homework in this class': '本班不布置作业',
+  'For a course that doesn’t allow homework. Each lesson plan’s homework becomes “Consolidation in class”: the same short task, done in the last minutes of the lesson. Spaced review and the Study Helper on the Portal stay there as optional practice.':
+    '适用于不允许布置作业的课程。每份教案中的“作业”会变成“课堂巩固”：同样的简短任务，在课堂最后几分钟完成。门户上的间隔复习和学习助手仍作为自愿练习保留。',
+  'Tick the answers that show a student understood (for the re-teach check):':
+    '勾选能说明学生已理解的答案（用于判断是否需要重讲）：',
+  'Confidence check': '理解程度自评',
+  'What the answers say ({n} students)': '答题情况（{n} 名学生）',
+  'Worth re-teaching before moving on:': '建议先重讲再继续：',
+  'Fewer than 7 in 10 showed they understood. Mark the lesson “Partly taught” and move the plan back, or open the next lesson with a short recap.':
+    '不到七成学生表现出已理解。可把这节课标为“部分完成”并把后续计划往后移，或在下节课开头做简短复习。',
+  '{percent}% understood': '{percent}% 已理解',
+  'This class is set to no homework (class Settings). Anything published here is optional practice; lesson plans show their consolidation task as in-class work.':
+    '本班设置为不布置作业（见班级设置）。在这里发布的内容都是自愿练习；教案中的巩固任务显示为课堂内完成。',
+  'Partly taught: re-teach': '部分完成：需重讲',
+  'This class has no homework: do this in the last minutes of the lesson.':
+    '本班不布置作业：请在课堂最后几分钟完成此任务。',
+  'The same task made easier: frames, model language, a shorter text, more time':
+    '同一任务的简化版：句型框架、示范语言、较短的文本、更多时间',
+  'The same task made harder: less help, a counterargument, less time':
+    '同一任务的进阶版：更少提示、加入反方观点、更短时间',
+  'Move planned lessons from {date} on by': '把 {date} 起尚未上的课顺延',
+  '1 day': '1 天',
+  '2 days': '2 天',
+  '1 week': '1 周',
+  '2 weeks': '2 周',
+  Move: '顺延',
+  'Re-teach this before moving on.': '继续之前先重讲这部分。',
+  'Make room: move later lessons back': '腾出时间：把后面的课往后移',
+  'Move this and later lessons…': '顺延这节及之后的课…',
+  'Moved {n} lessons.': '已顺延 {n} 节课。',
+  'How well do you understand today’s lesson?': '你对今天的课理解得怎么样？',
+  'I could explain it to a classmate': '我能讲给同学听',
+  'I mostly understand it': '我基本理解了',
+  'I’m not sure yet': '我还不太确定',
+  'I’m lost': '我没听懂'
 }

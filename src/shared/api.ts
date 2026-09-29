@@ -215,6 +215,8 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     /** Copies the week starting fromMonday to the week starting toMonday; returns the count. */
     copyWeek(classId: string, fromMonday: string, toMonday: string): Promise<number>
+    /** Moves the class's still-planned lessons from a date on later by `days`. */
+    shiftPlanned(classId: string, fromDate: string, days: number): Promise<number>
     resourceIds(lessonPlanId: string): Promise<string[]>
     setResources(lessonPlanId: string, resourceIds: string[]): Promise<void>
   }

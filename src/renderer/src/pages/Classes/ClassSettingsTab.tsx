@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Archive,
   ArchiveRestore,
+  BookOpenCheck,
   CopyPlus,
   Layers,
   Pencil,
@@ -266,6 +267,36 @@ export function ClassSettingsTab(): React.JSX.Element {
               {tr('Enter a number from 1 to 100.')}
             </p>
           )}
+        </CardBody>
+      </Card>
+
+      <Card className="h-fit">
+        <CardHeader>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <BookOpenCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            {tr('Homework')}
+          </h2>
+        </CardHeader>
+        <CardBody className="space-y-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={classSection.noHomework}
+              disabled={updateClass.isPending}
+              onChange={(e) =>
+                updateClass.mutate({
+                  id: classSection.id,
+                  patch: { noHomework: e.target.checked }
+                })
+              }
+            />
+            {tr('No homework in this class')}
+          </label>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'For a course that doesn’t allow homework. Each lesson plan’s homework becomes “Consolidation in class”: the same short task, done in the last minutes of the lesson. Spaced review and the Study Helper on the Portal stay there as optional practice.'
+            )}
+          </p>
         </CardBody>
       </Card>
 

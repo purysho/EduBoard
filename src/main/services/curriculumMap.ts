@@ -150,7 +150,8 @@ export function getCurriculumMap(
         skippedCount: 0
       }
       row.lessonCount++
-      if (lesson.status === 'taught') row.taughtCount++
+      // A lesson taught but to be re-taught still covered its standards.
+      if (lesson.status === 'taught' || lesson.status === 'partly') row.taughtCount++
       else if (lesson.status === 'planned') row.plannedCount++
       else row.skippedCount++
       coverage.set(code, row)
@@ -160,7 +161,8 @@ export function getCurriculumMap(
   const summary = {
     total: lessons.length,
     planned: lessons.filter((lesson) => lesson.status === 'planned').length,
-    taught: lessons.filter((lesson) => lesson.status === 'taught').length,
+    taught: lessons.filter((lesson) => lesson.status === 'taught' || lesson.status === 'partly')
+      .length,
     skipped: lessons.filter((lesson) => lesson.status === 'skipped').length,
     moved: lessons.filter((lesson) => lesson.moved).length
   }

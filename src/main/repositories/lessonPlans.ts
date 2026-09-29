@@ -41,7 +41,9 @@ export function createLessonPlan(input: CreateLessonPlanInput): LessonPlan {
     updatedAt: now,
     originalDate: input.date,
     status: 'planned',
-    ...input
+    ...input,
+    support: input.support ?? null,
+    stretch: input.stretch ?? null
   }
   getDb().insert(lessonPlans).values(row).run()
   return row
@@ -97,6 +99,27 @@ export function setLessonResources(lessonPlanId: string, resourceIds: string[]):
 /** Copies a class's lesson plans from the week starting `fromMonday` to the week
  * starting `toMonday`, same weekday, as planned. A plan already there with the same
  * title isn't copied again. Returns how many were copied. */
+/** Moves a class's still-planned lessons on or after `fromDate` later by `days` (a
+ * week to re-teach, a missed class). Taught, partly taught and skipped lessons stay where
+ * they happened; each lesson keeps its first planned date. Returns how many moved. */
+export function shiftPlannedLessons(classId: string, fromDate: string, days: number): number {
+  if (!Number.isInteger(days) || days === 0 || Math.abs(days) > 365) return 0
+  const now = nowIso()
+  let moved = 0
+  getDb().transaction(() => {
+    for (const p of listLessonPlansByClass(classId)) {
+      if (p.date < fromDate || p.status !== 'planned') continue
+      getDb()
+        .update(lessonPlans)
+        .set({ date: addDays(p.date, days), updatedAt: now })
+        .where(eq(lessonPlans.id, p.id))
+        .run()
+      moved++
+    }
+  })
+  return moved
+}
+
 export function copyWeekOfPlans(classId: string, fromMonday: string, toMonday: string): number {
   const fromEnd = addDays(fromMonday, 7)
   const shift = Math.round((Date.parse(toMonday) - Date.parse(fromMonday)) / 86_400_000)
@@ -117,6 +140,8 @@ export function copyWeekOfPlans(classId: string, fromMonday: string, toMonday: s
         framework: p.framework,
         materials: p.materials,
         activities: p.activities,
+        support: p.support,
+        stretch: p.stretch,
         homework: p.homework,
         linkedAssessmentId: null,
         standards: p.standards

@@ -24,7 +24,8 @@ export type EnrollmentStatus = 'active' | 'dropped' | 'completed'
 
 export type AttendanceStatus = 'present' | 'late' | 'absent' | 'excused'
 
-export type LessonPlanStatus = 'planned' | 'taught' | 'skipped'
+/** 'partly': taught, but not enough of the class got it: re-teach before moving on. */
+export type LessonPlanStatus = 'planned' | 'taught' | 'partly' | 'skipped'
 
 export interface GradeThresholds {
   A: number
@@ -97,6 +98,9 @@ export interface ClassSection {
   seatingRows: number
   seatingCols: number
   gradeThresholds: GradeThresholds
+  /** No homework may be set in this class (some courses don't allow it): lesson plans
+   * call their "homework" part in-class consolidation instead. */
+  noHomework: boolean
   archived: boolean
   createdAt: string
   updatedAt: string
@@ -451,6 +455,9 @@ export interface ExitTicketQuestion {
   prompt: string
   type: ExitTicketQuestionType
   options?: string[]
+  /** For a choice question: the options (by index) that show the student understood. Only
+   * the teacher sees this; it drives the "re-teach" suggestion (shared/exitTicketSummary). */
+  goodOptions?: number[]
 }
 
 export interface ExitTicket {
@@ -782,6 +789,12 @@ export interface LessonPlan {
   framework: string | null
   materials: string | null
   activities: string | null
+  /** The same task made easier for students who need it: frames, model language, a
+   * shorter text, more time. */
+  support: string | null
+  /** The same task made harder for those ready: less scaffolding, a counterargument, a
+   * more expert audience, less time. */
+  stretch: string | null
   homework: string | null
   linkedAssessmentId: string | null
   standards: string | null

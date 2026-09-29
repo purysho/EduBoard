@@ -440,6 +440,15 @@ export function registerIpcHandlers(): void {
       return lessonPlansRepo.copyWeekOfPlans(String(classId), fromMonday, toMonday)
     }
   )
+  handle(
+    IpcChannels.lessonPlans.shiftPlanned,
+    (_e, classId: string, fromDate: string, days: number) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate) || !Number.isInteger(days)) {
+        throw new AppError('EB-0004', tr('Invalid week'))
+      }
+      return lessonPlansRepo.shiftPlannedLessons(String(classId), fromDate, days)
+    }
+  )
   handle(IpcChannels.lessonPlans.resourceIds, (_e, lessonPlanId: string) =>
     lessonPlansRepo.listLessonResourceIds(String(lessonPlanId))
   )

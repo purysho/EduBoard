@@ -71,6 +71,7 @@ export const IpcChannels = {
     update: 'lessonPlans:update',
     remove: 'lessonPlans:remove',
     copyWeek: 'lessonPlans:copyWeek',
+    shiftPlanned: 'lessonPlans:shiftPlanned',
     resourceIds: 'lessonPlans:resourceIds',
     setResources: 'lessonPlans:setResources'
   },

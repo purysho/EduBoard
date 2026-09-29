@@ -838,6 +838,19 @@ const migrations: Migration[] = [
       )
       for (const r of rows) insert.run(r.resource_id, r.chunk_index, r.text, indexTerms(r.text))
     }
+  },
+  {
+    id: 37,
+    name: 'adapting_to_the_class',
+    up: (db) => {
+      // Support and stretch versions of a lesson's task, and classes that allow no
+      // homework. ("Partly taught" is a new lesson status value; no schema change.)
+      db.exec(`
+        ALTER TABLE lesson_plans ADD COLUMN support TEXT;
+        ALTER TABLE lesson_plans ADD COLUMN stretch TEXT;
+        ALTER TABLE classes ADD COLUMN no_homework INTEGER NOT NULL DEFAULT 0;
+      `)
+    }
   }
 ]
 

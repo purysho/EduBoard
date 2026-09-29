@@ -66,6 +66,7 @@ export const classes = sqliteTable('classes', {
   gradeThresholds: text('grade_thresholds', { mode: 'json' }).notNull(),
   seatingRows: integer('seating_rows').notNull().default(5),
   seatingCols: integer('seating_cols').notNull().default(6),
+  noHomework: integer('no_homework', { mode: 'boolean' }).notNull().default(false),
   archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
@@ -385,6 +386,8 @@ export const lessonPlans = sqliteTable(
     framework: text('framework'),
     materials: text('materials'),
     activities: text('activities'),
+    support: text('support'),
+    stretch: text('stretch'),
     homework: text('homework'),
     linkedAssessmentId: text('linked_assessment_id').references(() => assessments.id, {
       onDelete: 'set null'

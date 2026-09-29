@@ -32,8 +32,73 @@ import { tr, trn } from '@shared/i18n'
 const STATUS_TONE = {
   planned: 'primary',
   taught: 'success',
+  partly: 'warning',
   skipped: 'neutral'
 } as const
+
+const statusLabel = (status: LessonPlan['status']): string =>
+  ({
+    planned: tr('Planned'),
+    taught: tr('Taught'),
+    partly: tr('Partly taught: re-teach'),
+    skipped: tr('Skipped')
+  })[status]
+
+/** Moves the class's still-planned lessons from a date on later: room to re-teach, or a
+ * class that was missed. Taught lessons stay where they happened. */
+function MoveLaterControl({
+  classId,
+  fromDate,
+  label
+}: {
+  classId: string
+  fromDate: string
+  label: string
+}): React.JSX.Element {
+  const qc = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [days, setDays] = useState(7)
+  const [message, setMessage] = useState<string | null>(null)
+  if (message) return <span className="text-xs text-[var(--color-text-muted)]">{message}</span>
+  if (!open) {
+    return (
+      <button
+        className="text-xs text-[var(--color-primary)] hover:underline"
+        onClick={() => setOpen(true)}
+      >
+        {label}
+      </button>
+    )
+  }
+  return (
+    <span className="flex items-center gap-1.5 text-xs">
+      {tr('Move planned lessons from {date} on by', { date: formatDate(fromDate) })}
+      <select
+        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-1"
+        value={days}
+        onChange={(e) => setDays(Number(e.target.value))}
+      >
+        <option value={1}>{tr('1 day')}</option>
+        <option value={2}>{tr('2 days')}</option>
+        <option value={7}>{tr('1 week')}</option>
+        <option value={14}>{tr('2 weeks')}</option>
+      </select>
+      <Button
+        size="sm"
+        onClick={async () => {
+          const n = await window.api.lessonPlans.shiftPlanned(classId, fromDate, days)
+          await qc.invalidateQueries({ queryKey: ['classes', classId] })
+          setMessage(trn('Moved {n} lesson.', 'Moved {n} lessons.', n))
+        }}
+      >
+        {tr('Move')}
+      </Button>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+        {tr('Cancel')}
+      </Button>
+    </span>
+  )
+}
 
 export function LessonPlannerTab(): React.JSX.Element {
   const qc = useQueryClient()
@@ -157,11 +222,37 @@ export function LessonPlannerTab(): React.JSX.Element {
                     <span className="text-xs font-medium text-[var(--color-text-muted)]">
                       {formatDate(plan.date)}
                     </span>
-                    <Badge tone={STATUS_TONE[plan.status]}>{tr(plan.status)}</Badge>
+                    <Badge tone={STATUS_TONE[plan.status]}>{statusLabel(plan.status)}</Badge>
+                    {(plan.support || plan.stretch) && (
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {[plan.support && tr('Support'), plan.stretch && tr('Stretch')]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    )}
                   </div>
                   <h3 className="mt-1 text-sm font-semibold">{plan.title}</h3>
                   {plan.objectives && (
                     <p className="mt-1 text-sm text-[var(--color-text-muted)]">{plan.objectives}</p>
+                  )}
+                  {plan.status === 'partly' && (
+                    <p className="mt-1 text-xs text-[var(--color-warning)]">
+                      {tr('Re-teach this before moving on.')}{' '}
+                      <MoveLaterControl
+                        classId={classSection.id}
+                        fromDate={addDays(plan.date, 1)}
+                        label={tr('Make room: move later lessons back')}
+                      />
+                    </p>
+                  )}
+                  {plan.status === 'planned' && plan.date >= todayIso() && (
+                    <div className="mt-1">
+                      <MoveLaterControl
+                        classId={classSection.id}
+                        fromDate={plan.date}
+                        label={tr('Move this and later lessons…')}
+                      />
+                    </div>
                   )}
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -212,6 +303,7 @@ export function LessonPlannerTab(): React.JSX.Element {
         classId={classSection.id}
         assessments={assessments ?? []}
         initialDraft={aiDraft}
+        noHomework={classSection.noHomework}
       />
       {editingPlan && (
         <LessonPlanFormModal
@@ -220,6 +312,7 @@ export function LessonPlannerTab(): React.JSX.Element {
           classId={classSection.id}
           assessments={assessments ?? []}
           plan={editingPlan}
+          noHomework={classSection.noHomework}
         />
       )}
       <ConfirmDialog

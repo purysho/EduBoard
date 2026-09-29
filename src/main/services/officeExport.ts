@@ -211,10 +211,17 @@ export async function newsletterDocx(text: string): Promise<Buffer> {
 function lessonOr404(planId: string): {
   plan: NonNullable<ReturnType<typeof getLessonPlan>>
   className: string
+  /** "Homework", or "Consolidation in class" for a class that allows no homework. */
+  homeworkTitle: string
 } {
   const plan = getLessonPlan(planId)
   if (!plan) throw new AppError('EB-0002', tr('That lesson plan no longer exists.'))
-  return { plan, className: getClass(plan.classId)?.name ?? '' }
+  const cls = getClass(plan.classId)
+  return {
+    plan,
+    className: cls?.name ?? '',
+    homeworkTitle: cls?.noHomework ? tr('Consolidation in class') : tr('Homework')
+  }
 }
 
 const lines = (s: string | null): string[] =>
@@ -225,7 +232,7 @@ const lines = (s: string | null): string[] =>
 
 /** One lesson plan as a Word document. */
 export async function lessonPlanDocx(planId: string): Promise<Buffer> {
-  const { plan, className } = lessonOr404(planId)
+  const { plan, className, homeworkTitle } = lessonOr404(planId)
   const section = (title: string, text: string | null): Paragraph[] =>
     lines(text).length
       ? [
@@ -241,14 +248,16 @@ export async function lessonPlanDocx(planId: string): Promise<Buffer> {
     ...section(tr('Objectives'), plan.objectives),
     ...section(tr('Materials'), plan.materials),
     ...section(tr('Activities / task'), plan.activities),
-    ...section(tr('Homework'), plan.homework)
+    ...section(tr('Support'), plan.support),
+    ...section(tr('Stretch'), plan.stretch),
+    ...section(homeworkTitle, plan.homework)
   ])
 }
 
 /** A lesson plan as a starter slide deck: a title slide, the objectives, then one slide
  * per activity, then homework. Plain and editable, for the teacher to build on. */
 export async function lessonPlanPptx(planId: string): Promise<Buffer> {
-  const { plan, className } = lessonOr404(planId)
+  const { plan, className, homeworkTitle } = lessonOr404(planId)
   const settings = getSettings()
   const accent = (settings.accentColor || '#4f46e5').replace('#', '')
   const pptx = new PptxGenJS()
@@ -312,7 +321,7 @@ export async function lessonPlanPptx(planId: string): Promise<Buffer> {
     const [head, ...rest] = step.split(/:\s+/)
     bulletSlide(rest.length ? head : tr('Activity'), rest.length ? [rest.join(': ')] : [step])
   }
-  bulletSlide(tr('Homework'), lines(plan.homework))
+  bulletSlide(homeworkTitle, lines(plan.homework))
 
   return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
 }

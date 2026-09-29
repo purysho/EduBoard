@@ -18,6 +18,7 @@ import { lessonTemplates } from '@shared/templates'
 const STATUS_OPTIONS: { value: LessonPlanStatus; label: string }[] = [
   { value: 'planned', label: tr('Planned') },
   { value: 'taught', label: tr('Taught') },
+  { value: 'partly', label: tr('Partly taught: re-teach') },
   { value: 'skipped', label: tr('Skipped') }
 ]
 
@@ -37,7 +38,8 @@ export function LessonPlanFormModal({
   classId,
   assessments,
   plan,
-  initialDraft
+  initialDraft,
+  noHomework = false
 }: {
   open: boolean
   onClose: () => void
@@ -45,6 +47,8 @@ export function LessonPlanFormModal({
   assessments: Assessment[]
   plan?: LessonPlan
   initialDraft?: LessonPlanDraft
+  /** The class allows no homework: that part of the plan is done in class instead. */
+  noHomework?: boolean
 }): React.JSX.Element {
   const isEdit = !!plan
   const createPlan = useCreateLessonPlan(classId)
@@ -61,6 +65,8 @@ export function LessonPlanFormModal({
   const [materials, setMaterials] = useState(plan?.materials ?? initialDraft?.materials ?? '')
   const [activities, setActivities] = useState(plan?.activities ?? initialDraft?.activities ?? '')
   const [homework, setHomework] = useState(plan?.homework ?? initialDraft?.homework ?? '')
+  const [support, setSupport] = useState(plan?.support ?? '')
+  const [stretch, setStretch] = useState(plan?.stretch ?? '')
   const [linkedAssessmentId, setLinkedAssessmentId] = useState(plan?.linkedAssessmentId ?? '')
   const [status, setStatus] = useState<LessonPlanStatus>(plan?.status ?? 'planned')
   const [resourceIdsOverride, setResourceIdsOverride] = useState<string[] | null>(null)
@@ -83,6 +89,8 @@ export function LessonPlanFormModal({
       framework: plan?.framework ?? null,
       materials: materials.trim() || null,
       activities: activities.trim() || null,
+      support: support.trim() || null,
+      stretch: stretch.trim() || null,
       homework: homework.trim() || null,
       linkedAssessmentId: linkedAssessmentId || null,
       standards: plan?.standards ?? null,
@@ -166,8 +174,27 @@ export function LessonPlanFormModal({
         <FormRow label={tr('Activities / task')}>
           <Textarea value={activities} onChange={(e) => setActivities(e.target.value)} />
         </FormRow>
-        <FormRow label={tr('Homework')}>
+        <FormRow
+          label={noHomework ? tr('Consolidation in class') : tr('Homework')}
+          hint={
+            noHomework
+              ? tr('This class has no homework: do this in the last minutes of the lesson.')
+              : undefined
+          }
+        >
           <Textarea value={homework} onChange={(e) => setHomework(e.target.value)} />
+        </FormRow>
+        <FormRow
+          label={tr('Support')}
+          hint={tr('The same task made easier: frames, model language, a shorter text, more time')}
+        >
+          <Textarea rows={2} value={support} onChange={(e) => setSupport(e.target.value)} />
+        </FormRow>
+        <FormRow
+          label={tr('Stretch')}
+          hint={tr('The same task made harder: less help, a counterargument, less time')}
+        >
+          <Textarea rows={2} value={stretch} onChange={(e) => setStretch(e.target.value)} />
         </FormRow>
         <FormRow
           label={tr('Linked assessment')}

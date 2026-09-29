@@ -32,7 +32,8 @@ export function createClass(input: CreateClassInput): ClassSection {
     courseGroupId: null,
     termWeight: 1,
     minAttendance: null,
-    ...input
+    ...input,
+    noHomework: input.noHomework ?? false
   }
   getDb().insert(classes).values(row).run()
   recordAudit({

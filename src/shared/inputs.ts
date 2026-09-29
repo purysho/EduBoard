@@ -43,7 +43,9 @@ export type CreateClassInput = Omit<
   | 'courseGroupId'
   | 'termWeight'
   | 'minAttendance'
+  | 'noHomework'
 > & {
+  noHomework?: boolean
   archived?: boolean
   seatingRows?: number
   seatingCols?: number
@@ -109,8 +111,8 @@ export type MarkAttendanceInput = {
 
 export type CreateLessonPlanInput = Omit<
   LessonPlan,
-  'id' | 'createdAt' | 'updatedAt' | 'status' | 'originalDate'
-> & { status?: LessonPlan['status'] }
+  'id' | 'createdAt' | 'updatedAt' | 'status' | 'originalDate' | 'support' | 'stretch'
+> & { status?: LessonPlan['status']; support?: string | null; stretch?: string | null }
 export type UpdateLessonPlanInput = Partial<
   Omit<LessonPlan, 'id' | 'classId' | 'createdAt' | 'originalDate'>
 >
