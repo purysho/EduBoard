@@ -4,7 +4,7 @@
   "createdAt": "2026-09-29T00:00:00.000Z",
   "id": "just-applied-english-2026-27",
   "name": "JUST Applied Academic & Professional English 2026–27",
-  "description": "Applied Academic & Professional English: English for Study, Research and Work. A supplementary/optional JUST Zhangjiagang course bridging knowing English → using English effectively. Core work broadly targets CSE 4–5 with support toward shared outcomes and stretch toward CSE 6. Term 1 has 15 fixed 90-minute sessions; Term 2 has 16 core + 3 FLEX sessions.",
+  "description": "Applied Academic & Professional English: English for Study, Research and Work. A supplementary/optional JUST Zhangjiagang course bridging knowing English → using English effectively. Core work broadly targets CSE 4–5 with support toward shared outcomes and stretch toward CSE 6. Term 1 has 15 fixed 90-minute sessions; Term 2 has 16 core + 3 FLEX sessions. Teaching-material layer: each session includes an original lesson kit, differentiated task route, detailed production-oriented flow and PPTX-ready activity sequence.",
   "subject": "English",
   "terms": [
     {
@@ -1117,14 +1117,20 @@
       "weekLabel": "T1.01",
       "objectives": "Diagnostic + goal setting across speaking, listening/note-taking, reading and writing. Output: baseline self/major introduction, short written response, mini synthesis, confidence/goal survey. No grade.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Diagnostic + goal setting across speaking, listening/note-taking, reading and writing. Output: baseline self/major introduction, short written response, mini synthesis, confidence/goal survey. No grade.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.01 — Where Am I Now? — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Quick pair exchange: name, major, one English success from the past year.\nOutput challenge: Cold attempt: 60–90 second self/major introduction. Teacher records only observable evidence, not a grade.\nTargeted noticing/input: Show the four pathway descriptions and the nine UENG outcomes. Students identify which two matter most to them now.\nGuided practice: Run the short reading and listening baselines; model how to record notes without writing full sentences.\nProduction 1: Students complete the writing baseline and select pathway + target.\nFeedback: Students compare their own confidence rating with what the four tasks actually showed. Teacher avoids converting the diagnostic into a score.\nImproved attempt: Repeat the opening introduction with one improvement: clearer structure, one concrete example and a closing goal.\nExit ticket: One sentence: The English task I most need to improve is ___ because ___.",
+      "homework": "10 minutes: enter or draft your pathway, year target and one piece of baseline evidence to keep for the end-of-year comparison.",
       "standardKeys": [
         "ueng-01",
         "ueng-04",
         "ueng-05",
         "ueng-09"
+      ],
+      "resourceKeys": [
+        "kit-t1-01",
+        "poa-spine",
+        "support-core-stretch",
+        "pathway-model"
       ]
     },
     {
@@ -1135,12 +1141,18 @@
       "weekLabel": "T1.02",
       "objectives": "Skim, scan, predict, identify structure, claims and evidence. Output: explain the most important message from a university-level text and identify supporting evidence.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Skim, scan, predict, identify structure, claims and evidence. Output: explain the most important message from a university-level text and identify supporting evidence.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.02 — Read With a Purpose — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.01, recall one personal goal and turn it into a reading purpose: What information would help me with this goal?\nOutput challenge: Give students 45 seconds to answer: What is this text mainly doing? No dictionaries and no sentence-by-sentence translation.\nTargeted noticing/input: Model the difference between topic, purpose, claim and supporting evidence using one paragraph.\nGuided practice: SQ3R mini-cycle: survey headings/shape, ask two questions, read, recite the answer from memory, review against the text.\nProduction 1: Pairs prepare a 45-second explanation of the main message plus the strongest supporting evidence.\nFeedback: Listeners use two checks only: Did I hear the message? Did I hear evidence from the text?\nImproved attempt: Students explain again in 30 seconds with no paper, keeping only three key words.\nExit ticket: Write one reading move you used today and when you would use it again.",
+      "homework": "12 minutes: take any short English text from your major and mark purpose, one claim and one piece of evidence. Bring only the marked text or a photo.",
       "standardKeys": [
         "ueng-01",
         "ueng-02"
+      ],
+      "resourceKeys": [
+        "kit-t1-02",
+        "poa-spine",
+        "support-core-stretch",
+        "cet-transfer"
       ]
     },
     {
@@ -1151,12 +1163,18 @@
       "weekLabel": "T1.03",
       "objectives": "Listen for structure, signposting and keywords; organise notes and reconstruct meaning. Output: 60-second explanation using notes only.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Listen for structure, signposting and keywords; organise notes and reconstruct meaning. Output: 60-second explanation using notes only.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.03 — Listen and Capture Meaning — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Without notes, reconstruct the four-part structure from T1.02: problem, evidence, response, limitation.\nOutput challenge: Play/read the script once. Students may write only eight words total. Ask: What changed, and what did not change?\nTargeted noticing/input: Highlight spoken signposts: first, then, the important point, if. Show how signposts predict note structure.\nGuided practice: Read again in chunks. Students reorganise notes into Situation / Change / Action rather than chronological transcription.\nProduction 1: Students deliver the 60-second update from notes only.\nFeedback: Partners tick three items: accurate main message, logical order, no reading full sentences.\nImproved attempt: Teacher removes one minute of preparation. Students give a 30-second executive version.\nExit ticket: Write the one keyword or symbol that helped you recover the most meaning.",
+      "homework": "10 minutes: listen to any 1–3 minute English explanation once and make notes using headings + keywords only. Write a 2-sentence reconstruction.",
       "standardKeys": [
         "ueng-01",
         "ueng-04"
+      ],
+      "resourceKeys": [
+        "kit-t1-03",
+        "poa-spine",
+        "support-core-stretch",
+        "cet-transfer"
       ]
     },
     {
@@ -1167,13 +1185,20 @@
       "weekLabel": "T1.04",
       "objectives": "Summary, paraphrase, quotation, attribution, patchwriting and academic integrity. Introduce responsible AI use. Output: transform a short source into an accurate concise explanation.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Summary, paraphrase, quotation, attribution, patchwriting and academic integrity. Introduce responsible AI use. Output: transform a short source into an accurate concise explanation.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.04 — Say It in Your Own Words — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.03, reconstruct a message from only three keywords. Connect that compression skill to summarising.\nOutput challenge: Show the three sample paraphrases. Students vote: safe / risky / inaccurate, then justify one choice.\nTargeted noticing/input: Mini-model: preserve meaning first, then change structure and wording; quotation marks for exact words; attribution for borrowed ideas.\nGuided practice: Students transform one sentence in three steps: identify meaning units → close source → rewrite → reopen and verify.\nProduction 1: Students produce the summary, paraphrase and short quotation task.\nFeedback: Peer check uses four questions: same meaning? new structure? clear attribution? any invented claim?\nImproved attempt: Students revise the weakest item and add a one-line note: what changed and why.\nExit ticket: Complete: A paraphrase becomes inaccurate when ___.",
+      "homework": "15 minutes: choose one short paragraph from a course source. Write a 50-word paraphrase and add a 2-line verification note comparing it with the original.",
       "standardKeys": [
         "ueng-02",
         "ueng-05",
         "ueng-08"
+      ],
+      "resourceKeys": [
+        "kit-t1-04",
+        "poa-spine",
+        "support-core-stretch",
+        "ai-principles",
+        "cet-transfer"
       ]
     },
     {
@@ -1184,12 +1209,17 @@
       "weekLabel": "T1.05",
       "objectives": "Charts, trends, comparison, quantity, cautious interpretation and avoiding unsupported causal claims. Output: 90-second major-relevant data explanation.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Charts, trends, comparison, quantity, cautious interpretation and avoiding unsupported causal claims. Output: 90-second major-relevant data explanation.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.05 — Make Data Speak — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Recall the distinction from T1.04 between what a source says and what a writer adds. Apply it to charts: observation vs interpretation.\nOutput challenge: Show only the three data series. Students get 60 seconds to choose the single most important message.\nTargeted noticing/input: Model weak vs strong language: ‘X caused Y’ versus ‘X changed while Y…; this may suggest…, but…’.\nGuided practice: Pairs build one sentence for trend, comparison, uncertainty and next action.\nProduction 1: 90-second data explanation to a new partner.\nFeedback: Listener writes the speaker’s main message. If it differs from the speaker’s intended message, the explanation needs redesign.\nImproved attempt: Give the same update in 45 seconds, leading with the headline.\nExit ticket: Write one claim the data supports and one claim it does not support.",
+      "homework": "10 minutes: find or create a small dataset from your major (3–6 values). Write a headline sentence plus one cautious interpretation.",
       "standardKeys": [
         "ueng-01",
         "ueng-04"
+      ],
+      "resourceKeys": [
+        "kit-t1-05",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1200,13 +1230,18 @@
       "weekLabel": "T1.06",
       "objectives": "Claim → reason → evidence → qualification/counterpoint; distinguish fact, evidence, interpretation, opinion and assumption. Output: short evidence-supported position.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Claim → reason → evidence → qualification/counterpoint; distinguish fact, evidence, interpretation, opinion and assumption. Output: short evidence-supported position.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.06 — Build an Argument — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Use T1.05 language to separate observation from interpretation in one evidence card.\nOutput challenge: Students choose yes/no/conditional in 20 seconds, then must defend the choice with one evidence card.\nTargeted noticing/input: Teacher models an argument with a strong claim but weak evidence, then one with qualification.\nGuided practice: Small groups sort statements into fact, evidence, interpretation, opinion and assumption; discuss disputed items.\nProduction 1: Pairs deliver 75-second positions followed by one counter-question.\nFeedback: Partner checks whether every major claim has a reason/evidence link and whether the qualification is genuine.\nImproved attempt: Switch sides and give a 45-second version of the opposing case.\nExit ticket: Write the assumption in your own argument that most needs checking.",
+      "homework": "12 minutes: take one claim from your major or campus life. Add one reason, one piece of evidence you would need, and one qualification.",
       "standardKeys": [
         "ueng-02",
         "ueng-04",
         "ueng-05"
+      ],
+      "resourceKeys": [
+        "kit-t1-06",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1217,15 +1252,20 @@
       "weekLabel": "T1.07",
       "objectives": "Major assessed performance 1. Use a short reading/listening source set to deliver an approximately two-minute evidence-supported position, then revise after feedback.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Major assessed performance 1. Use a short reading/listening source set to deliver an approximately two-minute evidence-supported position, then revise after feedback.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.07 — Source-Based Position — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: One-minute recall: claim–reason–evidence–qualification from T1.06.\nOutput challenge: Before support, students listen/read once and state a provisional answer in one sentence.\nTargeted noticing/input: Clarify assessment evidence: understanding, evidence, reasoning, organisation, language clarity and qualification.\nGuided practice: Students fill the source grid, select only evidence that directly supports their position and rehearse with a partner.\nProduction 1: Two-minute source-based position.\nFeedback: Use the linked rubric. Give one strength and one priority for revision; avoid correcting every language error.\nImproved attempt: 60–90 second revised attempt targeting the priority.\nExit ticket: Write exactly what you changed between attempt 1 and attempt 2.",
+      "homework": "No new content. Spend 10 minutes saving the first/revised evidence and your feedback priority in the portfolio.",
       "assessmentKey": "t1-source-position",
       "standardKeys": [
         "ueng-01",
         "ueng-02",
         "ueng-04",
         "ueng-09"
+      ],
+      "resourceKeys": [
+        "kit-t1-07",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1236,12 +1276,17 @@
       "weekLabel": "T1.08",
       "objectives": "Enter and manage discussion: invite, agree/disagree, qualify, ask for evidence, clarify and repair misunderstanding. Output: structured small-group academic discussion with distributed speaking time.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Enter and manage discussion: invite, agree/disagree, qualify, ask for evidence, clarify and repair misunderstanding. Output: structured small-group academic discussion with distributed speaking time.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.08 — Academic Discussion — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Recall one qualification phrase from T1.06/T1.07 and use it in a 20-second warm-up opinion.\nOutput challenge: Silent individual allocation first; groups then discover where opinions conflict.\nTargeted noticing/input: Model three bad discussion habits: waiting, interrupting, agreeing without reasons. Students repair each one with a language function.\nGuided practice: Triads rehearse entry, invitation, clarification and disagreement in 30-second micro-rounds.\nProduction 1: 8-minute budget discussion with role rotation and an action/decision record.\nFeedback: Observers track contribution distribution and mark one moment where clarification improved the decision.\nImproved attempt: Groups run a 3-minute ‘executive version’ with one new condition: the budget falls by 25%.\nExit ticket: Who helped the discussion move forward today, and what exactly did they do?",
+      "homework": "10 minutes: write five useful discussion phrases from memory, then compare with the linked language bank and correct them.",
       "standardKeys": [
         "ueng-03",
         "ueng-02"
+      ],
+      "resourceKeys": [
+        "kit-t1-08",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1252,12 +1297,17 @@
       "weekLabel": "T1.09",
       "objectives": "Audience adaptation. Explain a process, concept, technology, model or idea from the student's major to an intelligent non-specialist. Output: 2–3 minute explanation.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Audience adaptation. Explain a process, concept, technology, model or idea from the student's major to an intelligent non-specialist. Output: 2–3 minute explanation.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.09 — Explain Your Major to Me — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.03, give a 30-second update with only headings. Transfer the same ‘structure before detail’ principle to explanation.\nOutput challenge: Students explain their item for 45 seconds with no preparation. List where listeners become lost.\nTargeted noticing/input: Teacher demonstrates jargon dumping versus audience-aware explanation. Students identify exactly what makes the second version clearer.\nGuided practice: Students map specialist terms to plain definitions/examples and rehearse one difficult step.\nProduction 1: 2–3 minute major explainer to a mixed-major partner/group.\nFeedback: Listeners write one sentence explaining the concept back. Misunderstanding becomes feedback evidence.\nImproved attempt: Students repair the least clear 30–45 seconds and answer one new question.\nExit ticket: Write one piece of assumed knowledge you removed from your explanation.",
+      "homework": "15 minutes: make one simple diagram or 5-step outline for your explainer. No paragraph slides.",
       "standardKeys": [
         "ueng-04",
         "ueng-07"
+      ],
+      "resourceKeys": [
+        "kit-t1-09",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1268,13 +1318,18 @@
       "weekLabel": "T1.10",
       "objectives": "Opening, signposting, sequencing, transitions, conclusion, vocal delivery, slide discipline and audience attention. Output: 3-minute mini-presentation without reading paragraphs from slides.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Opening, signposting, sequencing, transitions, conclusion, vocal delivery, slide discipline and audience attention. Output: 3-minute mini-presentation without reading paragraphs from slides.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.10 — Present Clearly — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Retell the structure of your T1.09 explainer without content: purpose → parts/steps → example → importance.\nOutput challenge: Show a deliberately overloaded slide and ask pairs to redesign it in 90 seconds using only six visible words plus one visual concept.\nTargeted noticing/input: Model vocal emphasis and pause placement on the same sentence; identify how delivery changes meaning.\nGuided practice: Students rehearse opening + transition + conclusion only before filling the middle.\nProduction 1: 3-minute presentation in groups; one student times, one listens for structure, one listens for delivery.\nFeedback: Two-column feedback: message/structure and delivery/visuals. One priority only in each.\nImproved attempt: Repeat the opening and weakest transition/conclusion immediately.\nExit ticket: Write the sentence you want the audience to remember tomorrow.",
+      "homework": "15 minutes: revise your mini-presentation to a clean 3–5 slide version and keep the before/after slide as portfolio evidence.",
       "assessmentKey": "t1-major-presentation",
       "standardKeys": [
         "ueng-04",
         "ueng-03"
+      ],
+      "resourceKeys": [
+        "kit-t1-10",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1285,13 +1340,19 @@
       "weekLabel": "T1.11",
       "objectives": "Synthesis rather than separate summaries; compare reading and listening using agreement, contradiction, addition, limitation and qualification. Output: integrated spoken or written synthesis.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Synthesis rather than separate summaries; compare reading and listening using agreement, contradiction, addition, limitation and qualification. Output: integrated spoken or written synthesis.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.11 — Combine Sources — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.04, state the difference between summary and paraphrase. Add: synthesis answers ‘how do sources relate?’\nOutput challenge: Students hear/read both sources once and write one sentence beginning ‘Taken together…’.\nTargeted noticing/input: Compare two paragraphs: source-by-source summary versus idea-by-idea synthesis. Students highlight relationship language.\nGuided practice: Pairs sort six source statements into agreement, addition, tension or limitation.\nProduction 1: Write/speak the synthesis without copying full source phrases.\nFeedback: Partner underlines relationship language and circles any sentence that could be written from only one source.\nImproved attempt: Revise so every sentence either combines sources or has a clear reason to focus on one.\nExit ticket: Complete: Synthesis is different from two summaries because ___.",
+      "homework": "12 minutes: find two short English sources on one topic from your studies. Write three bullet relationships only—no full summary.",
       "standardKeys": [
         "ueng-01",
         "ueng-02",
         "ueng-05"
+      ],
+      "resourceKeys": [
+        "kit-t1-11",
+        "poa-spine",
+        "support-core-stretch",
+        "cet-transfer"
       ]
     },
     {
@@ -1302,12 +1363,18 @@
       "weekLabel": "T1.12",
       "objectives": "Evaluate authorship, evidence, date, relevance, source type, unsupported claims and AI-generated information. Output: verify claims and explain the reasoning behind each verdict.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Evaluate authorship, evidence, date, relevance, source type, unsupported claims and AI-generated information. Output: verify claims and explain the reasoning behind each verdict.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.12 — Can I Trust This? — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.05/T1.06, give one example of a claim that goes beyond evidence.\nOutput challenge: Display the precise unsupported statistic first. Ask: What makes a claim feel trustworthy even when we have not verified it?\nTargeted noticing/input: Separate source credibility from claim support: a credible source can still be outdated or irrelevant; an AI answer can be useful but is not its own evidence.\nGuided practice: Teams inspect the five simulated source cards and defend one disputed verdict.\nProduction 1: Each student produces a verification log for two claims and explains one verdict orally.\nFeedback: Partner challenges the weakest link: author, evidence, date, relevance or independent confirmation.\nImproved attempt: Student upgrades one verdict by stating the next check they would actually perform.\nExit ticket: Write the sentence: ‘I would not trust this yet because…’ using a concrete reason, not ‘because it is AI.’",
+      "homework": "15 minutes: take one factual claim from an AI answer or online source you encounter. Preserve the claim, record one independent check, and note whether your confidence changed.",
       "standardKeys": [
         "ueng-02",
         "ueng-08"
+      ],
+      "resourceKeys": [
+        "kit-t1-12",
+        "poa-spine",
+        "support-core-stretch",
+        "ai-principles"
       ]
     },
     {
@@ -1318,13 +1385,18 @@
       "weekLabel": "T1.13",
       "objectives": "Intercultural explanation without stereotyping. Recognise assumed knowledge, define unfamiliar concepts, compare, clarify and avoid over-generalisation. Output: international-audience explainer + follow-up questions.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Intercultural explanation without stereotyping. Recognise assumed knowledge, define unfamiliar concepts, compare, clarify and avoid over-generalisation. Output: international-audience explainer + follow-up questions.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.13 — Explain China Across Cultures — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: From T1.09, list two kinds of assumed knowledge that can make an explanation fail.\nOutput challenge: Students explain one familiar Chinese/campus item in 30 seconds. Listener interrupts at the first unexplained assumption.\nTargeted noticing/input: Repair absolute language: ‘Chinese students…’ → ‘In many universities / in this situation / some students…’.\nGuided practice: Pairs annotate an explanation for hidden assumptions, unexplained names and unnecessary comparison.\nProduction 1: 2-minute international-audience explainer + questions.\nFeedback: Listener reports what they understood and one question caused by missing context rather than language.\nImproved attempt: Student repairs the 30 seconds around that missing context.\nExit ticket: What did you know so well that you forgot your audience might not know it?",
+      "homework": "10 minutes: write a 100-word version of your explainer for an international student arriving next week.",
       "standardKeys": [
         "ueng-07",
         "ueng-03",
         "ueng-04"
+      ],
+      "resourceKeys": [
+        "kit-t1-13",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1335,9 +1407,9 @@
       "weekLabel": "T1.14",
       "objectives": "Combine research/input, source evaluation, evidence, discussion, explanation, structured output and response to questions. Revision/rehearsal for final performance.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Combine research/input, source evaluation, evidence, discussion, explanation, structured output and response to questions. Revision/rehearsal for final performance.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.14 — Integrated Academic Challenge — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Rapid stations: reading purpose, source relationship, argument qualification, data caution and discussion entry from T1.02–T1.13.\nOutput challenge: Teams make a provisional choice after only two minutes with the source set, then track whether evidence changes it.\nTargeted noticing/input: Teacher models the difference between collecting all information and selecting evidence relevant to a decision.\nGuided practice: Teams build the evidence map, allocate speaking roles and rehearse one hostile/uncertain question.\nProduction 1: 3-minute recommendation + 2-minute Q&A.\nFeedback: Other team writes: strongest evidence, weakest assumption, one unanswered question.\nImproved attempt: Teams revise only the opening recommendation and weakest evidence link.\nExit ticket: Which earlier Term 1 skill mattered most in today’s challenge, and where did you use it?",
+      "homework": "20 minutes maximum: refine your evidence map and choose the portfolio item you may use in T1.15. Do not build new content.",
       "standardKeys": [
         "ueng-01",
         "ueng-02",
@@ -1345,6 +1417,11 @@
         "ueng-04",
         "ueng-05",
         "ueng-09"
+      ],
+      "resourceKeys": [
+        "kit-t1-14",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1355,9 +1432,9 @@
       "weekLabel": "T1.15",
       "objectives": "Term 1 capstone. Integrated performance, Q&A, selected baseline tasks repeated, portfolio selection, self-reflection and Term 2 goal. Emphasis: demonstrated growth.",
       "framework": "Modified Production-Oriented Approach: Motivate → Enable → Produce → Feedback → Reproduce. Shared task with Support/Core/Stretch layers; explicit language work added where performance shows a need.",
-      "materials": "Teacher-selected short input/model relevant to students' majors and pathways. Prepare Support/Core/Stretch scaffolding as needed.",
-      "activities": "Term 1 capstone. Integrated performance, Q&A, selected baseline tasks repeated, portfolio selection, self-reflection and Term 2 goal. Emphasis: demonstrated growth.",
-      "homework": null,
+      "materials": "Linked lesson kit: T1.15 — Academic Communication Showcase — lesson kit\nUse the kit’s original input/case and student task sheet; projector plus student notebook/device if permitted.\nSupport/Core/Stretch routes are embedded in the kit. Use the linked 90-minute POA spine as the default timing model.",
+      "activities": "Retrieval: Students look back at their T1.01 target before speaking. No generic ‘review everything’ warm-up.\nOutput challenge: Repeat the original 60–90 second self/major introduction under similar conditions before seeing old performance notes.\nTargeted noticing/input: Teacher clarifies that growth evidence can include clearer structure, better evidence use, stronger interaction, more accurate language or greater independence—not only a higher score.\nGuided practice: Short rehearsal using one rubric priority chosen by the student.\nProduction 1: Integrated academic communication showcase + Q&A.\nFeedback: Rubric evidence plus one comparative statement against baseline. Keep improvement and current level conceptually separate.\nImproved attempt: Student repeats a selected 45–60 second segment after feedback.\nExit ticket: Finish: ‘In Term 2 I want to transfer ___ into ___, and I will know it is improving when ___.’",
+      "homework": "No additional task beyond completing the portfolio reflection and Term 2 target.",
       "assessmentKey": "t1-academic-capstone",
       "standardKeys": [
         "ueng-01",
@@ -1366,6 +1443,11 @@
         "ueng-04",
         "ueng-05",
         "ueng-09"
+      ],
+      "resourceKeys": [
+        "kit-t1-15",
+        "poa-spine",
+        "support-core-stretch"
       ]
     },
     {
@@ -1756,6 +1838,307 @@
         "T2"
       ],
       "standardKey": "ueng-09"
+    },
+    {
+      "key": "university-activity-bank",
+      "title": "University communication activity bank",
+      "type": "note",
+      "notes": "Reusable low-prep formats. 1) 60-second rebuild: listen/read, close source, reconstruct, verify. 2) Evidence auction: teams spend limited points on the evidence most useful to a claim. 3) Headline first: compress an explanation to one sentence before adding detail. 4) Role rotation: chair / evidence checker / clarifier / summariser. 5) Challenge cards: limitation, counterexample, missing data, audience change. 6) Two-pass production: attempt → one feedback priority → immediate shorter retry. 7) Jargon alarm: listener stops at unexplained specialist language. 8) Decision record: conclusion / evidence / uncertainty / next action. 9) Source relationship sort: agreement / addition / tension / limitation. 10) Audience switch: explain the same content to a novice then a specialist. 11) Verification log: claim / source / cross-check / confidence change. 12) Exit transfer: where will I use this outside today’s lesson?",
+      "tags": [
+        "T1",
+        "T2",
+        "speaking",
+        "discussion",
+        "reading",
+        "listening",
+        "writing",
+        "model"
+      ],
+      "standardKey": "ueng-09"
+    },
+    {
+      "key": "kit-t1-01",
+      "title": "T1.01 — Where Am I Now? — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nDiagnostic set. Speaking prompt: Introduce yourself, your major and one situation where you want English to be easier. Reading: a 150-word notice about a student innovation team changing its meeting plan; identify purpose, two key details and one reason. Listening script for teacher read-aloud: a 60-second project update with a deadline, problem and next action. Writing prompt: explain one current English strength and one target in 80–100 words.\n\nSTUDENT TASK SHEET\nComplete four short baseline tasks without coaching. Then choose a primary pathway: Graduate/Research, Industry/Engineering, Business/International or General Development. Finish the sentence: By the end of this year, I want to be able to…\n\nSUPPORT\nAllow planning notes, a self-introduction frame and a vocabulary box for major / project / goal / improve.\n\nSTRETCH\nNo script for speaking; add one spontaneous follow-up question and require the written goal to include a measurable success indicator.\n\nFEEDBACK / EXIT\nOne sentence: The English task I most need to improve is ___ because ___.",
+      "tags": [
+        "T1",
+        "speaking",
+        "listening",
+        "reading",
+        "writing",
+        "general",
+        "assessment",
+        "support",
+        "core",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-02",
+      "title": "T1.02 — Read With a Purpose — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nOriginal reading: “Why a Project Team Changed Its Test Plan.” A university robotics team has three weeks before a demo. Their first plan tests every feature equally. After two early failures, the team studies the fault log and moves most testing time to the two functions causing repeated errors. The change does not guarantee success, but it concentrates limited time on the strongest evidence of risk. The team keeps one short full-system test each week to check that solving one problem does not create another.\n\nSTUDENT TASK SHEET\n1) Skim: write the text’s purpose in 8 words or fewer. 2) Scan: find the time limit and two reasons for the plan change. 3) Structure: label problem → evidence → response → limitation. 4) Evidence check: underline the sentence that best supports the claim that the new plan is evidence-led. 5) Explain the message to a partner without looking at the text.\n\nSUPPORT\nProvide the four structure labels in order and a key-word bank: failure, fault log, limited time, concentrate, guarantee.\n\nSTRETCH\nWrite a second plausible interpretation of the same evidence and state what extra information would help decide between them.\n\nFEEDBACK / EXIT\nWrite one reading move you used today and when you would use it again.",
+      "tags": [
+        "T1",
+        "reading",
+        "research",
+        "core",
+        "CET-transfer",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-03",
+      "title": "T1.03 — Listen and Capture Meaning — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nTeacher read-aloud script: “Project update. We planned to finish the sensor test on Thursday, but one component arrived late. The team can still complete the basic calibration this week. First, Mei will check the replacement component on Friday morning. Then Arjun will run the calibration and upload the results by 5 p.m. The full outdoor test moves to next Tuesday. The important point is that the final demonstration date has not changed. If Friday’s component check fails, we will borrow the older sensor and record the limitation in the report.”\n\nSTUDENT TASK SHEET\nFirst listen: write only three headings. Second listen: add keywords under Situation / Change / Next action. Then close your notes for 10 seconds, reopen them and give a 60-second spoken reconstruction. Finish by checking which detail you missed or distorted.\n\nSUPPORT\nGive the three headings and permit a symbols bank: → next, ↑ increase, ↓ decrease, ? uncertain, DL deadline.\n\nSTRETCH\nAfter the reconstruction, answer: Which detail is most important for a project manager, and why?\n\nFEEDBACK / EXIT\nWrite the one keyword or symbol that helped you recover the most meaning.",
+      "tags": [
+        "T1",
+        "listening",
+        "speaking",
+        "general",
+        "core",
+        "CET-transfer",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-04",
+      "title": "T1.04 — Say It in Your Own Words — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nSource paragraph: “Battery recycling can recover useful materials from cells that are no longer suitable for vehicles. Recovery does not remove every environmental cost: collection, transport and processing also use energy and resources. The value of recycling therefore depends on both the materials recovered and the efficiency of the recovery system.” Sample A copies phrases with small word changes. Sample B changes wording but adds the unsupported claim that recycling is ‘environmentally harmless.’ Sample C accurately condenses the idea and attributes it.\n\nSTUDENT TASK SHEET\nClassify Sample A/B/C as patchwriting, inaccurate paraphrase or acceptable paraphrase. Then write: (a) a 25-word summary, (b) a 45–60 word paraphrase with attribution, and (c) one direct quotation of no more than 8 words embedded in your own sentence.\n\nSUPPORT\nSentence frames: The source explains that…; It also warns that…; According to the source… Provide a synonym-choice bank but require students to change sentence structure too.\n\nSTRETCH\nParaphrase for two audiences: a first-year student and a technical project teammate. Preserve meaning while changing emphasis appropriately.\n\nFEEDBACK / EXIT\nComplete: A paraphrase becomes inaccurate when ___.",
+      "tags": [
+        "T1",
+        "reading",
+        "writing",
+        "AI-literacy",
+        "research",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-02"
+    },
+    {
+      "key": "kit-t1-05",
+      "title": "T1.05 — Make Data Speak — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nFictional classroom dataset — do not treat as real JUST data. A prototype line is tested over four runs. Defect rate: 8.2%, 6.9%, 5.8%, 5.6%. Average cycle time: 41s, 42s, 44s, 47s. Energy per unit: 3.1, 3.0, 3.0, 3.2 kWh. A business-pathway alternative uses the same pattern with returns rate, response time and cost per order.\n\nSTUDENT TASK SHEET\nPrepare a 90-second data update with four moves: current pattern, strongest comparison, cautious interpretation, next question/action. You must use at least two numbers and may not claim that one trend caused another unless the dataset proves it.\n\nSUPPORT\nLanguage bank: rose/fell from…to…; remained broadly stable; by contrast; may indicate; we cannot conclude; the next step is to check…\n\nSTRETCH\nInclude one limitation and answer a challenge question that asks whether the apparent improvement is worth the trade-off.\n\nFEEDBACK / EXIT\nWrite one claim the data supports and one claim it does not support.",
+      "tags": [
+        "T1",
+        "speaking",
+        "presentation",
+        "engineering",
+        "business",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-06",
+      "title": "T1.06 — Build an Argument — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nDecision case: A student project course is considering a rule requiring every team to hold a 15-minute progress meeting each week. Evidence card 1: teams often discover coordination problems late. Evidence card 2: some teams already communicate frequently online. Evidence card 3: fixed meetings can become ritual updates with little value. Evidence card 4: short meetings can expose blocked tasks early. No card proves the policy is universally good or bad.\n\nSTUDENT TASK SHEET\nBuild a position using Claim → Reason → Evidence → Qualification/Counterpoint. Then swap sides and build the strongest opposing position. Mark each sentence F (fact/evidence), I (interpretation), O (opinion) or A (assumption).\n\nSUPPORT\nFrame: I think ___ because ___. The strongest evidence is ___. However, ___. Therefore, a reasonable policy would be ___.\n\nSTRETCH\nAdd a condition under which your recommendation would change and identify what new evidence would matter most.\n\nFEEDBACK / EXIT\nWrite the assumption in your own argument that most needs checking.",
+      "tags": [
+        "T1",
+        "discussion",
+        "speaking",
+        "research",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-02"
+    },
+    {
+      "key": "kit-t1-07",
+      "title": "T1.07 — Source-Based Position — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nAssessment source set (original). Reading: a 180-word proposal says a faculty should replace some live project briefings with recorded updates to reduce scheduling conflicts; it notes that recordings improve access but may reduce immediate questioning. Listening: teacher reads a 75-second response from a project supervisor arguing that live questioning reveals misunderstandings quickly, while accepting that recordings are useful for routine status updates.\n\nSTUDENT TASK SHEET\nPrepare an approximately two-minute position answering: How should the faculty use recorded and live project updates? Use both sources. Include one qualification. After feedback, make a shorter revised attempt.\n\nSUPPORT\nGive a two-column source grid and structure cards: position / source A / source B / qualification / conclusion. Notes allowed; no full script.\n\nSTRETCH\nIntegrate the sources by relationship (agreement, tension, limitation) rather than discussing them one at a time. Take one spontaneous question.\n\nFEEDBACK / EXIT\nWrite exactly what you changed between attempt 1 and attempt 2.",
+      "tags": [
+        "T1",
+        "assessment",
+        "speaking",
+        "listening",
+        "reading",
+        "research",
+        "support",
+        "core",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-08",
+      "title": "T1.08 — Academic Discussion — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nDiscussion case: A fictional student innovation fund has 20,000 RMB left. Proposal A: buy shared sensors used by six engineering teams. Proposal B: fund translation/design support for teams entering an international competition. Proposal C: extend evening access to a prototyping room. Proposal D: run an industry mentor event. Each has benefits, unknowns and different beneficiaries.\n\nSTUDENT TASK SHEET\nIn groups of four, allocate the full budget across at least two proposals. Everyone must enter the discussion, invite another speaker once, ask for evidence/clarification once and disagree or qualify appropriately once. Produce a one-minute final rationale.\n\nSUPPORT\nFunction cards: Can I add…?; What evidence do we have for…?; I agree up to a point…; Could you clarify…?; We have not heard from…; So are we saying…?\n\nSTRETCH\nAssign a rotating chair who must surface disagreement and test whether the final decision reflects evidence rather than the loudest speaker.\n\nFEEDBACK / EXIT\nWho helped the discussion move forward today, and what exactly did they do?",
+      "tags": [
+        "T1",
+        "discussion",
+        "speaking",
+        "professional",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-03"
+    },
+    {
+      "key": "kit-t1-09",
+      "title": "T1.09 — Explain Your Major to Me — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nAudience challenge. Explain one major-related item to an intelligent non-specialist: engineering students may choose a robot subsystem, EV component, additive-manufacturing step or metallurgical process; software students a data flow or feature; business/trade students a supply-chain step, pricing model or transaction process. Audience card: ‘I am educated, but I do not study your field. I will stop you whenever you use an unexplained specialist term.’\n\nSTUDENT TASK SHEET\nBuild a 2–3 minute explanation using Purpose → Parts/Steps → Example → Why it matters. Define no more than three essential technical terms. Use one analogy, comparison or concrete example. Then answer two audience questions.\n\nSUPPORT\nPlanning grid and frames: It is used to…; The process has three main stages…; In simple terms…; For example…; The important point is…\n\nSTRETCH\nExplain the same idea twice: once to a non-specialist and once to a knowledgeable peer. Identify what changes in detail, terminology and assumed knowledge.\n\nFEEDBACK / EXIT\nWrite one piece of assumed knowledge you removed from your explanation.",
+      "tags": [
+        "T1",
+        "speaking",
+        "presentation",
+        "engineering",
+        "software",
+        "business",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-04"
+    },
+    {
+      "key": "kit-t1-10",
+      "title": "T1.10 — Present Clearly — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nPresentation design cards. Weak opening: ‘Today I will introduce my topic.’ Stronger opening states the problem/value. Weak slide: 8 lines of sentences. Stronger slide: one claim, one visual/data point and a short label. Delivery problem cards: reading, no signposting, rushing, facing screen, ending without a conclusion.\n\nSTUDENT TASK SHEET\nPrepare a 3-minute mini-presentation with 3–5 slides or equivalent visual cues. Required moves: meaningful opening, clear roadmap/signposting, 2–3 main points, conclusion that answers ‘so what?’, and one audience question. Slides must not contain paragraph scripts.\n\nSUPPORT\nProvide a slide skeleton and signposts: First…; The key point here is…; This matters because…; To sum up…\n\nSTRETCH\nRemove most written cues and handle a 45-second Q&A. Use one visual that the audience must interpret rather than merely decorate.\n\nFEEDBACK / EXIT\nWrite the sentence you want the audience to remember tomorrow.",
+      "tags": [
+        "T1",
+        "presentation",
+        "speaking",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-04"
+    },
+    {
+      "key": "kit-t1-11",
+      "title": "T1.11 — Combine Sources — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nSource A (reading): recorded lectures let students pause difficult explanations and revisit terminology, but passive rewatching does not guarantee learning. Source B (teacher read-aloud): a student describes using short recordings after class, but says the biggest benefit comes from pausing to write a question and then checking the answer in notes or with classmates. The sources overlap but emphasise different mechanisms.\n\nSTUDENT TASK SHEET\nCreate a synthesis that organises ideas by relationship, not source order. Use at least three connectors from: similarly, both, however, whereas, in addition, this limits, taken together. Produce either a 120–150 word synthesis or a 90-second spoken version.\n\nSUPPORT\nVenn grid: shared idea / Source A only / Source B only / relationship. Sentence frame: Both sources suggest ___. However, A emphasises ___, whereas B adds ___.\n\nSTRETCH\nAdd a cautious inference that follows from both sources, and label it clearly as an inference rather than a source claim.\n\nFEEDBACK / EXIT\nComplete: Synthesis is different from two summaries because ___.",
+      "tags": [
+        "T1",
+        "reading",
+        "listening",
+        "writing",
+        "research",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-12",
+      "title": "T1.12 — Can I Trust This? — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nSimulated claim-check set. Claim 1 comes from a named university lab page dated this year and links to its method. Claim 2 appears in an undated repost with no author. Claim 3 is an AI-generated paragraph containing a precise statistic but no traceable source. Claim 4 is an older official report that is credible but may not answer today’s question. Claim 5 cites a primary dataset but overstates what correlation proves.\n\nSTUDENT TASK SHEET\nFor each claim, record: Who says it? What evidence? When? Relevant to this question? Primary/secondary? What independent check would you make? Verdict options: usable, usable with limitation, not yet verified, unsupported. The verdict must include reasoning.\n\nSUPPORT\nUse the VERIFY grid: Voice/author, Evidence, Recency, Independence, Fit/relevance, Your cross-check.\n\nSTRETCH\nTwo apparently credible sources disagree. Design a verification plan that prioritises primary evidence and explains what would make you change your view.\n\nFEEDBACK / EXIT\nWrite the sentence: ‘I would not trust this yet because…’ using a concrete reason, not ‘because it is AI.’",
+      "tags": [
+        "T1",
+        "reading",
+        "AI-literacy",
+        "research",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-02"
+    },
+    {
+      "key": "kit-t1-13",
+      "title": "T1.13 — Explain China Across Cultures — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nAudience scenario: an international visitor has never studied at a Chinese university and asks about one local/campus practice. Options include QR-based daily services, a university club/recruitment event, a Zhangjiagang public-space feature, high-speed rail travel, a local manufacturing context or a discipline-specific Chinese example. The visitor is curious, not ignorant; avoid ‘Chinese people always…’ explanations.\n\nSTUDENT TASK SHEET\nPrepare a 2-minute explainer using Context → What happens → Why/when it matters → Comparison only if useful → Check understanding. Identify two things your audience may not know and define them before they become a barrier. Take two follow-up questions.\n\nSUPPORT\nFrames: In this context…; You may not be familiar with…; It is similar to ___, but…; This is common in ___ situations, although…\n\nSTRETCH\nExplain to two audience cards with different prior knowledge. Remove stereotypes and over-generalised claims; add a limitation or variation.\n\nFEEDBACK / EXIT\nWhat did you know so well that you forgot your audience might not know it?",
+      "tags": [
+        "T1",
+        "intercultural",
+        "speaking",
+        "general",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-07"
+    },
+    {
+      "key": "kit-t1-14",
+      "title": "T1.14 — Integrated Academic Challenge — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nIntegrated challenge (fictional). Campus food outlets want to reduce single-use takeaway packaging without increasing average service time too much. Source A: short student survey summary says convenience is the main reason for takeaway use. Source B: operations note says reusable-container returns create cleaning and storage work. Source C: small fictional table compares three pilot options on cost, estimated waste reduction and average extra service seconds. None is clearly best on every measure.\n\nSTUDENT TASK SHEET\nTeams must recommend one pilot for a six-week trial. Use all three sources, identify one limitation, discuss alternatives, prepare a 3-minute recommendation and answer questions. Submit a one-page evidence map rather than a full report.\n\nSUPPORT\nEvidence map columns: decision criterion / source evidence / what it suggests / limitation. Presentation frame: recommendation first → evidence → trade-off → next check.\n\nSTRETCH\nAdd one stakeholder objection, quantify a trade-off from the table and propose a success metric that could falsify your recommendation.\n\nFEEDBACK / EXIT\nWhich earlier Term 1 skill mattered most in today’s challenge, and where did you use it?",
+      "tags": [
+        "T1",
+        "reading",
+        "discussion",
+        "presentation",
+        "research",
+        "capstone",
+        "core",
+        "support",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
+    },
+    {
+      "key": "kit-t1-15",
+      "title": "T1.15 — Academic Communication Showcase — lesson kit",
+      "type": "note",
+      "notes": "CORE INPUT / CASE\nShowcase evidence set: selected baseline prompt from T1.01, one source/data task, one prepared academic communication task, Q&A prompts, and portfolio reflection grid. Students compare evidence rather than relying on memory of improvement.\n\nSTUDENT TASK SHEET\nComplete the capstone performance and one repeated baseline task. Then select two artefacts: one that shows strongest growth and one that reveals a next priority. Reflection prompts: What changed? What evidence proves it? What still breaks down under pressure? What will transfer into Term 2?\n\nSUPPORT\nAllow structured planning grid and chosen portfolio evidence. Reflection sentence frames focus on evidence: In September I…, now I…, the clearest evidence is…\n\nSTRETCH\nAdd spontaneous Q&A and require a transfer claim: how will one academic communication skill be used in research, industry or professional contexts?\n\nFEEDBACK / EXIT\nFinish: ‘In Term 2 I want to transfer ___ into ___, and I will know it is improving when ___.’",
+      "tags": [
+        "T1",
+        "assessment",
+        "presentation",
+        "speaking",
+        "writing",
+        "capstone",
+        "support",
+        "core",
+        "stretch",
+        "model",
+        "homework"
+      ],
+      "standardKey": "ueng-01"
     }
   ],
   "studentFields": [
