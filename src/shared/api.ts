@@ -78,6 +78,8 @@ import type {
   RubricWithCriteria,
   RubricScore,
   CompetencyMatrix,
+  CurriculumMap,
+  CurriculumMapScopeType,
   StudentLogEntry,
   ParentCommunicationEntry,
   LessonResource,
@@ -212,6 +214,8 @@ export interface EduBoardApi {
     remove(id: string): Promise<void>
     /** Copies the week starting fromMonday to the week starting toMonday; returns the count. */
     copyWeek(classId: string, fromMonday: string, toMonday: string): Promise<number>
+    resourceIds(lessonPlanId: string): Promise<string[]>
+    setResources(lessonPlanId: string, resourceIds: string[]): Promise<void>
   }
   scheduleSlots: {
     listByClass(classId: string): Promise<ClassScheduleSlot[]>
@@ -235,6 +239,10 @@ export interface EduBoardApi {
   competencies: {
     /** Latest rubric evidence for each active student × standard in one class. */
     matrix(classId: string): Promise<CompetencyMatrix>
+  }
+  curriculumMap: {
+    /** Cross-term course or single-class curriculum plan, derived from EduBoard records. */
+    get(scopeType: CurriculumMapScopeType, scopeId: string): Promise<CurriculumMap>
   }
   settings: {
     get(): Promise<AppSettings>
