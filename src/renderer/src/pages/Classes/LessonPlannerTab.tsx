@@ -44,8 +44,9 @@ const statusLabel = (status: LessonPlan['status']): string =>
     skipped: tr('Skipped')
   })[status]
 
-/** Moves the class's still-planned lessons from a date on later: room to re-teach, or a
- * class that was missed. Taught lessons stay where they happened. */
+/** Moves the class's still-planned lessons from a date on: later for room to re-teach or a
+ * class that was missed, earlier to close the gap a dropped lesson leaves. Taught lessons
+ * stay where they happened. */
 function MoveLaterControl({
   classId,
   fromDate,
@@ -72,16 +73,18 @@ function MoveLaterControl({
   }
   return (
     <span className="flex items-center gap-1.5 text-xs">
-      {tr('Move planned lessons from {date} on by', { date: formatDate(fromDate) })}
+      {tr('Move planned lessons from {date} on', { date: formatDate(fromDate) })}
       <select
         className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-1"
         value={days}
         onChange={(e) => setDays(Number(e.target.value))}
       >
-        <option value={1}>{tr('1 day')}</option>
-        <option value={2}>{tr('2 days')}</option>
-        <option value={7}>{tr('1 week')}</option>
-        <option value={14}>{tr('2 weeks')}</option>
+        <option value={1}>{tr('1 day later')}</option>
+        <option value={2}>{tr('2 days later')}</option>
+        <option value={7}>{tr('1 week later')}</option>
+        <option value={14}>{tr('2 weeks later')}</option>
+        {/* After a lesson is dropped (a FLEX session, a merged week): close the gap. */}
+        <option value={-7}>{tr('1 week earlier')}</option>
       </select>
       <Button
         size="sm"

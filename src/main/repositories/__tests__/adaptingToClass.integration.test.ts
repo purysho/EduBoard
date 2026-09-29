@@ -75,6 +75,21 @@ describe('adapting the plan to the class', () => {
     expect(shiftPlannedLessons(classId, '2026-10-06', 0)).toBe(0)
   })
 
+  it('closes the gap a dropped lesson leaves by moving later lessons a week earlier', () => {
+    lesson('2027-05-10', 'Solve a problem together')
+    const flex = lesson('2027-05-17', 'Professional networking')
+    lesson('2027-05-24', 'Research communication')
+    updateLessonPlan(flex, { status: 'skipped' })
+
+    expect(shiftPlannedLessons(classId, '2027-05-24', -7)).toBe(1)
+    const byTitle = Object.fromEntries(listLessonPlansByClass(classId).map((p) => [p.title, p]))
+    expect(byTitle['Research communication'].date).toBe('2027-05-17')
+    expect(byTitle['Research communication'].originalDate).toBe('2027-05-24')
+    // The skipped lesson stays on record where it was planned.
+    expect(byTitle['Professional networking'].date).toBe('2027-05-17')
+    expect(byTitle['Solve a problem together'].date).toBe('2027-05-10')
+  })
+
   it('keeps Support and Stretch when a week is copied', () => {
     const id = lesson('2026-10-05', 'Build an argument')
     updateLessonPlan(id, { support: 'Sentence frames', stretch: 'Add a counterargument' })
