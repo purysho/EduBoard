@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpenCheck, Map } from 'lucide-react'
 import { Badge } from '@renderer/components/ui/Badge'
@@ -41,18 +41,16 @@ export function CurriculumMapPage(): React.JSX.Element {
   const [selected, setSelected] = useState('')
 
   const activeClasses = useMemo(() => classes?.filter((cls) => !cls.archived) ?? [], [classes])
+  const defaultSelected = courseGroups?.length
+    ? scopeValue('courseGroup', courseGroups[0].id)
+    : activeClasses[0]
+      ? scopeValue('class', activeClasses[0].id)
+      : classes?.[0]
+        ? scopeValue('class', classes[0].id)
+        : ''
+  const effectiveSelected = selected || defaultSelected
 
-  useEffect(() => {
-    if (selected) return
-    if (courseGroups?.length) {
-      setSelected(scopeValue('courseGroup', courseGroups[0].id))
-      return
-    }
-    const first = activeClasses[0] ?? classes?.[0]
-    if (first) setSelected(scopeValue('class', first.id))
-  }, [activeClasses, classes, courseGroups, selected])
-
-  const scope = splitScope(selected)
+  const scope = splitScope(effectiveSelected)
   const { data: map, isLoading: loadingMap } = useCurriculumMap(scope?.type, scope?.id)
   const loading = loadingGroups || loadingClasses
 
@@ -87,7 +85,10 @@ export function CurriculumMapPage(): React.JSX.Element {
                   </p>
                 </div>
                 <div className="w-full max-w-sm">
-                  <Select value={selected} onChange={(event) => setSelected(event.target.value)}>
+                  <Select
+                    value={effectiveSelected}
+                    onChange={(event) => setSelected(event.target.value)}
+                  >
                     {!!courseGroups?.length && (
                       <optgroup label={tr('Course groups')}>
                         {courseGroups.map((group) => (
@@ -113,7 +114,7 @@ export function CurriculumMapPage(): React.JSX.Element {
             </CardBody>
           </Card>
 
-          {!selected || loadingMap ? (
+          {!effectiveSelected || loadingMap ? (
             <Spinner />
           ) : !map ? null : !map.lessons.length && !map.unlinkedAssessments.length ? (
             <EmptyState
