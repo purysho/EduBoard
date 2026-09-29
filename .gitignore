@@ -15,3 +15,7 @@ coverage/
 
 # Local test Portal (Start-Test-Portal.cmd): its secrets and data
 portal/local-test/
+
+# Course Packs describe real courses at real institutions: they stay on your own computer.
+course-packs/*
+!course-packs/README.md

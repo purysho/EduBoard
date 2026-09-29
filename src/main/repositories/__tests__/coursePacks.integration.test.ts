@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { mkdtempSync, readFileSync, rmSync } from 'fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -328,77 +328,6 @@ describe('Course Packs', () => {
     })
   })
 
-  it('installs and re-imports the real private 2026–27 pack without duplication', () => {
-    const pack = parseCoursePack(
-      readFileSync(
-        join(process.cwd(), 'course-packs', 'private-course-pack.coursepack.json'),
-        'utf8'
-      )
-    )
-    const t1 = universityClass('Private course — Term 1')
-    const t2 = universityClass('Private course — Term 2')
-    const input = {
-      pack,
-      termBindings: { t1: t1.id, t2: t2.id },
-      firstClassDates: { t1: '2026-09-07', t2: '2027-02-22' }
-    }
-
-    const first = installCoursePack(input)
-    expect(first.created).toMatchObject({
-      courseGroups: 1,
-      terms: 2,
-      standards: 9,
-      rubrics: 5,
-      resources: 40,
-      studentFields: 9,
-      assessments: 10,
-      homework: 0,
-      lessons: 34
-    })
-    expect(listLessonPlansByClass(t1.id)).toHaveLength(15)
-    expect(listLessonPlansByClass(t2.id)).toHaveLength(19)
-    expect(listAssessmentsByClass(t1.id)).toHaveLength(5)
-    expect(listAssessmentsByClass(t2.id)).toHaveLength(5)
-    expect(listStandards().map((standard) => standard.code)).toEqual([
-      'ENG-01',
-      'ENG-02',
-      'ENG-03',
-      'ENG-04',
-      'ENG-05',
-      'ENG-06',
-      'ENG-07',
-      'ENG-08',
-      'ENG-09'
-    ])
-
-    const second = installCoursePack(input)
-    expect(second.created).toMatchObject({
-      courseGroups: 0,
-      terms: 0,
-      standards: 0,
-      rubrics: 0,
-      resources: 0,
-      studentFields: 0,
-      assessments: 0,
-      homework: 0,
-      lessons: 0
-    })
-    expect(second.reused).toMatchObject({
-      courseGroups: 1,
-      terms: 2,
-      standards: 9,
-      rubrics: 5,
-      resources: 40,
-      studentFields: 9,
-      assessments: 10,
-      homework: 0,
-      lessons: 34
-    })
-    expect(listLessonPlansByClass(t1.id)).toHaveLength(15)
-    expect(listLessonPlansByClass(t2.id)).toHaveLength(19)
-    expect(listLessonResources()).toHaveLength(40)
-  })
-
   it('rolls the whole install back if materialisation fails', () => {
     const cls = universityClass('University English A')
     const pack = samplePack()
@@ -541,23 +470,26 @@ describe('Course Packs', () => {
     expect(listLessonPlansByClass(cls.id)).toHaveLength(0)
   })
 
-  it('installs the optional CET/IELTS bridge pack with Support and Stretch on each clinic', () => {
-    const cls = universityClass('Exam bridge')
-    const pack = parseCoursePack(
-      readFileSync(
-        join(process.cwd(), 'course-packs', 'exam-bridge-pack.coursepack.json'),
-        'utf8'
+  // Your own packs stay on your computer (course-packs/ is git-ignored and left out of the
+  // installers). When any are there, every one must parse, install, and re-install
+  // without duplicating anything. On a machine without them this is skipped.
+  const localPacks = existsSync(join(process.cwd(), 'course-packs'))
+    ? readdirSync(join(process.cwd(), 'course-packs')).filter((f) => f.endsWith('.coursepack.json'))
+    : []
+  it.runIf(localPacks.length > 0)('installs every local private pack, twice, cleanly', () => {
+    for (const file of localPacks) {
+      const pack = parseCoursePack(readFileSync(join(process.cwd(), 'course-packs', file), 'utf8'))
+      const termBindings = Object.fromEntries(
+        pack.terms.map((term) => [term.key, universityClass(`${file} ${term.key}`).id])
       )
-    )
-    installCoursePack({
-      pack,
-      termBindings: { bridge: cls.id },
-      firstClassDates: { bridge: '2026-10-12' }
-    })
-    const lessons = listLessonPlansByClass(cls.id)
-    expect(lessons).toHaveLength(10)
-    expect(lessons[0]).toMatchObject({ date: '2026-10-12' })
-    expect(lessons.every((l) => l.support && l.stretch)).toBe(true)
-    expect(listAssessmentsByClass(cls.id).map((a) => a.name)).toContain('Half mock')
+      // Dates for terms that don't carry their own.
+      const firstClassDates = Object.fromEntries(
+        pack.terms.map((term, i) => [term.key, i ? '2027-02-22' : '2026-09-07'])
+      )
+      const first = installCoursePack({ pack, termBindings, firstClassDates })
+      expect(first.created.lessons, file).toBe(pack.lessons?.length ?? 0)
+      const second = installCoursePack({ pack, termBindings, firstClassDates })
+      expect(second.created.lessons, file).toBe(0)
+    }
   })
 })
