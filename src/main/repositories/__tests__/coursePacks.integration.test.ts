@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { mkdtempSync, rmSync } from 'fs'
+import { mkdtempSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -14,7 +14,12 @@ import { listStandards } from '../standards'
 import { listRubrics } from '../rubrics'
 import { listAssessmentsByClass } from '../assessments'
 import { listHomeworkAssignmentsByClass } from '../homeworkAssignments'
-import { linkLessonResource, listLessonPlansByClass, listLessonResourceIds } from '../lessonPlans'
+import {
+  linkLessonResource,
+  listLessonPlansByClass,
+  listLessonResourceIds,
+  updateLessonPlan
+} from '../lessonPlans'
 import { createLessonResource, listLessonResources } from '../lessonResources'
 import { getSettings, updateSettings } from '../settingsRepo'
 import { installCoursePack } from '../coursePacks'
@@ -280,6 +285,97 @@ describe('Course Packs', () => {
     linkLessonResource(lesson.id, local.id)
     installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
     expect(new Set(listLessonResourceIds(lesson.id))).toEqual(new Set([packResource.id, local.id]))
+  })
+
+  it('reuses an imported lesson after the teacher moves it', () => {
+    const cls = universityClass('University English moved lesson')
+    installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
+
+    const lesson = listLessonPlansByClass(cls.id)[0]
+    updateLessonPlan(lesson.id, { date: '2026-09-09' })
+
+    const second = installCoursePack({ pack: samplePack(), termBindings: { t1: cls.id } })
+    const lessons = listLessonPlansByClass(cls.id)
+
+    expect(second.created.lessons).toBe(0)
+    expect(second.reused.lessons).toBe(1)
+    expect(lessons).toHaveLength(1)
+    expect(lessons[0]).toMatchObject({
+      id: lesson.id,
+      date: '2026-09-09',
+      originalDate: '2026-09-07'
+    })
+  })
+
+  it('installs and re-imports the real JUST 2026–27 pack without duplication', () => {
+    const pack = parseCoursePack(
+      readFileSync(
+        join(process.cwd(), 'course-packs', 'just-applied-english-2026-27.coursepack.json'),
+        'utf8'
+      )
+    )
+    const t1 = universityClass('JUST Applied English — Term 1')
+    const t2 = universityClass('JUST Applied English — Term 2')
+    const input = {
+      pack,
+      termBindings: { t1: t1.id, t2: t2.id },
+      firstClassDates: { t1: '2026-09-07', t2: '2027-02-22' }
+    }
+
+    const first = installCoursePack(input)
+    expect(first.created).toMatchObject({
+      courseGroups: 1,
+      terms: 2,
+      standards: 9,
+      rubrics: 5,
+      resources: 5,
+      studentFields: 9,
+      assessments: 10,
+      homework: 0,
+      lessons: 34
+    })
+    expect(listLessonPlansByClass(t1.id)).toHaveLength(15)
+    expect(listLessonPlansByClass(t2.id)).toHaveLength(19)
+    expect(listAssessmentsByClass(t1.id)).toHaveLength(5)
+    expect(listAssessmentsByClass(t2.id)).toHaveLength(5)
+    expect(listStandards().map((standard) => standard.code)).toEqual([
+      'UENG-01',
+      'UENG-02',
+      'UENG-03',
+      'UENG-04',
+      'UENG-05',
+      'UENG-06',
+      'UENG-07',
+      'UENG-08',
+      'UENG-09'
+    ])
+
+    const second = installCoursePack(input)
+    expect(second.created).toMatchObject({
+      courseGroups: 0,
+      terms: 0,
+      standards: 0,
+      rubrics: 0,
+      resources: 0,
+      studentFields: 0,
+      assessments: 0,
+      homework: 0,
+      lessons: 0
+    })
+    expect(second.reused).toMatchObject({
+      courseGroups: 1,
+      terms: 2,
+      standards: 9,
+      rubrics: 5,
+      resources: 5,
+      studentFields: 9,
+      assessments: 10,
+      homework: 0,
+      lessons: 34
+    })
+    expect(listLessonPlansByClass(t1.id)).toHaveLength(15)
+    expect(listLessonPlansByClass(t2.id)).toHaveLength(19)
+    expect(listLessonResources()).toHaveLength(5)
   })
 
   it('rolls the whole install back if materialisation fails', () => {
