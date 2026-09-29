@@ -13,7 +13,7 @@ const {
   revokeSessions,
   issueSessionCookie
 } = require('../auth')
-const { complete, AiNotConfiguredError } = require('../services/ai')
+const { complete, completeStream, AiNotConfiguredError } = require('../services/ai')
 const {
   isLanguage,
   translateText,
@@ -871,9 +871,8 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
     snippet: m.text.length > 220 ? `${m.text.slice(0, 220)}…` : m.text
   }))
 
-  try {
-    const student = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
-    const reply = (await complete(student.teacher_id, system, messages, 900)).trim()
+  const student = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
+  const record = (reply) =>
     recordInteraction({
       accountId: req.accountId,
       studentId,
@@ -882,6 +881,35 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
       reply,
       mode: helperMode
     })
+
+  // Streamed: the reply arrives piece by piece as server-sent events, then one final
+  // event with the whole reply and its citations. Errors arrive as an event too.
+  if (req.body.stream === true) {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no'
+    })
+    const send = (event) => res.write(`data: ${JSON.stringify(event)}\n\n`)
+    try {
+      const reply = (
+        await completeStream(student.teacher_id, system, messages, 900, (delta) => send({ delta }))
+      ).trim()
+      record(reply)
+      send({ done: true, reply, citations })
+    } catch (err) {
+      send(
+        err instanceof AiNotConfiguredError
+          ? { error: err.message, code: 'PT-4001' }
+          : { error: 'AI request failed. Try again in a moment.', code: 'PT-4002' }
+      )
+    }
+    return res.end()
+  }
+
+  try {
+    const reply = (await complete(student.teacher_id, system, messages, 900)).trim()
+    record(reply)
     res.json({ reply, citations })
   } catch (err) {
     if (err instanceof AiNotConfiguredError)

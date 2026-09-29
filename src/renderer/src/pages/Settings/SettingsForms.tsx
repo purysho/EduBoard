@@ -230,8 +230,51 @@ export function ProfileCard(): React.JSX.Element | null {
   )
 }
 
+/** Examples of other models per provider, for the hint only: model names change often,
+ * so the teacher types (or pastes) the name, and "Test" shows whether it's accepted. */
+const MODEL_EXAMPLES: Record<Exclude<AppSettings['aiProvider'], 'custom'>, string> = {
+  zhipu: 'glm-4.7-flash (free), glm-4.7, glm-5.1',
+  deepseek: 'deepseek-chat, deepseek-reasoner',
+  qwen: 'qwen-plus, qwen-max',
+  anthropic: 'see the models page in your Anthropic console'
+}
+
+function ModelChoice({
+  provider,
+  value,
+  onChange,
+  forStudents = false
+}: {
+  provider: Exclude<AppSettings['aiProvider'], 'custom'>
+  value: string
+  onChange: (value: string) => void
+  forStudents?: boolean
+}): React.JSX.Element {
+  return (
+    <FormRow
+      label={forStudents ? tr('Model for students (optional)') : tr('Model (optional)')}
+      hint={tr(
+        'Blank uses the provider’s default. A stronger model explains and questions better; a free one costs nothing. Examples: {examples}. Names change, so check your provider’s list and press Test.',
+        { examples: MODEL_EXAMPLES[provider] }
+      )}
+    >
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value.trim())}
+        placeholder={tr('Default')}
+      />
+    </FormRow>
+  )
+}
+
 export function TeacherAiCard(): React.JSX.Element | null {
-  const f = useSettingsForm(['aiProvider', 'aiApiKey', 'aiCustomBaseUrl', 'aiCustomModel'] as const)
+  const f = useSettingsForm([
+    'aiProvider',
+    'aiApiKey',
+    'aiCustomBaseUrl',
+    'aiCustomModel',
+    'aiModel'
+  ] as const)
   if (!f.form) return null
   const form = f.form
   return (
@@ -299,12 +342,20 @@ export function TeacherAiCard(): React.JSX.Element | null {
           </FormRow>
         </>
       )}
+      {form.aiProvider !== 'custom' && (
+        <ModelChoice
+          provider={form.aiProvider}
+          value={form.aiModel}
+          onChange={(aiModel) => f.set({ aiModel })}
+        />
+      )}
       <TestAiButton
         config={{
           provider: form.aiProvider,
           apiKey: form.aiApiKey,
           customBaseUrl: form.aiCustomBaseUrl,
-          customModel: form.aiCustomModel
+          customModel: form.aiCustomModel,
+          model: form.aiModel
         }}
       />
     </FormCard>
@@ -316,7 +367,8 @@ export function StudentAiCard(): React.JSX.Element | null {
     'portalAiProvider',
     'portalAiApiKey',
     'portalAiCustomBaseUrl',
-    'portalAiCustomModel'
+    'portalAiCustomModel',
+    'portalAiModel'
   ] as const)
   if (!f.form) return null
   const form = f.form
@@ -377,12 +429,21 @@ export function StudentAiCard(): React.JSX.Element | null {
           </FormRow>
         </>
       )}
+      {form.portalAiProvider !== 'custom' && (
+        <ModelChoice
+          provider={form.portalAiProvider}
+          value={form.portalAiModel}
+          onChange={(portalAiModel) => f.set({ portalAiModel })}
+          forStudents
+        />
+      )}
       <TestAiButton
         config={{
           provider: form.portalAiProvider,
           apiKey: form.portalAiApiKey,
           customBaseUrl: form.portalAiCustomBaseUrl,
-          customModel: form.portalAiCustomModel
+          customModel: form.portalAiCustomModel,
+          model: form.portalAiModel
         }}
       />
     </FormCard>

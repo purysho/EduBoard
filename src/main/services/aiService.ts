@@ -56,15 +56,22 @@ function stripCodeFence(text: string): string {
   return match ? match[1] : text
 }
 
+/** How a request is made. `json`: the reply must be one JSON object; providers that
+ * support it are asked for JSON mode, which stops replies with prose around the JSON. */
+export interface CompleteOptions {
+  json?: boolean
+}
+
 async function completeAnthropic(
   apiKey: string,
+  model: string,
   system: string,
   user: string,
   maxTokens: number
 ): Promise<string> {
   const client = new Anthropic({ apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 1 })
   const response = await client.messages.create({
-    model: ANTHROPIC_MODEL,
+    model,
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: user }]
@@ -83,26 +90,33 @@ async function completeOpenAiCompatible(
   apiKey: string,
   system: string,
   user: string,
-  maxTokens: number
+  maxTokens: number,
+  options: CompleteOptions = {}
 ): Promise<string> {
-  const res = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
-    // Without a limit a stalled provider leaves the button saying "Writing…" forever.
-    // Generous, because a long study guide on a free model can take a minute or two.
-    signal: AbortSignal.timeout(AI_TIMEOUT_MS),
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user }
-      ]
+  const send = (json: boolean): Promise<Response> =>
+    fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+      // Without a limit a stalled provider leaves the button saying "Writing…" forever.
+      // Generous, because a long study guide on a free model can take a minute or two.
+      signal: AbortSignal.timeout(AI_TIMEOUT_MS),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ],
+        ...(json ? { response_format: { type: 'json_object' } } : {})
+      })
     })
-  })
+  let res = await send(!!options.json)
+  // A server or model without JSON mode (an older one, a local one) refuses the option:
+  // ask again without it. The reply is checked just the same either way.
+  if (options.json && (res.status === 400 || res.status === 422)) res = await send(false)
   if (!res.ok) {
     throw new AppError('EB-4002', `AI provider error ${res.status}: ${await res.text()}`)
   }
@@ -113,8 +127,10 @@ async function completeOpenAiCompatible(
 /** The model a config will actually call — shown in the test result so a teacher can
  * see which model their key reached. */
 export function modelFor(config: AiConnectionConfig): string {
-  if (config.provider === 'anthropic') return ANTHROPIC_MODEL
   if (config.provider === 'custom') return config.customModel.trim()
+  const chosen = config.model?.trim()
+  if (chosen) return chosen
+  if (config.provider === 'anthropic') return ANTHROPIC_MODEL
   return OPENAI_COMPATIBLE_PRESETS[config.provider].model
 }
 
@@ -122,7 +138,8 @@ async function completeWith(
   config: AiConnectionConfig,
   system: string,
   user: string,
-  maxTokens: number
+  maxTokens: number,
+  options: CompleteOptions = {}
 ): Promise<string> {
   const provider = config.provider
   const apiKey = config.apiKey.trim()
@@ -133,16 +150,24 @@ async function completeWith(
     if (!baseUrl || !model) throw new AiNotConfiguredError()
     // A key isn't required for every custom endpoint (e.g. a local Ollama server) —
     // only Anthropic and the built-in presets below need one to even attempt a call.
-    return completeOpenAiCompatible(baseUrl, model, apiKey, system, user, maxTokens)
+    return completeOpenAiCompatible(baseUrl, model, apiKey, system, user, maxTokens, options)
   }
 
   if (!apiKey) throw new AiNotConfiguredError()
 
   if (provider === 'anthropic') {
-    return completeAnthropic(apiKey, system, user, maxTokens)
+    return completeAnthropic(apiKey, modelFor(config), system, user, maxTokens)
   }
   const preset = OPENAI_COMPATIBLE_PRESETS[provider]
-  return completeOpenAiCompatible(preset.baseUrl, preset.model, apiKey, system, user, maxTokens)
+  return completeOpenAiCompatible(
+    preset.baseUrl,
+    modelFor(config),
+    apiKey,
+    system,
+    user,
+    maxTokens,
+    options
+  )
 }
 
 /** Plain-text completion for other services (newsletters). Same provider, key and
@@ -151,18 +176,25 @@ export function completeText(system: string, user: string, maxTokens: number): P
   return complete(system, user, maxTokens)
 }
 
-async function complete(system: string, user: string, maxTokens: number): Promise<string> {
+async function complete(
+  system: string,
+  user: string,
+  maxTokens: number,
+  options: CompleteOptions = {}
+): Promise<string> {
   const settings = getSettings()
   return completeWith(
     {
       provider: settings.aiProvider,
       apiKey: settings.aiApiKey,
       customBaseUrl: settings.aiCustomBaseUrl,
-      customModel: settings.aiCustomModel
+      customModel: settings.aiCustomModel,
+      model: settings.aiModel
     },
     system,
     user,
-    maxTokens
+    maxTokens,
+    options
   )
 }
 
@@ -225,9 +257,14 @@ export async function testConnection(config: AiConnectionConfig): Promise<AiConn
  * anything that isn't one of this file's own two fixed-shape drafting prompts (e.g. the
  * Notebook's question-answering, which needs to hand over a variable amount of
  * retrieved context rather than a fixed template). */
-export async function askAi(system: string, user: string, maxTokens: number): Promise<string> {
+export async function askAi(
+  system: string,
+  user: string,
+  maxTokens: number,
+  options: CompleteOptions = {}
+): Promise<string> {
   try {
-    return await complete(system, user, maxTokens)
+    return await complete(system, user, maxTokens, options)
   } catch (err) {
     if (err instanceof AiNotConfiguredError) throw err
     throw new AiRequestError(describeAiFailure(err))
@@ -254,7 +291,7 @@ export async function draftLessonPlan(input: DraftLessonPlanInput): Promise<Draf
     (input.gradeLevel ? `, grade ${input.gradeLevel}` : '') +
     `\nTopic for this lesson: ${input.topic}`
 
-  const text = await complete(system, user, 2048)
+  const text = await complete(system, user, 2048, { json: true })
   const parsed = JSON.parse(stripCodeFence(text))
   return {
     title: String(parsed.title ?? input.topic),
@@ -291,8 +328,8 @@ export async function suggestCommentPhrases(
 
   const system =
     'You help a teacher write a report card comment by suggesting SHORT PHRASES, never a ' +
-    'whole comment. Respond with ONLY a JSON array of 3 to 5 objects, no prose and no ' +
-    'markdown: [{"phrase": string, "basis": "grade" | "trend" | "attendance" | "notes"}]. ' +
+    'whole comment. Respond with ONLY a JSON object holding 3 to 5 suggestions, no prose ' +
+    'and no markdown: {"phrases": [{"phrase": string, "basis": "grade" | "trend" | "attendance" | "notes"}]}. ' +
     'Each phrase is at most 15 words, in plain encouraging-but-honest language a parent ' +
     'understands, and must follow directly from the one piece of data named in "basis". ' +
     'Never invent achievements, subjects, events or traits that are not in the data; if ' +
@@ -300,6 +337,6 @@ export async function suggestCommentPhrases(
     writeIn()
   const user = `Student: ${input.studentName}\nClass: ${input.className}\n${gradeLine}\n${attendanceLine}\n${trendLine}\n${notesLine}`
 
-  const text = await complete(system, user, 600)
+  const text = await complete(system, user, 600, { json: true })
   return parsePhraseSuggestions(text)
 }

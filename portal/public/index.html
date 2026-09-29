@@ -1016,6 +1016,46 @@ async function loadAiHistory(root) {
   }
 }
 
+/** Asks the Study Helper and streams its answer: `onDelta` gets each piece as it arrives.
+ * Resolves with the whole reply and its citations. An older Portal that answers in one
+ * go works too. */
+async function streamChat(body, onDelta) {
+  const res = await fetch('/api/me/ai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...body, stream: true })
+  })
+  const failure = (data) => {
+    const code = /^PT-\d{4}$/.test(data.code || '') ? ` (${data.code})` : ''
+    return new Error(tError(data.error || 'Something went wrong') + code)
+  }
+  if (!(res.headers.get('content-type') || '').includes('text/event-stream')) {
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw failure(data)
+    if (data.reply) onDelta(data.reply)
+    return data
+  }
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  for (;;) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const events = buffer.split('\n\n')
+    buffer = events.pop()
+    for (const event of events) {
+      const line = event.split('\n').find((l) => l.startsWith('data:'))
+      if (!line) continue
+      const data = JSON.parse(line.slice(5))
+      if (data.error) throw failure(data)
+      if (data.delta) onDelta(data.delta)
+      if (data.done) return { reply: data.reply, citations: data.citations || [] }
+    }
+  }
+  throw new Error(tError('Something went wrong'))
+}
+
 function wireAiChats(root) {
   root.querySelectorAll('[data-ai-help-toggle]').forEach((btn) => {
     btn.onclick = () => {
@@ -1068,16 +1108,24 @@ function wireAiChats(root) {
       log.scrollTop = log.scrollHeight
       textarea.value = ''
       try {
-        const { reply, citations } = await api('/me/ai/chat', {
-          method: 'POST',
-          body: {
+        const thinking = pending.querySelector('.msg.teacher .msg-bubble')
+        let shown = ''
+        const { reply, citations } = await streamChat(
+          {
             studentId: chat.dataset.student,
             homeworkId: chat.dataset.homework || undefined,
             message,
             language: readingLanguage,
             mode: chat.dataset.mode || 'help'
+          },
+          (delta) => {
+            // The answer appears as it's written; the finished one replaces it below.
+            shown += delta
+            thinking.classList.remove('muted')
+            thinking.textContent = shown
+            log.scrollTop = log.scrollHeight
           }
-        })
+        )
         pending.innerHTML = aiBubblesHtml(message, reply, citations)
         wireListenButtons(pending)
         // Asking about an assignment marks it; show that on its submit form right away.

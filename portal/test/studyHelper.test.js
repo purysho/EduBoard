@@ -145,3 +145,57 @@ test('a Portal from before Chinese search rebuilds its index on start', async (t
     ['细胞是生物体的基本单位。']
   )
 })
+
+test('the Study Helper streams its answer, with the model the teacher chose', async (t) => {
+  const requests = []
+  const ai = http.createServer((req, res) => {
+    let raw = ''
+    req.on('data', (d) => (raw += d))
+    req.on('end', () => {
+      requests.push(JSON.parse(raw))
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' })
+      for (const piece of ['Try ', 'explaining ', 'it first.']) {
+        res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: piece } }] })}\n\n`)
+      }
+      res.end('data: [DONE]\n\n')
+    })
+  })
+  await new Promise((r) => ai.listen(0, '127.0.0.1', r))
+  const portal = await startPortal()
+  t.after(async () => {
+    await portal.stop()
+    ai.close()
+  })
+  const { cookie } = await makeStudentAccount(portal, {
+    payload: classPayload({
+      extra: {
+        aiProvider: 'custom',
+        aiApiKey: '',
+        aiCustomBaseUrl: `http://127.0.0.1:${ai.address().port}`,
+        aiCustomModel: 'mock-tutor',
+        aiHelperModel: 'ignored-for-custom'
+      }
+    })
+  })
+  const res = await portal.call('POST', '/api/me/ai/chat', {
+    cookie,
+    body: { studentId: 's1', message: 'Help', stream: true }
+  })
+  assert.match(res.headers.get('content-type'), /^text\/event-stream/)
+  const events = res.text
+    .split('\n\n')
+    .filter(Boolean)
+    .map((e) => JSON.parse(e.replace(/^data: /, '')))
+  assert.deepEqual(
+    events.filter((e) => e.delta).map((e) => e.delta),
+    ['Try ', 'explaining ', 'it first.']
+  )
+  assert.equal(events.at(-1).done, true)
+  assert.equal(events.at(-1).reply, 'Try explaining it first.')
+  assert.equal(requests[0].stream, true)
+  assert.equal(requests[0].model, 'mock-tutor')
+
+  // Logged like any other answer.
+  const history = await portal.call('GET', '/api/me/ai/history?studentId=s1', { cookie })
+  assert.equal(history.json.at(-1).reply, 'Try explaining it first.')
+})

@@ -331,6 +331,8 @@ function buildPublishPayload(): {
     aiApiKey: settings.portalAiApiKey,
     aiCustomBaseUrl: settings.portalAiCustomBaseUrl,
     aiCustomModel: settings.portalAiCustomModel,
+    // The Study Helper's model, when the teacher chose one other than the default.
+    aiHelperModel: settings.portalAiModel,
     digestEnabled: settings.digestEnabled,
     digestSmtpHost: settings.digestSmtpHost,
     digestSmtpPort: settings.digestSmtpPort,

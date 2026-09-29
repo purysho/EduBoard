@@ -131,6 +131,11 @@ export function parsePhraseSuggestions(text: string): PhraseSuggestion[] {
   } catch {
     throw new AppError('EB-4003', tr('The AI’s suggestions couldn’t be read. Try again.'))
   }
+  // JSON mode returns an object: {"phrases": [...]}.
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const lists = Object.values(raw).filter(Array.isArray)
+    if (lists.length === 1) raw = lists[0]
+  }
   if (!Array.isArray(raw))
     throw new AppError('EB-4003', tr('The AI’s suggestions couldn’t be read. Try again.'))
   const out: PhraseSuggestion[] = []

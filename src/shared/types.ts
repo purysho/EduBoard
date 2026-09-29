@@ -846,6 +846,9 @@ export interface AiConnectionConfig {
   apiKey: string
   customBaseUrl: string
   customModel: string
+  /** A different model from a built-in provider (e.g. a stronger or newer one); '' uses
+   * the provider's default. The custom provider uses customModel instead. */
+  model?: string
 }
 
 export type AiConnectionTestResult =
@@ -876,6 +879,8 @@ export interface AppSettings {
    * endpoint) and the model name to request. */
   aiCustomBaseUrl: string
   aiCustomModel: string
+  /** Another model from the chosen provider; '' means its default (AiConnectionConfig). */
+  aiModel: string
   /** Base URL of a deployed Portal instance (see portal/README.md) — e.g.
    * "https://portal.example.com". Empty means the Portal features (publish/pull) are
    * unavailable, same "entirely opt-in" shape as everything else here. */
@@ -893,6 +898,8 @@ export interface AppSettings {
   portalAiApiKey: string
   portalAiCustomBaseUrl: string
   portalAiCustomModel: string
+  /** The model the Portal's Study Helper uses; '' means the provider's default. */
+  portalAiModel: string
   /** SMTP config for the weekly parent digest email, sent from the Portal server (not
    * the desktop app) — same "teacher provisions once, pushed on every publish" shape as
    * the AI key above. digestEnabled off by default; a Gmail app password + smtp.gmail.com
@@ -1109,12 +1116,14 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   aiApiKey: '',
   aiCustomBaseUrl: '',
   aiCustomModel: '',
+  aiModel: '',
   portalUrl: '',
   portalSyncSecret: '',
   portalAiProvider: 'zhipu',
   portalAiApiKey: '',
   portalAiCustomBaseUrl: '',
   portalAiCustomModel: '',
+  portalAiModel: '',
   digestEnabled: false,
   digestSmtpHost: '',
   digestSmtpPort: 587,

@@ -228,7 +228,11 @@ Today's date is there by default — add more with the date picker and **+ Add d
 
 ## Planning lessons
 
-**Lesson plans** is a running list, newest additions included. Each entry has a date, status (Planned / Taught / Skipped), title, objectives, materials, activities, homework, and an optional link to one of the class's assessments (handy for tracing which lesson a quiz grew out of). Nothing here is required — use as much or as little structure as is useful to you.
+**Lesson plans** is a running list, newest additions included. Each entry has a date, status (Planned / Taught / Partly taught: re-teach / Skipped), title, objectives, materials, activities, **Support** and **Stretch** (the same task made easier or harder), homework, and an optional link to one of the class's assessments (handy for tracing which lesson a quiz grew out of). Nothing here is required — use as much or as little structure as is useful to you.
+
+**When the class needs more time:** mark a lesson **Partly taught: re-teach**, then **Make room: move later lessons back** (1 or 2 days or weeks). Any upcoming lesson also has **Move this and later lessons…** for a missed class. Only still-planned lessons move; each keeps its first planned date, so the curriculum map shows what moved.
+
+**No homework allowed?** In the class's **Settings**, tick **No homework in this class**. Each lesson's homework is then called **Consolidation in class** (in the plan, Word and slides): the same short task, done in the last minutes of the lesson.
 
 **Copy last week** copies every plan from last week (Monday to Sunday) to the same day this week, marked Planned, so a repeating timetable only needs editing rather than retyping. Plans already there with the same date and title aren't copied twice.
 
@@ -273,6 +277,8 @@ An exit ticket is a quick 1–3 question check students answer on their own devi
 3. Students **choose their name from the class list**, answer and submit. If a student submits again, the new answer replaces the old one, so there's one answer per student. Responses appear in the **Responses** list live, and **Not answered yet** lists who's missing.
 4. The session closes by itself at the time you chose, or press **Stop session**. **Clear** wipes the recorded responses if you want to reuse the same questions with another class.
 
+**Did the lesson land?** For a multiple-choice question, tick the answers that show a student understood, or add a ready-made **Confidence check**. **What the answers say** then shows each option's spread and the share who understood, and suggests re-teaching when it's under 7 in 10. It stays after the session closes, until you clear the answers.
+
 A class with no students enrolled yet falls back to students typing their name. Each device can send about a dozen answers a minute, which is plenty for a real student and stops anyone flooding the list.
 
 **QR attendance check-in** (Attendance tab) works the same way: students scan the code and tap their own name. Each phone can check in one student per session, so nobody can mark a friend present from their phone; they're told to ask you instead. You can still tick anyone present or absent yourself in the attendance grid.
@@ -290,7 +296,7 @@ Because everything happens over your local WiFi rather than the internet, this w
 - **New resource** → choose a type (**Link**, **File**, or **Note**), give it a title, and fill in the URL or pick a file from your computer (for File) or just write the note (for Note). Add tags (comma-separated) and, optionally, one of your standards to make it easy to find later.
 - Filter by typing in the search box or clicking a tag chip; click a link or file resource to open it in your browser or default app, or click a note to view/edit it.
 - Files are referenced by their path on disk, the same as gradebook submissions — keep the original file where EduBoard can find it.
-- **Study tools (needs an AI key in Settings):** **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. They work on PDFs, Word (.docx), PowerPoint (.pptx, including speaker notes), OpenDocument, .txt and .md files, links and notes, and index the resource themselves the first time. Older .doc/.ppt files need saving as .docx/.pptx first; scanned PDFs (pictures of pages) have no text to read. Flashcards and quizzes open in a review window where you can read every card and question (the correct answer is ticked) and **Regenerate** or **Remove** them. If the resource is shared with a class, students get them on the Portal to practise with; the practice quiz is self-checked and never counts toward a grade.
+- **Study tools (needs an AI key in Settings):** **Study guide**, **Flashcards** and **Practice quiz** each draft a study aid from the resource's text. They work on PDFs, Word (.docx), PowerPoint (.pptx, including speaker notes), OpenDocument, .txt and .md files, links and notes, and index the resource themselves the first time. Older .doc/.ppt files need saving as .docx/.pptx first; scanned PDFs (pictures of pages) have no text to read. Each opens in a review window where you read it (for a study guide, edit it), **Regenerate** or **Remove** it, and **Approve for students**. Nothing AI-drafted reaches students until you approve it, and a regenerated draft needs approving again; an **AI draft to check** badge shows what's waiting. Approved flashcards and practice questions come back to each student in **spaced review** on the Portal (see below), and the review window shows which items students miss most, marked **worth re-teaching**. The practice quiz never counts toward a grade.
 
 ![Resources library](screenshots/resources.png)
 
@@ -315,9 +321,16 @@ fill-in form instead of a list of names.
 
 ---
 
+## How the Portal helps students learn
+
+- **Today's review (spaced review):** approved flashcards and practice questions come back a little each day. Right moves a card up a box (due again in 1, 2, 4, 8, then 16 days); wrong sends it back to tomorrow. Up to ten new cards join a day, and a day mixes topics. Students answer from memory before seeing the answer.
+- **This week:** on the Portal's Home page, the next seven days with homework due, a day to start each piece (two days before it's due), the review cards coming up, and one goal of the student's own, with a look back the week after. The calendar feed shows review days too.
+- **Study Helper modes:** *Help me understand*, *Teach it back* (the Feynman technique: the student explains, it finds the gaps), *Quiz me* (recall, one question at a time), *Tutorial* (defend a claim or essay plan, Oxford-style), *Solve step by step* (Pólya's four steps, hints only). Students can add their **subject or major**, and examples then come from it.
+- **Chinese questions** find Chinese class materials (and the Notebook does the same for you).
+
 ## Students using AI
 
-Students can use AI on the Portal in two places: the **Study Helper** (Study tab), and **Get AI help** inside each assignment. It uses the **Student AI** key from Settings. The AI is told to help them understand and plan, not to write their answer. Students are told, on screen, that you can see what they ask.
+Students can use AI on the Portal in two places: the **Study Helper** (Study tab), and **Get AI help** inside each assignment. It uses the **Student AI** key from Settings; **Model for students** there lets you pick a stronger (or newer free) model than the provider's default. Answers appear as they're written. Class materials and the conversation so far are passed to the AI as data it's told not to take instructions from. The AI is told to help them understand and plan, not to write their answer. Students are told, on screen, that you can see what they ask.
 
 A submission shows a purple **Used AI** badge in the assignment's grading window when any of these is true:
 

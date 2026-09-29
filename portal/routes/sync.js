@@ -95,6 +95,7 @@ router.post('/', (req, res) => {
     aiApiKey,
     aiCustomBaseUrl,
     aiCustomModel,
+    aiHelperModel,
     digestEnabled,
     digestSmtpHost,
     digestSmtpPort,
@@ -125,7 +126,8 @@ router.post('/', (req, res) => {
     provider: aiProvider,
     apiKey: aiApiKey,
     customBaseUrl: aiCustomBaseUrl,
-    customModel: aiCustomModel
+    customModel: aiCustomModel,
+    helperModel: aiHelperModel
   })
   saveDigestSettings(req.teacherId, {
     enabled: digestEnabled,

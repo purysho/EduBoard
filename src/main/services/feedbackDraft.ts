@@ -67,7 +67,7 @@ export async function draftSubmissionFeedback(
   })
 
   const started = Date.now()
-  const reply = await askAi(system, user, 1024)
+  const reply = await askAi(system, user, 1024, { json: true })
   console.info(
     `[ai] feedback draft for ${homeworkAssignmentId}/${studentId}: ${Date.now() - started}ms, prompt v1`
   )

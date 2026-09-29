@@ -38,18 +38,19 @@ export function buildPracticePrompt(
   kind: PracticeKind,
   sourceText: string
 ): { system: string; user: string } {
-  const common = SOURCE_IS_DATA + ' Reply with ONLY a JSON array, no prose and no code fence.'
+  const common =
+    SOURCE_IS_DATA + ' Reply with ONLY a JSON object {"items": [...]}, no prose and no code fence.'
   const system =
     kind === 'flashcards'
       ? `You write study flashcards for university and school students. Write 8-${PRACTICE_LIMITS.flashcards.max} ` +
         'cards covering the most important terms, ideas and facts. Front: a short question or term. ' +
         'Back: a concise answer (1-3 sentences). ' +
-        'Shape: [{"front": string, "back": string}]. ' +
+        'Each item: {"front": string, "back": string}. ' +
         common
       : `You write multiple-choice practice questions for self-study. Write 5-10 questions that test ` +
         'understanding, not trivia. Each has 4 plausible options with exactly one correct, and a ' +
         'one- or two-sentence explanation of why it is correct. ' +
-        'Shape: [{"question": string, "options": string[], "answerIndex": number (0-based), "explanation": string}]. ' +
+        'Each item: {"question": string, "options": string[], "answerIndex": number (0-based), "explanation": string}. ' +
         common
   return { system, user: asSourceMaterial(sourceText) }
 }

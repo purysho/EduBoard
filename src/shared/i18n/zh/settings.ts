@@ -611,5 +611,10 @@ export const SETTINGS: Record<string, string> = {
   'Families see “EduBoard Portal”. Give the app a name and logo in Settings → Appearance and the Portal shows them after your next publish.':
     '家长目前看到的是“EduBoard 学生门户”。在“设置 → 外观”中为应用设置名称和标志，下次发布后门户就会显示它们。',
   'After your next publish, families see “{appName}” (and your logo) instead of “EduBoard Portal”. If other teachers share this Portal, it does so when all their apps have this name too (a school pack does that), or when the Portal’s admin chooses it.':
-    '下次发布后，家长看到的将是“{appName}”（以及你的标志），而不是“EduBoard 学生门户”。如果其他老师也使用这个门户，则需要他们的应用也使用同一名称（学校配置包可以做到），或由门户管理员选择它。'
+    '下次发布后，家长看到的将是“{appName}”（以及你的标志），而不是“EduBoard 学生门户”。如果其他老师也使用这个门户，则需要他们的应用也使用同一名称（学校配置包可以做到），或由门户管理员选择它。',
+  'Model for students (optional)': '学生使用的模型（可选）',
+  'Model (optional)': '模型（可选）',
+  'Blank uses the provider’s default. A stronger model explains and questions better; a free one costs nothing. Examples: {examples}. Names change, so check your provider’s list and press Test.':
+    '留空则使用服务商的默认模型。更强的模型讲解和提问更好；免费模型不花钱。例如：{examples}。模型名称经常变化，请查看服务商的模型列表并点击“测试”。',
+  Default: '默认'
 }

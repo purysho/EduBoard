@@ -229,12 +229,12 @@ export async function draftPracticeSet(resourceId: string, kind: PracticeKind): 
   const { system, user } = buildPracticePrompt(kind, text)
   let set
   try {
-    set = parsePracticeSet(kind, await askAi(system, user, 4096))
+    set = parsePracticeSet(kind, await askAi(system, user, 4096, { json: true }))
   } catch (err) {
     // Models occasionally return a cut-off or badly shaped reply. One retry usually
     // works; a second failure is reported rather than retried forever on the teacher's key.
     if (!(err instanceof AiDraftFormatError)) throw err
-    set = parsePracticeSet(kind, await askAi(system, user, 4096))
+    set = parsePracticeSet(kind, await askAi(system, user, 4096, { json: true }))
   }
   setLessonResourcePracticeSet(resourceId, kind, set)
   return set.length

@@ -354,6 +354,8 @@ db.exec(`
     PRIMARY KEY (student_id, week_start)
   );
 `)
+// The model the teacher chose for the Study Helper ('' or NULL: the provider's default).
+ensureColumn('ai_settings', 'helper_model', 'helper_model TEXT')
 // Which Study Helper mode a question was asked in (services/studyHelper.js); NULL = help.
 ensureColumn('ai_interactions', 'mode', 'mode TEXT')
 ensureColumn('teachers', 'app_name', 'app_name TEXT')
