@@ -30,7 +30,11 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true })
 })
 
-function makeClass(name: string, termId: string, courseGroupId: string) {
+function makeClass(
+  name: string,
+  termId: string,
+  courseGroupId: string
+): ReturnType<typeof createClass> {
   return createClass({
     name,
     subject: 'English',
