@@ -690,5 +690,9 @@ export const CLASSES: Record<string, string> = {
   'Optional — materials from your Resources library used in this lesson':
     '可选——从资源库中选择本节课使用的材料',
   'No resources in the library yet.': '资源库中还没有资源。'
+,
+  'Search students…': '搜索学生…',
+  'Showing {shown} of {total} students': '显示 {shown} / {total} 名学生',
+  'No students match that search.': '没有学生匹配该搜索。'
 
 }
