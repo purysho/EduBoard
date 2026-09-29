@@ -342,6 +342,18 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS review_items_material_idx ON review_items(material_id);
 `)
+// A student's own goal for each week and how it went (the Portal's week plan).
+db.exec(`
+  CREATE TABLE IF NOT EXISTS study_goals (
+    student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    week_start TEXT NOT NULL,
+    goal TEXT NOT NULL DEFAULT '',
+    outcome TEXT,
+    reflection TEXT,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (student_id, week_start)
+  );
+`)
 // Which Study Helper mode a question was asked in (services/studyHelper.js); NULL = help.
 ensureColumn('ai_interactions', 'mode', 'mode TEXT')
 ensureColumn('teachers', 'app_name', 'app_name TEXT')

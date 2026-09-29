@@ -131,6 +131,29 @@ function todaysReview(studentId, today) {
   }
 }
 
+/** How many cards come up for review on each of the next `days` days (anything overdue,
+ * and today's new cards, count today), for the student's week plan and calendar. */
+function reviewSchedule(studentId, today, days = 7) {
+  const items = itemsForStudent(studentId)
+  const states = statesFor(studentId)
+  const counts = new Map()
+  let fresh = 0
+  for (const item of items) {
+    const state = states.get(idOf(item))
+    if (!state) {
+      fresh++
+      continue
+    }
+    const day = state.due_on < today ? today : state.due_on
+    counts.set(day, (counts.get(day) || 0) + 1)
+  }
+  counts.set(today, (counts.get(today) || 0) + Math.min(fresh, NEW_PER_DAY))
+  return Array.from({ length: days }, (_, i) => {
+    const date = addDays(today, i)
+    return { date, count: Math.min(counts.get(date) || 0, i === 0 ? MAX_PER_SESSION : Infinity) }
+  })
+}
+
 /** Records one answer. Returns the item's new box and due date, or null when it isn't
  * one of this student's items (a material since removed, or not their class). */
 function recordAnswer(studentId, { materialId, kind, key, correct }, today) {
@@ -216,6 +239,8 @@ function teacherReviewStats(teacherId) {
 
 module.exports = {
   INTERVAL_DAYS,
+  addDays,
+  reviewSchedule,
   itemKey,
   studentToday,
   nextState,

@@ -102,3 +102,41 @@ test('students review, answers move cards between boxes, and the teacher sees wh
     learned: 0
   })
 })
+
+test('the week plan shows review days, and a goal can be set and looked back on', async (t) => {
+  const portal = await startPortal()
+  t.after(portal.stop)
+  const { cookie } = await makeStudentAccount(portal, {
+    payload: classPayload({
+      extra: { materials: [{ id: 'm1', classId: 'c1', title: 'Words', flashcards: cards }] }
+    })
+  })
+  const today = new Date().toISOString().slice(0, 10)
+  const week = (await portal.call('GET', `/api/me/week?studentId=s1&today=${today}`, { cookie }))
+    .json
+  assert.equal(week.review.length, 7)
+  assert.equal(week.review[0].date, today)
+  assert.equal(week.review[0].count, 10) // today's new cards
+  assert.equal(week.goal, null)
+
+  const put = (body) =>
+    portal.call('PUT', '/api/me/week/goal', { cookie, body: { studentId: 's1', today, ...body } })
+  assert.equal((await put({ weekStart: week.weekStart, goal: 'Review every day' })).status, 200)
+  assert.equal((await put({ weekStart: week.weekStart, outcome: 'partly' })).status, 200)
+  const after = (await portal.call('GET', `/api/me/week?studentId=s1&today=${today}`, { cookie }))
+    .json
+  assert.deepEqual(after.goal, {
+    weekStart: week.weekStart,
+    goal: 'Review every day',
+    outcome: 'partly',
+    reflection: null
+  })
+  // Only this week or last week.
+  assert.equal((await put({ weekStart: '2020-01-06', goal: 'x' })).status, 400)
+
+  // The family calendar shows the review days.
+  const made = await portal.call('POST', '/api/me/calendar', { cookie, body: { lang: 'en' } })
+  const url = new URL(made.json.url)
+  const ics = (await portal.call('GET', url.pathname + url.search)).text
+  assert.match(ics, /SUMMARY:Review: 10 cards/)
+})

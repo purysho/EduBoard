@@ -249,6 +249,12 @@
   .notif-pill { display: inline-block; margin-bottom: 14px; padding: 8px 14px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: .85rem; font-weight: 600; text-decoration: none; }
   .flashcard { cursor: pointer; min-height: 110px; display: flex; flex-direction: column; justify-content: center; background: var(--surface-muted); box-shadow: none; }
   .flashcard.flipped { background: var(--success-soft); }
+  .week-row { display: flex; gap: 12px; padding: 7px 0; border-top: 1px solid var(--border); align-items: baseline; }
+  .week-row:first-child { border-top: none; }
+  .week-day { width: 92px; flex-shrink: 0; font-weight: 600; font-size: .85rem; }
+  .week-items { display: flex; flex-wrap: wrap; gap: 6px; }
+  .week-items .pill { text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .week-goal { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .review-boxes { display: flex; gap: 6px; align-items: flex-end; height: 56px; }
   .review-boxes span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: .72rem; color: var(--muted); }
   .review-boxes b { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--primary-soft); margin-bottom: 2px; }
@@ -1655,6 +1661,108 @@ async function loadMaterials() {
 // card up a box (1, 2, 4, 8, 16 days), wrong sends it back to box 1. A day's review mixes
 // topics. What's due is worked out on the server, so it follows the student to any device.
 
+// ---- The student's week plan -------------------------------------------------------------
+// The next seven days: homework due, a day to start each piece (two days ahead, so it
+// isn't all left to the night before), and the spaced-review cards coming up. Plus one goal
+// of the student's own for the week, and a look back at last week's: plan, do, reflect.
+
+const GOAL_OUTCOMES = [
+  ['done', 'Did it'],
+  ['partly', 'Partly'],
+  ['not_yet', 'Not yet']
+]
+
+async function loadWeekPlan(root, allHomework) {
+  const studentId = root.dataset.student
+  let week
+  try {
+    week = await api(`/me/week?studentId=${encodeURIComponent(studentId)}&today=${localToday()}`)
+  } catch (err) {
+    root.innerHTML = `<p class="error">${esc(tError(err.message))}</p>`
+    return
+  }
+  const mine = allHomework.filter((h) => h.studentId === studentId && h.status === 'not_started' && h.dueDate)
+  const days = week.review.map(({ date, count }, i) => {
+    const due = mine.filter((h) => (i === 0 ? h.dueDate.slice(0, 10) <= date : h.dueDate.slice(0, 10) === date))
+    const start = mine.filter((h) => {
+      const dueDay = h.dueDate.slice(0, 10)
+      if (dueDay <= date) return false
+      const startOn = addDaysIso(dueDay, -2)
+      return startOn === date || (i === 0 && startOn < date)
+    })
+    return { date, i, review: count, due, start }
+  })
+  const dayLabel = (d) => (d.i === 0 ? t('Today') : d.i === 1 ? t('Tomorrow') : formatDay(d.date))
+  const rows = days
+    .map((d) => {
+      const bits = [
+        ...d.due.map((h) => `<span class="pill ${h.timing === 'missing' ? 'missing' : 'not_started'}" title="${esc(h.className)}">${esc(t('Due: {title}', { title: h.title }))}</span>`),
+        ...d.start.map((h) => `<span class="pill submitted" title="${esc(h.className)}">${esc(t('Start: {title}', { title: h.title }))}</span>`),
+        d.review ? `<span class="pill done">${esc(t('Review {n}', { n: d.review }))}</span>` : ''
+      ].filter(Boolean)
+      return `<div class="week-row"><span class="week-day">${esc(dayLabel(d))}</span><span class="week-items">${
+        bits.length ? bits.join(' ') : `<span class="muted">${t('Free')}</span>`
+      }</span></div>`
+    })
+    .join('')
+
+  const goal = week.goal?.goal || ''
+  const last = week.lastWeek
+  const lookBack =
+    last && last.goal && !last.outcome
+      ? `<div class="week-goal">
+           <p style="margin:0 0 6px">${esc(t('Last week you aimed to: {goal}', { goal: last.goal }))} ${t('How did it go?')}</p>
+           <div class="chip-row" style="margin:0">${GOAL_OUTCOMES.map(([id, label]) => `<button type="button" class="chip" data-outcome="${id}">${t(label)}</button>`).join('')}</div>
+         </div>`
+      : ''
+  const goalForm = (value) => `<form data-goal-form style="display:flex; gap:6px; align-items:center; margin:0">
+      <input maxlength="200" value="${esc(value)}" placeholder="${esc(t('My goal this week, e.g. review every day, finish the essay plan by Thursday'))}" style="margin:0" />
+      <button type="submit" class="chip">${t('Save')}</button>
+    </form>`
+  root.innerHTML = `
+    ${lookBack}
+    <div class="week-goal" data-goal-box>
+      ${
+        goal
+          ? `<p style="margin:0"><strong>${t('My goal this week:')}</strong> ${esc(goal)} · <a href="#" class="linklike" data-goal-edit>${t('Change')}</a></p>`
+          : goalForm('')
+      }
+    </div>
+    <div class="week-list">${rows}</div>`
+
+  const save = async (body) => {
+    try {
+      await api('/me/week/goal', { method: 'PUT', body: { studentId, today: localToday(), ...body } })
+    } catch {
+      return
+    }
+    loadWeekPlan(root, allHomework)
+  }
+  const wireForm = () => {
+    root.querySelector('[data-goal-form]')?.addEventListener('submit', (e) => {
+      e.preventDefault()
+      const value = e.target.querySelector('input').value.trim()
+      if (value) save({ weekStart: week.weekStart, goal: value })
+    })
+  }
+  wireForm()
+  root.querySelector('[data-goal-edit]')?.addEventListener('click', (e) => {
+    e.preventDefault()
+    root.querySelector('[data-goal-box]').innerHTML = goalForm(goal)
+    wireForm()
+  })
+  root.querySelectorAll('[data-outcome]').forEach((btn) => {
+    btn.onclick = () => save({ weekStart: last.weekStart, outcome: btn.dataset.outcome })
+  })
+}
+
+/** 'YYYY-MM-DD' plus some days. */
+function addDaysIso(ymd, days) {
+  const d = parseDay(ymd)
+  d.setDate(d.getDate() + days)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 /** 'YYYY-MM-DD' as a short local date: "Mon 6 Oct". */
 function formatDay(ymd) {
   return parseDay(ymd).toLocaleDateString(uiLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
@@ -2396,6 +2504,13 @@ function renderDashboard(me) {
        <div id="profile-nudge"></div>
        <div id="review-nudge"></div>
        <div id="report-card-nudge"></div>
+       ${me.students
+         .map(
+           (s) => `
+         <div class="section-title">${t('This week')}${multi ? ` · ${esc(s.studentName)}` : ''}</div>
+         <div class="card" data-week-root data-student="${esc(s.studentId)}">${t('Loading…')}</div>`
+         )
+         .join('')}
        <div class="section-title">${t('Due soon')}</div>
        ${dueSoonHtml(allHomework, multi)}
        <div class="section-title">${t('Class Story')}</div>
@@ -2653,6 +2768,7 @@ function renderDashboard(me) {
   loadPortfolio()
   loadMaterials()
   loadReviewNudge(me)
+  document.querySelectorAll('[data-week-root]').forEach((root) => loadWeekPlan(root, allHomework))
   document.getElementById('msg-lang').onchange = (e) => setReadingLanguage(e.target.value)
   document.getElementById('msg-form').onsubmit = async (e) => {
     e.preventDefault()

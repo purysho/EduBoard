@@ -5,17 +5,22 @@ const db = require('../db')
 const { hashToken, newRandomToken } = require('../auth')
 const { escapeText, fold } = require('./ics')
 const { brandName } = require('./branding')
+const { reviewSchedule } = require('./review')
 
 const WORDS = {
   en: {
     calendar: (name) => `${name} homework`,
     handedIn: 'Handed in',
-    notYet: 'Not handed in yet'
+    notYet: 'Not handed in yet',
+    review: (n) => `Review: ${n} card${n === 1 ? '' : 's'}`,
+    reviewNote: 'A few minutes of recall on the Portal (Study → Today’s review).'
   },
   zh: {
     calendar: (name) => `${name} 作业`,
     handedIn: '已提交',
-    notYet: '尚未提交'
+    notYet: '尚未提交',
+    review: (n) => `复习：${n} 张卡片`,
+    reviewNote: '在门户上花几分钟回忆（学习 → 今日复习）。'
   }
 }
 
@@ -73,6 +78,24 @@ function buildCalendar(accountId, lang, portalUrl) {
         `DTEND;VALUE=DATE:${compactDate(nextDay(day))}`,
         `SUMMARY:${escapeText(`${done ? '✓ ' : ''}${h.title}${who}`)}`,
         `DESCRIPTION:${escapeText(`${h.class_name}\n${done ? w.handedIn : w.notYet}\n${portalUrl}`)}`,
+        'TRANSP:TRANSPARENT',
+        'END:VEVENT'
+      )
+    }
+    // Spaced-review days for the next two weeks, as the cards stand today. The feed
+    // refreshes every few hours, so answering cards moves these along.
+    const today = new Date().toISOString().slice(0, 10)
+    for (const { date, count } of reviewSchedule(student.id, today, 14)) {
+      if (!count) continue
+      const who = students.length > 1 ? ` (${student.first_name})` : ''
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:review-${date}.${student.id}@eduboard-portal`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${compactDate(date)}`,
+        `DTEND;VALUE=DATE:${compactDate(nextDay(date))}`,
+        `SUMMARY:${escapeText(`${w.review(count)}${who}`)}`,
+        `DESCRIPTION:${escapeText(`${w.reviewNote}\n${portalUrl}`)}`,
         'TRANSP:TRANSPARENT',
         'END:VEVENT'
       )

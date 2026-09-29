@@ -49,6 +49,21 @@ function defaultReadingLanguage() {
 }
 
 const ZH = {
+  // Week plan
+  Today: '今天',
+  Tomorrow: '明天',
+  'Due: {title}': '截止：{title}',
+  'Start: {title}': '开始做：{title}',
+  'Review {n}': '复习 {n} 张',
+  Free: '空闲',
+  'Last week you aimed to: {goal}': '上周你的目标是：{goal}',
+  'How did it go?': '完成得怎么样？',
+  'My goal this week, e.g. review every day, finish the essay plan by Thursday':
+    '我本周的目标，例如：每天复习、周四前写完作文提纲',
+  'My goal this week:': '我本周的目标：',
+  'This week': '本周',
+  'Did it': '做到了',
+  Partly: '部分做到',
   // Study Helper modes
   'How should the Study Helper work?': '学习助手应该怎样帮你？',
   'Examples from: {field}': '举例来自：{field}',

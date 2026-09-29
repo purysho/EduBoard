@@ -899,6 +899,69 @@ router.get('/review', (req, res) => {
   res.json(review.todaysReview(studentId, review.studentToday(today)))
 })
 
+/** Monday of the week containing a YYYY-MM-DD date. */
+function mondayOf(date) {
+  const d = new Date(date + 'T00:00:00Z')
+  return review.addDays(date, -((d.getUTCDay() + 6) % 7))
+}
+
+const GOAL_OUTCOMES = ['done', 'partly', 'not_yet']
+
+// The student's week plan: review cards per day, and their own goal for the week (and
+// last week's, to look back on). Homework comes from the main /me data.
+router.get('/week', (req, res) => {
+  const { studentId, today } = req.query
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  const day = review.studentToday(today)
+  const weekStart = mondayOf(day)
+  const goalFor = (week) => {
+    const row = db
+      .prepare('SELECT * FROM study_goals WHERE student_id = ? AND week_start = ?')
+      .get(studentId, week)
+    return row
+      ? { weekStart: week, goal: row.goal, outcome: row.outcome, reflection: row.reflection }
+      : null
+  }
+  res.json({
+    today: day,
+    weekStart,
+    review: review.reviewSchedule(studentId, day, 7),
+    goal: goalFor(weekStart),
+    lastWeek: goalFor(review.addDays(weekStart, -7))
+  })
+})
+
+router.put('/week/goal', (req, res) => {
+  const { studentId, weekStart, goal, outcome, reflection } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
+  const thisWeek = mondayOf(review.studentToday(req.body.today))
+  // This week's goal, or looking back on last week's.
+  if (weekStart !== thisWeek && weekStart !== review.addDays(thisWeek, -7)) {
+    return res.status(400).json({ error: 'Only this week or last week', code: 'PT-3006' })
+  }
+  const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : null)
+  db.prepare(
+    `INSERT INTO study_goals (student_id, week_start, goal, outcome, reflection, updated_at)
+     VALUES (@studentId, @weekStart, COALESCE(@goal, ''), @outcome, @reflection, @now)
+     ON CONFLICT(student_id, week_start) DO UPDATE SET
+       goal = COALESCE(@goal, goal), outcome = COALESCE(@outcome, outcome),
+       reflection = COALESCE(@reflection, reflection), updated_at = @now`
+  ).run({
+    studentId,
+    weekStart,
+    goal: text(goal, 200),
+    outcome: GOAL_OUTCOMES.includes(outcome) ? outcome : null,
+    reflection: text(reflection, 400),
+    now: new Date().toISOString()
+  })
+  res.json({ ok: true })
+})
+
 router.post('/review/answer', (req, res) => {
   const { studentId, materialId, kind, key, correct, today } = req.body
   if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
@@ -1105,6 +1168,11 @@ router.get('/export', (req, res) => {
         `SELECT m.title AS material, r.kind, r.box, r.due_on AS dueOn, r.times_right AS timesRight,
            r.times_wrong AS timesWrong FROM review_items r LEFT JOIN materials m ON m.id = r.material_id
          WHERE r.student_id = ?`,
+        studentId
+      ),
+      weeklyGoals: all(
+        `SELECT week_start AS weekStart, goal, outcome, reflection FROM study_goals
+         WHERE student_id = ? ORDER BY week_start`,
         studentId
       ),
       reportCards: all(
