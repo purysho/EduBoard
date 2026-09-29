@@ -48,6 +48,7 @@ describe('JUST Applied Academic & Professional English Course Pack', () => {
       expect(lesson.resourceKeys).toContain(`kit-${lesson.key}`)
       expect(lesson.resourceKeys).toContain('poa-spine')
       expect(lesson.resourceKeys).toContain('support-core-stretch')
+      expect(lesson.resourceKeys).toContain('university-activity-bank')
       expect(lesson.materials).toContain('Linked lesson kit:')
       expect(lesson.homework?.trim().length).toBeGreaterThan(0)
 
