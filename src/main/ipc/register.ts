@@ -168,7 +168,9 @@ import {
   lessonPlanPptx,
   lettersDocx,
   newsletterDocx,
-  reportCardsDocx
+  reportCardsDocx,
+  resourcePracticePptx,
+  resourceWorksheetDocx
 } from '../services/officeExport'
 
 /** The newsletter being written (Newsletter page), kept in the database with the rest of
@@ -1503,6 +1505,16 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.office.slides, async (_e, planId: string) =>
     saveOffice(await lessonPlanPptx(String(planId)), tr('Lesson plan'), 'pptx')
   )
+  handle(IpcChannels.office.resourceWorksheet, async (_e, resourceId: string) => {
+    const resource = lessonResourcesRepo.getLessonResource(String(resourceId))
+    if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+    return saveOffice(await resourceWorksheetDocx(resource.id), resource.title, 'docx')
+  })
+  handle(IpcChannels.office.resourceSlides, async (_e, resourceId: string) => {
+    const resource = lessonResourcesRepo.getLessonResource(String(resourceId))
+    if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+    return saveOffice(await resourcePracticePptx(resource.id), `${resource.title} - Practice`, 'pptx')
+  })
   handle(IpcChannels.usagePing.preview, () => usagePingPreview())
   handle(IpcChannels.errorReport.get, () => {
     const s = settingsRepo.getSettings()
