@@ -115,6 +115,7 @@ export function groupChatProblem(
 }
 
 export type GroupRouteMode = 'robot' | 'manual' | 'muted'
+export type GroupRouteResult = { mode: 'sent' | 'copied' }
 
 export function groupRouteMode(group: Pick<GroupChat, 'kind' | 'muted'>): GroupRouteMode {
   if (group.muted) return 'muted'
