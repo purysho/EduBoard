@@ -6,6 +6,7 @@ import {
   clearPending,
   launchAction,
   pendingFileReady,
+  pendingFileVerified,
   readPending,
   writePending,
   type PendingUpdate
@@ -15,6 +16,7 @@ const pending = (over: Partial<PendingUpdate> = {}): PendingUpdate => ({
   version: '0.4.0',
   fileName: 'update.exe',
   size: 5,
+  digest: 'sha256:36bbe50ed96841d10443bcb670d6554f0a34b761be67ec9c4a8ad2c0c44ca42c',
   kind: 'windows-installer',
   attempts: 0,
   downloadedAt: '2026-09-27T00:00:00.000Z',
@@ -24,7 +26,7 @@ const pending = (over: Partial<PendingUpdate> = {}): PendingUpdate => ({
 const ready = {
   currentVersion: '0.3.3',
   kind: 'windows-installer' as const,
-  fileReady: true,
+  fileVerified: true,
   auto: true
 }
 
@@ -39,7 +41,7 @@ describe('what a launch does with a waiting update', () => {
   })
 
   it('clears an incomplete download or one for another kind of install', () => {
-    expect(launchAction(pending(), { ...ready, fileReady: false })).toBe('clear')
+    expect(launchAction(pending(), { ...ready, fileVerified: false })).toBe('clear')
     expect(launchAction(pending(), { ...ready, kind: 'windows-portable' })).toBe('clear')
     expect(launchAction(pending(), { ...ready, kind: null })).toBe('clear')
   })
@@ -73,6 +75,10 @@ describe('the waiting download on disk', () => {
     expect(pendingFileReady(dir, p)).toBe(false)
     writeFileSync(join(dir, p.fileName), 'abcde')
     expect(pendingFileReady(dir, p)).toBe(true)
+    expect(pendingFileVerified(dir, p)).toBe(true)
+    writeFileSync(join(dir, p.fileName), 'xxxxx')
+    expect(pendingFileReady(dir, p)).toBe(true)
+    expect(pendingFileVerified(dir, p)).toBe(false)
   })
 
   it('reads a missing or damaged record as nothing waiting', () => {
@@ -94,6 +100,13 @@ describe('the waiting download on disk', () => {
 
   it('refuses a filename that does not match the recorded install kind', () => {
     writePending(dir, pending({ kind: 'mac', fileName: 'update.exe' }))
+    expect(readPending(dir)).toBeNull()
+  })
+
+  it('refuses a missing or malformed digest in pending metadata', () => {
+    writeFileSync(join(dir, 'pending.json'), JSON.stringify({ ...pending(), digest: 'sha256:1234' }))
+    expect(readPending(dir)).toBeNull()
+    writeFileSync(join(dir, 'pending.json'), JSON.stringify({ ...pending(), digest: undefined }))
     expect(readPending(dir)).toBeNull()
   })
 
