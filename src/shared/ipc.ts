@@ -69,6 +69,7 @@ export const IpcChannels = {
   classroomHub: {
     getStatus: 'classroomHub:getStatus',
     open: 'classroomHub:open',
+    project: 'classroomHub:project',
     close: 'classroomHub:close'
   },
   lessonEvidence: {
