@@ -5,6 +5,7 @@ import {
   groupChatKind,
   groupMessageBody,
   groupReplyProblem,
+  groupRouteMode,
   type GroupChat
 } from '@shared/groupChats'
 import { getSettings } from '../repositories/settingsRepo'
@@ -59,5 +60,14 @@ export async function sendToSavedGroupChat(
 ): Promise<void> {
   const group = (getSettings().groupChats ?? []).find((g) => g.id === groupId)
   if (!group) throw new AppError('EB-6007', tr('That group chat is no longer set up.'))
+  if (groupRouteMode(group) === 'muted') {
+    throw new AppError('EB-6008', tr('EduBoard routing is muted for that destination.'))
+  }
+  if (groupRouteMode(group) !== 'robot') {
+    throw new AppError(
+      'EB-6009',
+      tr('That destination uses manual routing. Copy the message and paste it into the group app.')
+    )
+  }
   await sendToGroupChat(group, text, title)
 }
