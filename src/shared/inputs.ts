@@ -12,6 +12,7 @@ import type {
   HomeworkQuestionType,
   HomeworkSubmissionStatus,
   LessonPlan,
+  LessonEvidenceValue,
   Student,
   Term,
   Assessment,
@@ -118,6 +119,12 @@ export type MarkAttendanceInput = {
   date: string
   status: AttendanceRecord['status']
   note?: string | null
+}
+
+export type UpsertLessonEvidenceInput = {
+  lessonPlanId: string
+  studentId: string
+  value: LessonEvidenceValue | null
 }
 
 export type CreateLessonPlanInput = Omit<
