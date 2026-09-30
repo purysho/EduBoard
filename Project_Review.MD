@@ -64,3 +64,51 @@ The first post-`0.7.3` fix prevented release metadata and a tampered `pending.js
 The first draft was to verify the digest only during download. That is insufficient because a downloaded file could be modified before the next launch. The amended plan stores the expected digest and verifies the file again at the execution boundary.
 
 Electron sandboxing and signing are intentionally not mixed into this patch because they affect a wider runtime surface and would make checksum regressions harder to isolate.
+
+
+### Implementation review
+
+The implementation followed the amended plan: GitHub/Portal digest metadata is normalized,
+downloads are hashed while streaming, the expected digest is persisted, and pending files
+are hashed again before execution.
+
+A manual review found one adjacent recovery bug: when `readPending()` rejected a corrupt
+marker and returned null, startup did not remove the invalid pending-update folder. The
+startup clear path now removes the dedicated pending directory even when the marker could
+not be parsed.
+
+### CI and security review
+
+Initial PR run:
+- lint and typecheck passed;
+- CodeQL Actions and JavaScript/TypeScript passed;
+- dependency checks passed;
+- Electron E2E passed;
+- desktop tests had one failure in the new malformed-digest test fixture because the test
+  wrote into a directory it had not created;
+- the fixture was fixed and touched-file formatting was cleaned up.
+
+Corrected PR run:
+- lint: passed;
+- typecheck: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E smoke test: passed;
+- npm audit for shipped desktop dependencies: passed;
+- npm audit for shipped Portal dependencies: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed with no code-scanning annotations.
+
+GitHub's optional “Code scanning AI findings” job failed repeatedly before analysis with
+`400 The requested model is not supported` for GitHub's configured
+`claude-opus-5[ReasoningEffort=medium]`. This is an external GitHub/Copilot service
+failure; its logs contain no application-security finding. It is therefore documented,
+not treated as a code defect and not made a release blocker while the deterministic
+security checks are green.
+
+### Loop 1 completion status
+
+Code and requested documentation are complete on PR #37. A final docs-inclusive CI pass
+must be green before merge. After merge, verify the automatic v0.7.4 release workflow,
+all platform assets, digests and checksums, then begin Loop 2 from the released `main`.
