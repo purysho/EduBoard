@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
+  Archive,
   CopyPlus,
   FileText,
   NotebookPen,
@@ -106,6 +107,7 @@ function MoveLaterControl({
 export function LessonPlannerTab(): React.JSX.Element {
   const qc = useQueryClient()
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
+  const [packMessage, setPackMessage] = useState<string | null>(null)
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
   const { data: plans, isLoading } = useLessonPlans(classSection.id)
   const { data: assessments } = useAssessments(classSection.id)
@@ -197,6 +199,7 @@ export function LessonPlannerTab(): React.JSX.Element {
         </Button>
       </div>
       {copyMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{copyMessage}</p>}
+      {packMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{packMessage}</p>}
       {draftPlan.isError && (
         <p className="mb-4 text-sm text-[var(--color-danger)]">
           {ipcErrorMessage(draftPlan.error, tr('Could not draft a lesson plan.'))}
@@ -282,6 +285,32 @@ export function LessonPlannerTab(): React.JSX.Element {
                   >
                     <Presentation size={13} className="mr-1 inline" aria-hidden />
                     {tr('Slides')}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    title={tr('Portable lesson and shared resources for students to use offline')}
+                    onClick={async () => {
+                      setPackMessage(null)
+                      try {
+                        const result = await window.api.lessonPlans.exportOfflinePack(plan.id)
+                        if (result.saved) {
+                          setPackMessage(
+                            tr('Offline Lesson Pack saved with {resources} resources and {files} original files.', {
+                              resources: result.resources ?? 0,
+                              files: result.files ?? 0
+                            })
+                          )
+                        }
+                      } catch (e) {
+                        setPackMessage(
+                          ipcErrorMessage(e, tr('Could not export the Offline Lesson Pack.'))
+                        )
+                      }
+                    }}
+                  >
+                    <Archive size={13} className="mr-1 inline" aria-hidden />
+                    {tr('Offline pack')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPendingDelete(plan)}>
                     <Trash2 size={13} className="mr-1 inline" aria-hidden />
