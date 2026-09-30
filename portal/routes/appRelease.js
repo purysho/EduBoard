@@ -11,6 +11,20 @@ const RELEASE_API =
 const CACHE_MS = 10 * 60 * 1000
 // Only the files an update actually uses are relayed.
 const RELAYED = /\.(exe|dmg|zip|AppImage)$/
+const UNSAFE_ASSET_NAME = /[<>:"/\\|?*\u0000-\u001f]/
+
+function safeAssetName(name) {
+  return (
+    typeof name === 'string' &&
+    name.length > 0 &&
+    name.length <= 180 &&
+    name !== '.' &&
+    name !== '..' &&
+    !name.endsWith('.') &&
+    !name.endsWith(' ') &&
+    !UNSAFE_ASSET_NAME.test(name)
+  )
+}
 
 let cached = null
 
@@ -26,7 +40,7 @@ async function latestRelease() {
   const release = {
     version: String(body.tag_name || '').replace(/^v/, ''),
     assets: (body.assets || [])
-      .filter((a) => RELAYED.test(a.name))
+      .filter((a) => safeAssetName(a.name) && RELAYED.test(a.name))
       .map((a) => ({ name: a.name, size: a.size, url: a.browser_download_url }))
   }
   cached = { at: Date.now(), release }
