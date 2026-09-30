@@ -158,6 +158,7 @@ export function GradebookTab(): React.JSX.Element {
                             assessmentId={a.id}
                             studentId={row.student.id}
                             maxScore={a.maxScore}
+                            bestAttempt={a.bestAttempt}
                             score={scoreMap.get(`${a.id}:${row.student.id}`)}
                             submission={submissionMap.get(`${a.id}:${row.student.id}`)}
                             row={rowIndex}
