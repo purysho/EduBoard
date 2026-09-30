@@ -80,6 +80,10 @@ const api: EduBoardApi = {
     open: (classId, lessonId) => invoke(IpcChannels.classroomHub.open, classId, lessonId),
     close: (classId) => invoke(IpcChannels.classroomHub.close, classId)
   },
+  lessonEvidence: {
+    listByClass: (classId) => invoke(IpcChannels.lessonEvidence.listByClass, classId),
+    upsert: (input) => invoke(IpcChannels.lessonEvidence.upsert, input)
+  },
   lessonPlans: {
     listByClass: (classId) => invoke(IpcChannels.lessonPlans.listByClass, classId),
     listUpcoming: (fromDate, limit) =>
