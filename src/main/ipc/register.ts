@@ -32,6 +32,7 @@ import * as assessmentsRepo from '../repositories/assessments'
 import * as scoresRepo from '../repositories/scores'
 import * as attendanceRepo from '../repositories/attendanceRecords'
 import * as lessonPlansRepo from '../repositories/lessonPlans'
+import * as lessonEvidenceRepo from '../repositories/lessonEvidence'
 import * as scheduleSlotsRepo from '../repositories/classScheduleSlots'
 import * as settingsRepo from '../repositories/settingsRepo'
 import {
@@ -387,6 +388,16 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.scores.addAttempt, (_e, input: scoresRepo.AddScoreAttemptInput) =>
     scoresRepo.addScoreAttempt(input)
+  )
+
+  // --- Lesson evidence ------------------------------------------------------------------
+  handle(IpcChannels.lessonEvidence.listByClass, (_e, classId: string) =>
+    lessonEvidenceRepo.listLessonEvidenceByClass(classId)
+  )
+  handle(
+    IpcChannels.lessonEvidence.upsert,
+    (_e, input: lessonEvidenceRepo.UpsertLessonEvidenceInput) =>
+      lessonEvidenceRepo.upsertLessonEvidence(input)
   )
 
   // --- Attendance -----------------------------------------------------------------------
