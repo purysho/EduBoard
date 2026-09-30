@@ -27,8 +27,18 @@ async function fakeGitHub(t) {
               browser_download_url: `${base}/dl`,
               digest: 'sha256:not-a-digest'
             },
-            { name: '../Evil-Setup.exe', size: file.length, browser_download_url: `${base}/dl`, digest },
-            { name: 'Evil:stream-Setup.exe', size: file.length, browser_download_url: `${base}/dl`, digest },
+            {
+              name: '../Evil-Setup.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest
+            },
+            {
+              name: 'Evil:stream-Setup.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest
+            },
             { name: 'latest.yml', size: 10, browser_download_url: `${base}/yml` }
           ]
         })
