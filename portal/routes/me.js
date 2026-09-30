@@ -239,6 +239,7 @@ router.get('/', (req, res) => {
           name: c.name,
           levelType: c.level_type,
           assessments: assessmentsFor(studentId, c.id),
+          competencies: competenciesFor(studentId, c.id),
           // Finished (archived at the end of term): read-only, nothing more to hand in.
           finished: !!c.finished,
           percent: c.percent,
@@ -1095,6 +1096,25 @@ router.delete('/qr/:id', (req, res) => {
   )
   res.json({ ok: true })
 })
+
+function competenciesFor(studentId, classId) {
+  return db
+    .prepare(
+      `SELECT code, description, latest_level, latest_levels, source_name, evidence_count
+       FROM competency_progress
+       WHERE student_id = ? AND class_id = ?
+       ORDER BY code`
+    )
+    .all(studentId, classId)
+    .map((row) => ({
+      code: row.code,
+      description: row.description,
+      latestLevel: row.latest_level,
+      latestLevels: row.latest_levels ? JSON.parse(row.latest_levels) : [],
+      sourceName: row.source_name,
+      evidenceCount: row.evidence_count
+    }))
+}
 
 // This student's marked assessments in one class, oldest first, as the teacher chose to
 // share them (see routes/sync.js).
