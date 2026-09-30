@@ -16,7 +16,13 @@ import { createBackup } from './backup'
 import { isNewerVersion } from '@shared/appVersion'
 import type { AppUpdateInfo, AppUpdateProgress, AppUpdateStatus } from '@shared/types'
 import { normalizePortalUrl, portalUrlProblem } from '@shared/portalUrl'
-import { downloadAsset, fetchLatestRelease, pickAsset, type InstallKind } from './selfUpdateCore'
+import {
+  downloadAsset,
+  fetchLatestRelease,
+  localUpdateFileName,
+  pickAsset,
+  type InstallKind
+} from './selfUpdateCore'
 import {
   clearPending,
   launchAction,
@@ -158,15 +164,18 @@ async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
   const dir = pendingDir()
   clearPending(dir)
   mkdirSync(dir, { recursive: true })
-  const part = join(dir, `${asset.name}.part`)
+  // The network-provided asset name is only used to select the download. On disk use a
+  // fixed leaf name, so release metadata can never choose a path outside this folder.
+  const fileName = localUpdateFileName(kind)
+  const part = join(dir, `${fileName}.part`)
   progress = { phase: 'downloading', fraction: 0, error: null }
   await downloadAsset(asset, part, (fraction) => {
     progress = { phase: 'downloading', fraction, error: null }
   })
-  renameSync(part, join(dir, asset.name))
+  renameSync(part, join(dir, fileName))
   const pending: PendingUpdate = {
     version: release.version,
-    fileName: asset.name,
+    fileName,
     size: asset.size,
     kind,
     attempts: 0,
@@ -278,7 +287,7 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
     try {
       // On Linux this copies the new version into place, which blocks for a moment, so
       // it runs only once the window has drawn its message.
-      startInstaller(kind, join(dir, pending.fileName), dir)
+      startInstaller(kind, join(dir, localUpdateFileName(kind)), dir)
       setTimeout(() => app.quit(), 1500)
     } catch (err) {
       console.error('[eduboard] Installing the waiting update failed:', err)
@@ -341,7 +350,7 @@ export async function installAppUpdate(): Promise<void> {
     progress = { phase: 'installing', fraction: 1, error: null }
     // A teacher-started install resets the automatic-try count.
     writePending(pendingDir(), { ...pending, attempts: 0 })
-    startInstaller(where.kind, join(pendingDir(), pending.fileName), pendingDir())
+    startInstaller(where.kind, join(pendingDir(), localUpdateFileName(where.kind)), pendingDir())
     // Give the helper a moment to start before this window goes away.
     setTimeout(() => app.quit(), 800)
   } catch (err) {

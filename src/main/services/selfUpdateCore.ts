@@ -22,6 +22,31 @@ export interface Release {
 
 export type InstallKind = 'windows-installer' | 'windows-portable' | 'mac' | 'linux-appimage'
 
+// Release metadata comes from a network service. Never let an asset name become a local
+// path: separators, Windows device/stream punctuation and control characters are refused.
+// eslint-disable-next-line no-control-regex
+const UNSAFE_RELEASE_ASSET_NAME = /[<>:"/\\|?*\u0000-\u001f]/
+
+export function isSafeReleaseAssetName(name: unknown): name is string {
+  if (typeof name !== 'string' || name.length === 0 || name.length > 180) return false
+  if (name === '.' || name === '..' || name.endsWith('.') || name.endsWith(' ')) return false
+  return !UNSAFE_RELEASE_ASSET_NAME.test(name)
+}
+
+/** The name used on this computer is fixed by install kind, never copied from release
+ * metadata. This keeps a compromised release listing from escaping pending-update/. */
+export function localUpdateFileName(kind: InstallKind): string {
+  switch (kind) {
+    case 'windows-installer':
+    case 'windows-portable':
+      return 'update.exe'
+    case 'mac':
+      return 'update.dmg'
+    case 'linux-appimage':
+      return 'update.AppImage'
+  }
+}
+
 /** Which release file this copy of EduBoard updates itself from. Matched by the kind of
  * file (…-Setup.exe, …-arm64.dmg), not the product's name, so copies installed today
  * still find their update if the app is ever renamed (docs/RENAMING.md). */
@@ -31,7 +56,7 @@ export function pickAsset(
   assets: ReleaseAsset[]
 ): ReleaseAsset | null {
   const find = (pattern: RegExp): ReleaseAsset | null =>
-    assets.find((a) => pattern.test(a.name)) ?? null
+    assets.find((a) => isSafeReleaseAssetName(a.name) && pattern.test(a.name)) ?? null
   switch (kind) {
     case 'windows-installer':
       return find(/-Setup\.exe$/)

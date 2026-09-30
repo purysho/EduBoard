@@ -2,7 +2,12 @@ import { mkdtempSync, readFileSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { downloadAsset, fetchLatestRelease, pickAsset } from '../selfUpdateCore'
+import {
+  downloadAsset,
+  fetchLatestRelease,
+  localUpdateFileName,
+  pickAsset
+} from '../selfUpdateCore'
 
 const asset = (name: string, size = 5): { name: string; url: string; size: number } => ({
   name,
@@ -48,6 +53,20 @@ describe('which download fits this computer', () => {
     expect(pickAsset('mac', 'arm64', renamed)?.name).toBe('Tongban-arm64.dmg')
     expect(pickAsset('mac', 'x64', renamed)?.name).toBe('Tongban-x64.dmg')
     expect(pickAsset('linux-appimage', 'x64', renamed)?.name).toBe('Tongban.AppImage')
+  })
+
+  it('ignores release asset names that could become filesystem paths', () => {
+    expect(pickAsset('windows-installer', 'x64', [asset('../Evil-Setup.exe')])).toBeNull()
+    expect(pickAsset('windows-installer', 'x64', [asset('..\\Evil-Setup.exe')])).toBeNull()
+    expect(pickAsset('windows-installer', 'x64', [asset('Evil:stream-Setup.exe')])).toBeNull()
+    expect(pickAsset('mac', 'arm64', [asset('/tmp/Evil-arm64.dmg')])).toBeNull()
+  })
+
+  it('uses fixed local update names instead of release-provided names', () => {
+    expect(localUpdateFileName('windows-installer')).toBe('update.exe')
+    expect(localUpdateFileName('windows-portable')).toBe('update.exe')
+    expect(localUpdateFileName('mac')).toBe('update.dmg')
+    expect(localUpdateFileName('linux-appimage')).toBe('update.AppImage')
   })
 })
 

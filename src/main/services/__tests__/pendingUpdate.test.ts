@@ -13,7 +13,7 @@ import {
 
 const pending = (over: Partial<PendingUpdate> = {}): PendingUpdate => ({
   version: '0.4.0',
-  fileName: 'EduBoard-Setup.exe',
+  fileName: 'update.exe',
   size: 5,
   kind: 'windows-installer',
   attempts: 0,
@@ -79,6 +79,21 @@ describe('the waiting download on disk', () => {
     expect(readPending(dir)).toBeNull()
     writePending(dir, pending())
     writeFileSync(join(dir, 'pending.json'), '{not json')
+    expect(readPending(dir)).toBeNull()
+  })
+
+  it('refuses a tampered marker that tries to escape the pending folder', () => {
+    writePending(dir, pending())
+    writeFileSync(
+      join(dir, 'pending.json'),
+      JSON.stringify({ ...pending(), fileName: '../EduBoard-Setup.exe' })
+    )
+    expect(readPending(dir)).toBeNull()
+    expect(pendingFileReady(dir, pending({ fileName: '../EduBoard-Setup.exe' }))).toBe(false)
+  })
+
+  it('refuses a filename that does not match the recorded install kind', () => {
+    writePending(dir, pending({ kind: 'mac', fileName: 'update.exe' }))
     expect(readPending(dir)).toBeNull()
   })
 

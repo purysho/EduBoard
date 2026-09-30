@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { isNewerVersion } from '@shared/appVersion'
-import type { InstallKind } from './selfUpdateCore'
+import { localUpdateFileName, type InstallKind } from './selfUpdateCore'
 
 export interface PendingUpdate {
   version: string
@@ -18,11 +18,42 @@ export interface PendingUpdate {
 }
 
 const MARKER = 'pending.json'
+const INSTALL_KINDS = new Set<InstallKind>([
+  'windows-installer',
+  'windows-portable',
+  'mac',
+  'linux-appimage'
+])
+
+function isInstallKind(value: unknown): value is InstallKind {
+  return typeof value === 'string' && INSTALL_KINDS.has(value as InstallKind)
+}
+
+function validPending(value: unknown): value is PendingUpdate {
+  if (!value || typeof value !== 'object') return false
+  const p = value as Partial<PendingUpdate>
+  if (
+    typeof p.version !== 'string' ||
+    !isInstallKind(p.kind) ||
+    typeof p.fileName !== 'string' ||
+    p.fileName !== localUpdateFileName(p.kind) ||
+    typeof p.size !== 'number' ||
+    !Number.isFinite(p.size) ||
+    p.size < 0 ||
+    typeof p.attempts !== 'number' ||
+    !Number.isInteger(p.attempts) ||
+    p.attempts < 0 ||
+    typeof p.downloadedAt !== 'string'
+  ) {
+    return false
+  }
+  return true
+}
 
 export function readPending(dir: string): PendingUpdate | null {
   try {
-    const p = JSON.parse(readFileSync(join(dir, MARKER), 'utf-8')) as PendingUpdate
-    return typeof p.version === 'string' && typeof p.fileName === 'string' ? p : null
+    const p: unknown = JSON.parse(readFileSync(join(dir, MARKER), 'utf-8'))
+    return validPending(p) ? p : null
   } catch {
     return null
   }
@@ -39,7 +70,8 @@ export function clearPending(dir: string): void {
 
 /** The downloaded file is there and complete. */
 export function pendingFileReady(dir: string, pending: PendingUpdate): boolean {
-  const file = join(dir, pending.fileName)
+  if (pending.fileName !== localUpdateFileName(pending.kind)) return false
+  const file = join(dir, localUpdateFileName(pending.kind))
   try {
     return existsSync(file) && (!pending.size || statSync(file).size === pending.size)
   } catch {
