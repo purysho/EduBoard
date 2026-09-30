@@ -1,7 +1,7 @@
 import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
-import type { GroupChat } from './groupChats'
+import type { GroupChat, GroupRouteResult } from './groupChats'
 import type { UsagePing } from './usagePing'
 import type { CssCheck } from './cssCheck'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
@@ -647,10 +647,16 @@ export interface EduBoardApi {
     preview(): Promise<UsagePing>
   }
   groupChats: {
-    /** Posts text into a saved DingTalk / WeCom group (needs internet). */
+    /** Legacy robot-only send. Prefer route() for capability-aware destinations. */
     send(groupId: string, text: string, title: string): Promise<void>
-    /** Sends a short "connected" message to a group being set up, before it's saved. */
+    /** Sends through a robot where supported; otherwise copies the message for manual paste. */
+    route(groupId: string, text: string, title: string): Promise<GroupRouteResult>
+    /** Sends a short "connected" message to a robot group being set up, before it's saved. */
     test(group: Pick<GroupChat, 'webhook' | 'secret'>): Promise<void>
+    /** Imports a QR image and stores it as a small PNG data URL. */
+    pickQr(): Promise<string | null>
+    /** Generates a QR image from a safe http(s) group invite URL. */
+    makeQr(joinUrl: string): Promise<string>
   }
   office: {
     /** Saves a Word document (asks where). Letters and report cards are for a class,
