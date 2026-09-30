@@ -2,6 +2,20 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Offline Study Packs:** export any Resource as a standalone HTML file containing teacher-approved study guides, flashcards and practice quizzes. The file needs no EduBoard installation, account, server or internet connection, and stores the student's own progress locally on their device.
+- **Offline Lesson Packs:** export a lesson as a portable ZIP containing an offline lesson index, student-shared resource study pages and copies of available linked local files. Resources not marked for student sharing are excluded.
+- **Offline Classroom Hub practice:** teacher-approved flashcards and practice quizzes attached to a lesson can now run directly in Classroom Hub, including projector-only mode, with no Portal or AI call during class.
+- **Quick Board:** a large, full-screen classroom prompt/model-answer board with hide/reveal and adjustable display size.
+- **Team Scoreboard:** a full-screen four-team classroom scoreboard for games and participation activities.
+
+### Changed
+
+- EduBoard's classroom workflow now treats internet access as optional: PPTX/teacher tools remain local, Classroom Hub can run on loopback or a local network, and student self-study material can be exported for later offline use.
+
 ## [0.7.1] — 2026-09-30
 
 ### Added
