@@ -85,7 +85,8 @@ export const IpcChannels = {
     copyWeek: 'lessonPlans:copyWeek',
     shiftPlanned: 'lessonPlans:shiftPlanned',
     resourceIds: 'lessonPlans:resourceIds',
-    setResources: 'lessonPlans:setResources'
+    setResources: 'lessonPlans:setResources',
+    exportOfflinePack: 'lessonPlans:exportOfflinePack'
   },
   scheduleSlots: {
     listByClass: 'scheduleSlots:listByClass',
