@@ -32,6 +32,7 @@ import * as assessmentsRepo from '../repositories/assessments'
 import * as scoresRepo from '../repositories/scores'
 import * as attendanceRepo from '../repositories/attendanceRecords'
 import * as lessonPlansRepo from '../repositories/lessonPlans'
+import { offlineLessonPackZip } from '../services/offlineLessonPack'
 import * as lessonEvidenceRepo from '../repositories/lessonEvidence'
 import * as scheduleSlotsRepo from '../repositories/classScheduleSlots'
 import * as settingsRepo from '../repositories/settingsRepo'
@@ -480,6 +481,20 @@ export function registerIpcHandlers(): void {
       Array.isArray(resourceIds) ? resourceIds.map(String) : []
     )
   )
+  handle(IpcChannels.lessonPlans.exportOfflinePack, async (_e, lessonPlanId: string) => {
+    const plan = lessonPlansRepo.getLessonPlan(String(lessonPlanId))
+    if (!plan) throw new AppError('EB-0002', tr('That lesson plan no longer exists.'))
+    const result = await offlineLessonPackZip(plan.id)
+    const safeName =
+      plan.title.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 80) || 'EduBoard Lesson'
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `${safeName} - Offline Lesson Pack.zip`,
+      filters: [{ name: tr('ZIP archive'), extensions: ['zip'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, result.buffer)
+    return { saved: true, filePath, resources: result.resources, files: result.files }
+  })
 
   // --- Schedule slots (Timetable) ------------------------------------------------------------
   handle(IpcChannels.scheduleSlots.listByClass, (_e, classId: string) =>
