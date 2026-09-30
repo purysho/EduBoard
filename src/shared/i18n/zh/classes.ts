@@ -775,4 +775,11 @@ export const CLASSES: Record<string, string> = {
   'Evidence': '证据',
   'Add lesson plans first; each lesson becomes one evidence column.': '请先添加课程计划；每节课会成为一列证据。',
   '{student} · {lesson}': '{student} · {lesson}',
+  'Listening Lab': '听力训练室',
+  'This listening activity is not available.': '此听力活动目前不可用。',
+  'Listen for meaning first. Replay only what you need.': '先听懂大意，再只重听需要的部分。',
+  '0.85× speed': '0.85× 速度',
+  'Normal speed': '正常速度',
+  'Teacher notes / transcript': '教师笔记 / 听力文本',
+  'Audio not found.': '找不到音频。',
 }
