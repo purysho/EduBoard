@@ -104,7 +104,11 @@ describe('the waiting download on disk', () => {
   })
 
   it('refuses a missing or malformed digest in pending metadata', () => {
-    writeFileSync(join(dir, 'pending.json'), JSON.stringify({ ...pending(), digest: 'sha256:1234' }))
+    writePending(dir, pending())
+    writeFileSync(
+      join(dir, 'pending.json'),
+      JSON.stringify({ ...pending(), digest: 'sha256:1234' })
+    )
     expect(readPending(dir)).toBeNull()
     writeFileSync(join(dir, 'pending.json'), JSON.stringify({ ...pending(), digest: undefined }))
     expect(readPending(dir)).toBeNull()
