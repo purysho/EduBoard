@@ -17,7 +17,12 @@ import {
   upsertExitTicket
 } from '../../repositories/exitTickets'
 import { listAttendanceByClass } from '../../repositories/attendanceRecords'
-import { createLessonPlan } from '../../repositories/lessonPlans'
+import { createLessonPlan, linkLessonResource } from '../../repositories/lessonPlans'
+import {
+  createLessonResource,
+  setLessonResourceAiApproval,
+  setLessonResourcePracticeSet
+} from '../../repositories/lessonResources'
 import {
   getClassroomHubProjectorUrl,
   getExitTicketServerInfo,
@@ -121,6 +126,82 @@ describe('exit ticket local HTTP server', () => {
     const page = await fetch(projectorUrl!)
     expect(page.status).toBe(200)
     expect(await page.text()).toContain('Projector lesson')
+  })
+
+  it('serves approved flashcards and quizzes from linked resources without internet', async () => {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const lesson = createLessonPlan({
+      classId,
+      date: '2026-09-30',
+      weekLabel: null,
+      title: 'Offline practice lesson',
+      objectives: null,
+      framework: null,
+      materials: null,
+      activities: 'Review museum vocabulary.',
+      homework: null,
+      linkedAssessmentId: null,
+      standards: null
+    })
+    const resource = createLessonResource({
+      title: 'Museum words',
+      type: 'note',
+      url: null,
+      filePath: null,
+      notes: 'Review these words.',
+      tags: [],
+      standardId: null,
+      classId,
+      shareWithStudents: true,
+      studyGuide: null
+    })
+    setLessonResourcePracticeSet(resource.id, 'flashcards', [
+      { front: 'Exhibit', back: 'Something shown in a museum.' },
+      { front: 'Ancient', back: 'Very old.' },
+      { front: 'Collection', back: 'A group of things.' },
+      { front: 'Gallery', back: 'A room where things are shown.' }
+    ])
+    setLessonResourcePracticeSet(resource.id, 'quiz', [
+      {
+        question: 'What is an exhibit?',
+        options: ['Something shown', 'A bus'],
+        answerIndex: 0,
+        explanation: 'An exhibit is something shown to visitors.'
+      },
+      {
+        question: 'What does ancient mean?',
+        options: ['Very new', 'Very old'],
+        answerIndex: 1,
+        explanation: 'Ancient means very old.'
+      },
+      {
+        question: 'What is a collection?',
+        options: ['A group of things', 'One thing only'],
+        answerIndex: 0,
+        explanation: 'A collection is a group of things.'
+      }
+    ])
+    setLessonResourceAiApproval(resource.id, 'flashcards', true)
+    setLessonResourceAiApproval(resource.id, 'practiceQuiz', true)
+    linkLessonResource(lesson.id, resource.id)
+    openClassroomHub(classId, lesson.id)
+
+    const hub = await (await fetch(`${base}/h/${classId}`)).text()
+    expect(hub).toContain('/flashcards')
+    expect(hub).toContain('/quiz')
+
+    const cards = await (
+      await fetch(`${base}/h/${classId}/practice/${resource.id}/flashcards`)
+    ).text()
+    expect(cards).toContain('Exhibit')
+    expect(cards).toContain('Show answer')
+
+    const quiz = await (
+      await fetch(`${base}/h/${classId}/practice/${resource.id}/quiz`)
+    ).text()
+    expect(quiz).toContain('What is an exhibit?')
+    expect(quiz).toContain('Question ')
   })
 
   it('serves a "closed" page when no ticket is open for the class', async () => {
