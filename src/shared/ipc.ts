@@ -64,6 +64,11 @@ export const IpcChannels = {
     open: 'attendanceCheckIn:open',
     close: 'attendanceCheckIn:close'
   },
+  classroomHub: {
+    getStatus: 'classroomHub:getStatus',
+    open: 'classroomHub:open',
+    close: 'classroomHub:close'
+  },
   lessonPlans: {
     listByClass: 'lessonPlans:listByClass',
     listUpcoming: 'lessonPlans:listUpcoming',
