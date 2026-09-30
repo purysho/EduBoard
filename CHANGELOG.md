@@ -2,6 +2,22 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Offline manual content authoring:** Study Guides, Flashcards and Practice Quizzes can now be created and edited entirely by hand with no AI key or internet connection. AI remains available as an optional drafting shortcut, and teacher-authored material is approved as it is saved.
+- **Offline worksheet export:** a Resource's approved study material can be exported as an editable Word/WPS worksheet with student questions followed by an answer key.
+- **Offline practice-deck export:** approved flashcards and quiz questions can be exported as a projector-ready PowerPoint deck with prompt and answer slides.
+- **WeChat and QQ communication destinations:** Settings can now keep class-specific WeChat/QQ join links or QR images alongside DingTalk and WeCom groups. Invite links can be converted to QR codes locally, and QR images can be imported directly.
+- **Capability-aware message routing:** DingTalk/WeCom continue to send automatically through robot webhooks; WeChat/QQ destinations copy the prepared EduBoard message for manual paste instead of pretending a consumer-group webhook exists.
+- **Per-destination routing mute:** each communication destination can mute or unmute EduBoard-originated routing without changing the external app's own notification settings.
+
+### Changed
+
+- Resource Study Guide / Flashcards / Practice Quiz tools are available on every Resource, including blank/manual resources; readable source text is only required when choosing AI generation.
+- Class Story now routes through the saved destination's real capability and labels automatic, copy/paste and muted routes explicitly.
+
 ## [0.7.2] — 2026-09-30
 
 ### Added
