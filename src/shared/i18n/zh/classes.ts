@@ -766,4 +766,13 @@ export const CLASSES: Record<string, string> = {
   'Add': '添加',
   'No retries yet.': '还没有重试记录。',
   'Attempt {number}': '第 {number} 次尝试',
+  'Evidence Grid': '课堂证据表',
+  'One quick mark per student per lesson. Click forward; Shift-click goes back.': '每节课为每位学生快速记录一次。点击向前切换；Shift+点击向后切换。',
+  'complete': '完成',
+  'ladder step': '阶梯步骤',
+  'missing': '缺失',
+  'not observed': '未观察',
+  'Evidence': '证据',
+  'Add lesson plans first; each lesson becomes one evidence column.': '请先添加课程计划；每节课会成为一列证据。',
+  '{student} · {lesson}': '{student} · {lesson}',
 }
