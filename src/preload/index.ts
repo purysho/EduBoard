@@ -78,6 +78,7 @@ const api: EduBoardApi = {
   classroomHub: {
     getStatus: (classId) => invoke(IpcChannels.classroomHub.getStatus, classId),
     open: (classId, lessonId) => invoke(IpcChannels.classroomHub.open, classId, lessonId),
+    project: (classId, lessonId) => invoke(IpcChannels.classroomHub.project, classId, lessonId),
     close: (classId) => invoke(IpcChannels.classroomHub.close, classId)
   },
   lessonEvidence: {
