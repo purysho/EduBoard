@@ -366,6 +366,8 @@ export interface EduBoardApi {
     update(id: string, patch: UpdateLessonResourceInput): Promise<LessonResource>
     remove(id: string): Promise<void>
     pickFile(): Promise<string | null>
+    /** Saves a standalone student HTML pack that works without EduBoard or internet. */
+    exportOfflinePack(id: string): Promise<{ saved: boolean; filePath?: string }>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
   }
