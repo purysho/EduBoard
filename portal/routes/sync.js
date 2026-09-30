@@ -167,14 +167,25 @@ router.post('/', (req, res) => {
        WHERE c.teacher_id = ?`
     )
     .all(teacherId)
-  const previousFiles = previousHomework.map((r) => r.file_path).filter(Boolean)
+  const previousMaterials = db
+    .prepare(
+      `SELECT m.id, m.file_path, m.file_hash FROM materials m
+       JOIN classes c ON c.id = m.class_id
+       WHERE c.teacher_id = ?`
+    )
+    .all(teacherId)
+  const previousFiles = [
+    ...previousHomework.map((r) => r.file_path),
+    ...previousMaterials.map((r) => r.file_path)
+  ].filter(Boolean)
   const previousFileById = new Map(previousHomework.map((r) => [r.id, r]))
+  const previousMaterialFileById = new Map(previousMaterials.map((r) => [r.id, r]))
   const writtenFiles = new Set()
-  // Attachments and material text the publish described by fingerprint only, which the
-  // desktop then uploads one at a time (POST /homework/:id/file, /materials/:id/chunks).
-  // Sending them inside this one request made a publish with a few attachments too big
-  // for the server to accept.
+  // Attachments, original material files and material text are described by fingerprint
+  // in the main publish, then uploaded separately so large classroom files never bloat
+  // the JSON sync request.
   const needFiles = []
+  const needMaterialFiles = []
   const needChunks = []
 
   // Material text whose fingerprint hasn't changed is carried over, not re-sent.
@@ -412,12 +423,42 @@ router.post('/', (req, res) => {
     }
 
     const insertMaterial = db.prepare(
-      'INSERT INTO materials (id, class_id, title, study_guide, flashcards, practice_quiz, chunks_hash) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      `INSERT INTO materials
+       (id, class_id, title, study_guide, flashcards, practice_quiz, source_type, source_url,
+        source_text, file_name, file_hash, file_path, chunks_hash)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     const insertChunk = db.prepare(
       'INSERT INTO material_chunks (material_id, chunk_index, text, terms) VALUES (?, ?, ?, ?)'
     )
     for (const m of materials.filter(inPushedClass)) {
+      const sourceType = ['link', 'file', 'note'].includes(m.sourceType) ? m.sourceType : null
+      const sourceUrl =
+        sourceType === 'link' && typeof m.sourceUrl === 'string' && /^https?:\/\//i.test(m.sourceUrl)
+          ? m.sourceUrl.slice(0, 4000)
+          : null
+      const sourceText =
+        sourceType === 'note' && typeof m.sourceText === 'string'
+          ? m.sourceText.slice(0, 100000)
+          : null
+      const fileName =
+        sourceType === 'file' && typeof m.fileName === 'string'
+          ? sanitizeFileName(m.fileName)
+          : null
+      const fileHash = sourceType === 'file' && isSha256(m.fileHash) ? m.fileHash : null
+      const previousFile = previousMaterialFileById.get(m.id)
+      let filePath = null
+      if (
+        fileHash &&
+        previousFile?.file_hash === fileHash &&
+        previousFile?.file_path &&
+        fs.existsSync(path.join(UPLOADS_DIR, previousFile.file_path))
+      ) {
+        filePath = previousFile.file_path
+        writtenFiles.add(filePath)
+      } else if (fileHash) {
+        needMaterialFiles.push(m.id)
+      }
       insertMaterial.run(
         m.id,
         m.classId,
@@ -425,6 +466,12 @@ router.post('/', (req, res) => {
         m.studyGuide || null,
         validatedJson(validateFlashcards, m.flashcards),
         validatedJson(validatePracticeQuiz, m.practiceQuiz),
+        sourceType,
+        sourceUrl,
+        sourceText,
+        fileName,
+        fileHash,
+        filePath,
         isSha256(m.chunksHash) ? m.chunksHash : null
       )
       if (Array.isArray(m.chunks)) {
@@ -476,7 +523,7 @@ router.post('/', (req, res) => {
   // Report cards of a class or student the teacher no longer publishes go too.
   removeOrphanedReportCards()
 
-  res.json({ ok: true, needFiles, needChunks })
+  res.json({ ok: true, needFiles, needMaterialFiles, needChunks })
 })
 
 const isSha256 = (v) => typeof v === 'string' && /^[0-9a-f]{64}$/.test(v)
@@ -511,6 +558,38 @@ router.post(
       fs.rmSync(path.join(UPLOADS_DIR, hw.file_path), { force: true })
     }
     db.prepare('UPDATE homework_assignments SET file_path = ? WHERE id = ?').run(storedName, hw.id)
+    res.json({ ok: true })
+  }
+)
+
+// One original material file, authenticated and fingerprint-checked like homework
+// attachments. Students can only download it later through their own class membership.
+router.post(
+  '/materials/:id/file',
+  express.raw({ type: 'application/octet-stream', limit: MAX_ATTACHMENT_BYTES }),
+  (req, res) => {
+    const material = db
+      .prepare(
+        `SELECT m.id, m.file_name, m.file_hash, m.file_path FROM materials m
+         JOIN classes c ON c.id = m.class_id WHERE m.id = ? AND c.teacher_id = ?`
+      )
+      .get(req.params.id, req.teacherId)
+    if (!material || !material.file_name || !material.file_hash) {
+      return res.status(404).json({ error: 'Material not found', code: 'PT-3002' })
+    }
+    const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0)
+    const hash = crypto.createHash('sha256').update(bytes).digest('hex')
+    if (hash !== material.file_hash) {
+      return res
+        .status(409)
+        .json({ error: 'This isn’t the file that was published. Publish again.', code: 'PT-5002' })
+    }
+    const storedName = `material-${material.id}-${sanitizeFileName(material.file_name)}`
+    fs.writeFileSync(path.join(UPLOADS_DIR, storedName), bytes)
+    if (material.file_path && material.file_path !== storedName) {
+      fs.rmSync(path.join(UPLOADS_DIR, material.file_path), { force: true })
+    }
+    db.prepare('UPDATE materials SET file_path = ? WHERE id = ?').run(storedName, material.id)
     res.json({ ok: true })
   }
 )
