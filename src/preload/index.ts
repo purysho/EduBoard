@@ -72,6 +72,11 @@ const api: EduBoardApi = {
     open: (classId, date) => invoke(IpcChannels.attendanceCheckIn.open, classId, date),
     close: (classId) => invoke(IpcChannels.attendanceCheckIn.close, classId)
   },
+  classroomHub: {
+    getStatus: (classId) => invoke(IpcChannels.classroomHub.getStatus, classId),
+    open: (classId, lessonId) => invoke(IpcChannels.classroomHub.open, classId, lessonId),
+    close: (classId) => invoke(IpcChannels.classroomHub.close, classId)
+  },
   lessonPlans: {
     listByClass: (classId) => invoke(IpcChannels.lessonPlans.listByClass, classId),
     listUpcoming: (fromDate, limit) =>
