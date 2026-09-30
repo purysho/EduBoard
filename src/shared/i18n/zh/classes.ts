@@ -843,4 +843,5 @@ export const CLASSES: Record<string, string> = {
   'Portable lesson and shared resources for students to use offline': '将课程和共享资源打包，供学生离线使用',
   'Offline Lesson Pack saved with {resources} resources and {files} original files.': '离线课程包已保存：包含 {resources} 个资源和 {files} 个原始文件。',
   'Could not export the Offline Lesson Pack.': '无法导出离线课程包。',
+  'Offline pack': '离线包',
 }
