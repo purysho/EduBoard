@@ -2,6 +2,7 @@ import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat, GroupRouteResult } from './groupChats'
+import type { Flashcard, PracticeQuestion } from './practiceSets'
 import type { UsagePing } from './usagePing'
 import type { CssCheck } from './cssCheck'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
@@ -382,6 +383,12 @@ export interface EduBoardApi {
     draftStudyGuide(resourceId: string): Promise<string>
     /** Returns how many cards/questions were saved. */
     draftPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<number>
+    /** Saves teacher-authored practice immediately as approved student material. */
+    saveManualPracticeSet(
+      resourceId: string,
+      kind: 'flashcards' | 'quiz',
+      value: Flashcard[] | PracticeQuestion[]
+    ): Promise<LessonResource>
     clearPracticeSet(resourceId: string, kind: 'flashcards' | 'quiz'): Promise<void>
     /** The teacher has checked (or withdrawn) an AI draft; only approved ones reach students. */
     approveAiMaterial(
