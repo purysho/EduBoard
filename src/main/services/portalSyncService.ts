@@ -2,7 +2,7 @@ import { AppError } from '@shared/errorCodes'
 import { createHash } from 'crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { basename, join } from 'path'
 import type { PortalAiInteraction, PortalReviewStats } from '@shared/aiUsage'
 import { getSqlite } from '../db/client'
 import { listClasses } from '../repositories/classes'
@@ -125,6 +125,7 @@ export async function publishToPortal(): Promise<PublishResult> {
 function buildPublishPayload(): {
   body: Record<string, unknown>
   attachmentPaths: Map<string, string>
+  materialFilePaths: Map<string, string>
   materialChunks: Map<string, string[]>
   skipped: string[]
 } {
@@ -173,21 +174,36 @@ function buildPublishPayload(): {
     studyGuide: string | null
     flashcards: Flashcard[] | null
     practiceQuiz: PracticeQuestion[] | null
-    chunksHash: string
+    sourceType: 'link' | 'file' | 'note'
+    sourceUrl: string | null
+    sourceText: string | null
+    fileName: string | null
+    fileHash: string | null
+    chunksHash: string | null
   }[] = []
   // Sent after the main publish, only for what the Portal says it doesn't have yet.
   const attachmentPaths = new Map<string, string>()
+  const materialFilePaths = new Map<string, string>()
   const materialChunks = new Map<string, string[]>()
   const skipped: string[] = []
 
-  // Only resources the teacher explicitly opted in (classId set + shareWithStudents) and
-  // has indexed (chunks exist) get pushed — an unindexed "shared" resource would have
-  // nothing for the Portal's search to find, so it's silently skipped rather than sent
-  // with zero chunks.
+  // A shared resource reaches students even before it has been indexed: the original
+  // link, note or file is useful on its own. Indexed chunks remain optional and power
+  // Study Helper search when present.
   for (const resource of listLessonResources()) {
     if (!resource.classId || !resource.shareWithStudents) continue
     const chunks = listResourceChunks(resource.id)
-    if (!chunks.length) continue
+    const file = resource.type === 'file' ? checkHomeworkFile(resource.filePath) : null
+    if (file && !file.ok) {
+      skipped.push(
+        `${resource.title} (${
+          file.reason === 'too_large'
+            ? tr('over 25 MB')
+            : tr('file not found on this computer')
+        })`
+      )
+    }
+    const publishedFile = file?.ok ? file : null
     materials.push({
       id: resource.id,
       classId: resource.classId,
@@ -196,9 +212,16 @@ function buildPublishPayload(): {
       studyGuide: resource.aiApproved?.studyGuide ? resource.studyGuide : null,
       flashcards: resource.aiApproved?.flashcards ? resource.flashcards : null,
       practiceQuiz: resource.aiApproved?.practiceQuiz ? resource.practiceQuiz : null,
-      chunksHash: sha256(JSON.stringify(chunks))
+      sourceType: resource.type,
+      sourceUrl: resource.type === 'link' ? resource.url : null,
+      sourceText: resource.type === 'note' ? resource.notes : null,
+      fileName:
+        resource.type === 'file' && resource.filePath ? basename(resource.filePath) : null,
+      fileHash: publishedFile?.hash ?? null,
+      chunksHash: chunks.length ? sha256(JSON.stringify(chunks)) : null
     })
-    materialChunks.set(resource.id, chunks)
+    if (publishedFile) materialFilePaths.set(resource.id, publishedFile.path)
+    if (chunks.length) materialChunks.set(resource.id, chunks)
   }
 
   const withPoints = getSettings().digestOptions?.points === true
@@ -387,7 +410,7 @@ function buildPublishPayload(): {
         ? (squareLogoPng(settings.schoolLogo, 256)?.toString('base64') ?? '')
         : ''
   }
-  return { body, attachmentPaths, materialChunks, skipped }
+  return { body, attachmentPaths, materialFilePaths, materialChunks, skipped }
 }
 
 /** A fingerprint of what a publish would send right now. */
@@ -439,7 +462,7 @@ function currentFingerprint(): string {
 
 async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const { body, attachmentPaths, materialChunks, skipped } = buildPublishPayload()
+  const { body, attachmentPaths, materialFilePaths, materialChunks, skipped } = buildPublishPayload()
   const res = await portalFetch(`${portalUrl}/api/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },
@@ -448,6 +471,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   if (!res.ok) throw await portalFailure(tr('Portal sync failed'), res)
   const reply = (await res.json().catch(() => ({}))) as {
     needFiles?: unknown
+    needMaterialFiles?: unknown
     needChunks?: unknown
   }
 
@@ -456,6 +480,7 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   if (!Array.isArray(reply.needFiles) || !Array.isArray(reply.needChunks)) {
     return { attachmentsUploaded: 0, materialsUploaded: 0, skipped, outdatedServer: true }
   }
+  const needMaterialFiles = Array.isArray(reply.needMaterialFiles) ? reply.needMaterialFiles : []
 
   const headers = { 'X-Sync-Secret': portalSyncSecret }
   let attachmentsUploaded = 0
@@ -474,6 +499,20 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
     attachmentsUploaded++
   }
   let materialsUploaded = 0
+  for (const id of needMaterialFiles) {
+    const filePath = materialFilePaths.get(String(id))
+    if (!filePath) continue
+    const upload = await portalFetch(
+      `${portalUrl}/api/sync/materials/${encodeURIComponent(String(id))}/file`,
+      {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/octet-stream' },
+        body: readFileSync(filePath)
+      }
+    )
+    if (!upload.ok) throw await portalFailure(tr('Uploading a study material file failed'), upload)
+    materialsUploaded++
+  }
   for (const id of reply.needChunks) {
     const chunks = materialChunks.get(String(id))
     if (!chunks) continue
