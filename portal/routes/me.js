@@ -773,6 +773,20 @@ router.post('/translate', async (req, res) => {
   }
 })
 
+// The original file behind a shared material. Membership is checked here rather than
+// exposing the uploads directory as static files, so guessing an id never crosses classes.
+router.get('/materials/:id/file', (req, res) => {
+  const material = db.prepare('SELECT * FROM materials WHERE id = ?').get(req.params.id)
+  if (!material || !material.file_path || !material.file_name) {
+    return res.status(404).json({ error: 'No file', code: 'PT-3002' })
+  }
+  const classIds = getActiveClassIds(getLinkedStudentIds(req.accountId))
+  if (!classIds.includes(material.class_id)) {
+    return res.status(403).json({ error: 'Not your class', code: 'PT-3001' })
+  }
+  res.download(path.join(UPLOADS_DIR, material.file_path), material.file_name)
+})
+
 // Every resource the teacher shared with a class this account's student(s) are
 // actively enrolled in — the student-facing reading list, each with its AI study guide
 // if one's been generated.
@@ -795,6 +809,11 @@ router.get('/materials', (req, res) => {
       id: r.id,
       title: r.title,
       className: r.class_name,
+      sourceType: r.source_type,
+      sourceUrl: r.source_url,
+      sourceText: r.source_text,
+      hasFile: !!r.file_path,
+      fileName: r.file_name,
       studyGuide: r.study_guide,
       flashcards: r.flashcards ? JSON.parse(r.flashcards) : null,
       // Each question's review key, so answers here count toward spaced review.
