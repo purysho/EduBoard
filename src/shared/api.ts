@@ -237,6 +237,10 @@ export interface EduBoardApi {
     shiftPlanned(classId: string, fromDate: string, days: number): Promise<number>
     resourceIds(lessonPlanId: string): Promise<string[]>
     setResources(lessonPlanId: string, resourceIds: string[]): Promise<void>
+    /** Saves a portable ZIP containing the lesson and student-shared resources. */
+    exportOfflinePack(
+      lessonPlanId: string
+    ): Promise<{ saved: boolean; filePath?: string; resources?: number; files?: number }>
   }
   scheduleSlots: {
     listByClass(classId: string): Promise<ClassScheduleSlot[]>
