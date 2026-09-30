@@ -24,6 +24,7 @@ export type InstallKind = 'windows-installer' | 'windows-portable' | 'mac' | 'li
 
 // Release metadata comes from a network service. Never let an asset name become a local
 // path: separators, Windows device/stream punctuation and control characters are refused.
+// eslint-disable-next-line no-control-regex
 const UNSAFE_RELEASE_ASSET_NAME = /[<>:"/\\|?*\u0000-\u001f]/
 
 export function isSafeReleaseAssetName(name: unknown): name is string {
