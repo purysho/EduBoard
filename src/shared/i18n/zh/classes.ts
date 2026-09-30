@@ -741,6 +741,13 @@ export const CLASSES: Record<string, string> = {
   'Shared resources': '共享资源',
   'Share one lesson over classroom Wi-Fi — no internet or student account needed.':
     '通过课堂 Wi-Fi 共享一节课——无需互联网或学生账号。',
+  'Project this lesson directly from this computer, or share it over a local network.':
+    '可直接在本机投影本节课，也可通过本地网络分享给学生。',
+  'Project lesson': '投影课程',
+  'Share to devices': '分享到设备',
+  'Projector mode is running on this computer. Student-device sharing needs a local network.':
+    '投影模式正在本机运行。若要分享到学生设备，需要本地网络。',
+  'Couldn’t open projector mode.': '无法打开投影模式。',
   Open: '已开启',
   'No lesson plans yet.': '还没有课程计划。',
   Lesson: '课程',
