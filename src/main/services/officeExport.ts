@@ -430,8 +430,10 @@ export async function resourcePracticePptx(resourceId: string): Promise<Buffer> 
   const font = /^zh/.test(uiLocale()) ? 'Microsoft YaHei' : 'Calibri'
   const pptx = new PptxGenJS()
   pptx.layout = 'LAYOUT_WIDE'
+  let contentSlides = 0
 
   const addSlide = (heading: string, body: string, answer = false): void => {
+    contentSlides++
     const slide = pptx.addSlide()
     if (answer) slide.background = { color: 'F8FAFC' }
     slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.16, fill: { color: accent } })
@@ -511,7 +513,7 @@ export async function resourcePracticePptx(resourceId: string): Promise<Buffer> 
     }
   }
 
-  if (pptx._slides.length === 1 && resource.notes?.trim()) {
+  if (contentSlides === 0 && resource.notes?.trim()) {
     addSlide(tr('Notes'), resource.notes, true)
   }
 
