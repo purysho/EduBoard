@@ -223,6 +223,7 @@ const api: EduBoardApi = {
     update: (id, patch) => invoke(IpcChannels.lessonResources.update, id, patch),
     remove: (id) => invoke(IpcChannels.lessonResources.remove, id),
     pickFile: () => invoke(IpcChannels.lessonResources.pickFile),
+    exportOfflinePack: (id) => invoke(IpcChannels.lessonResources.exportOfflinePack, id),
     openPath: (filePath) => invoke(IpcChannels.lessonResources.openPath, filePath),
     openExternal: (url) => invoke(IpcChannels.lessonResources.openExternal, url)
   },
