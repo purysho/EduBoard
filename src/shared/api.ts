@@ -676,6 +676,10 @@ export interface EduBoardApi {
     ): Promise<{ saved: boolean; filePath?: string }>
     /** Saves a lesson plan as a starter PowerPoint deck (asks where). */
     slides(planId: string): Promise<{ saved: boolean; filePath?: string }>
+    /** Saves a Resource's approved practice material as an editable student worksheet. */
+    resourceWorksheet(resourceId: string): Promise<{ saved: boolean; filePath?: string }>
+    /** Saves a Resource's approved practice material as a projector-ready PowerPoint deck. */
+    resourceSlides(resourceId: string): Promise<{ saved: boolean; filePath?: string }>
   }
   newsletter: {
     facts(choice: NewsletterSourceChoice): Promise<NewsletterFact[]>
