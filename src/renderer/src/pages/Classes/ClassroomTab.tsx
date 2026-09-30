@@ -6,6 +6,7 @@ import {
   Maximize2,
   Pause,
   Play,
+  QrCode,
   RotateCcw,
   Shuffle,
   Star,
@@ -17,7 +18,7 @@ import type { ClassSection } from '@shared/types'
 import { makeGroups, pickNext, startOfWeekIso } from '@shared/classroomTools'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
-import { useAttendanceByClass, useClassRoster } from '@renderer/lib/queries'
+import { useAttendanceByClass, useClassRoster, useLessonPlans } from '@renderer/lib/queries'
 import { PointCategoryChips } from '@renderer/components/PointCategoryChips'
 import { todayIso } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/cn'
@@ -70,6 +71,7 @@ export function ClassroomTab(): React.JSX.Element {
         {tr('Leave out students marked absent today')}
         {skipAbsent && awayToday.size > 0 && ` (${awayToday.size})`}
       </label>
+      <ClassroomHubCard classId={classSection.id} />
       <div className="grid grid-cols-2 gap-4">
         <PickerCard kids={here} />
         <TimerCard />
@@ -77,6 +79,120 @@ export function ClassroomTab(): React.JSX.Element {
         <PointsCard classId={classSection.id} kids={everyone} />
       </div>
     </div>
+  )
+}
+
+
+function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
+  const { data: lessons } = useLessonPlans(classId)
+  const { data: status, refetch } = useQuery({
+    queryKey: ['classroomHub', classId],
+    queryFn: () => window.api.classroomHub.getStatus(classId),
+    refetchInterval: 2000
+  })
+  const today = todayIso()
+  const defaultLesson =
+    lessons?.find((lesson) => lesson.date === today) ??
+    lessons?.find((lesson) => lesson.date > today && lesson.status === 'planned') ??
+    lessons?.[0]
+  const [selectedLessonId, setSelectedLessonId] = useState('')
+  const selected = selectedLessonId || defaultLesson?.id || ''
+  const [qr, setQr] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!status?.url) {
+      setQr(null)
+      return
+    }
+    let cancelled = false
+    window.api.exitTickets
+      .getQrDataUrl(status.url)
+      .then((value) => !cancelled && setQr(value))
+      .catch(() => !cancelled && setQr(null))
+    return () => {
+      cancelled = true
+    }
+  }, [status?.url])
+
+  async function open(): Promise<void> {
+    if (!selected) return
+    await window.api.classroomHub.open(classId, selected)
+    await refetch()
+  }
+
+  async function close(): Promise<void> {
+    await window.api.classroomHub.close(classId)
+    await refetch()
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex items-center justify-between">
+        <div>
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <QrCode size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            {tr('Classroom Hub')}
+          </h2>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            {tr('Share one lesson over classroom Wi-Fi — no internet or student account needed.')}
+          </p>
+        </div>
+        {status?.open && (
+          <span className="text-xs font-medium text-[var(--color-success)]">{tr('Open')}</span>
+        )}
+      </CardHeader>
+      <CardBody>
+        {!lessons?.length ? (
+          <p className="text-sm text-[var(--color-text-muted)]">{tr('No lesson plans yet.')}</p>
+        ) : (
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="min-w-64 flex-1 text-xs font-medium text-[var(--color-text-muted)]">
+              {tr('Lesson')}
+              <select
+                className="mt-1 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-2 text-sm text-[var(--color-text)]"
+                value={selected}
+                onChange={(e) => setSelectedLessonId(e.target.value)}
+              >
+                {lessons.map((lesson) => (
+                  <option key={lesson.id} value={lesson.id}>
+                    {lesson.date} · {lesson.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {status?.open ? (
+              <Button variant="secondary" onClick={close}>
+                {tr('Close hub')}
+              </Button>
+            ) : (
+              <Button variant="primary" onClick={open}>
+                {tr('Open hub')}
+              </Button>
+            )}
+          </div>
+        )}
+        {status?.open && status.url && (
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
+            {qr && (
+              <img
+                src={qr}
+                alt={tr('Classroom Hub QR code')}
+                className="h-32 w-32 rounded-md bg-white p-1"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{status.title}</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                {tr('Students scan this QR code while they are on the same classroom Wi-Fi.')}
+              </p>
+              <p className="mt-2 break-all font-mono text-xs text-[var(--color-text-muted)]">
+                {status.url}
+              </p>
+            </div>
+          </div>
+        )}
+      </CardBody>
+    </Card>
   )
 }
 
