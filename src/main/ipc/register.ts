@@ -64,9 +64,12 @@ import { getCourseGroupComposite } from '../services/compositeGrades'
 import * as exitTicketsRepo from '../repositories/exitTickets'
 import {
   closeAttendanceCheckIn,
+  closeClassroomHub,
   getAttendanceCheckInStatus,
+  getClassroomHubStatus,
   getExitTicketServerInfo,
   openAttendanceCheckIn,
+  openClassroomHub,
   startExitTicketServer
 } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -1077,6 +1080,15 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.exitTickets.getServerInfo, () => getExitTicketServerInfo())
   handle(IpcChannels.exitTickets.getQrDataUrl, (_e, url: string) => QRCode.toDataURL(url))
+
+  // --- Classroom Hub (local classroom Wi-Fi only) -----------------------------------------
+  handle(IpcChannels.classroomHub.getStatus, (_e, classId: string) =>
+    getClassroomHubStatus(classId)
+  )
+  handle(IpcChannels.classroomHub.open, (_e, classId: string, lessonId: string) =>
+    openClassroomHub(classId, lessonId)
+  )
+  handle(IpcChannels.classroomHub.close, (_e, classId: string) => closeClassroomHub(classId))
 
   // --- AI (optional, requires a teacher-supplied API key) --------------------------------
   handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
