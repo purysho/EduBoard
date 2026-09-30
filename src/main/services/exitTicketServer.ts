@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'http'
 import { randomBytes } from 'crypto'
+import { createReadStream, statSync } from 'fs'
+import { extname } from 'path'
 import { networkInterfaces } from 'os'
 import {
   getExitTicketByClass,
@@ -304,6 +306,111 @@ function textBlock(value: string | null): string {
   return value ? escapeHtml(value).replace(/\n/g, '<br>') : ''
 }
 
+
+const AUDIO_MIME: Record<string, string> = {
+  '.mp3': 'audio/mpeg',
+  '.m4a': 'audio/mp4',
+  '.aac': 'audio/aac',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.webm': 'audio/webm'
+}
+
+function classroomHubResource(classId: string, resourceId: string) {
+  const lessonId = openClassroomHubs.get(classId)
+  if (!lessonId || !listLessonResourceIds(lessonId).includes(resourceId)) return undefined
+  const resource = getLessonResource(resourceId)
+  return resource?.shareWithStudents ? resource : undefined
+}
+
+function isAudioFile(filePath: string | null): boolean {
+  return !!filePath && !!AUDIO_MIME[extname(filePath).toLowerCase()]
+}
+
+function renderListeningLabPage(classId: string, resourceId: string): string {
+  const resource = classroomHubResource(classId, resourceId)
+  if (!resource || resource.type !== 'file' || !isAudioFile(resource.filePath)) {
+    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(tr('Listening Lab'))}</title></head><body><p>${escapeHtml(tr('This listening activity is not available.'))}</p></body></html>`
+  }
+  const audioUrl = `/h/${encodeURIComponent(classId)}/audio/${encodeURIComponent(resourceId)}`
+  return `<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(resource.title)}</title>
+<style>
+:root{color-scheme:light dark}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+main{max-width:680px;margin:0 auto;padding:28px 18px 64px}.hero{padding:22px;border-radius:18px;background:#4f46e5;color:#fff}.hero p{margin:5px 0 0;opacity:.85}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-top:14px}audio{width:100%}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{border:1px solid #c7d2fe;border-radius:999px;background:#eef2ff;color:#4338ca;padding:8px 12px;font:inherit;font-weight:600}.notes{line-height:1.65;white-space:pre-wrap}
+@media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}.card{background:#111827;border-color:#263042}button{background:#1e1b4b;border-color:#3730a3;color:#a5b4fc}}
+</style></head><body><main>
+<div class="hero"><strong>${escapeHtml(tr('Listening Lab'))}</strong><h1>${escapeHtml(resource.title)}</h1><p>${escapeHtml(tr('Listen for meaning first. Replay only what you need.'))}</p></div>
+<div class="card">
+<audio id="player" controls preload="metadata" src="${audioUrl}"></audio>
+<div class="controls">
+<button type="button" data-back>↶ 5s</button>
+<button type="button" data-slow>${escapeHtml(tr('0.85× speed'))}</button>
+<button type="button" data-normal>${escapeHtml(tr('Normal speed'))}</button>
+</div>
+</div>
+${resource.notes ? `<div class="card"><strong>${escapeHtml(tr('Teacher notes / transcript'))}</strong><div class="notes" style="margin-top:10px">${textBlock(resource.notes)}</div></div>` : ''}
+<script>
+const p=document.getElementById('player')
+document.querySelector('[data-back]').onclick=()=>{p.currentTime=Math.max(0,p.currentTime-5)}
+document.querySelector('[data-slow]').onclick=()=>{p.playbackRate=.85}
+document.querySelector('[data-normal]').onclick=()=>{p.playbackRate=1}
+</script></main></body></html>`
+}
+
+function streamClassroomAudio(
+  req: IncomingMessage,
+  res: ServerResponse,
+  classId: string,
+  resourceId: string
+): void {
+  const resource = classroomHubResource(classId, resourceId)
+  if (!resource || resource.type !== 'file' || !isAudioFile(resource.filePath) || !resource.filePath) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
+    res.end(tr('Audio not found.'))
+    return
+  }
+  try {
+    const stat = statSync(resource.filePath)
+    if (!stat.isFile()) throw new Error('not a file')
+    const mime = AUDIO_MIME[extname(resource.filePath).toLowerCase()] || 'application/octet-stream'
+    const range = req.headers.range
+    if (range) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(range)
+      const start = match?.[1] ? Number(match[1]) : 0
+      const end = match?.[2] ? Math.min(Number(match[2]), stat.size - 1) : stat.size - 1
+      if (!match || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start >= stat.size) {
+        res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` })
+        res.end()
+        return
+      }
+      res.writeHead(206, {
+        'Content-Type': mime,
+        'Content-Length': end - start + 1,
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'no-store'
+      })
+      createReadStream(resource.filePath, { start, end }).pipe(res)
+      return
+    }
+    res.writeHead(200, {
+      'Content-Type': mime,
+      'Content-Length': stat.size,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-store'
+    })
+    createReadStream(resource.filePath).pipe(res)
+  } catch {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
+    res.end(tr('Audio not found.'))
+  }
+}
+
 function renderClassroomHubPage(classId: string): string {
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
@@ -339,6 +446,9 @@ function renderClassroomHubPage(classId: string): string {
         .map((resource) => {
           if (!resource) return ''
           const title = escapeHtml(resource.title)
+          if (resource.type === 'file' && isAudioFile(resource.filePath)) {
+            return `<a class="resource" href="/h/${encodeURIComponent(classId)}/listen/${encodeURIComponent(resource.id)}">${title} · ${escapeHtml(tr('Listening Lab'))}</a>`
+          }
           if (resource.type === 'link' && resource.url && isSafeExternalUrl(resource.url)) {
             return `<a class="resource" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a>`
           }
@@ -416,6 +526,36 @@ export function startExitTicketServer(): void {
     // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
     // genuine request.
     const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
+
+    const listenMatch = url.match(/^\/h\/([^/]+)\/listen\/([^/]+)\/?$/)
+    if (listenMatch) {
+      if (req.method === 'GET') {
+        const classId = decodeURIComponent(listenMatch[1])
+        const resourceId = decodeURIComponent(listenMatch[2])
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(renderListeningLabPage(classId, resourceId))
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' })
+        res.end('Method not allowed')
+      }
+      return
+    }
+
+    const audioMatch = url.match(/^\/h\/([^/]+)\/audio\/([^/]+)\/?$/)
+    if (audioMatch) {
+      if (req.method === 'GET') {
+        streamClassroomAudio(
+          req,
+          res,
+          decodeURIComponent(audioMatch[1]),
+          decodeURIComponent(audioMatch[2])
+        )
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' })
+        res.end('Method not allowed')
+      }
+      return
+    }
 
     const hubMatch = url.match(/^\/h\/([^/]+)\/?$/)
     if (hubMatch) {
