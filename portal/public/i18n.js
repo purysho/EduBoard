@@ -136,6 +136,13 @@ const ZH = {
   'Open classwork': '打开课业',
   'See progress': '查看进度',
   'My courses': '我的课程',
+  'No standards evidence yet.': '还没有学习成果证据。',
+  'Learning progress': '学习进展',
+  'Based on rubric evidence your teacher has recorded — not a separate grade.': '依据老师记录的评分量规证据，不是另一个成绩。',
+  'Mixed: {levels}': '多项表现：{levels}',
+  'Evidence recorded': '已有证据',
+  'Latest evidence: {source} · {count} pieces total': '最近证据：{source} · 共 {count} 条',
+  '{count} pieces of evidence': '{count} 条证据',
   // Offline
   unknown: '未知',
   'Viewing saved data': '正在查看已保存的数据',
