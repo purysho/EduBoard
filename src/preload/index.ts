@@ -236,6 +236,8 @@ const api: EduBoardApi = {
     draftStudyGuide: (resourceId) => invoke(IpcChannels.notebook.draftStudyGuide, resourceId),
     draftPracticeSet: (resourceId, kind) =>
       invoke(IpcChannels.notebook.draftPracticeSet, resourceId, kind),
+    saveManualPracticeSet: (resourceId, kind, value) =>
+      invoke(IpcChannels.notebook.saveManualPracticeSet, resourceId, kind, value),
     clearPracticeSet: (resourceId, kind) =>
       invoke(IpcChannels.notebook.clearPracticeSet, resourceId, kind),
     approveAiMaterial: (resourceId, kind, approved) =>
