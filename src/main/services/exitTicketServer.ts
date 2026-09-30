@@ -411,6 +411,63 @@ function streamClassroomAudio(
   }
 }
 
+
+function renderTalkLadderPage(classId: string): string {
+  const lessonId = openClassroomHubs.get(classId)
+  const lesson = lessonId ? getLessonPlan(lessonId) : undefined
+  if (!lesson || lesson.classId !== classId) {
+    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(tr('Talk Ladder'))}</title></head><body><p>${escapeHtml(tr('This speaking activity is not available.'))}</p></body></html>`
+  }
+  const prompt = lesson.activities || lesson.objectives || lesson.title
+  const frames = lesson.support
+  const steps = [
+    [tr('1 · Write it'), tr('Write your answer. Keep it short and clear.'), 60],
+    [tr('2 · Read it'), tr('Read it to one partner.'), 60],
+    [tr('3 · Change one detail'), tr('Change one idea, example or reason, then say it again.'), 60],
+    [tr('4 · Keywords only'), tr('Hide the full answer. Speak from keywords only.'), 90],
+    [tr('5 · No notes'), tr('Put the notes away and speak freely.'), 90]
+  ]
+  const stepsJson = JSON.stringify(steps)
+  return `<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(tr('Talk Ladder'))}</title>
+<style>
+:root{color-scheme:light dark}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+main{max-width:760px;margin:0 auto;padding:24px 18px 64px}.hero{background:#4f46e5;color:white;padding:22px;border-radius:18px}.hero h1{margin:5px 0 0}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-top:14px}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:700}.body{line-height:1.6;white-space:pre-wrap}.step{font-size:1.35rem;font-weight:750;margin:5px 0}.timer{font-size:3.5rem;font-variant-numeric:tabular-nums;font-weight:750;text-align:center;margin:14px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1;min-width:100px;border:0;border-radius:10px;padding:11px;background:#4f46e5;color:white;font:inherit;font-weight:650}.actions button.secondary{background:#eef2ff;color:#4338ca}
+.progress{display:flex;gap:5px;margin-top:14px}.dot{height:7px;flex:1;border-radius:99px;background:#e2e8f0}.dot.on{background:#4f46e5}
+@media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}.card{background:#111827;border-color:#263042}.label{color:#94a3b8}.actions button.secondary{background:#1e1b4b;color:#a5b4fc}.dot{background:#263042}.dot.on{background:#818cf8}}
+</style></head><body><main>
+<div class="hero"><div style="font-weight:700;opacity:.85">${escapeHtml(tr('Talk Ladder'))}</div><h1>${escapeHtml(lesson.title)}</h1></div>
+<div class="card"><div class="label">${escapeHtml(tr('Prompt'))}</div><div class="body" style="margin-top:8px">${textBlock(prompt)}</div></div>
+${frames ? `<div class="card"><div class="label">${escapeHtml(tr('Keep it going'))}</div><div class="body" style="margin-top:8px">${textBlock(frames)}</div></div>` : ''}
+<div class="card">
+<div class="label">${escapeHtml(tr('Speaking ladder'))}</div>
+<div id="step" class="step"></div>
+<div id="help" class="body"></div>
+<div id="timer" class="timer">1:00</div>
+<div class="actions">
+<button type="button" class="secondary" data-prev>${escapeHtml(tr('Back'))}</button>
+<button type="button" data-start>${escapeHtml(tr('Start timer'))}</button>
+<button type="button" class="secondary" data-next>${escapeHtml(tr('Next step'))}</button>
+</div>
+<div id="progress" class="progress"></div>
+</div>
+<script>
+const steps=${stepsJson}
+let i=0,left=steps[0][2],tick=null
+const step=document.getElementById('step'),help=document.getElementById('help'),timer=document.getElementById('timer'),progress=document.getElementById('progress')
+function fmt(n){return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')}
+function render(){clearInterval(tick);tick=null;left=steps[i][2];step.textContent=steps[i][0];help.textContent=steps[i][1];timer.textContent=fmt(left);progress.innerHTML=steps.map((_,n)=>'<span class="dot '+(n<=i?'on':'')+'"></span>').join('')}
+document.querySelector('[data-start]').onclick=()=>{if(tick){clearInterval(tick);tick=null;return}tick=setInterval(()=>{left=Math.max(0,left-1);timer.textContent=fmt(left);if(!left){clearInterval(tick);tick=null}},1000)}
+document.querySelector('[data-prev]').onclick=()=>{if(i>0){i--;render()}}
+document.querySelector('[data-next]').onclick=()=>{if(i<steps.length-1){i++;render()}}
+render()
+</script></main></body></html>`
+}
+
 function renderClassroomHubPage(classId: string): string {
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
@@ -469,6 +526,7 @@ function renderClassroomHubPage(classId: string): string {
   @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}section{background:#111827;border-color:#263042}.resource{background:#1a2332;border-color:#263042;color:#a5b4fc}h2{color:#94a3b8}}
 </style></head><body><main>
 <header><div class="eyebrow">${escapeHtml(tr("Today's lesson"))}</div><h1>${escapeHtml(lesson.title)}</h1></header>
+<section><h2>${escapeHtml(tr('Speaking practice'))}</h2><a class="resource" href="/h/${encodeURIComponent(classId)}/talk">${escapeHtml(tr('Open Talk Ladder'))}</a></section>
 ${sectionHtml}${resourceHtml}
 </main></body></html>`
 }
@@ -526,6 +584,19 @@ export function startExitTicketServer(): void {
     // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
     // genuine request.
     const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
+
+    const talkMatch = url.match(/^\/h\/([^/]+)\/talk\/?$/)
+    if (talkMatch) {
+      if (req.method === 'GET') {
+        const classId = decodeURIComponent(talkMatch[1])
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(renderTalkLadderPage(classId))
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' })
+        res.end('Method not allowed')
+      }
+      return
+    }
 
     const listenMatch = url.match(/^\/h\/([^/]+)\/listen\/([^/]+)\/?$/)
     if (listenMatch) {
