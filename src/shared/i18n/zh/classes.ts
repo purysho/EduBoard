@@ -752,4 +752,18 @@ export const CLASSES: Record<string, string> = {
   'Students scan this QR code while they are on the same classroom Wi-Fi.':
     '学生连接同一课堂 Wi-Fi 后扫描此二维码。',
 
+  'Assessment not found.': '找不到该测评。',
+  'Retries are not enabled for this assessment.': '此测评未启用重试。',
+  'Enter a score from 0 to {max}.': '请输入 0 到 {max} 之间的分数。',
+  'Enter the first attempt in the gradebook before adding a retry.': '请先在成绩册中录入第一次成绩，再添加重试。',
+  'Retries': '重试',
+  'Allow retries; highest score counts': '允许重试；取最高分',
+  'Record later attempts from the gradebook cell.': '之后可从成绩册单元格记录新的尝试。',
+  'Add retry': '添加重试',
+  'Retries — highest score counts': '重试——取最高分',
+  'The first retry also saves the original grade as Attempt 1.': '第一次添加重试时，也会把原成绩保存为第 1 次尝试。',
+  'New attempt': '新尝试',
+  'Add': '添加',
+  'No retries yet.': '还没有重试记录。',
+  'Attempt {number}': '第 {number} 次尝试',
 }
