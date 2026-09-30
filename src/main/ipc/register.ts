@@ -5,7 +5,15 @@ import { studentTimeline } from '../services/studentTimeline'
 import { applyScoreImport, readScoreSheet } from '../services/scoreImport'
 import type { ScoreImportRequest } from '@shared/scoreImport'
 import { reportCardSendProgress, sendReportCards } from '../services/reportCardDelivery'
-import { BrowserWindow, dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
+import {
+  BrowserWindow,
+  clipboard,
+  dialog,
+  ipcMain,
+  nativeImage,
+  shell,
+  type IpcMainInvokeEvent
+} from 'electron'
 import { readFile, writeFile } from 'fs/promises'
 import { IpcChannels } from '@shared/ipc'
 import type {
@@ -143,6 +151,7 @@ import { tr, uiLanguage } from '@shared/i18n'
 import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
+import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
 import {
   errorLogPath,
@@ -1469,6 +1478,24 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.groupChats.send, (_e, groupId: string, text: string, title: string) =>
     sendToSavedGroupChat(String(groupId), String(text ?? ''), String(title ?? ''))
   )
+  handle(IpcChannels.groupChats.route, async (_e, groupId: string, text: string, title: string) => {
+    const group = (settingsRepo.getSettings().groupChats ?? []).find(
+      (item) => item.id === String(groupId)
+    )
+    if (!group) throw new AppError('EB-6007', tr('That group chat is no longer set up.'))
+    const mode = groupRouteMode(group)
+    if (mode === 'muted') {
+      throw new AppError('EB-6008', tr('EduBoard routing is muted for that destination.'))
+    }
+    const body = String(text ?? '').trim()
+    if (!body) throw new AppError('EB-6002', tr('There’s nothing to send.'))
+    if (mode === 'robot') {
+      await sendToSavedGroupChat(group.id, body, String(title ?? ''))
+      return { mode: 'sent' as const }
+    }
+    clipboard.writeText(body)
+    return { mode: 'copied' as const }
+  })
   handle(IpcChannels.groupChats.test, (_e, group: { webhook?: unknown; secret?: unknown }) =>
     sendToGroupChat(
       {
@@ -1479,6 +1506,36 @@ export function registerIpcHandlers(): void {
       'EduBoard'
     )
   )
+  handle(IpcChannels.groupChats.pickQr, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: tr('Images'), extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
+    })
+    if (canceled || !filePaths[0]) return null
+    const image = nativeImage.createFromPath(filePaths[0])
+    if (image.isEmpty()) throw new AppError('EB-0004', tr('That image could not be opened.'))
+    const size = image.getSize()
+    const max = 720
+    const resized =
+      size.width > max || size.height > max
+        ? image.resize({
+            width: size.width >= size.height ? max : undefined,
+            height: size.height > size.width ? max : undefined,
+            quality: 'good'
+          })
+        : image
+    return resized.toDataURL()
+  })
+  handle(IpcChannels.groupChats.makeQr, async (_e, joinUrl: string) => {
+    const safe = safeJoinUrl(String(joinUrl ?? ''))
+    if (!safe) {
+      throw new AppError(
+        'EB-0004',
+        tr('The group invite link must be a web address beginning with http:// or https://.')
+      )
+    }
+    return QRCode.toDataURL(safe, { width: 520, margin: 2 })
+  })
   handle(IpcChannels.newsletter.facts, (_e, choice: NewsletterSourceChoice) =>
     gatherNewsletterFacts(choice)
   )
