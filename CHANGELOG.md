@@ -4,6 +4,19 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- **Classroom Hub:** a local-WiFi student page launched from a class, with the current lesson, objectives, activities, shared resources, Listening Lab audio and Talk Ladder prompts. It uses the existing classroom server, so students scan one QR code and need neither an account nor internet access.
+- **Assessment retries:** assessments can keep retry attempts and count the best attempt in the gradebook; the retry popover shows the attempt history without replacing the original score.
+- **Evidence Grid:** a fast per-lesson class grid for completion, speaking-ladder levels 1–5, missing and not-observed evidence.
+- **Student course overview:** the Portal Home page now shows course/unit context and upcoming learning alongside the existing week plan.
+- **Listening Lab:** shared audio resources can play through the Classroom Hub as focused listening practice rather than only as ordinary files.
+- **Talk Ladder:** speaking prompts and support frames can be shown directly in the Classroom Hub for staged pair/group practice.
+- **Student learning progress:** competency/standard evidence published from the desktop is shown back to students as learning progress on the Portal.
+- **Rich Portfolio:** teacher-selected work on the Portal can include the actual submitted file, not only its title, grade and feedback.
+- **Original shared resources:** a Portal material now includes the teacher's original HTTPS link, note or file as well as any approved study guide, flashcards or practice quiz. Files are fingerprinted, uploaded separately and only downloadable by accounts linked to an actively enrolled student in that class.
+- **Private Course Bundles:** `.coursebundle` files package a Course Pack with its local resource files for private portable import. The builder, preview/import flow and documentation are included; private bundles remain git-ignored and blocked by the private-content guard.
+
 ### Security
 
 - **Private-content guard:** Git now ignores Portal `.env` files, deployment certificates, private curriculum scratch work and generated course deliveries. CI refuses to accept tracked environment files, Course Packs, Course Bundles or the private resource-pack paths. `portal/.env.example` documents the required Portal variables without real secrets.
