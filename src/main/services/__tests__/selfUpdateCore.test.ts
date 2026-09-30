@@ -6,13 +6,21 @@ import {
   downloadAsset,
   fetchLatestRelease,
   localUpdateFileName,
+  normalizeSha256Digest,
   pickAsset
 } from '../selfUpdateCore'
 
-const asset = (name: string, size = 5): { name: string; url: string; size: number } => ({
+const HELLO_DIGEST =
+  'sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+const asset = (
+  name: string,
+  size = 5,
+  digest: string | null = HELLO_DIGEST
+): { name: string; url: string; size: number; digest: string | null } => ({
   name,
   url: `https://api.github.com/assets/${name}`,
-  size
+  size,
+  digest
 })
 const assets = [
   asset('EduBoard-Setup.exe'),
@@ -68,6 +76,13 @@ describe('which download fits this computer', () => {
     expect(localUpdateFileName('mac')).toBe('update.dmg')
     expect(localUpdateFileName('linux-appimage')).toBe('update.AppImage')
   })
+
+  it('normalizes only complete SHA-256 digests', () => {
+    expect(normalizeSha256Digest(HELLO_DIGEST.toUpperCase())).toBe(HELLO_DIGEST)
+    expect(normalizeSha256Digest('sha256:1234')).toBeNull()
+    expect(normalizeSha256Digest('md5:2cf24dba')).toBeNull()
+    expect(normalizeSha256Digest(null)).toBeNull()
+  })
 })
 
 describe('getting the new version', () => {
@@ -81,13 +96,19 @@ describe('getting the new version', () => {
     const urls: string[] = []
     const fakeFetch = (async (url: string) => {
       urls.push(url)
-      return Response.json({ version: '0.3.3', assets: [{ name: 'EduBoard-Setup.exe', size: 5 }] })
+      return Response.json({
+        version: '0.3.3',
+        assets: [{ name: 'EduBoard-Setup.exe', size: 5, digest: HELLO_DIGEST }]
+      })
     }) as unknown as typeof fetch
     const release = await fetchLatestRelease('https://portal.example', fakeFetch)
     expect(release.version).toBe('0.3.3')
-    expect(release.assets[0].url).toBe(
-      'https://portal.example/api/app-release/download/EduBoard-Setup.exe'
-    )
+    expect(release.assets[0]).toEqual({
+      name: 'EduBoard-Setup.exe',
+      size: 5,
+      digest: HELLO_DIGEST,
+      url: 'https://portal.example/api/app-release/download/EduBoard-Setup.exe'
+    })
     expect(urls).toEqual(['https://portal.example/api/app-release'])
   })
 
@@ -95,12 +116,19 @@ describe('getting the new version', () => {
     const fakeFetch = (async () =>
       Response.json({
         tag_name: 'v0.3.3',
-        assets: [{ name: 'EduBoard.AppImage', size: 7, browser_download_url: 'https://gh/dl' }]
+        assets: [
+          {
+            name: 'EduBoard.AppImage',
+            size: 7,
+            browser_download_url: 'https://gh/dl',
+            digest: HELLO_DIGEST.toUpperCase()
+          }
+        ]
       })) as unknown as typeof fetch
     const release = await fetchLatestRelease(null, fakeFetch)
     expect(release).toEqual({
       version: '0.3.3',
-      assets: [{ name: 'EduBoard.AppImage', size: 7, url: 'https://gh/dl' }]
+      assets: [{ name: 'EduBoard.AppImage', size: 7, digest: HELLO_DIGEST, url: 'https://gh/dl' }]
     })
   })
 
@@ -114,5 +142,26 @@ describe('getting the new version', () => {
     await expect(
       downloadAsset(asset('EduBoard.AppImage', 999), join(dir, 'x'), () => {}, fakeFetch)
     ).rejects.toThrow(/incomplete/)
+  })
+
+  it('refuses same-size content with the wrong digest and removes it', async () => {
+    const fakeFetch = (async () => new Response('xxxxx')) as unknown as typeof fetch
+    const file = join(dir, 'update.exe')
+    await expect(
+      downloadAsset(asset('EduBoard-Setup.exe', 5), file, () => {}, fakeFetch)
+    ).rejects.toThrow(/verified/)
+    expect(() => readFileSync(file)).toThrow()
+  })
+
+  it('refuses an update whose release metadata has no valid digest', async () => {
+    let fetched = false
+    const fakeFetch = (async () => {
+      fetched = true
+      return new Response('hello')
+    }) as unknown as typeof fetch
+    await expect(
+      downloadAsset(asset('EduBoard-Setup.exe', 5, null), join(dir, 'update.exe'), () => {}, fakeFetch)
+    ).rejects.toThrow(/verified/)
+    expect(fetched).toBe(false)
   })
 })
