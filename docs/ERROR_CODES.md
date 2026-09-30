@@ -98,6 +98,8 @@ after changing either.
 | EB-6005 | The robot no longer exists (DingTalk 300001 / 300005, WeCom 93000). | Add the robot again in the group and paste its new address in Settings → Portal and families → Class group chats. |
 | EB-6006 | DingTalk or WeCom refused the message for another reason, shown in the message. | Look up the service’s own error code in the message in its documentation. |
 | EB-6007 | That group chat has been removed from Settings. | Choose another group, or add it again in Settings → Portal and families → Class group chats. |
+| EB-6008 | EduBoard routing is muted for that communication destination. | Unmute the destination in Settings → Portal and families → Class group chats before routing a message. |
+| EB-6009 | That destination does not support EduBoard robot posting. | Use EduBoard’s copy-routing action, then paste the prepared message into the WeChat or QQ group. |
 
 ## Portal (PT)
 
