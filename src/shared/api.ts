@@ -444,6 +444,8 @@ export interface EduBoardApi {
     /** Chooses and validates a curriculum pack without changing the database. */
     preview(): Promise<{
       filePath: string
+      sourceKind: 'pack' | 'bundle'
+      bundledResourceCount: number
       id: string
       name: string
       description: string | null
