@@ -399,7 +399,7 @@ export async function resourceWorksheetDocx(resourceId: string): Promise<Buffer>
         new Paragraph({
           children: [
             new TextRun({ text: `${i + 1}. ${card.front}: `, bold: true }),
-            new TextRun(card.back)
+            new TextRun({ text: card.back })
           ]
         })
       )
