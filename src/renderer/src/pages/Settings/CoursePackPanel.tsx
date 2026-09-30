@@ -10,6 +10,8 @@ import type { ClassSection } from '@shared/types'
 
 interface CoursePackPreview {
   filePath: string
+  sourceKind: 'pack' | 'bundle'
+  bundledResourceCount: number
   id: string
   name: string
   description: string | null
@@ -55,13 +57,13 @@ export function CoursePackPanel(): React.JSX.Element {
       <CardHeader>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <BookOpenCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />
-          {tr('Course Pack')}
+          {tr('Course Pack / Bundle')}
         </h2>
       </CardHeader>
       <CardBody className="space-y-3 text-sm">
         <p className="text-[var(--color-text-muted)]">
           {tr(
-            'Import a reusable curriculum into classes you choose. A Course Pack can add terms, standards, rubrics, planned lessons, assessments and homework without changing EduBoard for other courses.'
+            'Import a reusable curriculum into classes you choose. A private Course Bundle can carry the same Course Pack plus its local resource files in one portable file.'
           )}
         </p>
         <div>
@@ -89,7 +91,7 @@ export function CoursePackPanel(): React.JSX.Element {
             }}
           >
             <Upload size={13} className="mr-1 inline" aria-hidden />
-            {tr('Import Course Pack…')}
+            {tr('Import Course Pack or Bundle…')}
           </Button>
         </div>
         {message && <p className="text-[var(--color-text-muted)]">{message}</p>}
@@ -146,6 +148,13 @@ export function CoursePackPanel(): React.JSX.Element {
           <div className="space-y-4 text-sm">
             {preview.description && (
               <p className="text-[var(--color-text-muted)]">{preview.description}</p>
+            )}
+            {preview.sourceKind === 'bundle' && (
+              <p className="rounded-md border border-[var(--color-primary)]/25 bg-[var(--color-primary-soft)] p-2.5 text-xs">
+                {tr('Private Course Bundle · {count} bundled resource files', {
+                  count: preview.bundledResourceCount
+                })}
+              </p>
             )}
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
