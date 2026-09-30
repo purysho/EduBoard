@@ -2232,6 +2232,42 @@ function scoreChartHtml(list) {
 
 /** A class's marked assessments on the Grades page: the chart, the three most recent,
  * and the rest behind "Show all". */
+
+function competencyProgressHtml(list) {
+  if (!list || !list.length) {
+    return `<p class="muted" style="margin:8px 0 0">${t('No standards evidence yet.')}</p>`
+  }
+  return `<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+    <strong style="font-size:.88rem">${t('Learning progress')}</strong>
+    <p class="muted" style="margin:3px 0 8px">${t('Based on rubric evidence your teacher has recorded — not a separate grade.')}</p>
+    <div style="display:grid;gap:7px">
+      ${list
+        .map((item) => {
+          const level =
+            item.latestLevel ||
+            (item.latestLevels && item.latestLevels.length
+              ? t('Mixed: {levels}', { levels: item.latestLevels.join(' / ') })
+              : t('Evidence recorded'))
+          return `<div class="card inset" style="margin:0;padding:10px 12px">
+            <div class="row" style="align-items:flex-start">
+              <span style="min-width:0"><strong>${esc(item.code)}</strong><span class="muted" style="display:block;margin-top:2px">${esc(item.description)}</span></span>
+              <span class="pill done" style="text-transform:none;letter-spacing:0">${esc(level)}</span>
+            </div>
+            <p class="field-note" style="margin-top:6px">${esc(
+              item.sourceName
+                ? t('Latest evidence: {source} · {count} pieces total', {
+                    source: item.sourceName,
+                    count: item.evidenceCount
+                  })
+                : t('{count} pieces of evidence', { count: item.evidenceCount })
+            )}</p>
+          </div>`
+        })
+        .join('')}
+    </div>
+  </div>`
+}
+
 function assessmentsHtml(list) {
   if (!list || !list.length) return ''
   const row = (a) => {
@@ -2697,6 +2733,7 @@ function renderDashboard(me) {
              <div class="row"><strong>${esc(c.name)}${c.finished ? ` <span class="pill done">${t('Finished')}</span>` : ''}</strong><span class="grade-big">${c.percent != null ? Math.round(c.percent) + '%' : '—'}</span></div>
              <div class="row" style="margin-top:6px"><span class="muted">${c.letter ? esc(t('Letter grade {letter}', { letter: c.letter })) : t('No grade yet')}</span><span class="muted">${t('Attendance {rate}', { rate: c.attendanceRate != null ? Math.round(c.attendanceRate * 100) + '%' : '—' })}</span></div>
              ${assessmentsHtml(c.assessments)}
+             ${competencyProgressHtml(c.competencies)}
            </div>`
            )
            .join('')}`
