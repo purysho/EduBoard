@@ -851,6 +851,30 @@ const migrations: Migration[] = [
         ALTER TABLE classes ADD COLUMN no_homework INTEGER NOT NULL DEFAULT 0;
       `)
     }
+  },
+  {
+    id: 38,
+    name: 'best_attempt_retries',
+    up: (db) => {
+      // Optional assessment retries. The normal scores table remains the gradebook's
+      // source of truth; when retries are enabled it stores the highest recorded attempt.
+      db.exec(`
+        ALTER TABLE assessments ADD COLUMN best_attempt INTEGER NOT NULL DEFAULT 0;
+
+        CREATE TABLE score_attempts (
+          id TEXT PRIMARY KEY,
+          assessment_id TEXT NOT NULL REFERENCES assessments(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          attempt_number INTEGER NOT NULL,
+          points_earned REAL NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX score_attempts_unique
+          ON score_attempts(assessment_id, student_id, attempt_number);
+        CREATE INDEX score_attempts_assessment_student_idx
+          ON score_attempts(assessment_id, student_id);
+      `)
+    }
   }
 ]
 
