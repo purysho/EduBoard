@@ -382,6 +382,12 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.scores.history, (_e, assessmentId: string, studentId: string) =>
     scoresRepo.listScoreHistory(assessmentId, studentId)
   )
+  handle(IpcChannels.scores.attempts, (_e, assessmentId: string, studentId: string) =>
+    scoresRepo.listScoreAttempts(assessmentId, studentId)
+  )
+  handle(IpcChannels.scores.addAttempt, (_e, input: scoresRepo.AddScoreAttemptInput) =>
+    scoresRepo.addScoreAttempt(input)
+  )
 
   // --- Attendance -----------------------------------------------------------------------
   handle(IpcChannels.attendance.listByClass, (_e, classId: string) =>
