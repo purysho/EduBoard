@@ -71,6 +71,7 @@ import type {
   EnrollmentStatus,
   GradeCategory,
   LessonPlan,
+  LessonEvidence,
   Score,
   ScoreAttempt,
   Student,
@@ -112,6 +113,7 @@ import type {
   UpdateTermInput,
   AddScoreAttemptInput,
   UpsertScoreInput,
+  UpsertLessonEvidenceInput,
   CreateStandardInput,
   UpdateStandardInput,
   CreateRubricInput,
@@ -216,6 +218,10 @@ export interface EduBoardApi {
     getStatus(classId: string): Promise<ClassroomHubStatus>
     open(classId: string, lessonId: string): Promise<ClassroomHubStatus>
     close(classId: string): Promise<ClassroomHubStatus>
+  }
+  lessonEvidence: {
+    listByClass(classId: string): Promise<LessonEvidence[]>
+    upsert(input: UpsertLessonEvidenceInput): Promise<LessonEvidence | null>
   }
   lessonPlans: {
     listByClass(classId: string): Promise<LessonPlan[]>
