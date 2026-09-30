@@ -117,6 +117,12 @@ function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
     await refetch()
   }
 
+  async function project(): Promise<void> {
+    if (!selected) return
+    await window.api.classroomHub.project(classId, selected)
+    await refetch()
+  }
+
   async function close(): Promise<void> {
     await window.api.classroomHub.close(classId)
     await refetch()
@@ -131,7 +137,9 @@ function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
             {tr('Classroom Hub')}
           </h2>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {tr('Share one lesson over classroom Wi-Fi — no internet or student account needed.')}
+            {tr(
+              'Project this lesson directly from this computer, or share it over a local network.'
+            )}
           </p>
         </div>
         {status?.open && (
@@ -157,16 +165,27 @@ function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
                 ))}
               </select>
             </label>
+            <Button variant="primary" onClick={project}>
+              <Maximize2 size={14} className="mr-1 inline" aria-hidden />
+              {tr('Project lesson')}
+            </Button>
             {status?.open ? (
               <Button variant="secondary" onClick={close}>
                 {tr('Close hub')}
               </Button>
             ) : (
-              <Button variant="primary" onClick={open}>
-                {tr('Open hub')}
+              <Button variant="secondary" onClick={open}>
+                {tr('Share to devices')}
               </Button>
             )}
           </div>
+        )}
+        {status?.open && !status.url && (
+          <p className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 text-xs text-[var(--color-text-muted)]">
+            {tr(
+              'Projector mode is running on this computer. Student-device sharing needs a local network.'
+            )}
+          </p>
         )}
         {status?.open && status.url && (
           <div className="mt-4 flex flex-wrap items-center gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
