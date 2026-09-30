@@ -172,5 +172,6 @@ export const COMMON: Record<string, string> = {
   ' Last published {date}.': '上次发布于 {date}。',
   'Nothing has been published from this computer yet.': '这台电脑还没有发布过任何内容。',
   'Publishing failed. Try again.': '发布失败，请重试。',
-  'Publish now': '立即发布'
+  'Publish now': '立即发布',
+  Back: '返回'
 }
