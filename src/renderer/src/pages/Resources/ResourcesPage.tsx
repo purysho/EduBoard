@@ -33,14 +33,6 @@ import { tr } from '@shared/i18n'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
 
-// The AI buttons index a resource themselves if needed, so they don't wait for "Index
-// for Notebook". Only a resource with nothing to read hides them.
-function canUseAi(resource: LessonResource): boolean {
-  if (resource.type === 'note') return !!resource.notes?.trim()
-  if (resource.type === 'link') return !!resource.url
-  return !!resource.filePath
-}
-
 export function ResourcesPage(): React.JSX.Element {
   const { data: resources, isLoading } = useLessonResources()
   const { data: standards } = useStandards()
@@ -281,17 +273,14 @@ export function ResourcesPage(): React.JSX.Element {
                             ? tr('Re-index')
                             : tr('Index for Notebook')}
                       </button>
-                      {canUseAi(resource) && (
-                        <button
+                      <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                           onClick={() => setPractice({ resourceId: resource.id, kind: 'guide' })}
                         >
                           <Sparkles size={12} aria-hidden />
                           {tr('Study guide')}
                         </button>
-                      )}
-                      {canUseAi(resource) && (
-                        <button
+                      <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                           onClick={() =>
                             setPractice({ resourceId: resource.id, kind: 'flashcards' })
@@ -302,9 +291,7 @@ export function ResourcesPage(): React.JSX.Element {
                             count: resource.flashcards ? ` (${resource.flashcards.length})` : ''
                           })}
                         </button>
-                      )}
-                      {canUseAi(resource) && (
-                        <button
+                      <button
                           className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
                           onClick={() => setPractice({ resourceId: resource.id, kind: 'quiz' })}
                         >
@@ -313,7 +300,6 @@ export function ResourcesPage(): React.JSX.Element {
                             count: resource.practiceQuiz ? ` (${resource.practiceQuiz.length})` : ''
                           })}
                         </button>
-                      )}
                     </div>
                   </div>
                 </CardBody>
