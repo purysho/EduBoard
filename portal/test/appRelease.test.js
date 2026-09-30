@@ -15,6 +15,8 @@ async function fakeGitHub(t) {
           tag_name: 'v9.9.9',
           assets: [
             { name: 'EduBoard-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
+            { name: '../Evil-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
+            { name: 'Evil:stream-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
             { name: 'latest.yml', size: 10, browser_download_url: `${base}/yml` }
           ]
         })
@@ -48,6 +50,8 @@ test('the Portal relays the newest desktop release and its downloads', async (t)
   assert.equal(dl.status, 200)
   assert.equal(Buffer.from(await dl.arrayBuffer()).toString(), 'new EduBoard')
   assert.equal((await portal.call('GET', '/api/app-release/download/latest.yml')).status, 404)
+  assert.equal((await portal.call('GET', '/api/app-release/download/..%2FEvil-Setup.exe')).status, 404)
+  assert.equal((await portal.call('GET', '/api/app-release/download/Evil%3Astream-Setup.exe')).status, 404)
 })
 
 test('without GitHub, the version notice falls back to the version this Portal was built with', async (t) => {
