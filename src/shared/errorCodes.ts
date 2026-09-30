@@ -277,6 +277,16 @@ export const APP_ERROR_CODES = {
     area: 'Group chats',
     meaning: 'That group chat has been removed from Settings.',
     fix: 'Choose another group, or add it again in Settings → Portal and families → Class group chats.'
+  },
+  'EB-6008': {
+    area: 'Group chats',
+    meaning: 'EduBoard routing is muted for that communication destination.',
+    fix: 'Unmute the destination in Settings → Portal and families → Class group chats before routing a message.'
+  },
+  'EB-6009': {
+    area: 'Group chats',
+    meaning: 'That destination does not support EduBoard robot posting.',
+    fix: 'Use EduBoard’s copy-routing action, then paste the prepared message into the WeChat or QQ group.'
   }
 } as const satisfies Record<string, ErrorCodeInfo>
 
