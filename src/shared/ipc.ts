@@ -71,6 +71,10 @@ export const IpcChannels = {
     open: 'classroomHub:open',
     close: 'classroomHub:close'
   },
+  lessonEvidence: {
+    listByClass: 'lessonEvidence:listByClass',
+    upsert: 'lessonEvidence:upsert'
+  },
   lessonPlans: {
     listByClass: 'lessonPlans:listByClass',
     listUpcoming: 'lessonPlans:listUpcoming',
