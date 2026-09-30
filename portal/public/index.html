@@ -1680,12 +1680,23 @@ async function loadMaterials() {
   box.innerHTML = items
     .map((m, i) => {
       const guideId = `guide-${i}`
+      const sourceId = `source-${i}`
+      const sourceControl =
+        m.sourceType === 'link' && m.sourceUrl
+          ? `<a class="pill-link" href="${esc(m.sourceUrl)}" target="_blank" rel="noopener">${t('Open original')}</a>`
+          : m.sourceType === 'file' && m.hasFile
+            ? `<a class="pill-link" href="/api/me/materials/${encodeURIComponent(m.id)}/file">${t('Download original')}${m.fileName ? ` · ${esc(m.fileName)}` : ''}</a>`
+            : m.sourceType === 'note' && m.sourceText
+              ? `<button class="chip" data-toggle="${sourceId}">${t('Original note')}</button>`
+              : ''
+      const hasAids = m.studyGuide || m.flashcards || m.practiceQuiz
       return `
     <div class="card">
       <div class="row"><strong>${esc(m.title)}</strong><span class="muted">${esc(m.className)}</span></div>
       ${
-        m.studyGuide || m.flashcards || m.practiceQuiz
+        sourceControl || hasAids
           ? `<div class="chip-row">
+               ${sourceControl}
                ${m.studyGuide ? `<button class="chip" data-toggle="${guideId}">${t('Study guide')}</button>` : ''}
                ${m.studyGuide ? `<button class="chip" data-listen="${guideId}">${t('Listen')}</button>` : ''}
                ${m.flashcards ? `<button class="chip" data-practice-cards="${i}">${t('Flashcards ({n})', { n: m.flashcards.length })}</button>` : ''}
@@ -1693,6 +1704,7 @@ async function loadMaterials() {
              </div>`
           : `<p class="muted" style="margin-top:6px">${t('No study aids for this one yet.')}</p>`
       }
+      ${m.sourceType === 'note' && m.sourceText ? `<div id="detail-${sourceId}" style="display:none"><div class="desc" style="margin-top:10px; white-space:pre-wrap">${esc(m.sourceText)}</div></div>` : ''}
       ${m.studyGuide ? `<div id="detail-${guideId}" style="display:none"><div class="desc" style="margin-top:10px; white-space:pre-wrap" data-guide-text>${esc(m.studyGuide)}</div>${translateControlHtml('material', m.id)}</div>` : ''}
       <div id="practice-${i}" style="margin-top:8px"></div>
     </div>`
