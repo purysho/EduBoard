@@ -796,6 +796,16 @@ export interface AttendanceRecord {
   createdAt: string
 }
 
+export type LessonEvidenceValue = '✓' | '1' | '2' | '3' | '4' | '5' | 'M' | 'N'
+
+export interface LessonEvidence {
+  id: string
+  lessonPlanId: string
+  studentId: string
+  value: LessonEvidenceValue
+  updatedAt: string
+}
+
 export interface LessonPlan {
   id: string
   classId: string
