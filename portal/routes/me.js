@@ -501,15 +501,41 @@ router.get('/portfolio', (req, res) => {
 
   res.json(
     rows.map((r) => ({
+      homeworkId: r.homework_assignment_id,
+      studentId: r.student_id,
       studentName: `${r.first_name} ${r.last_name}`,
       className: r.class_name,
       title: r.title,
       topic: r.topic,
       grade: r.grade,
       feedback: r.feedback,
+      textAnswer: r.text_answer,
+      fileName: r.file_name,
+      hasFile: !!r.file_path,
       gradedAt: r.graded_at
     }))
   )
+})
+
+// Inline view of a student's own curated portfolio file. The same account/student
+// ownership check as the ordinary submission download applies; only teacher-starred work
+// can be opened through this portfolio route.
+router.get('/portfolio/:id/file', (req, res) => {
+  const { studentId } = req.query
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  const submission = db
+    .prepare(
+      `SELECT sub.* FROM homework_submissions sub
+       JOIN homework_assignments hw ON hw.id = sub.homework_assignment_id
+       WHERE sub.homework_assignment_id = ? AND sub.student_id = ? AND sub.portfolio = 1`
+    )
+    .get(req.params.id, studentId)
+  if (!submission || !submission.file_path) {
+    return res.status(404).json({ error: 'No file', code: 'PT-3002' })
+  }
+  res.sendFile(path.join(SUBMISSIONS_DIR, submission.file_path))
 })
 
 require('fs').mkdirSync(POSTS_DIR, { recursive: true })
