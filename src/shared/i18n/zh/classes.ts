@@ -731,4 +731,25 @@ export const CLASSES: Record<string, string> = {
   'I mostly understand it': '我基本理解了',
   'I’m not sure yet': '我还不太确定',
   'I’m lost': '我没听懂'
+  'Classroom Hub': '课堂学习站',
+  'This classroom hub is closed.': '课堂学习站已关闭。',
+  "Today's lesson": '今天的课程',
+  Objectives: '学习目标',
+  Activities: '课堂活动',
+  Materials: '学习材料',
+  'Need more help?': '需要更多帮助？',
+  Challenge: '挑战任务',
+  Homework: '作业',
+  'Shared resources': '共享资源',
+  'Share one lesson over classroom Wi-Fi — no internet or student account needed.':
+    '通过课堂 Wi-Fi 共享一节课——无需互联网或学生账号。',
+  Open: '已开启',
+  'No lesson plans yet.': '还没有课程计划。',
+  Lesson: '课程',
+  'Close hub': '关闭学习站',
+  'Open hub': '开启学习站',
+  'Classroom Hub QR code': '课堂学习站二维码',
+  'Students scan this QR code while they are on the same classroom Wi-Fi.':
+    '学生连接同一课堂 Wi-Fi 后扫描此二维码。',
+
 }
