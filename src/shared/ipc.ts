@@ -51,7 +51,9 @@ export const IpcChannels = {
     listByStudentAndClass: 'scores:listByStudentAndClass',
     upsert: 'scores:upsert',
     upsertBulk: 'scores:upsertBulk',
-    history: 'scores:history'
+    history: 'scores:history',
+    attempts: 'scores:attempts',
+    addAttempt: 'scores:addAttempt'
   },
   attendance: {
     listByClass: 'attendance:listByClass',
