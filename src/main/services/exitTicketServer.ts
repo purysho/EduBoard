@@ -345,6 +345,7 @@ function renderListeningLabPage(classId: string, resourceId: string): string {
 main{max-width:680px;margin:0 auto;padding:28px 18px 64px}.hero{padding:22px;border-radius:18px;background:#4f46e5;color:#fff}.hero p{margin:5px 0 0;opacity:.85}
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-top:14px}audio{width:100%}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 button{border:1px solid #c7d2fe;border-radius:999px;background:#eef2ff;color:#4338ca;padding:8px 12px;font:inherit;font-weight:600}.notes{line-height:1.65;white-space:pre-wrap}
+@media(min-width:1100px){main{max-width:1100px;padding:40px 48px 80px}.hero{padding:32px}.hero h1{font-size:2.5rem}.card{font-size:1.25rem;padding:28px}button{font-size:1.1rem;padding:10px 16px}}
 @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}.card{background:#111827;border-color:#263042}button{background:#1e1b4b;border-color:#3730a3;color:#a5b4fc}}
 </style></head><body><main>
 <div class="hero"><strong>${escapeHtml(tr('Listening Lab'))}</strong><h1>${escapeHtml(resource.title)}</h1><p>${escapeHtml(tr('Listen for meaning first. Replay only what you need.'))}</p></div>
@@ -441,6 +442,7 @@ main{max-width:760px;margin:0 auto;padding:24px 18px 64px}.hero{background:#4f46
 .label{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:700}.body{line-height:1.6;white-space:pre-wrap}.step{font-size:1.35rem;font-weight:750;margin:5px 0}.timer{font-size:3.5rem;font-variant-numeric:tabular-nums;font-weight:750;text-align:center;margin:14px 0}
 .actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1;min-width:100px;border:0;border-radius:10px;padding:11px;background:#4f46e5;color:white;font:inherit;font-weight:650}.actions button.secondary{background:#eef2ff;color:#4338ca}
 .progress{display:flex;gap:5px;margin-top:14px}.dot{height:7px;flex:1;border-radius:99px;background:#e2e8f0}.dot.on{background:#4f46e5}
+@media(min-width:1100px){main{max-width:1180px;padding:40px 48px 80px}.hero{padding:32px}.hero h1{font-size:2.6rem}.card{padding:28px}.label{font-size:1rem}.body{font-size:1.4rem}.step{font-size:2.3rem}.timer{font-size:7rem}.actions button{font-size:1.2rem;padding:16px}}
 @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}.card{background:#111827;border-color:#263042}.label{color:#94a3b8}.actions button.secondary{background:#1e1b4b;color:#a5b4fc}.dot{background:#263042}.dot.on{background:#818cf8}}
 </style></head><body><main>
 <div class="hero"><div style="font-weight:700;opacity:.85">${escapeHtml(tr('Talk Ladder'))}</div><h1>${escapeHtml(lesson.title)}</h1></div>
@@ -526,6 +528,7 @@ function renderClassroomHubPage(classId: string): string {
   .eyebrow{font-size:.78rem;font-weight:700;opacity:.82;text-transform:uppercase;letter-spacing:.06em}h1{font-size:1.65rem;margin:7px 0 0}section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-top:12px}
   h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin:0 0 8px}.body{line-height:1.6;white-space:normal}.resources{display:grid;gap:8px}
   .resource{display:block;padding:11px 12px;border:1px solid #e2e8f0;border-radius:10px;color:#4338ca;text-decoration:none;background:#f8fafc}
+  @media(min-width:1100px){main{max-width:1180px;padding:40px 48px 80px}header{padding:34px}h1{font-size:3rem}section{padding:28px}h2{font-size:1rem}.body,.resource{font-size:1.35rem}.resource{padding:16px 18px}}
   @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}section{background:#111827;border-color:#263042}.resource{background:#1a2332;border-color:#263042;color:#a5b4fc}h2{color:#94a3b8}}
 </style></head><body><main>
 <header><div class="eyebrow">${escapeHtml(tr("Today's lesson"))}</div><h1>${escapeHtml(lesson.title)}</h1></header>
@@ -547,6 +550,17 @@ export function openClassroomHub(classId: string, lessonId: string): ClassroomHu
 export function closeClassroomHub(classId: string): ClassroomHubStatus {
   openClassroomHubs.delete(classId)
   return getClassroomHubStatus(classId)
+}
+
+/** Loopback URL for the teacher's own projector window. Unlike the student URL, this
+ * never needs a LAN address: 127.0.0.1 works even when the computer is completely
+ * offline and not connected to school Wi-Fi. */
+export function getClassroomHubProjectorUrl(classId: string): string | null {
+  const lessonId = openClassroomHubs.get(classId)
+  const lesson = lessonId ? getLessonPlan(lessonId) : undefined
+  const info = getExitTicketServerInfo()
+  if (!lesson || lesson.classId !== classId || !info.running || !info.port) return null
+  return `http://127.0.0.1:${info.port}/h/${encodeURIComponent(classId)}`
 }
 
 export function getClassroomHubStatus(classId: string): ClassroomHubStatus {
