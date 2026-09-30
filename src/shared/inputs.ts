@@ -88,8 +88,13 @@ export type CreateEnrollmentInput = Omit<Enrollment, 'id' | 'createdAt' | 'statu
 
 export type CreateAssessmentInput = Omit<
   Assessment,
-  'id' | 'createdAt' | 'updatedAt' | 'isFinal' | 'sortOrder' | 'rubricId'
-> & { isFinal?: boolean; sortOrder?: number; rubricId?: string | null }
+  'id' | 'createdAt' | 'updatedAt' | 'isFinal' | 'bestAttempt' | 'sortOrder' | 'rubricId'
+> & {
+  isFinal?: boolean
+  bestAttempt?: boolean
+  sortOrder?: number
+  rubricId?: string | null
+}
 export type UpdateAssessmentInput = Partial<Omit<Assessment, 'id' | 'classId' | 'createdAt'>>
 
 export type UpsertScoreInput = {
