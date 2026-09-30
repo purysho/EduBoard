@@ -98,7 +98,9 @@ const api: EduBoardApi = {
       invoke(IpcChannels.lessonPlans.shiftPlanned, classId, fromDate, days),
     resourceIds: (lessonPlanId) => invoke(IpcChannels.lessonPlans.resourceIds, lessonPlanId),
     setResources: (lessonPlanId, resourceIds) =>
-      invoke(IpcChannels.lessonPlans.setResources, lessonPlanId, resourceIds)
+      invoke(IpcChannels.lessonPlans.setResources, lessonPlanId, resourceIds),
+    exportOfflinePack: (lessonPlanId) =>
+      invoke(IpcChannels.lessonPlans.exportOfflinePack, lessonPlanId)
   },
   scheduleSlots: {
     listByClass: (classId) => invoke(IpcChannels.scheduleSlots.listByClass, classId),
