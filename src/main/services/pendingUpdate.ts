@@ -1,15 +1,31 @@
 // An update downloaded in the background waits in a folder until EduBoard next opens (or
 // the teacher chooses to restart now). This file decides, without needing Electron, what
 // a launch should do with it, so the rules can be tested.
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
+import { createHash } from 'crypto'
+import {
+  closeSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  rmSync,
+  statSync,
+  writeFileSync
+} from 'fs'
 import { join } from 'path'
 import { isNewerVersion } from '@shared/appVersion'
-import { localUpdateFileName, type InstallKind } from './selfUpdateCore'
+import {
+  localUpdateFileName,
+  normalizeSha256Digest,
+  type InstallKind
+} from './selfUpdateCore'
 
 export interface PendingUpdate {
   version: string
   fileName: string
   size: number
+  digest: string
   kind: InstallKind
   /** Launches that tried to install it. One failed try stops automatic installs, so a
    * broken download can't close EduBoard every time it opens. */
@@ -40,6 +56,8 @@ function validPending(value: unknown): value is PendingUpdate {
     typeof p.size !== 'number' ||
     !Number.isFinite(p.size) ||
     p.size < 0 ||
+    typeof p.digest !== 'string' ||
+    normalizeSha256Digest(p.digest) !== p.digest ||
     typeof p.attempts !== 'number' ||
     !Number.isInteger(p.attempts) ||
     p.attempts < 0 ||
@@ -79,6 +97,32 @@ export function pendingFileReady(dir: string, pending: PendingUpdate): boolean {
   }
 }
 
+function sha256File(file: string): string {
+  const hash = createHash('sha256')
+  const fd = openSync(file, 'r')
+  const chunk = Buffer.allocUnsafe(1024 * 1024)
+  try {
+    while (true) {
+      const read = readSync(fd, chunk, 0, chunk.length, null)
+      if (!read) break
+      hash.update(read === chunk.length ? chunk : chunk.subarray(0, read))
+    }
+  } finally {
+    closeSync(fd)
+  }
+  return `sha256:${hash.digest('hex')}`
+}
+
+/** Re-checks the installer at the execution boundary, not only when it was downloaded. */
+export function pendingFileVerified(dir: string, pending: PendingUpdate): boolean {
+  if (!pendingFileReady(dir, pending)) return false
+  try {
+    return sha256File(join(dir, localUpdateFileName(pending.kind))) === pending.digest
+  } catch {
+    return false
+  }
+}
+
 export type LaunchAction =
   /** Install it now, before the main window opens. */
   | 'install'
@@ -90,11 +134,11 @@ export type LaunchAction =
 
 export function launchAction(
   pending: PendingUpdate | null,
-  opts: { currentVersion: string; kind: InstallKind | null; fileReady: boolean; auto: boolean }
+  opts: { currentVersion: string; kind: InstallKind | null; fileVerified: boolean; auto: boolean }
 ): LaunchAction {
   if (!pending) return 'clear'
   if (!isNewerVersion(pending.version, opts.currentVersion)) return 'clear'
-  if (!opts.fileReady || pending.kind !== opts.kind) return 'clear'
+  if (!opts.fileVerified || pending.kind !== opts.kind) return 'clear'
   if (!opts.auto || pending.attempts >= 1) return 'wait'
   return 'install'
 }
