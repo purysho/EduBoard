@@ -13,9 +13,27 @@ data/
 release/
 coverage/
 
+# Secrets and local deployment configuration.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
 # Local test Portal (Start-Test-Portal.cmd): its secrets and data
 portal/local-test/
 
 # Course Packs describe real courses at real institutions: they stay on your own computer.
 course-packs/*
 !course-packs/README.md
+
+# Private curriculum/resource scratch work and generated deliveries.
+yearplan/
+resource-pack/
+student-pack-*.zip
+english-course-*.zip
+resource-pack-video-*.zip
+private-course-packs-backup.tar.gz
+*.coursebundle
