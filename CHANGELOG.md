@@ -4,6 +4,10 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 ## [Unreleased]
 
+### Security
+
+- **Private-content guard:** Git now ignores Portal `.env` files, deployment certificates, private curriculum scratch work and generated course deliveries. CI refuses to accept tracked environment files, Course Packs, Course Bundles or the private resource-pack paths. `portal/.env.example` documents the required Portal variables without real secrets.
+
 ## [0.6.1] — 2026-09-28
 
 **If you run a Portal, update it** (Harden-Server.cmd updates it and locks down the server in one go): the terms and consent screen, each assessment on the Grades page, the calendar link and the brochure need the updated Portal.
