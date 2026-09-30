@@ -101,6 +101,12 @@ export type UpsertScoreInput = {
   comment?: string | null
 }
 
+export type AddScoreAttemptInput = {
+  assessmentId: string
+  studentId: string
+  pointsEarned: number
+}
+
 export type MarkAttendanceInput = {
   classId: string
   studentId: string
