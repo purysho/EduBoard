@@ -616,7 +616,7 @@ export const SETTINGS: Record<string, string> = {
   'Model (optional)': '模型（可选）',
   'Blank uses the provider’s default. A stronger model explains and questions better; a free one costs nothing. Examples: {examples}. Names change, so check your provider’s list and press Test.':
     '留空则使用服务商的默认模型。更强的模型讲解和提问更好；免费模型不花钱。例如：{examples}。模型名称经常变化，请查看服务商的模型列表并点击“测试”。',
-  Default: '默认'
+  Default: '默认',
   'This Course Bundle can’t be used: {detail}': '此课程包文件无法使用：{detail}',
   'manifest.json isn’t valid JSON': 'manifest.json 不是有效的 JSON',
   'manifest.json is missing': '缺少 manifest.json',
