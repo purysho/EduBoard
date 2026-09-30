@@ -3,9 +3,11 @@ import {
   Download,
   ExternalLink,
   File,
+  FileText,
   FolderOpen,
   Link2,
   Plus,
+  Presentation,
   Sparkles,
   StickyNote,
   Trash2
@@ -187,6 +189,11 @@ export function ResourcesPage(): React.JSX.Element {
             const Icon = TYPE_ICON[resource.type]
             const standard = resource.standardId ? standardById.get(resource.standardId) : null
             const openable = resource.type !== 'note'
+            const hasStudentContent =
+              !!resource.notes?.trim() ||
+              (!!resource.studyGuide && !!resource.aiApproved?.studyGuide) ||
+              (!!resource.flashcards?.length && !!resource.aiApproved?.flashcards) ||
+              (!!resource.practiceQuiz?.length && !!resource.aiApproved?.practiceQuiz)
             return (
               <Card key={resource.id}>
                 <CardBody>
@@ -300,6 +307,26 @@ export function ResourcesPage(): React.JSX.Element {
                             count: resource.practiceQuiz ? ` (${resource.practiceQuiz.length})` : ''
                           })}
                         </button>
+                      {hasStudentContent && (
+                        <>
+                          <button
+                            className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                            onClick={() => void window.api.office.resourceWorksheet(resource.id)}
+                            title={tr('Editable student worksheet for Word or WPS')}
+                          >
+                            <FileText size={12} aria-hidden />
+                            {tr('Worksheet')}
+                          </button>
+                          <button
+                            className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)]"
+                            onClick={() => void window.api.office.resourceSlides(resource.id)}
+                            title={tr('Projector-ready PowerPoint practice deck')}
+                          >
+                            <Presentation size={12} aria-hidden />
+                            {tr('Practice deck')}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardBody>
