@@ -24,6 +24,7 @@ import { listHomeworkQuestions } from '../repositories/homeworkQuestions'
 import { listResourceChunks } from '../repositories/resourceChunks'
 import { attendanceSummaryByStudent, getClassGrades } from './reports'
 import { pointSummaries } from '../repositories/behaviourPoints'
+import { getCompetencyMatrix } from './competencyMatrix'
 import {
   portalAssessmentsForClass,
   type PortalAssessment,
@@ -207,6 +208,16 @@ function buildPublishPayload(): {
   }
   const assessments: PortalAssessment[] = []
   const assessmentScores: PortalAssessmentScore[] = []
+  const competencies: {
+    classId: string
+    studentId: string
+    code: string
+    description: string
+    latestLevel: string | null
+    latestLevels: string[]
+    sourceName: string | null
+    evidenceCount: number
+  }[] = []
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   for (const cls of classes) {
     const roster = getRosterForClass(cls.id)
@@ -243,6 +254,27 @@ function buildPublishPayload(): {
     )
     assessments.push(...scored.assessments)
     assessmentScores.push(...scored.scores)
+
+    // Student-facing progress uses the same rubric/standard evidence as the desktop
+    // Competencies tab. No hidden mastery score is invented: the latest level and the
+    // number of real evidence points are all that travel to the Portal.
+    const matrix = getCompetencyMatrix(cls.id)
+    const standardById = new Map(matrix.standards.map((standard) => [standard.id, standard]))
+    for (const cell of matrix.cells) {
+      if (!cell.evidenceCount) continue
+      const standard = standardById.get(cell.standardId)
+      if (!standard) continue
+      competencies.push({
+        classId: cls.id,
+        studentId: cell.studentId,
+        code: standard.code,
+        description: standard.description,
+        latestLevel: cell.latestLevelLabel,
+        latestLevels: cell.latestLevelLabels,
+        sourceName: cell.latestSourceName,
+        evidenceCount: cell.evidenceCount
+      })
+    }
 
     // Drafts stay local — only an assignment the teacher explicitly published (see
     // HomeworkTab's Publish button) ever reaches the Portal, so building out homework
@@ -322,6 +354,7 @@ function buildPublishPayload(): {
     grades,
     assessments,
     assessmentScores,
+    competencies,
     homeworkAssignments,
     invites,
     materials,
