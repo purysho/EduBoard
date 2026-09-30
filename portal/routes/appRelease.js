@@ -11,6 +11,8 @@ const RELEASE_API =
 const CACHE_MS = 10 * 60 * 1000
 // Only the files an update actually uses are relayed.
 const RELAYED = /\.(exe|dmg|zip|AppImage)$/
+// Control characters are deliberately rejected as part of filename validation.
+// eslint-disable-next-line no-control-regex
 const UNSAFE_ASSET_NAME = /[<>:"/\\|?*\u0000-\u001f]/
 
 function safeAssetName(name) {
