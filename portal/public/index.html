@@ -2363,6 +2363,70 @@ function dueSoonHtml(all, multi) {
     .join('')}</div>`
 }
 
+
+function courseHomeHtml(student) {
+  const active = (student.classes || []).filter((c) => !c.finished)
+  if (!active.length) {
+    return `<div class="card"><p class="muted" style="margin:0">${t('No active classes right now.')}</p></div>`
+  }
+  return active
+    .map((c) => {
+      const homework = c.homework || []
+      const finished = homework.filter((h) => h.status === 'done' || h.status === 'submitted').length
+      const total = homework.length
+      const pending = homework
+        .filter((h) => h.status === 'not_started' && h.dueDate)
+        .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+      const next = pending[0]
+      const currentTopic =
+        next?.topic ||
+        [...homework].reverse().find((h) => h.topic)?.topic ||
+        ''
+      const pct = total ? Math.round((finished / total) * 100) : null
+      const latestAssessment = [...(c.assessments || [])]
+        .filter((a) => !a.excused && a.points != null && a.maxScore > 0)
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0]
+      const latestPercent = latestAssessment
+        ? Math.round((latestAssessment.points / latestAssessment.maxScore) * 100)
+        : null
+      return `
+      <div class="card">
+        <div class="row" style="align-items:flex-start">
+          <span style="min-width:0">
+            <strong style="font-size:1rem">${esc(c.name)}</strong>
+            ${currentTopic ? `<span class="muted" style="display:block;margin-top:2px">${esc(t('Now: {topic}', { topic: currentTopic }))}</span>` : ''}
+          </span>
+          ${c.percent != null ? `<span class="grade-big">${Math.round(c.percent)}%</span>` : ''}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px">
+          <div class="card inset" style="margin:0;padding:10px">
+            <span class="muted" style="display:block">${t('Classwork')}</span>
+            <strong>${pct == null ? '—' : pct + '%'}</strong>
+          </div>
+          <div class="card inset" style="margin:0;padding:10px">
+            <span class="muted" style="display:block">${t('Attendance')}</span>
+            <strong>${c.attendanceRate == null ? '—' : Math.round(c.attendanceRate * 100) + '%'}</strong>
+          </div>
+          <div class="card inset" style="margin:0;padding:10px">
+            <span class="muted" style="display:block">${t('Latest mark')}</span>
+            <strong>${latestPercent == null ? '—' : latestPercent + '%'}</strong>
+          </div>
+        </div>
+        ${
+          next
+            ? `<p class="desc" style="margin-top:12px"><strong>${t('Next:')}</strong> ${esc(next.title)} · ${esc(formatDue(next.dueDate))}</p>`
+            : `<p class="desc" style="margin-top:12px">${t('Nothing waiting to be handed in.')}</p>`
+        }
+        <div class="chip-row">
+          <button type="button" class="chip" data-tab="classwork">${t('Open classwork')}</button>
+          <button type="button" class="chip" data-tab="study">${t('Study')}</button>
+          <button type="button" class="chip" data-tab="grades">${t('See progress')}</button>
+        </div>
+      </div>`
+    })
+    .join('')
+}
+
 // ---- First-login tour ---------------------------------------------------------------------
 // A few short steps that walk a new student through the real tabs (each step opens the
 // tab it describes and highlights it) rather than screenshots of them. Shown once per
@@ -2552,6 +2616,13 @@ function renderDashboard(me) {
        <div id="profile-nudge"></div>
        <div id="review-nudge"></div>
        <div id="report-card-nudge"></div>
+       ${me.students
+         .map(
+           (s) => `
+         <div class="section-title">${t('My courses')}${multi ? ` · ${esc(s.studentName)}` : ''}</div>
+         ${courseHomeHtml(s)}`
+         )
+         .join('')}
        ${me.students
          .map(
            (s) => `
