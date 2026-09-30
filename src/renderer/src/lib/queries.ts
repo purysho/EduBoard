@@ -8,6 +8,7 @@ import type {
   EnrollmentStatus
 } from '@shared/types'
 import type {
+  AddScoreAttemptInput,
   CreateAssessmentInput,
   CreateClassInput,
   CreateEnrollmentInput,
@@ -451,6 +452,35 @@ export function useScoreHistory(
     queryKey: ['scoreHistory', assessmentId, studentId],
     queryFn: () => api().scores.history(assessmentId!, studentId!),
     enabled: enabled && !!assessmentId && !!studentId
+  })
+}
+
+export function useScoreAttempts(
+  assessmentId: string | undefined,
+  studentId: string | undefined,
+  enabled: boolean
+) {
+  return useQuery({
+    queryKey: ['scoreAttempts', assessmentId, studentId],
+    queryFn: () => api().scores.attempts(assessmentId!, studentId!),
+    enabled: enabled && !!assessmentId && !!studentId
+  })
+}
+
+export function useAddScoreAttempt(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: AddScoreAttemptInput) => api().scores.addAttempt(input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['scoreAttempts', vars.assessmentId, vars.studentId] })
+      qc.invalidateQueries({ queryKey: ['scoreHistory', vars.assessmentId, vars.studentId] })
+      qc.invalidateQueries({ queryKey: queryKeys.scoresByAssessment(vars.assessmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.scoresByClass(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
+    }
   })
 }
 
