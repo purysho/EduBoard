@@ -8,8 +8,10 @@ with the [privacy notice](https://edu-board.com/privacy) and the
 ## Supported versions
 
 Only the latest release is supported. The desktop app updates itself (it downloads new
-versions in the background and installs them the next time it opens), and a Portal is
-updated with `portal/scripts/update-server.sh`. Please check that an issue still happens
+versions in the background, verifies the installer against the SHA-256 digest published
+with the GitHub release, verifies it again immediately before execution, and installs it
+the next time EduBoard opens), and a Portal is updated with
+`portal/scripts/update-server.sh`. Please check that an issue still happens
 on the [latest release](https://github.com/purysho/EduBoard/releases/latest) before
 reporting it.
 

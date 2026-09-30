@@ -20,6 +20,7 @@ import {
   downloadAsset,
   fetchLatestRelease,
   localUpdateFileName,
+  normalizeSha256Digest,
   pickAsset,
   type InstallKind
 } from './selfUpdateCore'
@@ -27,6 +28,7 @@ import {
   clearPending,
   launchAction,
   pendingFileReady,
+  pendingFileVerified,
   readPending,
   writePending,
   type PendingUpdate
@@ -161,6 +163,9 @@ async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
   const asset = pickAsset(kind, process.arch, release.assets)
   if (!asset)
     throw new AppError('EB-3001', tr('The newest release has no download for this computer.'))
+  const digest = normalizeSha256Digest(asset.digest)
+  if (!digest)
+    throw new AppError('EB-3007', tr('The update could not be verified. Download it again.'))
   const dir = pendingDir()
   clearPending(dir)
   mkdirSync(dir, { recursive: true })
@@ -177,6 +182,7 @@ async function downloadToPending(kind: InstallKind): Promise<PendingUpdate> {
     version: release.version,
     fileName,
     size: asset.size,
+    digest,
     kind,
     attempts: 0,
     downloadedAt: new Date().toISOString()
@@ -265,11 +271,13 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
   const action = launchAction(pending, {
     currentVersion: app.getVersion(),
     kind: 'kind' in where ? where.kind : null,
-    fileReady: pending ? pendingFileReady(dir, pending) : false,
+    fileVerified: pending ? pendingFileVerified(dir, pending) : false,
     auto: getSettings().autoUpdate
   })
   if (action === 'clear') {
-    if (pending) clearPending(dir)
+    // Also clears a corrupt/unreadable marker: readPending() deliberately returns null
+    // for one, and leaving it behind would make every later launch rediscover the same junk.
+    clearPending(dir)
     return false
   }
   if (action === 'wait' || !pending || !('kind' in where)) return false
@@ -342,10 +350,18 @@ export async function installAppUpdate(): Promise<void> {
   try {
     createBackup()
     let pending = usablePending()
+    if (pending && !pendingFileVerified(pendingDir(), pending)) {
+      clearPending(pendingDir())
+      pending = null
+    }
     if (!pending || (latestKnown && isNewerVersion(latestKnown, pending.version))) {
       if (progress.phase === 'downloading')
         throw new AppError('EB-3005', tr('The update is still downloading.'))
       pending = await downloadToPending(where.kind)
+    }
+    if (!pendingFileVerified(pendingDir(), pending)) {
+      clearPending(pendingDir())
+      throw new AppError('EB-3007', tr('The update could not be verified. Download it again.'))
     }
     progress = { phase: 'installing', fraction: 1, error: null }
     // A teacher-started install resets the automatic-try count.

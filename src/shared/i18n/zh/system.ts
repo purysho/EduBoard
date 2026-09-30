@@ -179,6 +179,7 @@ export const SYSTEM: Record<string, string> = {
   'GitHub couldn’t be asked for updates ({status}).': '无法从 GitHub 检查更新（{status}）。',
   'The download failed ({status}).': '下载失败（{status}）。',
   'The download was incomplete. Try again.': '下载不完整，请重试。',
+  'The update could not be verified. Download it again.': '无法验证更新文件，请重新下载。',
   'That student no longer exists.': '这名学生已不存在。',
   'Erased all records of a student at their request': '应学生要求清除了其全部记录',
   'You have changes students can’t see yet.': '你有学生还看不到的更改。',

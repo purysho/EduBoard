@@ -6,6 +6,7 @@ const { startPortal } = require('./helpers')
 /** Stands in for GitHub: the release list and one download. */
 async function fakeGitHub(t) {
   const file = Buffer.from('new EduBoard')
+  const digest = 'sha256:34a5733a9e095e3a1630623054401a0ac895acefd717e38a28b4500e52c4949d'
   const server = http.createServer((req, res) => {
     if (req.url === '/release') {
       const base = `http://127.0.0.1:${server.address().port}`
@@ -14,9 +15,30 @@ async function fakeGitHub(t) {
         JSON.stringify({
           tag_name: 'v9.9.9',
           assets: [
-            { name: 'EduBoard-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
-            { name: '../Evil-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
-            { name: 'Evil:stream-Setup.exe', size: file.length, browser_download_url: `${base}/dl` },
+            {
+              name: 'EduBoard-Setup.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest
+            },
+            {
+              name: 'EduBoard-Portable.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest: 'sha256:not-a-digest'
+            },
+            {
+              name: '../Evil-Setup.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest
+            },
+            {
+              name: 'Evil:stream-Setup.exe',
+              size: file.length,
+              browser_download_url: `${base}/dl`,
+              digest
+            },
             { name: 'latest.yml', size: 10, browser_download_url: `${base}/yml` }
           ]
         })
@@ -28,7 +50,7 @@ async function fakeGitHub(t) {
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   t.after(() => server.close())
-  return { url: `http://127.0.0.1:${server.address().port}/release`, file }
+  return { url: `http://127.0.0.1:${server.address().port}/release`, file, digest }
 }
 
 test('the Portal relays the newest desktop release and its downloads', async (t) => {
@@ -41,7 +63,10 @@ test('the Portal relays the newest desktop release and its downloads', async (t)
   // Only files an update uses are listed.
   assert.deepEqual(release.json, {
     version: '9.9.9',
-    assets: [{ name: 'EduBoard-Setup.exe', size: github.file.length }]
+    assets: [
+      { name: 'EduBoard-Setup.exe', size: github.file.length, digest: github.digest },
+      { name: 'EduBoard-Portable.exe', size: github.file.length, digest: null }
+    ]
   })
   const version = await portal.call('GET', '/api/app-version')
   assert.equal(version.json.version, '9.9.9')

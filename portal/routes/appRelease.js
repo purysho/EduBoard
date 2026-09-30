@@ -28,6 +28,12 @@ function safeAssetName(name) {
   )
 }
 
+function safeDigest(value) {
+  if (typeof value !== 'string') return null
+  const match = /^sha256:([0-9a-f]{64})$/i.exec(value.trim())
+  return match ? `sha256:${match[1].toLowerCase()}` : null
+}
+
 let cached = null
 
 /** The newest release, asked of GitHub at most every ten minutes. */
@@ -43,7 +49,12 @@ async function latestRelease() {
     version: String(body.tag_name || '').replace(/^v/, ''),
     assets: (body.assets || [])
       .filter((a) => safeAssetName(a.name) && RELAYED.test(a.name))
-      .map((a) => ({ name: a.name, size: a.size, url: a.browser_download_url }))
+      .map((a) => ({
+        name: a.name,
+        size: a.size,
+        digest: safeDigest(a.digest),
+        url: a.browser_download_url
+      }))
   }
   cached = { at: Date.now(), release }
   return release
@@ -54,7 +65,7 @@ router.get('/', async (_req, res) => {
     const { version, assets } = await latestRelease()
     res.set('Cache-Control', 'no-cache').json({
       version,
-      assets: assets.map(({ name, size }) => ({ name, size }))
+      assets: assets.map(({ name, size, digest }) => ({ name, size, digest }))
     })
   } catch (err) {
     res
