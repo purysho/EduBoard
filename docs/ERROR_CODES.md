@@ -68,6 +68,7 @@ after changing either.
 | EB-3004 | The update download stopped part-way. | Try again on a steadier connection. |
 | EB-3005 | The update is still downloading. | Wait for the download to finish, then install. |
 | EB-3006 | EduBoard can’t update itself where it’s installed (e.g. a read-only folder, or running from the disk image on a Mac). | Read the message for the reason. Usually: move EduBoard to Applications (Mac) or reinstall with the installer. |
+| EB-3007 | The downloaded update did not match its published SHA-256 digest. | Try the update again. If it repeats, install the latest release manually and report the error before running the rejected file. |
 
 ### AI
 
