@@ -102,6 +102,34 @@ export function setLessonResourcePracticeSet(
     .run()
 }
 
+/** Saves practice material authored or directly edited by the teacher. Unlike an AI
+ * draft it is immediately approved, because the teacher is the author and has already
+ * reviewed the content while entering it. */
+export function setLessonResourceManualPracticeSet(
+  id: string,
+  kind: PracticeSetKind,
+  value: Flashcard[] | PracticeQuestion[] | null
+): LessonResource {
+  const resource = getLessonResource(id)
+  if (!resource) throw new AppError('EB-0002', `Lesson resource ${id} not found`)
+  const key = kind === 'flashcards' ? 'flashcards' : 'practiceQuiz'
+  const approval = { ...resource.aiApproved, [key]: !!value?.length }
+  getDb()
+    .update(lessonResources)
+    .set(
+      kind === 'flashcards'
+        ? { flashcards: value as Flashcard[] | null, aiApproved: approval, updatedAt: nowIso() }
+        : {
+            practiceQuiz: value as PracticeQuestion[] | null,
+            aiApproved: approval,
+            updatedAt: nowIso()
+          }
+    )
+    .where(eq(lessonResources.id, id))
+    .run()
+  return getLessonResource(id) as LessonResource
+}
+
 /** The teacher has checked (or withdrawn) one of the resource's AI drafts. Only
  * something that exists can be approved. */
 export function setLessonResourceAiApproval(
