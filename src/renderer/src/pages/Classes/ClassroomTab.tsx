@@ -3,14 +3,21 @@ import { useOutletContext } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Dices,
+  Eraser,
+  Eye,
+  EyeOff,
   Maximize2,
+  Minus,
   Pause,
   Play,
+  Plus,
+  Presentation,
   QrCode,
   RotateCcw,
   Shuffle,
   Star,
   Timer,
+  Trophy,
   Undo2,
   Users
 } from 'lucide-react'
@@ -18,6 +25,7 @@ import type { ClassSection } from '@shared/types'
 import { makeGroups, pickNext, startOfWeekIso } from '@shared/classroomTools'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
+import { Textarea } from '@renderer/components/ui/Field'
 import { useAttendanceByClass, useClassRoster, useLessonPlans } from '@renderer/lib/queries'
 import { PointCategoryChips } from '@renderer/components/PointCategoryChips'
 import { todayIso } from '@renderer/lib/format'
@@ -76,6 +84,8 @@ export function ClassroomTab(): React.JSX.Element {
         <PickerCard kids={here} />
         <TimerCard />
         <GroupsCard kids={here} />
+        <QuickBoardCard />
+        <TeamScoreboardCard />
         <PointsCard classId={classSection.id} kids={everyone} />
       </div>
     </div>
@@ -208,6 +218,172 @@ function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
           </div>
         )}
       </CardBody>
+    </Card>
+  )
+}
+
+function QuickBoardCard(): React.JSX.Element {
+  const [text, setText] = useState('')
+  const [revealed, setRevealed] = useState(true)
+  const [size, setSize] = useState<'md' | 'lg' | 'xl'>('lg')
+  const board = useRef<HTMLDivElement>(null)
+  const sizeClass = size === 'md' ? 'text-3xl' : size === 'xl' ? 'text-7xl' : 'text-5xl'
+
+  return (
+    <Card>
+      <CardHeader className="flex items-center justify-between">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+          <Presentation size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+          {tr('Quick Board')}
+        </h2>
+        <button
+          aria-label={tr('Full screen')}
+          title={tr('Full screen')}
+          className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          onClick={() => void board.current?.requestFullscreen()}
+        >
+          <Maximize2 size={15} aria-hidden />
+        </button>
+      </CardHeader>
+      <CardBody className="space-y-3">
+        <Textarea
+          rows={3}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={tr('Type a question, sentence, model answer or instructions…')}
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setRevealed((v) => !v)}>
+            {revealed ? (
+              <EyeOff size={13} className="mr-1 inline" aria-hidden />
+            ) : (
+              <Eye size={13} className="mr-1 inline" aria-hidden />
+            )}
+            {revealed ? tr('Hide') : tr('Reveal')}
+          </Button>
+          {(['md', 'lg', 'xl'] as const).map((value) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={size === value ? 'primary' : 'ghost'}
+              onClick={() => setSize(value)}
+            >
+              {value === 'md' ? tr('Medium') : value === 'lg' ? tr('Large') : tr('Huge')}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setText('')
+              setRevealed(true)
+            }}
+          >
+            <Eraser size={13} className="mr-1 inline" aria-hidden />
+            {tr('Clear')}
+          </Button>
+        </div>
+        <div
+          ref={board}
+          onClick={() => setRevealed((v) => !v)}
+          className={cn(
+            'flex min-h-44 cursor-pointer items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center font-semibold leading-tight whitespace-pre-wrap',
+            sizeClass,
+            '[:fullscreen_&]:min-h-screen [:fullscreen_&]:border-0 [:fullscreen_&]:p-16 [:fullscreen_&]:text-[8vw]'
+          )}
+          title={tr('Click to hide or reveal')}
+        >
+          {revealed ? text || tr('Ready') : '••••••'}
+        </div>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          {tr('Click the board to hide or reveal it. Full screen works without internet.')}
+        </p>
+      </CardBody>
+    </Card>
+  )
+}
+
+interface Team {
+  id: number
+  name: string
+  score: number
+}
+
+function TeamScoreboardCard(): React.JSX.Element {
+  const [teams, setTeams] = useState<Team[]>(() =>
+    Array.from({ length: 4 }, (_, i) => ({ id: i + 1, name: tr('Team {n}', { n: i + 1 }), score: 0 }))
+  )
+  const board = useRef<HTMLDivElement>(null)
+
+  const changeScore = (id: number, by: number): void =>
+    setTeams((old) => old.map((team) => (team.id === id ? { ...team, score: team.score + by } : team)))
+
+  return (
+    <Card className="col-span-2">
+      <div ref={board} className="bg-[var(--color-surface)]">
+        <CardHeader className="flex items-center justify-between">
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Trophy size={15} className="text-[var(--color-text-muted)]" aria-hidden />
+            {tr('Team Scoreboard')}
+          </h2>
+          <div className="flex gap-1">
+            <button
+              aria-label={tr('Full screen')}
+              title={tr('Full screen')}
+              className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              onClick={() =>
+                document.fullscreenElement
+                  ? void document.exitFullscreen()
+                  : void board.current?.requestFullscreen()
+              }
+            >
+              <Maximize2 size={15} aria-hidden />
+            </button>
+            <button
+              aria-label={tr('Reset scores')}
+              title={tr('Reset scores')}
+              className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              onClick={() => setTeams((old) => old.map((team) => ({ ...team, score: 0 })))}
+            >
+              <RotateCcw size={15} aria-hidden />
+            </button>
+          </div>
+        </CardHeader>
+        <CardBody>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {teams.map((team) => (
+              <div
+                key={team.id}
+                className="rounded-xl border border-[var(--color-border)] p-3 text-center [:fullscreen_&]:p-8"
+              >
+                <input
+                  aria-label={tr('Team name')}
+                  value={team.name}
+                  onChange={(e) =>
+                    setTeams((old) =>
+                      old.map((item) =>
+                        item.id === team.id ? { ...item, name: e.target.value.slice(0, 30) } : item
+                      )
+                    )
+                  }
+                  className="w-full bg-transparent text-center text-sm font-semibold outline-none [:fullscreen_&]:text-3xl"
+                />
+                <p className="my-3 text-5xl font-bold tabular-nums [:fullscreen_&]:my-8 [:fullscreen_&]:text-[9vw]">
+                  {team.score}
+                </p>
+                <div className="flex justify-center gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => changeScore(team.id, -1)}>
+                    <Minus size={14} aria-hidden />
+                  </Button>
+                  <Button size="sm" variant="primary" onClick={() => changeScore(team.id, 1)}>
+                    <Plus size={14} aria-hidden />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardBody>
+      </div>
     </Card>
   )
 }
