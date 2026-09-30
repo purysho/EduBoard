@@ -1,6 +1,12 @@
 import { createHmac } from 'crypto'
 import { describe, expect, it } from 'vitest'
-import { groupChatKind, groupChatProblem, groupMessageBody } from '@shared/groupChats'
+import {
+  groupChatKind,
+  groupChatProblem,
+  groupMessageBody,
+  groupRouteMode,
+  safeJoinUrl
+} from '@shared/groupChats'
 import { sendToGroupChat, signedWebhook } from '../groupChat'
 
 const ding = 'https://oapi.dingtalk.com/robot/send?access_token=abc123'
@@ -16,12 +22,44 @@ describe('group chats', () => {
       groupChatKind('https://oapi.dingtalk.com.evil.example/robot/send?access_token=a')
     ).toBeNull()
     expect(groupChatKind('https://oapi.dingtalk.com/robot/send')).toBeNull()
-    expect(groupChatProblem({ name: '4B', webhook: 'nonsense' })).toMatch(/robot address/)
-    expect(groupChatProblem({ name: '', webhook: ding })).toMatch(/name/)
-    expect(groupChatProblem({ name: '4B', webhook: ding, secret: 'nope' })).toMatch(/SEC/)
     expect(
-      groupChatProblem({ name: '4B', webhook: ding, secret: 'SEC' + 'a'.repeat(30) })
+      groupChatProblem({ name: '4B', kind: 'dingtalk', webhook: 'nonsense' })
+    ).toMatch(/robot address/)
+    expect(groupChatProblem({ name: '', kind: 'dingtalk', webhook: ding })).toMatch(/name/)
+    expect(
+      groupChatProblem({ name: '4B', kind: 'dingtalk', webhook: ding, secret: 'nope' })
+    ).toMatch(/SEC/)
+    expect(
+      groupChatProblem({
+        name: '4B',
+        kind: 'dingtalk',
+        webhook: ding,
+        secret: 'SEC' + 'a'.repeat(30)
+      })
     ).toBeNull()
+    expect(
+      groupChatProblem({
+        name: '4B WeChat',
+        kind: 'wechat',
+        webhook: '',
+        joinUrl: '',
+        qrDataUrl: ''
+      })
+    ).toBeNull()
+    expect(
+      groupChatProblem({
+        name: '4B QQ',
+        kind: 'qq',
+        webhook: '',
+        joinUrl: 'javascript:alert(1)',
+        qrDataUrl: ''
+      })
+    ).toMatch(/http/)
+    expect(safeJoinUrl('https://example.com/join')).toMatch(/^https:/)
+    expect(safeJoinUrl('javascript:alert(1)')).toBeNull()
+    expect(groupRouteMode({ kind: 'wecom' })).toBe('robot')
+    expect(groupRouteMode({ kind: 'wechat' })).toBe('manual')
+    expect(groupRouteMode({ kind: 'qq', muted: true })).toBe('muted')
   })
 
   it('signs DingTalk requests when the robot has a secret', () => {
