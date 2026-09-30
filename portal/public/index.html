@@ -1544,6 +1544,23 @@ function renderMessages(messages) {
   })
 }
 
+
+function portfolioMediaHtml(item) {
+  if (!item.hasFile || !item.fileName) return ''
+  const url = `/api/me/portfolio/${encodeURIComponent(item.homeworkId)}/file?studentId=${encodeURIComponent(item.studentId)}`
+  const ext = item.fileName.split('.').pop()?.toLowerCase() || ''
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
+    return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="${esc(item.fileName)}" style="display:block;max-width:100%;max-height:360px;border-radius:10px;margin-top:10px"></a>`
+  }
+  if (['mp3', 'm4a', 'aac', 'wav', 'ogg', 'webm'].includes(ext)) {
+    return `<audio controls preload="metadata" src="${url}" style="width:100%;margin-top:10px"></audio>`
+  }
+  if (['mp4', 'mov', 'm4v', 'webm'].includes(ext)) {
+    return `<video controls preload="metadata" src="${url}" style="display:block;width:100%;max-height:420px;border-radius:10px;margin-top:10px"></video>`
+  }
+  return `<p style="margin:10px 0 0"><a class="pill-link" href="${url}" target="_blank" rel="noopener">${t('Open submitted work')}</a></p>`
+}
+
 async function loadPortfolio() {
   const box = document.getElementById('portfolio')
   if (!box) return
@@ -1560,7 +1577,9 @@ async function loadPortfolio() {
       <div class="row"><strong>${esc(p.title)}</strong><span class="muted">${p.gradedAt ? formatWhen(p.gradedAt) : ''}</span></div>
       <p class="muted" style="margin:2px 0 6px">${esc(p.studentName)} · ${esc(p.className)}${p.topic ? ' · ' + esc(p.topic) : ''}</p>
       ${p.grade ? `<p class="desc"><strong>${t('Grade:')}</strong> ${esc(p.grade)}</p>` : ''}
-      ${p.feedback ? `<p class="desc">${esc(p.feedback)}</p>` : ''}
+      ${p.feedback ? `<p class="desc"><strong>${t('Teacher feedback:')}</strong> ${esc(p.feedback)}</p>` : ''}
+      ${p.textAnswer ? `<div class="card inset" style="margin:10px 0 0"><strong style="font-size:.82rem">${t('Student work')}</strong><div class="desc" style="white-space:pre-wrap">${esc(p.textAnswer)}</div></div>` : ''}
+      ${portfolioMediaHtml(p)}
     </div>`
     )
     .join('')
