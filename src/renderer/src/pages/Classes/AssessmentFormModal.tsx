@@ -31,6 +31,7 @@ export function AssessmentFormModal({
   const [assessmentDate, setAssessmentDate] = useState(assessment?.assessmentDate ?? todayIso())
   const [maxScore, setMaxScore] = useState(assessment?.maxScore ?? 100)
   const [isFinal, setIsFinal] = useState(assessment?.isFinal ?? false)
+  const [bestAttempt, setBestAttempt] = useState(assessment?.bestAttempt ?? false)
   const [rubricId, setRubricId] = useState(assessment?.rubricId ?? '')
 
   const selectedRubric = rubrics?.find((r) => r.id === rubricId)
@@ -58,7 +59,8 @@ export function AssessmentFormModal({
       description: assessment?.description ?? null,
       assessmentDate: assessmentDate || null,
       maxScore: selectedRubric ? selectedRubric.maxPoints : Number(maxScore) || 100,
-      isFinal
+      isFinal,
+      bestAttempt
     }
 
     if (isEdit) {
@@ -125,6 +127,21 @@ export function AssessmentFormModal({
                 onChange={(e) => setIsFinal(e.target.checked)}
               />
               {tr('Counts as a final/summative assessment')}
+            </label>
+          </FormRow>
+          <FormRow label={tr('Retries')}>
+            <label className="mt-2 flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={bestAttempt}
+                onChange={(e) => setBestAttempt(e.target.checked)}
+              />
+              <span>
+                {tr('Allow retries; highest score counts')}
+                <span className="block text-xs text-[var(--color-text-muted)]">
+                  {tr('Record later attempts from the gradebook cell.')}
+                </span>
+              </span>
             </label>
           </FormRow>
         </div>
