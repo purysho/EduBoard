@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type {
   PostReplySlip,
   AiMaterialKind,
@@ -1227,6 +1228,25 @@ export function useDraftPracticeSet() {
   return useMutation({
     mutationFn: ({ resourceId, kind }: { resourceId: string; kind: 'flashcards' | 'quiz' }) =>
       api().notebook.draftPracticeSet(resourceId, kind),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+export function useSaveManualPracticeSet() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      resourceId,
+      kind,
+      value
+    }: {
+      resourceId: string
+      kind: 'flashcards' | 'quiz'
+      value: Flashcard[] | PracticeQuestion[]
+    }) => api().notebook.saveManualPracticeSet(resourceId, kind, value),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.lessonResources })
       scheduleAutoPublishToPortal()
