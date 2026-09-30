@@ -126,7 +126,6 @@ import {
   planSchoolPack,
   sanitizeCss
 } from '@shared/schoolPack'
-import { parseCoursePack } from '@shared/coursePack'
 import { loadCoursePackSource } from '../services/courseBundle'
 import { isSafeExternalUrl } from '@shared/externalUrl'
 import { checkCss, exampleStylesheet } from '@shared/cssCheck'
