@@ -350,11 +350,7 @@ export async function installAppUpdate(): Promise<void> {
     progress = { phase: 'installing', fraction: 1, error: null }
     // A teacher-started install resets the automatic-try count.
     writePending(pendingDir(), { ...pending, attempts: 0 })
-    startInstaller(
-      where.kind,
-      join(pendingDir(), localUpdateFileName(where.kind)),
-      pendingDir()
-    )
+    startInstaller(where.kind, join(pendingDir(), localUpdateFileName(where.kind)), pendingDir())
     // Give the helper a moment to start before this window goes away.
     setTimeout(() => app.quit(), 800)
   } catch (err) {
