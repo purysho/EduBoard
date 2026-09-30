@@ -127,6 +127,7 @@ import {
   sanitizeCss
 } from '@shared/schoolPack'
 import { parseCoursePack } from '@shared/coursePack'
+import { loadCoursePackSource } from '../services/courseBundle'
 import { isSafeExternalUrl } from '@shared/externalUrl'
 import { checkCss, exampleStylesheet } from '@shared/cssCheck'
 import { getDeviceSyncStatus } from '../services/deviceSync'
@@ -999,12 +1000,15 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.coursePack.preview, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: tr('EduBoard course pack'), extensions: ['json'] }]
+      filters: [{ name: tr('EduBoard Course Pack or Bundle'), extensions: ['json', 'coursebundle'] }]
     })
     if (canceled || !filePaths[0]) return null
-    const pack = parseCoursePack(await readFile(filePaths[0], 'utf-8'))
+    const source = await loadCoursePackSource(filePaths[0])
+    const pack = source.pack
     return {
       filePath: filePaths[0],
+      sourceKind: source.kind,
+      bundledResourceCount: source.bundledResourceCount,
       id: pack.id,
       name: pack.name,
       description: pack.description ?? null,
@@ -1036,7 +1040,10 @@ export function registerIpcHandlers(): void {
       firstClassDates: Record<string, string> = {},
       options: { publishHomework?: boolean } = {}
     ) => {
-      const pack = parseCoursePack(await readFile(String(filePath), 'utf-8'))
+      const source = await loadCoursePackSource(String(filePath), {
+        extractBundleResources: true
+      })
+      const pack = source.pack
       // A successful Course Pack changes real curriculum records and class links. Keep a
       // normal EduBoard recovery point immediately before it, in addition to the install
       // transaction's automatic rollback if anything fails mid-import.
@@ -1045,7 +1052,8 @@ export function registerIpcHandlers(): void {
         pack,
         termBindings,
         firstClassDates,
-        publishHomework: options?.publishHomework === true
+        publishHomework: options?.publishHomework === true,
+        resourceFilePaths: source.resourceFilePaths
       })
       return {
         courseGroupId: result.courseGroupId,
