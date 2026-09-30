@@ -480,6 +480,8 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   if (!Array.isArray(reply.needFiles) || !Array.isArray(reply.needChunks)) {
     return { attachmentsUploaded: 0, materialsUploaded: 0, skipped, outdatedServer: true }
   }
+  const materialFilesUnsupported =
+    materialFilePaths.size > 0 && !Array.isArray(reply.needMaterialFiles)
   const needMaterialFiles = Array.isArray(reply.needMaterialFiles) ? reply.needMaterialFiles : []
 
   const headers = { 'X-Sync-Secret': portalSyncSecret }
@@ -532,7 +534,12 @@ async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
     at: new Date().toISOString(),
     fingerprint: payloadFingerprint(body)
   })
-  return { attachmentsUploaded, materialsUploaded, skipped, outdatedServer: false }
+  return {
+    attachmentsUploaded,
+    materialsUploaded,
+    skipped,
+    outdatedServer: materialFilesUnsupported
+  }
 }
 
 const PENDING_DELETES_KEY = 'portal_pending_student_deletes'
