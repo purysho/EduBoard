@@ -100,10 +100,7 @@ function ClassroomHubCard({ classId }: { classId: string }): React.JSX.Element {
   const [qr, setQr] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!status?.url) {
-      setQr(null)
-      return
-    }
+    if (!status?.url) return
     let cancelled = false
     window.api.exitTickets
       .getQrDataUrl(status.url)
