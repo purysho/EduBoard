@@ -128,6 +128,14 @@ const ZH = {
   'Loading…': '加载中…',
   'Switch language': '切换语言',
 
+  'No active classes right now.': '目前没有正在进行的课程。',
+  'Now: {topic}': '当前：{topic}',
+  'Latest mark': '最近成绩',
+  'Next:': '接下来：',
+  'Nothing waiting to be handed in.': '目前没有待提交的作业。',
+  'Open classwork': '打开课业',
+  'See progress': '查看进度',
+  'My courses': '我的课程',
   // Offline
   unknown: '未知',
   'Viewing saved data': '正在查看已保存的数据',
