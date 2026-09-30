@@ -275,7 +275,9 @@ export function installPendingUpdateOnLaunch(openNormally: () => void): boolean 
     auto: getSettings().autoUpdate
   })
   if (action === 'clear') {
-    if (pending) clearPending(dir)
+    // Also clears a corrupt/unreadable marker: readPending() deliberately returns null
+    // for one, and leaving it behind would make every later launch rediscover the same junk.
+    clearPending(dir)
     return false
   }
   if (action === 'wait' || !pending || !('kind' in where)) return false
