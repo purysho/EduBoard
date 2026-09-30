@@ -8,7 +8,14 @@ import {
 } from '../repositories/exitTickets'
 import { getRosterForClass } from '../repositories/enrollments'
 import { markAttendance } from '../repositories/attendanceRecords'
-import type { AttendanceCheckInStatus, ExitTicketServerInfo } from '@shared/types'
+import { getLessonPlan, listLessonResourceIds } from '../repositories/lessonPlans'
+import { getLessonResource } from '../repositories/lessonResources'
+import { isSafeExternalUrl } from '@shared/externalUrl'
+import type {
+  AttendanceCheckInStatus,
+  ClassroomHubStatus,
+  ExitTicketServerInfo
+} from '@shared/types'
 import { tr, uiLanguage } from '@shared/i18n'
 
 // Fixed port with a few fallbacks in case something else on the machine already holds
@@ -18,6 +25,7 @@ const CANDIDATE_PORTS = [51820, 51821, 51822, 51823]
 
 let server: Server | null = null
 let boundPort: number | null = null
+const openClassroomHubs = new Map<string, string>()
 
 function getLanIp(): string | null {
   const nets = networkInterfaces()
@@ -291,6 +299,97 @@ document.querySelectorAll('.s').forEach(function (btn) {
 </body></html>`
 }
 
+
+function textBlock(value: string | null): string {
+  return value ? escapeHtml(value).replace(/\n/g, '<br>') : ''
+}
+
+function renderClassroomHubPage(classId: string): string {
+  const lessonId = openClassroomHubs.get(classId)
+  const lesson = lessonId ? getLessonPlan(lessonId) : undefined
+  if (!lesson || lesson.classId !== classId) {
+    return `<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(tr('Classroom Hub'))}</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
+</head><body><p>${escapeHtml(tr('This classroom hub is closed.'))}</p></body></html>`
+  }
+
+  const sections: [string, string | null][] = [
+    [tr('Objectives'), lesson.objectives],
+    [tr('Activities'), lesson.activities],
+    [tr('Materials'), lesson.materials],
+    [tr('Need more help?'), lesson.support],
+    [tr('Challenge'), lesson.stretch],
+    [tr('Homework'), lesson.homework]
+  ]
+  const sectionHtml = sections
+    .filter(([, value]) => !!value?.trim())
+    .map(
+      ([label, value]) =>
+        `<section><h2>${escapeHtml(label)}</h2><div class="body">${textBlock(value)}</div></section>`
+    )
+    .join('')
+
+  const resources = listLessonResourceIds(lesson.id)
+    .map((id) => getLessonResource(id))
+    .filter((resource) => resource?.shareWithStudents)
+  const resourceHtml = resources.length
+    ? `<section><h2>${escapeHtml(tr('Shared resources'))}</h2><div class="resources">${resources
+        .map((resource) => {
+          if (!resource) return ''
+          const title = escapeHtml(resource.title)
+          if (resource.type === 'link' && resource.url && isSafeExternalUrl(resource.url)) {
+            return `<a class="resource" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a>`
+          }
+          return `<div class="resource">${title}</div>`
+        })
+        .join('')}</div></section>`
+    : ''
+
+  return `<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(lesson.title)}</title>
+<style>
+  :root{color-scheme:light dark}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+  main{max-width:760px;margin:0 auto;padding:28px 18px 64px}header{padding:22px;border-radius:18px;background:#4f46e5;color:#fff;margin-bottom:16px}
+  .eyebrow{font-size:.78rem;font-weight:700;opacity:.82;text-transform:uppercase;letter-spacing:.06em}h1{font-size:1.65rem;margin:7px 0 0}section{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-top:12px}
+  h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;margin:0 0 8px}.body{line-height:1.6;white-space:normal}.resources{display:grid;gap:8px}
+  .resource{display:block;padding:11px 12px;border:1px solid #e2e8f0;border-radius:10px;color:#4338ca;text-decoration:none;background:#f8fafc}
+  @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}section{background:#111827;border-color:#263042}.resource{background:#1a2332;border-color:#263042;color:#a5b4fc}h2{color:#94a3b8}}
+</style></head><body><main>
+<header><div class="eyebrow">${escapeHtml(tr("Today's lesson"))}</div><h1>${escapeHtml(lesson.title)}</h1></header>
+${sectionHtml}${resourceHtml}
+</main></body></html>`
+}
+
+export function openClassroomHub(classId: string, lessonId: string): ClassroomHubStatus {
+  const lesson = getLessonPlan(lessonId)
+  if (!lesson || lesson.classId !== classId) {
+    return { open: false, lessonId: null, title: null, url: null }
+  }
+  startExitTicketServer()
+  openClassroomHubs.set(classId, lessonId)
+  return getClassroomHubStatus(classId)
+}
+
+export function closeClassroomHub(classId: string): ClassroomHubStatus {
+  openClassroomHubs.delete(classId)
+  return getClassroomHubStatus(classId)
+}
+
+export function getClassroomHubStatus(classId: string): ClassroomHubStatus {
+  const lessonId = openClassroomHubs.get(classId) ?? null
+  const lesson = lessonId ? getLessonPlan(lessonId) : undefined
+  const info = getExitTicketServerInfo()
+  return {
+    open: !!lesson && lesson.classId === classId,
+    lessonId: lesson?.id ?? null,
+    title: lesson?.title ?? null,
+    url: lesson && info.url ? `${info.url}/h/${encodeURIComponent(classId)}` : null
+  }
+}
+
 function readBody(req: import('http').IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     let body = ''
@@ -317,6 +416,19 @@ export function startExitTicketServer(): void {
     // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
     // genuine request.
     const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
+
+    const hubMatch = url.match(/^\/h\/([^/]+)\/?$/)
+    if (hubMatch) {
+      if (req.method === 'GET') {
+        const classId = decodeURIComponent(hubMatch[1])
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(renderClassroomHubPage(classId))
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' })
+        res.end('Method not allowed')
+      }
+      return
+    }
 
     const checkInMatch = url.match(/^\/a\/([^/]+)(\/checkin)?\/?$/)
     if (checkInMatch) {
@@ -523,6 +635,7 @@ export function stopExitTicketServer(): void {
   server = null
   boundPort = null
   openCheckIns.clear()
+  openClassroomHubs.clear()
   recentSubmits.clear()
 }
 
