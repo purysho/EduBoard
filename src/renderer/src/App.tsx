@@ -14,6 +14,7 @@ import { LessonPlannerTab } from './pages/Classes/LessonPlannerTab'
 import { SeatingChartTab } from './pages/Classes/SeatingChartTab'
 import { ExitTicketTab } from './pages/Classes/ExitTicketTab'
 import { ClassroomTab } from './pages/Classes/ClassroomTab'
+import { EvidenceTab } from './pages/Classes/EvidenceTab'
 import { ReportTab } from './pages/Classes/ReportTab'
 import { ClassSettingsTab } from './pages/Classes/ClassSettingsTab'
 import { SettingsPage } from './pages/Settings/SettingsPage'
@@ -58,6 +59,7 @@ function App(): React.JSX.Element {
             <Route path="competencies" element={<CompetenciesTab />} />
             <Route path="attendance" element={<AttendanceTab />} />
             <Route path="lessons" element={<LessonPlannerTab />} />
+            <Route path="evidence" element={<EvidenceTab />} />
             <Route path="seating" element={<SeatingChartTab />} />
             <Route path="classroom" element={<ClassroomTab />} />
             <Route path="exit-ticket" element={<ExitTicketTab />} />
