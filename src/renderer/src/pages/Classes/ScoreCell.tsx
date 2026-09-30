@@ -4,6 +4,7 @@ import type { UpsertScoreInput } from '@shared/inputs'
 import { ScoreHistoryPopover } from './ScoreHistoryPopover'
 import { CommentPopover } from './CommentPopover'
 import { SubmissionPopover } from './SubmissionPopover'
+import { RetryPopover } from './RetryPopover'
 import { focusGradebookCell } from './gradebookNav'
 import { tr } from '@shared/i18n'
 
@@ -12,6 +13,7 @@ export function ScoreCell({
   assessmentId,
   studentId,
   maxScore,
+  bestAttempt,
   score,
   submission,
   row,
@@ -22,6 +24,7 @@ export function ScoreCell({
   assessmentId: string
   studentId: string
   maxScore: number
+  bestAttempt: boolean
   score: Score | undefined
   submission: AssignmentSubmission | undefined
   row: number
@@ -108,6 +111,16 @@ export function ScoreCell({
       {score && active && (
         <span className="absolute -right-3 flex flex-col opacity-0 transition-opacity group-hover/cell:opacity-100">
           <ScoreHistoryPopover assessmentId={assessmentId} studentId={studentId} />
+        </span>
+      )}
+      {score && bestAttempt && active && (
+        <span className="absolute -right-3 top-9 flex flex-col opacity-0 transition-opacity group-hover/cell:opacity-100">
+          <RetryPopover
+            classId={classId}
+            assessmentId={assessmentId}
+            studentId={studentId}
+            maxScore={maxScore}
+          />
         </span>
       )}
       {score && (active || score.comment) && (
