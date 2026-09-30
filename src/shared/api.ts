@@ -72,6 +72,7 @@ import type {
   GradeCategory,
   LessonPlan,
   Score,
+  ScoreAttempt,
   Student,
   StudentClassGrade,
   Term,
@@ -109,6 +110,7 @@ import type {
   UpdateLessonPlanInput,
   UpdateStudentInput,
   UpdateTermInput,
+  AddScoreAttemptInput,
   UpsertScoreInput,
   CreateStandardInput,
   UpdateStandardInput,
@@ -196,6 +198,8 @@ export interface EduBoardApi {
     upsert(input: UpsertScoreInput): Promise<Score>
     upsertBulk(inputs: UpsertScoreInput[]): Promise<void>
     history(assessmentId: string, studentId: string): Promise<ScoreHistoryEntry[]>
+    attempts(assessmentId: string, studentId: string): Promise<ScoreAttempt[]>
+    addAttempt(input: AddScoreAttemptInput): Promise<Score>
   }
   attendance: {
     listByClass(classId: string): Promise<AttendanceRecord[]>
