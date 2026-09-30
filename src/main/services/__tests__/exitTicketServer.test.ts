@@ -17,9 +17,12 @@ import {
   upsertExitTicket
 } from '../../repositories/exitTickets'
 import { listAttendanceByClass } from '../../repositories/attendanceRecords'
+import { createLessonPlan } from '../../repositories/lessonPlans'
 import {
+  getClassroomHubProjectorUrl,
   getExitTicketServerInfo,
   openAttendanceCheckIn,
+  openClassroomHub,
   overSubmitLimit,
   startExitTicketServer,
   stopExitTicketServer
@@ -94,6 +97,32 @@ async function waitForServer(): Promise<string> {
 }
 
 describe('exit ticket local HTTP server', () => {
+  it('serves Classroom Hub to the same computer for projector mode', async () => {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const lesson = createLessonPlan({
+      classId,
+      date: '2026-09-30',
+      weekLabel: 'Week 1',
+      title: 'Projector lesson',
+      objectives: 'Speak with a partner.',
+      framework: null,
+      materials: null,
+      activities: 'Ask and answer two questions.',
+      homework: null,
+      linkedAssessmentId: null,
+      standards: null
+    })
+
+    expect(openClassroomHub(classId, lesson.id).open).toBe(true)
+    const projectorUrl = getClassroomHubProjectorUrl(classId)
+    expect(projectorUrl).toBe(`${base}/h/${encodeURIComponent(classId)}`)
+
+    const page = await fetch(projectorUrl!)
+    expect(page.status).toBe(200)
+    expect(await page.text()).toContain('Projector lesson')
+  })
+
   it('serves a "closed" page when no ticket is open for the class', async () => {
     const base = await waitForServer()
     const classId = makeClass()
