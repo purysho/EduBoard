@@ -1,0 +1,37 @@
+name: Private content guard
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  private-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Refuse tracked secrets and private course artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r path; do
+            case "$path" in
+              .env|*/.env|.env.*|*/.env.*)
+                case "$path" in *.env.example|*/.env.example) ;; *)
+                  echo "::error file=$path::Local environment/secrets file must not be tracked."
+                  failed=1
+                esac
+                ;;
+              course-packs/README.md) ;;
+              course-packs/*|*.coursepack.json|*.coursebundle|yearplan/*|resource-pack/*|student-pack-*.zip|english-course-*.zip|resource-pack-video-*.zip|private-course-packs-backup.tar.gz)
+                echo "::error file=$path::Private course material or generated delivery must not be tracked."
+                failed=1
+                ;;
+            esac
+          done < <(git ls-files)
+          exit "$failed"
