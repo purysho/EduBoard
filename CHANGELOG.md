@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Projector-only Classroom Hub:** teachers can project a lesson directly from EduBoard in a dedicated maximized window with no Wi-Fi or internet connection. The projector uses loopback networking on the teacher's own computer, keeps Talk Ladder and Listening Lab available, supports F11 full screen, and leaves QR/student-device sharing as an optional local-network mode.
+
 ## [0.7.0] — 2026-09-30
 
 ### Added
