@@ -26,6 +26,7 @@ import type {
   UpdateStudentInput,
   UpdateTermInput,
   UpsertScoreInput,
+  UpsertLessonEvidenceInput,
   CreateStandardInput,
   UpdateStandardInput,
   CreateRubricInput,
@@ -511,6 +512,26 @@ export function useUpsertScoresBulk(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.classReport(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
       scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+// ---- Lesson evidence ------------------------------------------------------------------
+
+export function useLessonEvidence(classId: string | undefined) {
+  return useQuery({
+    queryKey: ['lessonEvidence', classId ?? ''],
+    queryFn: () => api().lessonEvidence.listByClass(classId!),
+    enabled: !!classId
+  })
+}
+
+export function useUpsertLessonEvidence(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpsertLessonEvidenceInput) => api().lessonEvidence.upsert(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['lessonEvidence', classId] })
     }
   })
 }
