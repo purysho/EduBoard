@@ -20,6 +20,7 @@ import {
 import PptxGenJS from 'pptxgenjs'
 import { getClass } from '../repositories/classes'
 import { getLessonPlan } from '../repositories/lessonPlans'
+import { getLessonResource } from '../repositories/lessonResources'
 import { listReportComments } from '../repositories/reportComments'
 import { pointSummaries } from '../repositories/behaviourPoints'
 import { resolveReportLayout } from '@shared/templates'
@@ -322,6 +323,197 @@ export async function lessonPlanPptx(planId: string): Promise<Buffer> {
     bulletSlide(rest.length ? head : tr('Activity'), rest.length ? [rest.join(': ')] : [step])
   }
   bulletSlide(homeworkTitle, lines(plan.homework))
+
+  return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
+}
+
+
+/** A printable/editable student worksheet from one Resource. Teacher-approved study
+ * material is used; unapproved AI drafts are deliberately left out. */
+export async function resourceWorksheetDocx(resourceId: string): Promise<Buffer> {
+  const resource = getLessonResource(resourceId)
+  if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+
+  const cards =
+    resource.aiApproved?.flashcards && resource.flashcards?.length ? resource.flashcards : []
+  const quiz =
+    resource.aiApproved?.practiceQuiz && resource.practiceQuiz?.length
+      ? resource.practiceQuiz
+      : []
+  const guide =
+    resource.aiApproved?.studyGuide && resource.studyGuide ? resource.studyGuide : null
+
+  const children: (Paragraph | Table)[] = [
+    new Paragraph({ text: resource.title, heading: HeadingLevel.HEADING_1 }),
+    new Paragraph({
+      children: [new TextRun({ text: tr('Offline worksheet'), color: '64748B' })]
+    })
+  ]
+
+  if (resource.notes?.trim()) {
+    children.push(
+      new Paragraph({ text: tr('Instructions / notes'), heading: HeadingLevel.HEADING_2 }),
+      ...formattedText(resource.notes)
+    )
+  }
+  if (guide) {
+    children.push(
+      new Paragraph({ text: tr('Study notes'), heading: HeadingLevel.HEADING_2 }),
+      ...formattedText(guide)
+    )
+  }
+  if (cards.length) {
+    children.push(new Paragraph({ text: tr('Key terms / prompts'), heading: HeadingLevel.HEADING_2 }))
+    cards.forEach((card, i) => {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${i + 1}. ${card.front}`, bold: true }),
+            new TextRun({ text: '\n____________________________________________________________' })
+          ],
+          spacing: { after: 160 }
+        })
+      )
+    })
+  }
+  if (quiz.length) {
+    children.push(new Paragraph({ text: tr('Practice questions'), heading: HeadingLevel.HEADING_2 }))
+    quiz.forEach((question, i) => {
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: `${i + 1}. ${question.question}`, bold: true })],
+          spacing: { before: 120, after: 60 }
+        })
+      )
+      question.options.forEach((option) =>
+        children.push(new Paragraph({ text: `○ ${option}`, indent: { left: 360 } }))
+      )
+    })
+  }
+
+  if (cards.length || quiz.length) {
+    children.push(new Paragraph({ children: [new PageBreak()] }))
+    children.push(new Paragraph({ text: tr('Answer key'), heading: HeadingLevel.HEADING_1 }))
+    cards.forEach((card, i) =>
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${i + 1}. ${card.front}: `, bold: true }),
+            new TextRun(card.back)
+          ]
+        })
+      )
+    )
+    quiz.forEach((question, i) => {
+      const answer = question.options[question.answerIndex] ?? ''
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: `Q${i + 1}: ${answer}`, bold: true }),
+            new TextRun({ text: question.explanation ? ` — ${question.explanation}` : '' })
+          ]
+        })
+      )
+    })
+  }
+
+  return pack(children)
+}
+
+/** A projector-ready PowerPoint from approved flashcards and quiz questions. The deck
+ * alternates prompt/answer slides so the teacher can reveal by advancing one slide. */
+export async function resourcePracticePptx(resourceId: string): Promise<Buffer> {
+  const resource = getLessonResource(resourceId)
+  if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+  const settings = getSettings()
+  const accent = (settings.accentColor || '#4f46e5').replace('#', '')
+  const font = /^zh/.test(uiLocale()) ? 'Microsoft YaHei' : 'Calibri'
+  const pptx = new PptxGenJS()
+  pptx.layout = 'LAYOUT_WIDE'
+
+  const addSlide = (heading: string, body: string, answer = false): void => {
+    const slide = pptx.addSlide()
+    if (answer) slide.background = { color: 'F8FAFC' }
+    slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.16, fill: { color: accent } })
+    slide.addText(heading, {
+      x: 0.65,
+      y: 0.45,
+      w: 12,
+      h: 0.7,
+      fontSize: 24,
+      bold: true,
+      color: answer ? accent : '64748B',
+      fontFace: font
+    })
+    slide.addText(body || '—', {
+      x: 0.9,
+      y: 1.5,
+      w: 11.5,
+      h: 4.8,
+      fontSize: body.length > 220 ? 26 : 34,
+      bold: !answer,
+      color: '0F172A',
+      valign: 'mid',
+      align: 'center',
+      margin: 0.1,
+      fontFace: font
+    })
+  }
+
+  const title = pptx.addSlide()
+  title.background = { color: accent }
+  title.addText(resource.title, {
+    x: 0.7,
+    y: 2.35,
+    w: 11.9,
+    h: 1.2,
+    fontSize: 40,
+    bold: true,
+    color: 'FFFFFF',
+    align: 'center',
+    fontFace: font
+  })
+  title.addText(tr('Offline practice deck'), {
+    x: 0.7,
+    y: 3.65,
+    w: 11.9,
+    h: 0.5,
+    fontSize: 18,
+    color: 'FFFFFF',
+    align: 'center',
+    fontFace: font
+  })
+
+  if (resource.aiApproved?.studyGuide && resource.studyGuide) {
+    addSlide(tr('Study notes'), resource.studyGuide, true)
+  }
+  if (resource.aiApproved?.flashcards) {
+    for (const [i, card] of (resource.flashcards ?? []).entries()) {
+      addSlide(tr('Card {n}', { n: i + 1 }), card.front)
+      addSlide(tr('Answer'), card.back, true)
+    }
+  }
+  if (resource.aiApproved?.practiceQuiz) {
+    for (const [i, question] of (resource.practiceQuiz ?? []).entries()) {
+      const body = [
+        question.question,
+        '',
+        ...question.options.map((option, optionIndex) =>
+          `${String.fromCharCode(65 + optionIndex)}. ${option}`
+        )
+      ].join('\n')
+      addSlide(tr('Question {n}', { n: i + 1 }), body)
+      addSlide(
+        tr('Answer'),
+        `${question.options[question.answerIndex] ?? ''}${question.explanation ? `\n\n${question.explanation}` : ''}`,
+        true
+      )
+    }
+  }
+
+  if (pptx._slides.length === 1 && resource.notes?.trim()) {
+    addSlide(tr('Notes'), resource.notes, true)
+  }
 
   return (await pptx.write({ outputType: 'nodebuffer' })) as Buffer
 }
