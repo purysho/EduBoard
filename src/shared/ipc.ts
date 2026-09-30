@@ -355,7 +355,9 @@ export const IpcChannels = {
   },
   office: {
     word: 'office:word',
-    slides: 'office:slides'
+    slides: 'office:slides',
+    resourceWorksheet: 'office:resourceWorksheet',
+    resourceSlides: 'office:resourceSlides'
   },
   usagePing: {
     preview: 'usagePing:preview'
