@@ -143,6 +143,9 @@ const ZH = {
   'Evidence recorded': '已有证据',
   'Latest evidence: {source} · {count} pieces total': '最近证据：{source} · 共 {count} 条',
   '{count} pieces of evidence': '{count} 条证据',
+  'Open submitted work': '打开已提交作品',
+  'Teacher feedback:': '教师反馈：',
+  'Student work': '学生作品',
   // Offline
   unknown: '未知',
   'Viewing saved data': '正在查看已保存的数据',
