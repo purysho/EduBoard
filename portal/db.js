@@ -385,6 +385,12 @@ ensureColumn('classes', 'finished', 'finished INTEGER NOT NULL DEFAULT 0')
 ensureColumn('teachers', 'timezone', 'timezone TEXT')
 ensureColumn('materials', 'flashcards', 'flashcards TEXT')
 ensureColumn('materials', 'practice_quiz', 'practice_quiz TEXT')
+ensureColumn('materials', 'source_type', 'source_type TEXT')
+ensureColumn('materials', 'source_url', 'source_url TEXT')
+ensureColumn('materials', 'source_text', 'source_text TEXT')
+ensureColumn('materials', 'file_name', 'file_name TEXT')
+ensureColumn('materials', 'file_hash', 'file_hash TEXT')
+ensureColumn('materials', 'file_path', 'file_path TEXT')
 ensureColumn('students', 'teacher_id', 'teacher_id TEXT')
 // How AI was involved in a submission, worked out when it was turned in (see
 // services/aiUsage.js): the student said so, asked the Study Helper about this
