@@ -196,6 +196,11 @@ export const APP_ERROR_CODES = {
       'EduBoard can’t update itself where it’s installed (e.g. a read-only folder, or running from the disk image on a Mac).',
     fix: 'Read the message for the reason. Usually: move EduBoard to Applications (Mac) or reinstall with the installer.'
   },
+  'EB-3007': {
+    area: 'Updates',
+    meaning: 'The downloaded update did not match its published SHA-256 digest.',
+    fix: 'Try the update again. If it repeats, install the latest release manually and report the error before running the rejected file.'
+  },
 
   // --- AI -----------------------------------------------------------------------------------
   'EB-4001': {
