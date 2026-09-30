@@ -88,6 +88,7 @@ router.post('/', (req, res) => {
     grades = [],
     assessments = [],
     assessmentScores = [],
+    competencies = [],
     homeworkAssignments = [],
     invites = [],
     materials = [],
@@ -218,6 +219,9 @@ router.post('/', (req, res) => {
       db.prepare(`DELETE FROM assessments WHERE class_id IN (${classIdPlaceholders})`).run(
         ...ownClassIds
       )
+      db.prepare(`DELETE FROM competency_progress WHERE class_id IN (${classIdPlaceholders})`).run(
+        ...ownClassIds
+      )
       db.prepare(
         `DELETE FROM homework_questions WHERE homework_assignment_id IN
            (SELECT id FROM homework_assignments WHERE class_id IN (${classIdPlaceholders}))`
@@ -327,6 +331,29 @@ router.post('/', (req, res) => {
         sc.late ? 1 : 0,
         typeof sc.comment === 'string' && sc.comment.trim() ? sc.comment.slice(0, 2000) : null,
         cleanRubric(sc.rubric)
+      )
+    }
+
+    const insertCompetency = db.prepare(
+      `INSERT OR REPLACE INTO competency_progress
+         (class_id, student_id, code, description, latest_level, latest_levels, source_name, evidence_count)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    for (const row of competencies) {
+      if (!inPushedRoster(row)) continue
+      if (typeof row.code !== 'string' || typeof row.description !== 'string') continue
+      const levels = Array.isArray(row.latestLevels)
+        ? row.latestLevels.filter((value) => typeof value === 'string').slice(0, 8)
+        : []
+      insertCompetency.run(
+        row.classId,
+        row.studentId,
+        row.code.slice(0, 50),
+        row.description.slice(0, 500),
+        typeof row.latestLevel === 'string' ? row.latestLevel.slice(0, 120) : null,
+        JSON.stringify(levels),
+        typeof row.sourceName === 'string' ? row.sourceName.slice(0, 200) : null,
+        Number.isInteger(row.evidenceCount) && row.evidenceCount > 0 ? row.evidenceCount : 0
       )
     }
 
