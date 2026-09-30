@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { BellRing, CheckSquare, Eye, Image as ImageIcon, Newspaper, Trash2 } from 'lucide-react'
 import type { ClassPost, ClassSection, PostReplyKind } from '@shared/types'
+import { groupChatKindName, groupRouteMode } from '@shared/groupChats'
 import { Card, CardBody } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
 import { Textarea } from '@renderer/components/ui/Field'
@@ -31,14 +32,18 @@ export function ClassStoryTab(): React.JSX.Element {
   const [replyKind, setReplyKind] = useState<'' | PostReplyKind>('')
   const [replyQuestion, setReplyQuestion] = useState('')
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
-  // A DingTalk / WeCom group to send the post to as well (Settings → Class group chats).
+  // An optional communication destination: robot-send where supported, copy/paste otherwise.
   const { data: settings } = useSettings()
   const groups = (settings?.groupChats ?? []).filter(
     (g) => !g.classId || g.classId === classSection.id
   )
   const [groupId, setGroupId] = useState<string | null>(null)
   const chosenGroup = groups.find(
-    (g) => g.id === (groupId ?? groups.find((x) => x.classId === classSection.id)?.id ?? '')
+    (g) =>
+      g.id ===
+      (groupId ??
+        groups.find((x) => x.classId === classSection.id && groupRouteMode(x) !== 'muted')?.id ??
+        '')
   )
   const [groupStatus, setGroupStatus] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -60,8 +65,18 @@ export function ClassStoryTab(): React.JSX.Element {
     setGroupStatus(null)
     if (chosenGroup) {
       try {
-        await window.api.groupChats.send(chosenGroup.id, body.trim(), classSection.name)
-        setGroupStatus({ ok: true, text: tr('Also sent to {name}.', { name: chosenGroup.name }) })
+        const routed = await window.api.groupChats.route(
+          chosenGroup.id,
+          body.trim(),
+          classSection.name
+        )
+        setGroupStatus({
+          ok: true,
+          text:
+            routed.mode === 'sent'
+              ? tr('Also sent to {name}.', { name: chosenGroup.name })
+              : tr('Copied for {name}. Paste it into the group app.', { name: chosenGroup.name })
+        })
       } catch (err) {
         setGroupStatus({
           ok: false,
@@ -159,13 +174,20 @@ export function ClassStoryTab(): React.JSX.Element {
                 >
                   <option value="">{tr('No group chat')}</option>
                   {groups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
+                    <option key={g.id} value={g.id} disabled={groupRouteMode(g) === 'muted'}>
+                      {g.name} · {groupChatKindName(g.kind)}
+                      {groupRouteMode(g) === 'muted' ? ` · ${tr('muted')}` : ''}
                     </option>
                   ))}
                 </select>
-                {chosenGroup && imagePath && (
-                  <span>{tr('(text only; the photo stays on the Portal)')}</span>
+                {chosenGroup && (
+                  <span>
+                    {groupRouteMode(chosenGroup) === 'manual'
+                      ? tr('(message copied; paste it into the app)')
+                      : imagePath
+                        ? tr('(text only; the photo stays on the Portal)')
+                        : ''}
+                  </span>
                 )}
               </label>
             )}
