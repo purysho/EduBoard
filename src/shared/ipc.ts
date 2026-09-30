@@ -367,7 +367,10 @@ export const IpcChannels = {
   },
   groupChats: {
     send: 'groupChats:send',
-    test: 'groupChats:test'
+    route: 'groupChats:route',
+    test: 'groupChats:test',
+    pickQr: 'groupChats:pickQr',
+    makeQr: 'groupChats:makeQr'
   },
   newsletter: {
     facts: 'newsletter:facts',
