@@ -730,7 +730,7 @@ export const CLASSES: Record<string, string> = {
   'I could explain it to a classmate': '我能讲给同学听',
   'I mostly understand it': '我基本理解了',
   'I’m not sure yet': '我还不太确定',
-  'I’m lost': '我没听懂'
+  'I’m lost': '我没听懂',
   'Classroom Hub': '课堂学习站',
   'This classroom hub is closed.': '课堂学习站已关闭。',
   "Today's lesson": '今天的课程',
