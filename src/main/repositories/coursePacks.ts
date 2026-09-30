@@ -25,6 +25,9 @@ export interface InstallCoursePackInput {
   /** Homework the pack marks as published goes straight to students on the Portal. Only
    * when the teacher chose "Publish now"; otherwise everything arrives as a draft. */
   publishHomework?: boolean
+  /** Resource key -> persistent file extracted from a private Course Bundle. Ordinary
+   * JSON Course Packs leave this empty, so they never get arbitrary local file access. */
+  resourceFilePaths?: Record<string, string>
 }
 
 export interface CoursePackInstallResult {
@@ -273,6 +276,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
     const existingResources = listLessonResources()
     const resourceRows = new Map<string, (typeof existingResources)[number]>()
     for (const source of pack.resources ?? []) {
+      const bundledFilePath = input.resourceFilePaths?.[source.key] ?? null
       const standardId = source.standardKey
         ? (standardRows.get(norm(source.standardKey))?.id ?? null)
         : null
@@ -281,6 +285,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
           norm(resource.title) === norm(source.title) &&
           resource.type === source.type &&
           (resource.url ?? null) === (source.url ?? null) &&
+          (source.type !== 'file' || (resource.filePath ?? null) === bundledFilePath) &&
           (resource.notes ?? null) === (source.notes ?? null) &&
           resource.standardId === standardId &&
           JSON.stringify(resource.tags) === JSON.stringify(source.tags ?? [])
@@ -294,7 +299,7 @@ export function installCoursePack(input: InstallCoursePackInput): CoursePackInst
         title: source.title,
         type: source.type,
         url: source.url ?? null,
-        filePath: null,
+        filePath: source.type === 'file' ? bundledFilePath : null,
         notes: source.notes ?? null,
         tags: source.tags ?? [],
         standardId,
