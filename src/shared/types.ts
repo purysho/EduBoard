@@ -490,6 +490,14 @@ export interface ExitTicketServerInfo {
   lanIp: string | null
 }
 
+/** One teacher-opened, read-only lesson page served only on the classroom LAN. */
+export interface ClassroomHubStatus {
+  open: boolean
+  lessonId: string | null
+  title: string | null
+  url: string | null
+}
+
 /** 0 = Sunday, matching JS Date#getDay() — kept structured (vs. the free-text
  * ClassSection.schedule field) so a Timetable view can group/sort by day and time. */
 export interface ClassScheduleSlot {
