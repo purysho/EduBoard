@@ -428,6 +428,29 @@ export const lessonPlans = sqliteTable(
   (t) => ({ classDateIdx: index('lesson_plans_class_date_idx').on(t.classId, t.date) })
 )
 
+export const lessonEvidence = sqliteTable(
+  'lesson_evidence',
+  {
+    id: text('id').primaryKey(),
+    lessonPlanId: text('lesson_plan_id')
+      .notNull()
+      .references(() => lessonPlans.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    value: text('value').notNull(),
+    updatedAt: text('updated_at').notNull()
+  },
+  (t) => ({
+    lessonStudentUnique: uniqueIndex('lesson_evidence_lesson_student_unique').on(
+      t.lessonPlanId,
+      t.studentId
+    ),
+    lessonIdx: index('lesson_evidence_lesson_idx').on(t.lessonPlanId),
+    studentIdx: index('lesson_evidence_student_idx').on(t.studentId)
+  })
+)
+
 export const standards = sqliteTable('standards', {
   id: text('id').primaryKey(),
   code: text('code').notNull(),
