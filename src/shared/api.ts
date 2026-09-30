@@ -217,6 +217,8 @@ export interface EduBoardApi {
   classroomHub: {
     getStatus(classId: string): Promise<ClassroomHubStatus>
     open(classId: string, lessonId: string): Promise<ClassroomHubStatus>
+    /** Opens a teacher-led projector window on this computer; no network is required. */
+    project(classId: string, lessonId: string): Promise<ClassroomHubStatus>
     close(classId: string): Promise<ClassroomHubStatus>
   }
   lessonEvidence: {
