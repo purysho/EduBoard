@@ -666,4 +666,5 @@ export const SETTINGS: Record<string, string> = {
   'WeChat': '微信',
   'QQ': 'QQ',
   'That robot address does not match the selected service. Copy the whole webhook address from the group’s settings.': '机器人地址与所选服务不匹配。请从群设置中复制完整的 Webhook 地址。',
+  'That destination uses manual routing. Copy the message and paste it into the group app.': '该沟通渠道使用手动路由。请复制消息并粘贴到群聊应用中。',
 }
