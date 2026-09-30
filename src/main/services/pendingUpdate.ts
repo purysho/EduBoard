@@ -15,11 +15,7 @@ import {
 } from 'fs'
 import { join } from 'path'
 import { isNewerVersion } from '@shared/appVersion'
-import {
-  localUpdateFileName,
-  normalizeSha256Digest,
-  type InstallKind
-} from './selfUpdateCore'
+import { localUpdateFileName, normalizeSha256Digest, type InstallKind } from './selfUpdateCore'
 
 export interface PendingUpdate {
   version: string
