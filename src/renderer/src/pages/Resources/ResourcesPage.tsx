@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  Download,
   ExternalLink,
   File,
   FolderOpen,
@@ -47,6 +48,8 @@ export function ResourcesPage(): React.JSX.Element {
   const indexResource = useIndexResource()
   const [indexingId, setIndexingId] = useState<string | null>(null)
   const [indexError, setIndexError] = useState<string | null>(null)
+  const [exportingId, setExportingId] = useState<string | null>(null)
+  const [exportMessage, setExportMessage] = useState<string | null>(null)
 
   async function handleIndex(resource: LessonResource): Promise<void> {
     setIndexingId(resource.id)
@@ -102,6 +105,21 @@ export function ResourcesPage(): React.JSX.Element {
     }
   }
 
+  async function handleOfflinePack(resource: LessonResource): Promise<void> {
+    setExportingId(resource.id)
+    setExportMessage(null)
+    try {
+      const result = await window.api.lessonResources.exportOfflinePack(resource.id)
+      if (result.saved) {
+        setExportMessage(tr('Offline Study Pack saved. Students can open the HTML file without internet.'))
+      }
+    } catch (e) {
+      setExportMessage(ipcErrorMessage(e, tr('Could not export the Offline Study Pack.')))
+    } finally {
+      setExportingId(null)
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -145,6 +163,9 @@ export function ResourcesPage(): React.JSX.Element {
       </div>
 
       {indexError && <p className="mb-4 text-sm text-[var(--color-danger)]">{indexError}</p>}
+      {exportMessage && (
+        <p className="mb-4 text-sm text-[var(--color-text-muted)]">{exportMessage}</p>
+      )}
 
       {isLoading ? (
         <Spinner />
@@ -194,6 +215,15 @@ export function ResourcesPage(): React.JSX.Element {
                       </h3>
                     </button>
                     <div className="flex shrink-0 gap-1">
+                      <button
+                        className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)] disabled:opacity-50"
+                        onClick={() => handleOfflinePack(resource)}
+                        disabled={exportingId === resource.id}
+                        aria-label={tr('Export Offline Study Pack')}
+                        title={tr('Export Offline Study Pack')}
+                      >
+                        <Download size={13} aria-hidden />
+                      </button>
                       {openable && (
                         <button
                           className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
