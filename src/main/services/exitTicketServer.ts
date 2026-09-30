@@ -316,7 +316,10 @@ const AUDIO_MIME: Record<string, string> = {
   '.webm': 'audio/webm'
 }
 
-function classroomHubResource(classId: string, resourceId: string) {
+function classroomHubResource(
+  classId: string,
+  resourceId: string
+): ReturnType<typeof getLessonResource> | undefined {
   const lessonId = openClassroomHubs.get(classId)
   if (!lessonId || !listLessonResourceIds(lessonId).includes(resourceId)) return undefined
   const resource = getLessonResource(resourceId)
