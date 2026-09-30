@@ -51,6 +51,7 @@ import * as auditLogRepo from '../repositories/auditLog'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
+import { offlineStudyPackHtml } from '../services/offlineStudyPack'
 import {
   indexResource,
   askNotebook,
@@ -760,6 +761,19 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.lessonResources.pickFile, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'] })
     return canceled || !filePaths[0] ? null : filePaths[0]
+  })
+  handle(IpcChannels.lessonResources.exportOfflinePack, async (_e, id: string) => {
+    const resource = lessonResourcesRepo.getLessonResource(id)
+    if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+    const safeName =
+      resource.title.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 80) || 'EduBoard Study Pack'
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `${safeName} - Study Pack.html`,
+      filters: [{ name: tr('Web page'), extensions: ['html'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, offlineStudyPackHtml(resource), 'utf-8')
+    return { saved: true, filePath }
   })
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => {
