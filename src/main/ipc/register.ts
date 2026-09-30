@@ -152,6 +152,7 @@ import { getWeeklySummary, weeklySummaryHtml } from '../services/weeklySummary'
 import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterService'
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
+import { cleanFlashcard, cleanPracticeQuestion, PRACTICE_LIMITS } from '@shared/practiceSets'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
 import {
   errorLogPath,
@@ -832,6 +833,43 @@ export function registerIpcHandlers(): void {
     IpcChannels.notebook.draftPracticeSet,
     (_e, resourceId: string, kind: 'flashcards' | 'quiz') =>
       draftPracticeSet(resourceId, kind === 'quiz' ? 'quiz' : 'flashcards')
+  )
+  handle(
+    IpcChannels.notebook.saveManualPracticeSet,
+    (_e, resourceId: string, kind: 'flashcards' | 'quiz', raw: unknown[]) => {
+      if (!Array.isArray(raw) || raw.length < 1) {
+        throw new AppError('EB-0004', tr('Add at least one item before saving.'))
+      }
+      if (kind === 'flashcards') {
+        if (raw.length > PRACTICE_LIMITS.flashcards.max) {
+          throw new AppError('EB-0004', tr('That flashcard set is too large.'))
+        }
+        const cards = raw.map(cleanFlashcard)
+        if (cards.some((card) => !card)) {
+          throw new AppError('EB-0004', tr('Complete every flashcard before saving.'))
+        }
+        return lessonResourcesRepo.setLessonResourceManualPracticeSet(
+          String(resourceId),
+          'flashcards',
+          cards as NonNullable<(typeof cards)[number]>[]
+        )
+      }
+      if (raw.length > PRACTICE_LIMITS.quiz.max) {
+        throw new AppError('EB-0004', tr('That practice quiz is too large.'))
+      }
+      const questions = raw.map(cleanPracticeQuestion)
+      if (questions.some((question) => !question)) {
+        throw new AppError(
+          'EB-0004',
+          tr('Complete every question, answer option and explanation before saving.')
+        )
+      }
+      return lessonResourcesRepo.setLessonResourceManualPracticeSet(
+        String(resourceId),
+        'quiz',
+        questions as NonNullable<(typeof questions)[number]>[]
+      )
+    }
   )
   handle(
     IpcChannels.notebook.clearPracticeSet,
