@@ -424,7 +424,9 @@ const api: EduBoardApi = {
   },
   office: {
     word: (what) => invoke(IpcChannels.office.word, what),
-    slides: (planId) => invoke(IpcChannels.office.slides, planId)
+    slides: (planId) => invoke(IpcChannels.office.slides, planId),
+    resourceWorksheet: (resourceId) => invoke(IpcChannels.office.resourceWorksheet, resourceId),
+    resourceSlides: (resourceId) => invoke(IpcChannels.office.resourceSlides, resourceId)
   },
   errorReport: {
     get: () => invoke(IpcChannels.errorReport.get),
