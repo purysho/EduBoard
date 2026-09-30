@@ -447,6 +447,7 @@ const ZH = {
   // Grades
   'Letter grade {letter}': '等级 {letter}',
   'No grade yet': '暂无成绩',
+  Attendance: '出勤率',
   'Attendance {rate}': '出勤率 {rate}',
   Portfolio: '作品集',
 
