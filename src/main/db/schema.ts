@@ -116,6 +116,7 @@ export const assessments = sqliteTable(
     assessmentDate: text('assessment_date'),
     maxScore: real('max_score').notNull().default(100),
     isFinal: integer('is_final', { mode: 'boolean' }).notNull().default(false),
+    bestAttempt: integer('best_attempt', { mode: 'boolean' }).notNull().default(false),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull()
@@ -315,6 +316,33 @@ export const scores = sqliteTable(
   },
   (t) => ({
     assessmentStudentUnique: uniqueIndex('scores_assessment_student_unique').on(
+      t.assessmentId,
+      t.studentId
+    )
+  })
+)
+
+export const scoreAttempts = sqliteTable(
+  'score_attempts',
+  {
+    id: text('id').primaryKey(),
+    assessmentId: text('assessment_id')
+      .notNull()
+      .references(() => assessments.id, { onDelete: 'cascade' }),
+    studentId: text('student_id')
+      .notNull()
+      .references(() => students.id, { onDelete: 'cascade' }),
+    attemptNumber: integer('attempt_number').notNull(),
+    pointsEarned: real('points_earned').notNull(),
+    createdAt: text('created_at').notNull()
+  },
+  (t) => ({
+    assessmentStudentAttemptUnique: uniqueIndex('score_attempts_unique').on(
+      t.assessmentId,
+      t.studentId,
+      t.attemptNumber
+    ),
+    assessmentStudentIdx: index('score_attempts_assessment_student_idx').on(
       t.assessmentId,
       t.studentId
     )
