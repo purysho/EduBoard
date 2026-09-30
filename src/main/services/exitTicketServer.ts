@@ -306,6 +306,9 @@ function textBlock(value: string | null): string {
   return value ? escapeHtml(value).replace(/\n/g, '<br>') : ''
 }
 
+function inlineJson(value: unknown): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
 
 const AUDIO_MIME: Record<string, string> = {
   '.mp3': 'audio/mpeg',
@@ -416,6 +419,80 @@ function streamClassroomAudio(
 }
 
 
+function renderPracticePage(
+  classId: string,
+  resourceId: string,
+  kind: 'flashcards' | 'quiz'
+): string {
+  const resource = classroomHubResource(classId, resourceId)
+  const cards =
+    resource?.aiApproved?.flashcards && resource.flashcards?.length ? resource.flashcards : []
+  const quiz =
+    resource?.aiApproved?.practiceQuiz && resource.practiceQuiz?.length
+      ? resource.practiceQuiz
+      : []
+  const available = kind === 'flashcards' ? cards.length > 0 : quiz.length > 0
+  if (!resource || !available) {
+    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(tr('Practice'))}</title></head><body><p>${escapeHtml(tr('This practice activity is not available.'))}</p></body></html>`
+  }
+
+  const title = kind === 'flashcards' ? tr('Flashcards') : tr('Practice quiz')
+  const data = kind === 'flashcards' ? cards : quiz
+  return `<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(resource.title)} · ${escapeHtml(title)}</title>
+<style>
+:root{color-scheme:light dark}*{box-sizing:border-box}body{font-family:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+main{max-width:860px;margin:0 auto;padding:28px 18px 64px}.hero{padding:22px;border-radius:18px;background:#4f46e5;color:#fff}.hero h1{margin:5px 0 0}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;margin-top:14px}.prompt{font-size:1.55rem;font-weight:700;line-height:1.45}.answer{display:none;margin-top:18px;padding-top:18px;border-top:1px solid #e2e8f0;font-size:1.35rem;line-height:1.5}.answer.show{display:block}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.actions button,.option{border:0;border-radius:11px;padding:12px 16px;background:#4f46e5;color:#fff;font:inherit;font-weight:650;cursor:pointer}.actions button.secondary{background:#eef2ff;color:#4338ca}
+.option{display:block;width:100%;margin:8px 0;text-align:left;background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1}.option.good{background:#ecfdf5;border-color:#10b981}.option.bad{background:#fef2f2;border-color:#ef4444}.explanation{margin-top:14px;color:#475569}.status{color:#64748b;font-size:.9rem;margin-top:12px}
+@media(min-width:1100px){main{max-width:1180px;padding:40px 48px 80px}.hero{padding:32px}.hero h1{font-size:2.6rem}.card{padding:36px}.prompt{font-size:2.4rem}.answer{font-size:2rem}.actions button,.option{font-size:1.25rem;padding:16px 20px}.status{font-size:1.1rem}}
+@media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}.card{background:#111827;border-color:#263042}.answer{border-color:#263042}.actions button.secondary{background:#1e1b4b;color:#a5b4fc}.option{background:#111827;color:#e5e7eb;border-color:#374151}.option.good{background:#052e24}.option.bad{background:#3f1114}.explanation,.status{color:#9ca3af}}
+</style></head><body><main>
+<div class="hero"><strong>${escapeHtml(title)}</strong><h1>${escapeHtml(resource.title)}</h1></div>
+<div id="app" class="card"></div>
+<script>
+const kind=${inlineJson(kind)}
+const data=${inlineJson(data)}
+let i=0,score=0,answered=false,revealed=false
+const app=document.getElementById('app')
+function escText(el,text){el.textContent=text;return el}
+function button(label,cls,fn){const b=document.createElement('button');b.type='button';b.textContent=label;if(cls)b.className=cls;b.onclick=fn;return b}
+function render(){
+  app.innerHTML=''
+  if(kind==='flashcards'){
+    const item=data[i]
+    const p=escText(document.createElement('div'),item.front);p.className='prompt';app.appendChild(p)
+    const a=escText(document.createElement('div'),item.back);a.className='answer'+(revealed?' show':'');app.appendChild(a)
+    const actions=document.createElement('div');actions.className='actions'
+    actions.appendChild(button(revealed?'Hide answer':'Show answer','',()=>{revealed=!revealed;render()}))
+    actions.appendChild(button('Previous','secondary',()=>{i=Math.max(0,i-1);revealed=false;render()}))
+    actions.appendChild(button('Next','secondary',()=>{i=Math.min(data.length-1,i+1);revealed=false;render()}))
+    app.appendChild(actions)
+    const st=escText(document.createElement('div'),(i+1)+' / '+data.length);st.className='status';app.appendChild(st)
+  } else {
+    const item=data[i]
+    const p=escText(document.createElement('div'),item.question);p.className='prompt';app.appendChild(p)
+    item.options.forEach((opt,oi)=>{
+      const b=button(opt,'option',()=>{if(answered)return;answered=true;if(oi===item.answerIndex)score++;render()})
+      if(answered){b.disabled=true;if(oi===item.answerIndex)b.classList.add('good')}
+      app.appendChild(b)
+    })
+    if(answered){
+      const ex=escText(document.createElement('div'),item.explanation);ex.className='explanation';app.appendChild(ex)
+      const actions=document.createElement('div');actions.className='actions'
+      actions.appendChild(button(i===data.length-1?'Start again':'Next question','',()=>{if(i===data.length-1){i=0;score=0}else i++;answered=false;render()}))
+      app.appendChild(actions)
+    }
+    const st=escText(document.createElement('div'),'Question '+(i+1)+' / '+data.length+' · Score '+score);st.className='status';app.appendChild(st)
+  }
+}
+render()
+</script></main></body></html>`
+}
+
 function renderTalkLadderPage(classId: string): string {
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
@@ -508,13 +585,28 @@ function renderClassroomHubPage(classId: string): string {
         .map((resource) => {
           if (!resource) return ''
           const title = escapeHtml(resource.title)
+          const links: string[] = []
           if (resource.type === 'file' && isAudioFile(resource.filePath)) {
-            return `<a class="resource" href="/h/${encodeURIComponent(classId)}/listen/${encodeURIComponent(resource.id)}">${title} · ${escapeHtml(tr('Listening Lab'))}</a>`
+            links.push(
+              `<a class="resource" href="/h/${encodeURIComponent(classId)}/listen/${encodeURIComponent(resource.id)}">${title} · ${escapeHtml(tr('Listening Lab'))}</a>`
+            )
+          }
+          if (resource.flashcards?.length && resource.aiApproved?.flashcards) {
+            links.push(
+              `<a class="resource" href="/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/flashcards">${title} · ${escapeHtml(tr('Flashcards'))}</a>`
+            )
+          }
+          if (resource.practiceQuiz?.length && resource.aiApproved?.practiceQuiz) {
+            links.push(
+              `<a class="resource" href="/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/quiz">${title} · ${escapeHtml(tr('Practice quiz'))}</a>`
+            )
           }
           if (resource.type === 'link' && resource.url && isSafeExternalUrl(resource.url)) {
-            return `<a class="resource" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a>`
+            links.push(
+              `<a class="resource" href="${escapeHtml(resource.url)}" target="_blank" rel="noopener noreferrer">${title} ↗</a>`
+            )
           }
-          return `<div class="resource">${title}</div>`
+          return links.length ? links.join('') : `<div class="resource">${title}</div>`
         })
         .join('')}</div></section>`
     : ''
@@ -608,6 +700,24 @@ export function startExitTicketServer(): void {
         const classId = decodeURIComponent(talkMatch[1])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(renderTalkLadderPage(classId))
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain' })
+        res.end('Method not allowed')
+      }
+      return
+    }
+
+    const practiceMatch = url.match(/^\/h\/([^/]+)\/practice\/([^/]+)\/(flashcards|quiz)\/?$/)
+    if (practiceMatch) {
+      if (req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(
+          renderPracticePage(
+            decodeURIComponent(practiceMatch[1]),
+            decodeURIComponent(practiceMatch[2]),
+            practiceMatch[3] as 'flashcards' | 'quiz'
+          )
+        )
       } else {
         res.writeHead(405, { 'Content-Type': 'text/plain' })
         res.end('Method not allowed')
