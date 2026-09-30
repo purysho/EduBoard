@@ -617,4 +617,23 @@ export const SETTINGS: Record<string, string> = {
   'Blank uses the provider’s default. A stronger model explains and questions better; a free one costs nothing. Examples: {examples}. Names change, so check your provider’s list and press Test.':
     '留空则使用服务商的默认模型。更强的模型讲解和提问更好；免费模型不花钱。例如：{examples}。模型名称经常变化，请查看服务商的模型列表并点击“测试”。',
   Default: '默认'
+  'This Course Bundle can’t be used: {detail}': '此课程包文件无法使用：{detail}',
+  'manifest.json isn’t valid JSON': 'manifest.json 不是有效的 JSON',
+  'manifest.json is missing': '缺少 manifest.json',
+  'manifest.json is not an EduBoard Course Bundle v1': 'manifest.json 不是 EduBoard 课程包文件 v1',
+  'there are too many bundled resources': '打包的资源数量过多',
+  'resource key {key} is not valid': '资源键 {key} 无效',
+  'the bundle file is too large': '课程包文件过大',
+  'the bundle is not a readable ZIP file': '课程包文件不是可读取的 ZIP 文件',
+  'the Course Pack named in manifest.json is missing': '缺少 manifest.json 中指定的课程包',
+  'resource {key} is not a file resource': '资源 {key} 不是文件资源',
+  'bundled file is missing for resource {key}': '资源 {key} 缺少打包文件',
+  'resource {key} is over 100 MB': '资源 {key} 超过 100 MB',
+  'the bundled resources are too large in total': '打包资源的总大小过大',
+  'file resource {key} has no bundled file': '文件资源 {key} 没有对应的打包文件',
+  'EduBoard Course Pack or Bundle': 'EduBoard 课程包或课程包文件',
+  'Course Pack / Bundle': '课程包 / 课程包文件',
+  'Import a reusable curriculum into classes you choose. A private Course Bundle can carry the same Course Pack plus its local resource files in one portable file.': '把可复用课程导入你选择的班级。私有课程包文件可把同一课程包及其本地资源文件合并成一个便携文件。',
+  'Import Course Pack or Bundle…': '导入课程包或课程包文件…',
+  'Private Course Bundle · {count} bundled resource files': '私有课程包文件 · {count} 个打包资源文件',
 }
