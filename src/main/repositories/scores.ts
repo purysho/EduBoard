@@ -8,7 +8,7 @@ import type { Score, ScoreAttempt, ScoreHistoryEntry } from '@shared/types'
 import type { AddScoreAttemptInput, UpsertScoreInput } from '@shared/inputs'
 import { tr } from '@shared/i18n'
 
-export type { UpsertScoreInput }
+export type { AddScoreAttemptInput, UpsertScoreInput }
 
 export function listScoresByAssessment(assessmentId: string): Score[] {
   return getDb().select().from(scores).where(eq(scores.assessmentId, assessmentId)).all() as Score[]
@@ -181,7 +181,7 @@ export function addScoreAttempt(input: AddScoreAttemptInput): Score {
         createdAt: now
       })
       .run()
-  })()
+  })
 
   const best = Math.max(
     current.pointsEarned,
