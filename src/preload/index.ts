@@ -435,7 +435,11 @@ const api: EduBoardApi = {
   },
   groupChats: {
     send: (groupId, text, title) => invoke(IpcChannels.groupChats.send, groupId, text, title),
-    test: (group) => invoke(IpcChannels.groupChats.test, group)
+    route: (groupId, text, title) =>
+      invoke(IpcChannels.groupChats.route, groupId, text, title),
+    test: (group) => invoke(IpcChannels.groupChats.test, group),
+    pickQr: () => invoke(IpcChannels.groupChats.pickQr),
+    makeQr: (joinUrl) => invoke(IpcChannels.groupChats.makeQr, joinUrl)
   },
   newsletter: {
     facts: (choice) => invoke(IpcChannels.newsletter.facts, choice),
