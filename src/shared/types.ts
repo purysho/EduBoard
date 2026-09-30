@@ -134,6 +134,8 @@ export interface Assessment {
   assessmentDate: string | null
   maxScore: number
   isFinal: boolean
+  /** When true, a teacher can record retries and the highest attempt becomes the grade. */
+  bestAttempt: boolean
   sortOrder: number
   createdAt: string
   updatedAt: string
@@ -166,6 +168,15 @@ export interface Score {
   late: boolean
   comment: string | null
   updatedAt: string
+}
+
+export interface ScoreAttempt {
+  id: string
+  assessmentId: string
+  studentId: string
+  attemptNumber: number
+  pointsEarned: number
+  createdAt: string
 }
 
 export interface ScoreHistoryEntry {
