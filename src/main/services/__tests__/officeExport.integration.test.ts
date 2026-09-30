@@ -9,8 +9,19 @@ import { createClass } from '../../repositories/classes'
 import { createStudent } from '../../repositories/students'
 import { enrollStudent } from '../../repositories/enrollments'
 import { createLessonPlan } from '../../repositories/lessonPlans'
+import {
+  createLessonResource,
+  setLessonResourceManualPracticeSet
+} from '../../repositories/lessonResources'
 import { setReportComment } from '../../repositories/reportComments'
-import { lessonPlanPptx, lettersDocx, newsletterDocx, reportCardsDocx } from '../officeExport'
+import {
+  lessonPlanPptx,
+  lettersDocx,
+  newsletterDocx,
+  reportCardsDocx,
+  resourcePracticePptx,
+  resourceWorksheetDocx
+} from '../officeExport'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let dir: string
@@ -92,6 +103,45 @@ describe('Word and PowerPoint files', () => {
     expect(text).toContain('This week')
     expect(text).toContain('We read books')
     expect(text).toContain('A short note.')
+  })
+
+  it('exports teacher-authored practice as a worksheet and projector deck', async () => {
+    const resource = createLessonResource({
+      title: 'Museum vocabulary',
+      type: 'note',
+      url: null,
+      filePath: null,
+      notes: 'Write short answers.',
+      tags: [],
+      standardId: null,
+      classId: null,
+      shareWithStudents: false,
+      studyGuide: 'Review exhibit and ancient.'
+    })
+    setLessonResourceManualPracticeSet(resource.id, 'flashcards', [
+      { front: 'Exhibit', back: 'Something shown in a museum.' }
+    ])
+    setLessonResourceManualPracticeSet(resource.id, 'quiz', [
+      {
+        question: 'What does ancient mean?',
+        options: ['Very old', 'Very noisy'],
+        answerIndex: 0,
+        explanation: 'Ancient means very old.'
+      }
+    ])
+
+    const worksheet = await textOf(await resourceWorksheetDocx(resource.id), /word\/document\.xml/)
+    expect(worksheet).toContain('Museum vocabulary')
+    expect(worksheet).toContain('Exhibit')
+    expect(worksheet).toContain('Answer key')
+    expect(worksheet).toContain('Very old')
+
+    const deck = await resourcePracticePptx(resource.id)
+    const deckText = await textOf(deck, /ppt\/slides\/slide\d+\.xml$/)
+    expect(deckText).toContain('Museum vocabulary')
+    expect(deckText).toContain('Exhibit')
+    expect(deckText).toContain('What does ancient mean?')
+    expect(deckText).toContain('Something shown in a museum.')
   })
 
   it('makes a slide per activity from a lesson plan', async () => {
