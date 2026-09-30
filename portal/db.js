@@ -515,6 +515,24 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS assessment_scores_student_idx ON assessment_scores(student_id);
 `)
 
+// Student-facing standards/competency evidence, derived from the desktop's existing
+// rubric evidence. A publish replaces it; the Portal never calculates a hidden mastery score.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS competency_progress (
+    class_id TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    student_id TEXT NOT NULL,
+    code TEXT NOT NULL,
+    description TEXT NOT NULL,
+    latest_level TEXT,
+    latest_levels TEXT,
+    source_name TEXT,
+    evidence_count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (class_id, student_id, code)
+  );
+  CREATE INDEX IF NOT EXISTS competency_progress_student_idx
+    ON competency_progress(student_id, class_id);
+`)
+
 // ai_settings/digest_settings used to be single shared rows keyed by id=1. On a server
 // upgrading from that version, PRAGMA table_info still shows the old `id` column (SQLite
 // can't drop/rename a PRIMARY KEY column via ALTER TABLE), so detect that shape and
