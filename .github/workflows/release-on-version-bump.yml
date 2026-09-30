@@ -1,0 +1,30 @@
+name: Release on version bump
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - package.json
+
+permissions:
+  contents: write
+
+jobs:
+  tag-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Tag a new package version
+        shell: bash
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "$tag already exists; no release to publish."
+            exit 0
+          fi
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "$tag"
