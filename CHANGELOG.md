@@ -2,6 +2,19 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.4] — 2026-09-30
+
+### Security
+
+- **Verified automatic updates:** EduBoard now checks every downloaded installer against the SHA-256 digest GitHub publishes for that release asset, not only its byte size, and rejects/deletes a same-size file whose content differs.
+- **Verify again before execution:** a pending installer is hashed again immediately before automatic startup installation or a teacher-triggered restart-and-update, detecting modification after download.
+- **Verified Portal relay metadata:** the Portal now carries GitHub's release digest through its update API so teachers whose app reaches GitHub through the Portal receive the same integrity check.
+
+### Fixed
+
+- Corrupt or unreadable pending-update metadata is cleared on launch instead of being rediscovered forever.
+- Release and pending-update digests are normalized and validated before use; malformed or missing integrity metadata is rejected with `EB-3007`.
+
 ## [0.7.3] — 2026-09-30
 
 ### Added
