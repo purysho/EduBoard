@@ -67,6 +67,7 @@ import {
   closeAttendanceCheckIn,
   closeClassroomHub,
   getAttendanceCheckInStatus,
+  getClassroomHubProjectorUrl,
   getClassroomHubStatus,
   getExitTicketServerInfo,
   openAttendanceCheckIn,
@@ -1112,6 +1113,56 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.classroomHub.open, (_e, classId: string, lessonId: string) =>
     openClassroomHub(classId, lessonId)
   )
+  handle(IpcChannels.classroomHub.project, async (_e, classId: string, lessonId: string) => {
+    const status = openClassroomHub(classId, lessonId)
+    if (!status.open) throw new AppError('EB-0004', tr('Couldn’t open projector mode.'))
+
+    // The local HTTP server binds asynchronously. The projector never needs a LAN
+    // address: once a port is ready, loopback works even on a completely offline PC.
+    let url = getClassroomHubProjectorUrl(classId)
+    for (let i = 0; i < 40 && !url; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 25))
+      url = getClassroomHubProjectorUrl(classId)
+    }
+    if (!url) throw new AppError('EB-0004', tr('Couldn’t open projector mode.'))
+
+    const projector = new BrowserWindow({
+      width: 1280,
+      height: 800,
+      minWidth: 800,
+      minHeight: 600,
+      autoHideMenuBar: true,
+      backgroundColor: '#f8fafc',
+      title: `${tr('Classroom Hub')} · ${status.title ?? ''}`,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true
+      }
+    })
+    projector.webContents.setWindowOpenHandler(({ url: target }) => {
+      try {
+        const parsed = new URL(target)
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') void shell.openExternal(target)
+      } catch {
+        // Invalid links stay closed.
+      }
+      return { action: 'deny' }
+    })
+    projector.webContents.on('before-input-event', (event, input) => {
+      if (input.type !== 'keyDown') return
+      if (input.key === 'F11') {
+        event.preventDefault()
+        projector.setFullScreen(!projector.isFullScreen())
+      } else if (input.key === 'Escape' && projector.isFullScreen()) {
+        event.preventDefault()
+        projector.setFullScreen(false)
+      }
+    })
+    await projector.loadURL(url)
+    projector.maximize()
+    return getClassroomHubStatus(classId)
+  })
   handle(IpcChannels.classroomHub.close, (_e, classId: string) => closeClassroomHub(classId))
 
   // --- AI (optional, requires a teacher-supplied API key) --------------------------------
