@@ -455,7 +455,7 @@ export async function resourcePracticePptx(resourceId: string): Promise<Buffer> 
       fontSize: body.length > 220 ? 26 : 34,
       bold: !answer,
       color: '0F172A',
-      valign: 'mid',
+      valign: 'middle',
       align: 'center',
       margin: 0.1,
       fontFace: font
