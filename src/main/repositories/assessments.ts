@@ -29,6 +29,7 @@ export function createAssessment(input: CreateAssessmentInput): Assessment {
     createdAt: now,
     updatedAt: now,
     isFinal: false,
+    bestAttempt: false,
     sortOrder: 0,
     rubricId: null,
     ...input
