@@ -875,6 +875,27 @@ const migrations: Migration[] = [
           ON score_attempts(assessment_id, student_id);
       `)
     }
+  },
+  {
+    id: 39,
+    name: 'lesson_evidence_grid',
+    up: (db) => {
+      // Fast, low-stakes evidence per lesson: completion, speaking-ladder step or
+      // missing/not-observed. Kept separate from formal gradebook scores.
+      db.exec(`
+        CREATE TABLE lesson_evidence (
+          id TEXT PRIMARY KEY,
+          lesson_plan_id TEXT NOT NULL REFERENCES lesson_plans(id) ON DELETE CASCADE,
+          student_id TEXT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX lesson_evidence_lesson_student_unique
+          ON lesson_evidence(lesson_plan_id, student_id);
+        CREATE INDEX lesson_evidence_lesson_idx ON lesson_evidence(lesson_plan_id);
+        CREATE INDEX lesson_evidence_student_idx ON lesson_evidence(student_id);
+      `)
+    }
   }
 ]
 
