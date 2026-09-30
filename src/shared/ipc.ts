@@ -200,6 +200,7 @@ export const IpcChannels = {
     ask: 'notebook:ask',
     draftStudyGuide: 'notebook:draftStudyGuide',
     draftPracticeSet: 'notebook:draftPracticeSet',
+    saveManualPracticeSet: 'notebook:saveManualPracticeSet',
     clearPracticeSet: 'notebook:clearPracticeSet',
     approveAiMaterial: 'notebook:approveAiMaterial'
   },
