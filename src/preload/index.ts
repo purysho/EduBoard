@@ -58,7 +58,10 @@ const api: EduBoardApi = {
     upsert: (input) => invoke(IpcChannels.scores.upsert, input),
     upsertBulk: (inputs) => invoke(IpcChannels.scores.upsertBulk, inputs),
     history: (assessmentId, studentId) =>
-      invoke(IpcChannels.scores.history, assessmentId, studentId)
+      invoke(IpcChannels.scores.history, assessmentId, studentId),
+    attempts: (assessmentId, studentId) =>
+      invoke(IpcChannels.scores.attempts, assessmentId, studentId),
+    addAttempt: (input) => invoke(IpcChannels.scores.addAttempt, input)
   },
   attendance: {
     listByClass: (classId) => invoke(IpcChannels.attendance.listByClass, classId),
