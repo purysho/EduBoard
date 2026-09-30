@@ -636,4 +636,5 @@ export const SETTINGS: Record<string, string> = {
   'Import a reusable curriculum into classes you choose. A private Course Bundle can carry the same Course Pack plus its local resource files in one portable file.': '把可复用课程导入你选择的班级。私有课程包文件可把同一课程包及其本地资源文件合并成一个便携文件。',
   'Import Course Pack or Bundle…': '导入课程包或课程包文件…',
   'Private Course Bundle · {count} bundled resource files': '私有课程包文件 · {count} 个打包资源文件',
+  'Uploading a study material file failed': '上传学习材料文件失败',
 }
