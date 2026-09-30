@@ -17,6 +17,7 @@ import type {
   AppSettings,
   Assessment,
   AttendanceCheckInStatus,
+  ClassroomHubStatus,
   AttendanceRecord,
   AttendanceSummary,
   GradeTrendPoint,
@@ -206,6 +207,11 @@ export interface EduBoardApi {
     getStatus(classId: string): Promise<AttendanceCheckInStatus>
     open(classId: string, date: string): Promise<AttendanceCheckInStatus>
     close(classId: string): Promise<void>
+  }
+  classroomHub: {
+    getStatus(classId: string): Promise<ClassroomHubStatus>
+    open(classId: string, lessonId: string): Promise<ClassroomHubStatus>
+    close(classId: string): Promise<ClassroomHubStatus>
   }
   lessonPlans: {
     listByClass(classId: string): Promise<LessonPlan[]>
