@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '../schoolPack'
+import { auditSchoolPack, makeSchoolPack, parseSchoolPack, planSchoolPack, sanitizeCss } from '../schoolPack'
 import { DEFAULT_APP_SETTINGS, type AppSettings, type Term } from '../types'
 
 const settings = (over: Partial<AppSettings> = {}): AppSettings => ({
@@ -103,6 +103,24 @@ describe('school pack', () => {
     expect(plan.settings.studentFields?.map((f) => f.id)).toEqual(['house', 'bus'])
     expect(plan.settings.studentFields?.[0].label).toBe('House (colour)')
     expect(plan.newTerms.map((t) => t.name)).toEqual(['Term 2'])
+  })
+
+  it('audits included policy/configuration and explicitly excludes classroom data', () => {
+    const pack = parseSchoolPack(
+      JSON.stringify(
+        makeSchoolPack(
+          settings({
+            schoolName: 'Riverside',
+            defaultPassMark: 60,
+            studentFields: [{ id: 'house', label: 'House' }]
+          }),
+          [term('Term 1', '2026-2027')]
+        )
+      )
+    )
+    const audit = auditSchoolPack(pack)
+    expect(audit.included.join('\n')).toMatch(/branding|Grading|terms|student-field/i)
+    expect(audit.excluded.join('\n')).toMatch(/rosters|Grades|Homework|Lesson plans|credentials/i)
   })
 
   it('changes nothing when this computer already matches', () => {
