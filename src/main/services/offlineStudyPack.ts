@@ -67,8 +67,8 @@ ${guide ? `<section><h2>Study guide</h2><p>${textBlock(guide)}</p></section>` : 
 ${cards.length ? `<section><h2>Flashcards</h2><p class="muted">Tap a card to reveal the answer. Mark it “Got it” or “Again”; progress stays on this device.</p><div id="cards"></div><div id="card-progress" class="progress"></div></section>` : ''}
 ${quiz.length ? `<section><h2>Practice quiz</h2><p class="muted">Choose an answer to check it immediately.</p><div id="quiz"></div><div id="quiz-score" class="progress"></div></section>` : ''}
 ${source}
-<section><div class="row"><button class="btn secondary" id="reset" type="button">Reset my progress</button></div></section>
-<p class="footer">Made with EduBoard · This file stores progress only on this device.</p>
+<section><div class="row"><button class="btn" id="export-progress" type="button">Export progress for my teacher</button><button class="btn secondary" id="reset" type="button">Reset my progress</button></div><p class="muted">The exported JSON contains only the name you enter here and summary completion counts.</p></section>
+<p class="footer">Made with EduBoard · Progress stays on this device unless you export it.</p>
 <script>
 const cards=${safeJson(cards)}
 const quiz=${safeJson(quiz)}
@@ -79,6 +79,34 @@ state.cards=state.cards||{}
 state.quiz=state.quiz||{}
 
 function save(){try{localStorage.setItem(key,JSON.stringify(state))}catch{}}
+function progressCounts(){
+  const got=Object.values(state.cards).filter(v=>v==='got').length
+  const again=Object.values(state.cards).filter(v=>v==='again').length
+  const answered=Object.keys(state.quiz).length
+  const correct=Object.entries(state.quiz).filter(([i,v])=>quiz[Number(i)]&&quiz[Number(i)].answerIndex===v).length
+  return {got,again,answered,correct}
+}
+function exportProgress(){
+  const name=String(state.studentName||prompt('Enter your full name so your teacher can identify this progress file:')||'').trim()
+  if(!name){alert('Please enter your name before exporting progress.');return}
+  state.studentName=name.slice(0,120);save()
+  const p=progressCounts()
+  const payload={
+    format:'eduboard-study-progress',
+    version:1,
+    resourceId:${safeJson(resource.id)},
+    resourceTitle:${safeJson(resource.title)},
+    studentName:state.studentName,
+    exportedAt:new Date().toISOString(),
+    cards:{got:p.got,again:p.again,total:cards.length},
+    quiz:{correct:p.correct,answered:p.answered,total:quiz.length}
+  }
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})
+  const url=URL.createObjectURL(blob)
+  const a=document.createElement('a')
+  const safe=(state.studentName+' - '+${safeJson(resource.title)}).replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,100)||'EduBoard Study Progress'
+  a.href=url;a.download=safe+' - Study Progress.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)
+}
 function renderCards(){
   const root=document.getElementById('cards'); if(!root)return
   root.innerHTML=''
@@ -114,6 +142,7 @@ function renderQuiz(){
   const right=Object.entries(state.quiz).filter(([i,v])=>quiz[Number(i)]&&quiz[Number(i)].answerIndex===v).length
   document.getElementById('quiz-score').textContent=answered?right+' correct out of '+answered+' answered':'No questions answered yet'
 }
+document.getElementById('export-progress').onclick=exportProgress
 document.getElementById('reset').onclick=()=>{state={cards:{},quiz:{}};save();renderCards();renderQuiz()}
 renderCards();renderQuiz()
 </script>
