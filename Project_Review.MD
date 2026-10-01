@@ -204,3 +204,52 @@ One renderer action intentionally calls `location.reload()` after changing the U
 The first candidate was simply changing `sandbox: false` to `sandbox: true`. Review showed that would be incomplete: the preload also exposes an unused broad Electron bridge from an external package that is unnecessary for EduBoard and can conflict with sandboxed preload constraints. The amended plan removes that bridge first and makes the renderer's only privileged surface the existing typed `window.api`.
 
 A blanket `will-navigate` denial was also rejected because EduBoard intentionally uses `location.reload()` when changing interface language. The navigation policy will therefore allow the exact current app document and deny everything else.
+
+
+### Loop 2 implementation review
+
+The final implementation matched the amended plan:
+- the unused generic Electron bridge was removed;
+- main and print windows share explicit sandbox/isolation webPreferences;
+- renderer-created windows are denied;
+- renderer-triggered top-level navigation is centrally classified;
+- exact-document reloads remain allowed so the UI-language switch continues working.
+
+A post-code review made one non-behavioral cleanup: `windows.ts` imports Electron's
+`WebPreferences` type directly rather than relying on an ambient namespace.
+
+### Loop 2 CI and security review
+
+PR #38 results:
+- lint: passed;
+- typecheck: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron build and E2E smoke test: passed;
+- desktop npm audit: passed;
+- Portal npm audit: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- aggregate CodeQL check: passed with 0 code-scanning annotations.
+
+The E2E result is important for this loop: Electron successfully launched the real app
+with the sandboxed preload, confirmed secure live webPreferences, retained the typed
+`window.api` bridge, omitted `window.electron`, completed a renderer-triggered
+same-document reload, and blocked an unsafe top-level document navigation.
+
+The GitHub connection does not expose the private Security-tab alert-list REST endpoints,
+so open code-scanning/Dependabot/secret-scanning lists could not be enumerated directly.
+This limitation is recorded explicitly rather than inferred away.
+
+GitHub's optional AI-security job failed before reviewing code. Its log again shows
+`COPILOT_AGENT_MODEL: sweagent-capi:claude-opus-5[ReasoningEffort=medium]` followed by
+`400 The requested model is not supported`. No application-security finding was
+produced.
+
+### Loop 2 completion status
+
+Code, tests and requested documentation are complete on PR #38. Run one final
+docs-inclusive gate, merge only if the deterministic checks remain green, verify the
+automatic v0.7.5 release and all platform assets, then begin Loop 3 from released
+`main`.
