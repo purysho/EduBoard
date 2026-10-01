@@ -29,6 +29,8 @@ jobs:
         run: |
           bash -n tools/mac/smoke-test.sh
           bash -n tools/release/repair-release-assets.sh
+          bash -n tools/release/test-repair-release-assets.sh
+          bash tools/release/test-repair-release-assets.sh
       # Before the desktop tests: some of them publish to a real test Portal.
       - name: Install Portal dependencies
         working-directory: portal
