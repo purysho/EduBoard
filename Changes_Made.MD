@@ -1,62 +1,79 @@
-# Changes Made — EduBoard v0.7.7 “Trusted IPC Boundary”
+# Changes Made — EduBoard v0.7.8 “Lean Core”
 
-## Purpose
+## Teacher workflow
 
-v0.7.7 adds an independent trust boundary around renderer-to-main IPC. Sandboxing and
-navigation containment already reduced renderer risk, but privileged IPC handlers now
-also verify who sent each request before any arguments reach EduBoard services.
+- Upgraded the existing Dashboard Today card into a current/next-lesson action area.
+- The class happening now, or the next class of the day, is promoted with direct links to:
+  - attendance;
+  - lesson planning;
+  - classroom tools / Classroom Hub.
+- The complete daily timetable remains visible underneath.
+- Added deterministic shared tests for current/next lesson selection.
 
-## Security changes
+## Term rollover and teacher handover
 
-- Added a central IPC sender validator for app and print windows.
-- Each EduBoard-created WebContents is registered against one exact renderer document.
-- Every asynchronous typed IPC request now requires:
-  - a registered EduBoard WebContents;
-  - a live, attached sender frame;
-  - the WebContents main frame rather than an iframe/child frame;
-  - the exact registered app document, ignoring only hash routing.
-- The synchronous boot-time `i18n:prefs` channel uses the same validation and returns no
-  UI settings to an untrusted sender.
-- Added `EB-0006` for rejected async IPC requests and a Chinese translation.
-- Removed the unused `@electron-toolkit/preload` runtime dependency.
+- Kept the existing transactional next-term workflow as the source of truth.
+- Added **Export handover pack** for the classes currently selected in the rollover modal.
+- Handover ZIPs contain:
+  - class setup;
+  - term/course labels;
+  - grading categories;
+  - timetable;
+  - active student names;
+  - seating positions;
+  - lesson dates/titles/statuses and summary counts.
+- Handover exports deliberately exclude:
+  - grades;
+  - attendance history;
+  - guardian contacts;
+  - student notes;
+  - student email/number;
+  - passwords;
+  - API keys / Portal secrets;
+  - submissions.
+- Added an integration test that opens the generated ZIP and proves those private fields are absent.
 
-## Regression coverage
+## Lean packaging
 
-Added sender-validation tests for:
-- packaged and development app documents;
-- hash-only route changes;
-- unknown WebContents;
-- child frames;
-- missing, destroyed and detached frames;
-- registered windows that have navigated to another document.
+- Restricted packaged Electron locales to English (US/GB) and Simplified Chinese.
+- Explicitly excluded repository-only material from the desktop package:
+  - docs;
+  - Portal source/public site;
+  - development tools;
+  - GitHub workflow files;
+  - root roadmap/handoff Markdown and helper command files.
+- Moved renderer-only libraries from runtime dependencies to dev dependencies so electron-builder does not separately collect them after Vite already bundles them:
+  - React;
+  - React DOM;
+  - React Router;
+  - TanStack Query;
+  - Lucide;
+  - Recharts;
+  - clsx.
+- No native runtime dependency was bundled, replaced or removed.
 
-Existing Electron E2E continues to prove the sandboxed preload and typed `window.api`
-operate normally.
+## Permanent anti-bloat controls
 
-## Review and CI
+- Added `tools/package-size/report.mjs` with no external dependency.
+- Reports:
+  - total built bytes;
+  - renderer JavaScript;
+  - main/preload JavaScript;
+  - packaged node_modules when present;
+  - app.asar when present;
+  - locales;
+  - production dependency count;
+  - largest files.
+- Added conservative committed size budgets.
+- Electron E2E CI now runs the size budget after the real Vite build.
+- Windows installer CI logs packaged dist composition for release-size tracking.
 
-The first full PR gate passed:
-- lint;
-- TypeScript typecheck;
-- release-script syntax/regression checks;
-- desktop unit/integration tests;
-- Portal tests;
-- Electron E2E;
-- desktop and Portal production dependency audits;
-- private-content guard;
-- CodeQL GitHub Actions;
-- CodeQL JavaScript/TypeScript.
+## Release reliability
 
-Aggregate CodeQL reported 0 code-scanning annotations. GitHub's optional AI-security
-service check again failed outside application analysis and produced no app finding.
-
-## Release-tooling prerequisite
-
-Before this release, v0.7.5's two missing derived Mac assets were restored from its exact
-published binaries, returning that release to 19 assets. A cleanup-trap bug discovered
-after successful repair was fixed with a subshell-scoped cleanup and a mocked-GitHub
-idempotency regression test; the subsequent no-op repair workflow exited green.
+- Folded the release-finalizer correction into the main Release workflow.
+- Release completeness/derived Mac asset verification now runs inside the Release workflow itself instead of relying on a second workflow_run chain.
+- Historical/manual release repair remains available separately.
 
 ## Version
 
-**EduBoard v0.7.7 — Trusted IPC Boundary**
+**EduBoard v0.7.8 — Lean Core**
