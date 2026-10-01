@@ -39,7 +39,10 @@ EduBoard has two parts:
   app and print renderers run in Chromium's OS-level sandbox with context isolation,
   Node.js integration disabled, and a narrow typed preload bridge. Renderer-created
   windows are denied and unexpected top-level document navigation is blocked; allowed
-  web/email destinations are opened by the system instead of inside EduBoard. It
+  web/email destinations are opened by the system instead of inside EduBoard. Privileged
+  IPC is accepted only from an EduBoard-created window's live main frame while it is on
+  the exact registered app document; unknown windows, child frames and navigated-away
+  documents are rejected before handler arguments reach app services. It
   connects to the network only for what the teacher sets up: publishing to their Portal,
   AI suggestions with their own key, DingTalk / WeCom group posts, update checks, and an
   anonymous weekly count that is off unless turned on. The **Exit ticket** feature runs a
