@@ -363,3 +363,28 @@ Code and requested documentation are complete on PR #39. Run the final docs-incl
 gate, merge if deterministic checks stay green, re-run the failed v0.7.5 Release workflow
 to trigger the new repair finalizer, verify v0.7.5 has 19 assets, then verify the v0.7.6
 release and native Intel validation before beginning Loop 4.
+
+
+### Loop 3 post-release amendment — repair trigger recovery
+
+The v0.7.6 release itself completed successfully with native Intel validation and all 19 expected assets. Re-running only the failed v0.7.5 Mac job reproduced the known Rosetta failure as expected, but GitHub did **not** emit a new `workflow_run: completed` event for that failed-job re-run. Therefore the new release-repair workflow did not run and v0.7.5 remained at 17 assets.
+
+This is a workflow-trigger gap, not an application or packaging-integrity failure.
+
+#### Amendment plan
+
+1. Keep `workflow_run` as the normal automatic finalizer after future Release workflows.
+2. Add `workflow_dispatch` with an optional explicit release tag so a specific published release can be repaired without rebuilding it.
+3. Add a narrowly scoped `push` trigger for changes to the repair workflow itself. On that event, audit recent published releases and target any release that:
+   - has all four canonical Mac installer archives (arm64/x64 DMG and ZIP), and
+   - is missing either derived `EduBoard.dmg` or `SHA256SUMS-macos-latest.txt`.
+4. Refactor the repair shell logic to support one explicit tag or an audit-discovered tag list.
+5. Preserve idempotency: derived assets use `--clobber`; releases already complete are verified and otherwise left unchanged.
+6. Never rebuild old installers. Repair only derives files from the exact binaries already published for that tag.
+7. Verify the complete 19-asset set after repair.
+8. Run normal PR CI/CodeQL, merge, confirm the main-push audit repairs v0.7.5, and re-check all v0.7.5 asset digests/states.
+9. Record the outcome in `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review before beginning Loop 4.
+
+#### Amendment review
+
+A broader always-on push audit was considered and rejected because release builds are asynchronous: a routine source push can occur while a release is still assembling assets. Limiting push-triggered auditing to changes of the repair workflow itself avoids racing ordinary releases. Normal release completion remains owned by the `workflow_run` trigger, while `workflow_dispatch` provides an explicit recovery path for future historical repairs.
