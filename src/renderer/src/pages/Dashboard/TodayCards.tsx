@@ -2,15 +2,19 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertCircle,
+  CalendarCheck,
   CheckCircle2,
   Circle,
+  Clock3,
   NotebookPen,
   PhoneCall,
+  Presentation,
   Sun,
   UserSearch
 } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { tr, trn } from '@shared/i18n'
+import { todayLessonFocus } from '@shared/todayFocus'
 
 /** Today's lessons from the timetable: is attendance taken, is there a plan. */
 export function TodayCard(): React.JSX.Element | null {
@@ -22,6 +26,9 @@ export function TodayCard(): React.JSX.Element | null {
     refetchInterval: 60_000
   })
   if (!today || (!today.lessons.length && !today.followUpsDue)) return null
+  const focus = todayLessonFocus(today.lessons)
+  const focusLesson = focus ? today.lessons[focus.index] : null
+
   return (
     <Card className="mb-6">
       <CardHeader className="flex items-center justify-between">
@@ -45,6 +52,56 @@ export function TodayCard(): React.JSX.Element | null {
         )}
       </CardHeader>
       <CardBody className="p-0">
+        {focusLesson && focus && (
+          <div className="border-b border-[var(--color-border)] bg-[var(--color-surface-muted)] px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+                  <Clock3 size={13} aria-hidden />
+                  {focus.state === 'current' ? tr('Now') : tr('Next lesson')}
+                </p>
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <Link
+                    to={`/classes/${focusLesson.classId}`}
+                    className="truncate text-base font-semibold hover:underline"
+                  >
+                    {focusLesson.className}
+                  </Link>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    {focusLesson.startTime}–{focusLesson.endTime}
+                    {focusLesson.room ? ` · ${focusLesson.room}` : ''}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  {focusLesson.lessonPlanTitle ?? tr('No plan yet')}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to={`/classes/${focusLesson.classId}/attendance`}
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--color-bg)]"
+                >
+                  <CalendarCheck size={13} aria-hidden />
+                  {focusLesson.attendanceTaken ? tr('Attendance') : tr('Take attendance')}
+                </Link>
+                <Link
+                  to={`/classes/${focusLesson.classId}/lessons`}
+                  className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1.5 text-xs font-medium hover:bg-[var(--color-bg)]"
+                >
+                  <NotebookPen size={13} aria-hidden />
+                  {tr('Lesson plan')}
+                </Link>
+                <Link
+                  to={`/classes/${focusLesson.classId}/classroom`}
+                  className="inline-flex items-center gap-1 rounded-md bg-[var(--color-primary)] px-2.5 py-1.5 text-xs font-medium text-white hover:opacity-90"
+                >
+                  <Presentation size={13} aria-hidden />
+                  {tr('Classroom tools')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
         {today.lessons.length ? (
           <ul>
             {today.lessons.map((l, i) => (
