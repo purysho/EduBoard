@@ -2,6 +2,19 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.7] — 2026-10-01
+
+### Security
+
+- **Trusted IPC boundary:** every asynchronous renderer-to-main request is now rejected unless it comes from an EduBoard-created WebContents, its live main frame, and the exact renderer document registered for that window.
+- **Synchronous bootstrap protection:** the pre-render `i18n:prefs` request uses the same sender validation and returns no settings to an untrusted frame.
+- **Independent trust checks:** IPC authorization no longer relies only on navigation blocking; window identity, main-frame identity, and document identity are checked at the IPC boundary itself.
+- **Narrower runtime dependencies:** removed the unused `@electron-toolkit/preload` package after v0.7.5 eliminated its last generic Electron bridge.
+
+### Tests
+
+- Added sender-validation coverage for unknown windows, child frames, missing/destroyed/detached frames, unexpected documents, development URLs, and hash-only routes.
+
 ## [0.7.6] — 2026-10-01
 
 ### Fixed
