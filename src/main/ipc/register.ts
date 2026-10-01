@@ -125,6 +125,7 @@ import * as security from '../services/security'
 import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
 import { getTodayOverview, getWatchList } from '../services/today'
+import { buildClassHandoverBundle } from '../services/classHandover'
 import { getCompetencyMatrix } from '../services/competencyMatrix'
 import { getCurriculumMap } from '../services/curriculumMap'
 import { eraseStudent, exportStudentData } from '../services/studentErase'
@@ -337,6 +338,25 @@ export function registerIpcHandlers(): void {
       return newTermClassRepo.startNextTermForClasses(input)
     }
   )
+  handle(IpcChannels.classes.exportHandover, async (_e, classIds: string[]) => {
+    if (!Array.isArray(classIds) || !classIds.every((id) => typeof id === 'string')) {
+      throw new AppError('EB-0004', tr('Choose at least one class to export.'))
+    }
+    const bundle = await buildClassHandoverBundle(classIds)
+    const stamp = new Date().toISOString().slice(0, 10)
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `EduBoard-Class-Handover-${stamp}.zip`,
+      filters: [{ name: tr('ZIP archive'), extensions: ['zip'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, bundle.buffer)
+    return {
+      saved: true,
+      filePath,
+      classCount: bundle.classCount,
+      studentCount: bundle.studentCount
+    }
+  })
 
   // --- Grade categories --------------------------------------------------------------
   handle(IpcChannels.gradeCategories.listByClass, (_e, classId: string) =>
