@@ -253,3 +253,77 @@ Code, tests and requested documentation are complete on PR #38. Run one final
 docs-inclusive gate, merge only if the deterministic checks remain green, verify the
 automatic v0.7.5 release and all platform assets, then begin Loop 3 from released
 `main`.
+
+
+## Loop 2 — v0.7.5 “Sandboxed Renderer”
+
+### Baseline reviewed
+
+- Starting point: `main` at `fdcd4abeea1798ff4051b8e8727065b17ad01a08`.
+- Previous public release: `v0.7.4`, whose release workflow completed successfully with all 19 platform assets uploaded and SHA-256 digests present.
+- No application-code commits were added after the v0.7.4 merge before this loop began.
+
+### Current Electron security review
+
+EduBoard's main and print windows currently set `sandbox: false`. Electron 20+ enables renderer sandboxing by default and recommends sandboxing for most applications. Context isolation is also recommended and enabled by default, but EduBoard currently relies on those defaults instead of declaring every security-critical preference explicitly.
+
+The preload already uses the right architecture for sandboxing: a narrow typed `window.api` backed by `contextBridge` and `ipcRenderer.invoke`. However, it also imports and exposes `@electron-toolkit/preload` as `window.electron`.
+
+A complete scan of all 137 renderer TypeScript/JavaScript source files found no use of:
+- `window.electron`;
+- `electronAPI`;
+- direct `ipcRenderer`;
+- `window.open`;
+- direct top-level `location.href`, `location.assign` or `location.replace`.
+
+This means the broad `window.electron` bridge can be removed without changing currently used renderer behavior.
+
+### Gaps and candidates
+
+1. **Renderer sandboxing — selected for v0.7.5.**
+   - Main and print windows explicitly opt out with `sandbox: false`.
+   - The preload architecture is otherwise compatible with a sandboxed renderer.
+2. **Navigation policy — selected for v0.7.5.**
+   - New-window creation is already denied unless a safe external URL is handed to the system browser.
+   - Top-level renderer navigation is not explicitly denied.
+3. **Explicit context isolation / Node integration settings — selected for v0.7.5.**
+   - Secure Electron defaults should be stated explicitly so a future Electron/default change cannot silently weaken the app.
+4. **Code signing/notarization — still deferred.**
+   - Requires external signing credentials/secrets.
+5. **Branch protection and release provenance/SBOM — still queued for later loops.**
+
+### Detailed implementation plan
+
+1. Change the main and print windows to explicitly use:
+   - `sandbox: true`;
+   - `contextIsolation: true`;
+   - `nodeIntegration: false`;
+   - the existing preload path.
+2. Remove `@electron-toolkit/preload` from the preload bridge and stop exposing `window.electron`.
+3. Remove the now-unused `ElectronAPI` declaration from the preload global typings.
+4. Keep only EduBoard's typed `window.api` and the existing synchronous UI preference bridge.
+5. Because context isolation becomes an explicit invariant, expose the bridges through `contextBridge` directly rather than retaining the insecure/non-isolated fallback assignment to `window`.
+6. Add a reusable navigation hardening helper in the main process:
+   - deny all renderer-created child windows;
+   - for the main window only, send allow-listed HTTP/HTTPS/mail links to the system browser;
+   - prevent all renderer-initiated top-level navigations;
+   - if such a navigation targets an allow-listed external URL from the main window, open it externally instead.
+7. Apply the same top-level-navigation denial to print windows, but do not allow print content to launch external links.
+8. Confirm hash-router navigation remains unaffected; Electron's `will-navigate` event does not apply to same-document hash changes.
+9. Add regression coverage for:
+   - explicit secure BrowserWindow preferences;
+   - child-window denial;
+   - safe external link handoff;
+   - unsafe/new top-level navigation denial;
+   - no exposed `window.electron` bridge in E2E;
+   - the existing `window.api` still functioning under sandbox.
+10. Update security/user documentation and changelog.
+11. Bump version metadata to `0.7.5`.
+12. Run lint, typecheck, unit/integration tests, Portal tests, Electron E2E, dependency audit, private-content guard and CodeQL.
+13. Merge only if deterministic application/security checks are green, then verify all v0.7.5 release assets.
+
+### Plan review and amendment
+
+The first idea was simply to flip `sandbox: false` to `sandbox: true`. That would leave two unnecessary risks: the broad unused `window.electron` bridge and unrestricted top-level renderer navigation. The amended plan removes the unused bridge and treats navigation policy as part of the same renderer trust boundary.
+
+The scope deliberately does **not** include Content Security Policy changes in this loop. CSP needs a separate review of Vite development behavior, packaged renderer assets, inline styles and any data/blob URLs so it can be tightened without breaking the offline UI.
