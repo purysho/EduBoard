@@ -388,3 +388,34 @@ This is a workflow-trigger gap, not an application or packaging-integrity failur
 #### Amendment review
 
 A broader always-on push audit was considered and rejected because release builds are asynchronous: a routine source push can occur while a release is still assembling assets. Limiting push-triggered auditing to changes of the repair workflow itself avoids racing ordinary releases. Normal release completion remains owned by the `workflow_run` trigger, while `workflow_dispatch` provides an explicit recovery path for future historical repairs.
+
+
+#### Amendment implementation and CI review
+
+The repair logic was extracted to `tools/release/repair-release-assets.sh`. Normal
+`workflow_run` completion remains the default release-finalization path. An explicit
+tagged `workflow_dispatch` path was added for historical recovery, plus a narrow
+`main` push audit that runs only when the repair tooling itself changes.
+
+Audit mode refuses to infer a repair from only the four Mac files. It requires the full
+17-asset canonical core set (the expected v0.7.x release minus the two derived Mac
+assets), skips drafts/non-`v*` tags, and only then reconstructs the derived pair. This
+prevents older or structurally different releases from being silently coerced into the
+current release format.
+
+PR #40 deterministic validation:
+- lint: passed;
+- typecheck: passed;
+- Mac smoke-test Bash syntax: passed;
+- release-repair Bash syntax: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E: passed;
+- desktop and Portal npm audits: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed.
+
+The final docs-inclusive gate must remain green before merge. After merge, the repair
+workflow's path-scoped main-push trigger should audit recent releases, repair v0.7.5,
+and prove the release has all 19 expected assets before Loop 4 begins.
