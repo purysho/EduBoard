@@ -1,6 +1,7 @@
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
 import type { AiApproval, ExitTicketQuestion } from '@shared/types'
+import type { StudyProgressCounts, StudyQuizCounts } from '@shared/studyProgress'
 
 // NOTE: this file defines the Drizzle ORM shape of the database for typed queries.
 // The actual DDL used to create/evolve the tables lives in ./migrations.ts — the two
@@ -632,6 +633,31 @@ export const lessonResources = sqliteTable(
   },
   (t) => ({
     standardIdx: index('lesson_resources_standard_idx').on(t.standardId)
+  })
+)
+
+export const studyProgressReturns = sqliteTable(
+  'study_progress_returns',
+  {
+    id: text('id').primaryKey(),
+    resourceId: text('resource_id')
+      .notNull()
+      .references(() => lessonResources.id, { onDelete: 'cascade' }),
+    studentId: text('student_id').references(() => students.id, { onDelete: 'set null' }),
+    studentName: text('student_name').notNull(),
+    exportedAt: text('exported_at').notNull(),
+    importedAt: text('imported_at').notNull(),
+    cards: text('cards', { mode: 'json' }).notNull().$type<StudyProgressCounts>(),
+    quiz: text('quiz', { mode: 'json' }).notNull().$type<StudyQuizCounts>()
+  },
+  (t) => ({
+    uniqueReturn: uniqueIndex('study_progress_returns_unique').on(
+      t.resourceId,
+      t.studentName,
+      t.exportedAt
+    ),
+    resourceIdx: index('study_progress_returns_resource_idx').on(t.resourceId, t.exportedAt),
+    studentIdx: index('study_progress_returns_student_idx').on(t.studentId)
   })
 )
 
