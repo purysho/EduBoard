@@ -60,3 +60,30 @@ produced.
 ## Version
 
 **EduBoard v0.7.6 — Native Mac Release Validation**
+
+
+## Post-release tooling correction
+
+After v0.7.6 shipped successfully, recovery testing of the incomplete v0.7.5 release showed
+that GitHub does not emit a fresh `workflow_run: completed` event when only failed jobs in
+an existing workflow run are re-run. The v0.7.5 Mac job therefore reproduced its known
+Rosetta failure but did not invoke the new finalizer.
+
+The repair tooling now also:
+
+- supports an explicit `workflow_dispatch` release tag;
+- has a narrowly scoped main-push audit when the repair tooling itself changes;
+- audits only published `v*` releases with all 17 canonical core assets and a missing
+  derived Mac asset;
+- keeps all repair logic in `tools/release/repair-release-assets.sh`;
+- derives assets only from the exact already-published Mac binaries;
+- verifies the full 19-asset set after repair;
+- is syntax-checked in normal CI.
+
+The correction passed lint, typecheck, Bash syntax checks, desktop tests, Portal tests,
+Electron E2E, both production dependency audits, private-content guard, CodeQL Actions and
+CodeQL JavaScript/TypeScript.
+
+The merge is expected to trigger the narrow push audit once and restore v0.7.5's missing
+`EduBoard.dmg` and `SHA256SUMS-macos-latest.txt` without rebuilding or replacing any
+existing installer.
