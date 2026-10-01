@@ -896,6 +896,30 @@ const migrations: Migration[] = [
         CREATE INDEX lesson_evidence_student_idx ON lesson_evidence(student_id);
       `)
     }
+  },
+  {
+    id: 40,
+    name: 'offline_study_progress_returns',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE study_progress_returns (
+          id TEXT PRIMARY KEY,
+          resource_id TEXT NOT NULL REFERENCES lesson_resources(id) ON DELETE CASCADE,
+          student_id TEXT REFERENCES students(id) ON DELETE SET NULL,
+          student_name TEXT NOT NULL,
+          exported_at TEXT NOT NULL,
+          imported_at TEXT NOT NULL,
+          cards TEXT NOT NULL,
+          quiz TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX study_progress_returns_unique
+          ON study_progress_returns(resource_id, student_name, exported_at);
+        CREATE INDEX study_progress_returns_resource_idx
+          ON study_progress_returns(resource_id, exported_at);
+        CREATE INDEX study_progress_returns_student_idx
+          ON study_progress_returns(student_id);
+      `)
+    }
   }
 ]
 
