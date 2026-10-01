@@ -731,3 +731,40 @@ After merge:
 - verify inline finalizer completes successfully;
 - record exact release-size deltas versus v0.7.7;
 - update `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review.
+
+
+### Loop 5 implementation review
+
+The implementation stayed within the planned Lean Core boundary.
+
+Teacher workflow:
+- no new Dashboard route or database table was created;
+- the existing Today card now promotes the current/next scheduled class and links directly into existing attendance, lesson-plan and classroom-tool routes;
+- lesson focus is a pure shared helper with deterministic unit tests.
+
+Rollover/handover:
+- the existing transactional next-term copy/archive path is unchanged;
+- handover is an optional export from the same modal, not a parallel rollover system;
+- one ZIP can contain all selected classes;
+- the integration test verifies sensitive student/contact fields are absent from archive text.
+
+Package trimming:
+- runtime feature code was not removed;
+- native modules were not changed;
+- repository-only files and unneeded Electron locales are excluded;
+- renderer-only libraries remain available to Vite but are no longer declared as shipped runtime dependencies;
+- a permanent build-size report/budget now turns bloat into a measurable regression.
+
+Release orchestration:
+- the inline finalizer from the superseded release follow-up was folded into this branch;
+- the standalone repair workflow remains for explicit/historical recovery.
+
+### Pending validation
+
+Before merge, CI must confirm:
+- npm lock/package dependency placement is accepted by `npm ci`;
+- English/Chinese locale restriction does not break Electron E2E;
+- handover types/API compile and privacy integration test passes;
+- package-size budgets reflect the real current build rather than an estimate;
+- installer packaging succeeds with the new exclusions;
+- CodeQL and dependency audits remain green.
