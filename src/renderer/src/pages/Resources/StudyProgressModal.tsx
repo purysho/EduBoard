@@ -23,7 +23,13 @@ export function StudyProgressModal({
   }
 
   useEffect(() => {
-    void refresh()
+    let active = true
+    void window.api.lessonResources.listProgress(resource.id).then((next) => {
+      if (active) setRows(next)
+    })
+    return () => {
+      active = false
+    }
   }, [resource.id])
 
   async function importFile(): Promise<void> {
