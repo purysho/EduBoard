@@ -457,7 +457,12 @@ export interface EduBoardApi {
     /** Saves this computer's school-wide settings and terms as a school pack file. */
     export(): Promise<{ saved: boolean; filePath?: string }>
     /** Asks for a pack file and lists what importing it would change (nothing applied). */
-    preview(): Promise<{ filePath: string; changes: string[] } | null>
+    preview(): Promise<{
+      filePath: string
+      changes: string[]
+      included: string[]
+      excluded: string[]
+    } | null>
     /** Applies the pack at filePath (read and checked again, not trusted from preview). */
     apply(filePath: string): Promise<{ changes: string[]; reload?: boolean }>
     /** Asks for a .css file and saves it, cleaned, as the school stylesheet. */

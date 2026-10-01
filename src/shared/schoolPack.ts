@@ -318,6 +318,55 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
   }
 }
 
+export interface SchoolPackAudit {
+  included: string[]
+  excluded: string[]
+}
+
+/** Human-readable, import-preview-safe summary of what a School Pack carries.
+ * Operational classroom data is deliberately never part of this format. */
+export function auditSchoolPack(pack: SchoolPack): SchoolPackAudit {
+  const included: string[] = []
+  if (pack.schoolName || pack.appName || pack.schoolLogo || pack.accentColor !== undefined || pack.customCss) {
+    included.push(tr('School branding and appearance'))
+  }
+  if (
+    pack.defaultGradeThresholds ||
+    pack.defaultPassMark !== undefined ||
+    pack.defaultMaxScore !== undefined
+  ) {
+    included.push(tr('Grading defaults for new classes'))
+  }
+  if (pack.terms?.length) included.push(tr('{n} school terms', { n: pack.terms.length }))
+  if (pack.studentFields?.length)
+    included.push(tr('{n} student-field definitions', { n: pack.studentFields.length }))
+  if (pack.logQuickAdds?.length)
+    included.push(tr('{n} student-log quick actions', { n: pack.logQuickAdds.length }))
+  if (pack.commentBank?.length)
+    included.push(tr('{n} report comments', { n: pack.commentBank.length }))
+  if (pack.letterTemplate) included.push(tr('Parent-letter template'))
+  if (pack.attendanceCodes?.length)
+    included.push(tr('{n} attendance codes', { n: pack.attendanceCodes.length }))
+  if (pack.pointCategories?.length)
+    included.push(tr('{n} class-point categories', { n: pack.pointCategories.length }))
+  if (pack.reportCard) included.push(tr('Report-card layout defaults'))
+  if (pack.savedTemplates?.length)
+    included.push(tr('{n} saved teacher templates', { n: pack.savedTemplates.length }))
+  if (pack.terminology) included.push(tr('School terminology'))
+
+  return {
+    included,
+    excluded: [
+      tr('Classes and class-specific settings'),
+      tr('Student rosters and enrollments'),
+      tr('Grades, attendance and behaviour records'),
+      tr('Homework, submissions and feedback'),
+      tr('Lesson plans and classroom resources'),
+      tr('Portal accounts, messages and credentials')
+    ]
+  }
+}
+
 export interface SchoolPackPlan {
   settings: Partial<AppSettings>
   newTerms: SchoolPackTerm[]
