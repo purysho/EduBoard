@@ -111,7 +111,7 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Check the Mac apps start (Apple Silicon, and Intel via Rosetta)
+      - name: Check Mac packages (native arm64 GUI; x64 modules via Rosetta)
         if: runner.os == 'macOS'
         run: bash tools/mac/smoke-test.sh
 
@@ -151,3 +151,27 @@ jobs:
         run: gh release upload "${{ needs.tag.outputs.name }}" "dist/SHA256SUMS-${{ matrix.os }}.txt" --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Rosetta proves the x64 native modules can load, but it is not the target
+  # environment for Intel users. Validate the exact published x64 ZIP on real Intel.
+  verify-mac-intel:
+    needs: [tag, build]
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download the published Intel app
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist/intel
+          gh release download "${{ needs.tag.outputs.name }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern 'EduBoard-x64.zip' \
+            --dir dist
+          ditto -x -k dist/EduBoard-x64.zip dist/intel
+          test -d dist/intel/EduBoard.app
+
+      - name: Check the Intel app natively
+        run: bash tools/mac/smoke-test.sh dist/intel/EduBoard.app x64
