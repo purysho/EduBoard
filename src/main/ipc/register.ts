@@ -134,6 +134,7 @@ import { saveUiPrefs } from '../i18n'
 import { resolveAttendanceCodes } from '@shared/attendanceCodes'
 import {
   MAX_CSS_CHARS,
+  auditSchoolPack,
   makeSchoolPack,
   parseSchoolPack,
   planSchoolPack,
@@ -1101,7 +1102,8 @@ export function registerIpcHandlers(): void {
     if (canceled || !filePaths[0]) return null
     const pack = parseSchoolPack(await readFile(filePaths[0], 'utf-8'))
     const plan = planSchoolPack(pack, settingsRepo.getSettings(), termsRepo.listTerms())
-    return { filePath: filePaths[0], changes: plan.changes }
+    const audit = auditSchoolPack(pack)
+    return { filePath: filePaths[0], changes: plan.changes, ...audit }
   })
   handle(IpcChannels.schoolPack.apply, async (_e, filePath: string) => {
     const pack = parseSchoolPack(await readFile(String(filePath), 'utf-8'))
