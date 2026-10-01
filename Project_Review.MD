@@ -829,3 +829,23 @@ The final PR gate passed:
 No classroom feature, export format or native runtime dependency was removed to obtain the size reduction.
 
 GitHub's optional AI-security job continued to fail before analysis because its configured `claude-opus-5[ReasoningEffort=medium]` model is unsupported. Deterministic CodeQL remained green.
+
+
+#### Packaged Windows composition evidence
+
+The Windows installer test-build composition report measured the complete `dist/` tree at **740.19 MiB**. That number intentionally includes both installers and the unpacked application, so it is not itself an installer-size target. Its breakdown is useful for the next optimization pass:
+
+- packaged `app.asar`: **122.58 MiB**;
+- unpacked packaged `node_modules`: **67.86 MiB**;
+- retained Electron locales: **1.68 MiB across 3 files**;
+- Windows Setup: **114.49 MiB**;
+- Windows Portable: **114.33 MiB**;
+- largest fixed Electron runtime binary: `EduBoard.exe` at **234.64 MiB**.
+
+The report also exposed cross-platform native-package material inside the Windows package, including a Linux-musl SQLite prebuild. This is a measured candidate for a future package-specific pruning pass, but it was deliberately **not** changed after the v0.7.8 release because native-module packaging should be optimized only with per-platform smoke tests.
+
+#### Post-release Windows CI validation follow-up
+
+The first v0.7.8 Windows installer test-build produced the installer successfully, reported package composition successfully, uploaded the artifact successfully and published the `test-latest` prerelease successfully. Its final `Update-EduBoard` download check failed on an unauthenticated GitHub request from the shared Actions runner; this was a CI/network validation false negative rather than an installer defect.
+
+PR #48 (`901cc9505732ada4b3c240ed31688219f7161419`) changed only CI validation: the test-build workflow now supplies its ephemeral `GITHUB_TOKEN` to the existing updater test. Normal teacher-facing public updates remain tokenless by default. Main tests, dependency checks, CodeQL and private-content guard are green on that follow-up commit.
