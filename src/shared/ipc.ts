@@ -192,6 +192,8 @@ export const IpcChannels = {
     remove: 'lessonResources:remove',
     pickFile: 'lessonResources:pickFile',
     exportOfflinePack: 'lessonResources:exportOfflinePack',
+    importProgress: 'lessonResources:importProgress',
+    listProgress: 'lessonResources:listProgress',
     openPath: 'lessonResources:openPath',
     openExternal: 'lessonResources:openExternal'
   },

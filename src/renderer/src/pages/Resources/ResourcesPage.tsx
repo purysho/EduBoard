@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  ClipboardCheck,
   Download,
   ExternalLink,
   File,
@@ -31,6 +32,7 @@ import { cn } from '@renderer/lib/cn'
 import { ResourceFormModal } from './ResourceFormModal'
 import { PracticeSetModal, type StudyMaterialKind } from './PracticeSetModal'
 import { hasUncheckedAiMaterial } from '@renderer/lib/aiMaterial'
+import { StudyProgressModal } from './StudyProgressModal'
 import { tr } from '@shared/i18n'
 
 const TYPE_ICON = { link: Link2, file: File, note: StickyNote } as const
@@ -62,6 +64,7 @@ export function ResourcesPage(): React.JSX.Element {
   const [showAdd, setShowAdd] = useState(false)
   const [editingResource, setEditingResource] = useState<LessonResource | null>(null)
   const [pendingDelete, setPendingDelete] = useState<LessonResource | null>(null)
+  const [progressResource, setProgressResource] = useState<LessonResource | null>(null)
   const [practice, setPractice] = useState<{
     resourceId: string
     kind: StudyMaterialKind
@@ -223,6 +226,14 @@ export function ResourcesPage(): React.JSX.Element {
                       >
                         <Download size={13} aria-hidden />
                       </button>
+                      <button
+                        className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
+                        onClick={() => setProgressResource(resource)}
+                        aria-label={tr('Offline study progress')}
+                        title={tr('Import or view returned offline progress')}
+                      >
+                        <ClipboardCheck size={13} aria-hidden />
+                      </button>
                       {openable && (
                         <button
                           className="rounded p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-muted)] hover:text-[var(--color-primary)]"
@@ -342,6 +353,12 @@ export function ResourcesPage(): React.JSX.Element {
           resource={practiceResource}
           kind={practice.kind}
           onClose={() => setPractice(null)}
+        />
+      )}
+      {progressResource && (
+        <StudyProgressModal
+          resource={progressResource}
+          onClose={() => setProgressResource(null)}
         />
       )}
       {editingResource && (

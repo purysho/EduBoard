@@ -258,5 +258,27 @@ export const PAGES: Record<string, string> = {
   'worth re-teaching': '值得再讲一遍',
   '{n} students review these on the Portal (spaced review). The ones they miss most are listed first and marked.':
     '{n} 名学生在门户上复习这些内容（间隔复习）。最常答错的排在前面并有标记。',
-  'Subject or major': '学科或专业'
+  'Subject or major': '学科或专业',
+  'Offline study progress': '离线学习进度',
+  'Import or view returned offline progress': '导入或查看学生返回的离线学习进度',
+  'Students can export a tiny JSON progress file from the Offline Study Pack. Importing it here does not require a student account, server or internet connection.':
+    '学生可从离线学习包导出一个很小的 JSON 进度文件。在此导入时不需要学生账号、服务器或网络连接。',
+  'Importing…': '正在导入…',
+  'Import progress file': '导入进度文件',
+  'For {title}': '用于 {title}',
+  'Imported progress for {name}.': '已导入 {name} 的学习进度。',
+  'Could not import that progress file.': '无法导入该进度文件。',
+  'No returned progress files for this resource yet.': '此资源还没有学生返回的进度文件。',
+  Quiz: '测验',
+  Exported: '导出时间',
+  'Matched to roster': '已匹配学生名单',
+  'Name only': '仅按姓名记录',
+  '{got}/{total} got it': '已掌握 {got}/{total}',
+  '{correct}/{answered} correct ({total} total)': '答对 {correct}/{answered}（共 {total} 题）',
+  'Returned files contain only the student-entered name and summary progress counts.':
+    '返回文件只包含学生输入的姓名和汇总后的学习进度数量。',
+  'EduBoard study progress': 'EduBoard 学习进度',
+  'That is not a valid EduBoard study progress file.': '这不是有效的 EduBoard 学习进度文件。',
+  'That progress file belongs to a different resource: {title}.':
+    '该进度文件属于另一个资源：{title}。',
 }
