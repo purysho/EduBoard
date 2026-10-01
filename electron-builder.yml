@@ -1,5 +1,7 @@
 appId: com.eduboard.app
 productName: EduBoard
+# Keep only the UI locales EduBoard supports; Chromium otherwise ships every locale.
+electronLanguages: [en-US, en-GB, zh-CN]
 directories:
   buildResources: build
 files:
@@ -11,6 +13,15 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,tsconfig.node.tsbuildinfo,tsconfig.web.tsbuildinfo}'
   # Private: never shipped (see course-packs/README.md).
   - '!course-packs/**'
+  # Repository/development material is not part of the desktop runtime.
+  - '!docs/**'
+  - '!portal/**'
+  - '!tools/**'
+  - '!.github/**'
+  - '!*.md'
+  - '!*.cmd'
+  - '!vitest.config.ts'
+  - '!eslint.config.mjs'
 asarUnpack:
   - resources/**
   - node_modules/better-sqlite3/**
