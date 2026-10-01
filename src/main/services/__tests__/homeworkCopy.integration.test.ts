@@ -12,7 +12,7 @@ import { copyHomeworkToClasses } from '../homeworkCopy'
 
 let dir: string
 
-function makeClass(name: string) {
+function makeClass(name: string): ReturnType<typeof classesRepo.createClass> {
   return classesRepo.createClass({
     name,
     subject: 'English',
