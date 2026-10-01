@@ -24,7 +24,8 @@ export const IpcChannels = {
     update: 'classes:update',
     remove: 'classes:remove',
     duplicateForNewTerm: 'classes:duplicateForNewTerm',
-    startNextTerm: 'classes:startNextTerm'
+    startNextTerm: 'classes:startNextTerm',
+    exportHandover: 'classes:exportHandover'
   },
   gradeCategories: {
     listByClass: 'gradeCategories:listByClass',
