@@ -26,12 +26,15 @@ describe('renderer-triggered navigation', () => {
     expect(navigationDecision(file + '#/settings', file + '#/settings')).toBe('allow')
   })
 
-  it('rejects other local files, paths and origins', () => {
+  it('blocks unsafe document targets and never treats another local file as the app', () => {
     expect(navigationDecision(file, 'file:///tmp/other.html')).toBe('deny')
-    expect(navigationDecision(dev, 'http://127.0.0.1:5173/other.html')).toBe('deny')
-    expect(navigationDecision(dev, 'http://localhost:5173/')).toBe('external')
     expect(navigationDecision(dev, 'data:text/html,hello')).toBe('deny')
     expect(navigationDecision(dev, 'not a url')).toBe('deny')
+  })
+
+  it('moves other HTTP documents out to the system browser instead of navigating EduBoard', () => {
+    expect(navigationDecision(dev, 'http://127.0.0.1:5173/other.html')).toBe('external')
+    expect(navigationDecision(dev, 'http://localhost:5173/')).toBe('external')
   })
 
   it('hands safe web and email destinations to the system browser', () => {
