@@ -892,7 +892,7 @@ export const CLASSES: Record<string, string> = {
   'Editable student worksheet for Word or WPS': '适用于 Word 或 WPS 的可编辑学生练习单',
   'Worksheet': '练习单',
   'Projector-ready PowerPoint practice deck': '可直接投影使用的 PowerPoint 练习演示文稿',
-  'Practice deck': '练习演示',,
+  'Practice deck': '练习演示',
   'That assignment no longer exists.': '该作业已不存在。',
   'One of the selected classes is no longer active.': '所选班级中有一个已不再处于活动状态。',
   'Bulk archive': '批量归档',
