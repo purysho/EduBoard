@@ -419,3 +419,26 @@ PR #40 deterministic validation:
 The final docs-inclusive gate must remain green before merge. After merge, the repair
 workflow's path-scoped main-push trigger should audit recent releases, repair v0.7.5,
 and prove the release has all 19 expected assets before Loop 4 begins.
+
+
+#### Repair audit post-merge defect and correction
+
+The path-scoped main-push audit successfully repaired v0.7.5 from 17 to 19 assets. The two derived files were recreated from the already-published Mac binaries:
+- `EduBoard.dmg`;
+- `SHA256SUMS-macos-latest.txt`.
+
+However, the repair workflow itself ended with exit code 1 **after** successful verification. The log showed:
+`tools/release/repair-release-assets.sh: line 104: dir: unbound variable`.
+
+Root cause: `repair_tag()` installed a Bash `RETURN` trap referring to its local `dir`. The trap remained active after `repair_tag()` returned and fired again when `audit_recent()` returned, after the local variable no longer existed under `set -u`.
+
+Correction plan:
+1. Run each `repair_tag()` invocation in a subshell.
+2. Use an `EXIT` cleanup trap local to that subshell, preventing cleanup state from leaking to callers.
+3. Add a fully local regression test with a mocked `gh` command that:
+   - presents a 17-asset v0.7.5-style release;
+   - runs the real `--audit-recent` path;
+   - verifies both derived assets are created and the process exits successfully;
+   - runs the audit again and verifies it is idempotent.
+4. Execute this regression in normal PR CI, not only Bash syntax checking.
+5. Merge only with deterministic tests and CodeQL green, then run the repair workflow explicitly against the now-complete v0.7.5 release and require a green no-op result.
