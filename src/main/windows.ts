@@ -2,9 +2,36 @@ import { is } from '@electron-toolkit/utils'
 import { app, BrowserWindow, nativeImage, shell } from 'electron'
 import { join } from 'path'
 import { isSafeExternalUrl } from '@shared/externalUrl'
+import { APP_WINDOW_WEB_PREFERENCES, navigationDecision } from './windowSecurity'
 import icon from '../../resources/icon.png?asset'
 
 const preloadPath = join(__dirname, '../preload/index.js')
+
+function appWebPreferences(): Electron.WebPreferences {
+  return {
+    preload: preloadPath,
+    ...APP_WINDOW_WEB_PREFERENCES
+  }
+}
+
+function installWindowSecurity(win: BrowserWindow): void {
+  // A renderer can request a new window through window.open(), target=_blank, etc. Never
+  // create one. Safe web/email destinations leave EduBoard and open in the system app.
+  win.webContents.setWindowOpenHandler((details) => {
+    if (isSafeExternalUrl(details.url)) void shell.openExternal(details.url)
+    return { action: 'deny' }
+  })
+
+  // HashRouter changes stay in-page and never reach this event. A renderer-triggered
+  // reload of the exact app document is allowed; any other document navigation is
+  // prevented, with safe web/email URLs handed to the system browser instead.
+  win.webContents.on('will-navigate', (event, url) => {
+    const decision = navigationDecision(win.webContents.getURL(), url)
+    if (decision === 'allow') return
+    event.preventDefault()
+    if (decision === 'external') void shell.openExternal(url)
+  })
+}
 
 /** Loads a hash route (e.g. "/print/student/abc/def") into a window the same way in dev
  * (Vite dev server) and in a packaged build (the built index.html), so print/report
@@ -30,19 +57,11 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
-    webPreferences: {
-      preload: preloadPath,
-      sandbox: false
-    }
+    webPreferences: appWebPreferences()
   })
 
   win.on('ready-to-show', () => win.show())
-  // Links that would open a new window go to the system browser instead, and only web
-  // and email links at all (see isSafeExternalUrl).
-  win.webContents.setWindowOpenHandler((details) => {
-    if (isSafeExternalUrl(details.url)) void shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+  installWindowSecurity(win)
   loadAppRoute(win, '/').catch((err) => {
     console.error(`[eduboard] Failed to load the app window: ${err}`)
     if (is.dev) {
@@ -71,13 +90,12 @@ export function applyWindowIcon(schoolLogo: string): void {
 
 /** A hidden window used only to render a print-friendly route before printToPDF. */
 export function createPrintWindow(): BrowserWindow {
-  return new BrowserWindow({
+  const win = new BrowserWindow({
     show: false,
-    webPreferences: {
-      preload: preloadPath,
-      sandbox: false
-    }
+    webPreferences: appWebPreferences()
   })
+  installWindowSecurity(win)
+  return win
 }
 
 /** The print route sets document.title once its data has finished loading; poll for it
