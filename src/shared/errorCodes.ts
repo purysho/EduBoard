@@ -45,6 +45,11 @@ export const APP_ERROR_CODES = {
     meaning: 'The assignment has no rubric linked, so it can’t be marked with one.',
     fix: 'Edit the assessment and link a rubric, or enter the score directly.'
   },
+  'EB-0006': {
+    area: 'General',
+    meaning: 'EduBoard blocked an IPC request because it did not come from a trusted EduBoard window.',
+    fix: 'Restart EduBoard. If it repeats in the normal app, copy the error report and report the code.'
+  },
   'EB-0900': {
     area: 'General',
     meaning:

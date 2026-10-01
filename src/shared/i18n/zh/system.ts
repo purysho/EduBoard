@@ -1,5 +1,6 @@
 export const SYSTEM: Record<string, string> = {
   'EduBoard is locked.': 'EduBoard 已锁定。',
+  'This request did not come from an EduBoard window.': '此请求并非来自受信任的 EduBoard 窗口。',
   'Choose the classes to carry on.': '请选择要继续开设的班级。',
   'Invalid week': '无效的周',
   'Choose a second place for backups': '选择第二个备份位置',

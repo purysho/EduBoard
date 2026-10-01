@@ -131,7 +131,7 @@ heavy teacher's year and a whole school's Portal in [docs/PERFORMANCE.md](docs/P
 - **Electron + React + TypeScript**, scaffolded with [electron-vite](https://electron-vite.org/).
 - **better-sqlite3 + Drizzle ORM** for storage — one `.db` file. On a packaged app it lives next to the executable when that's writable (portable/USB use), and falls back to the OS user-data folder otherwise (see `src/main/db/path.ts`).
 - **Hand-rolled versioned migrations** (`src/main/db/migrations.ts`) instead of a drizzle-kit migration folder, so there's nothing extra to ship — see the comment at the top of that file for why.
-- **React Query** on top of a typed `window.api` (defined in `src/shared/api.ts`) talking to the main process over IPC (`src/main/ipc/register.ts`).
+- **React Query** on top of a typed `window.api` (defined in `src/shared/api.ts`) talking to the main process over IPC (`src/main/ipc/register.ts`). The IPC boundary validates the sending EduBoard window, main frame, and exact app document before privileged handlers run.
 - **Tailwind CSS v4** for styling, **Recharts** for the report charts.
 - **exceljs** for `.xlsx`/`.csv` import and export.
 - Report cards print via Electron's own `webContents.printToPDF` against a dedicated print-only route (`/print/student/:studentId/:classId`) rendered in a hidden window — no extra PDF library needed.

@@ -15,6 +15,7 @@ import {
   type UiLanguage
 } from '@shared/i18n'
 import { cleanAppName } from '@shared/branding'
+import { isTrustedIpcSender } from './ipc/senderValidation'
 
 const CHANNEL = 'i18n:prefs'
 
@@ -102,6 +103,6 @@ export function initUiLanguage(): void {
   applyUiPrefs()
   // Answered synchronously, so the preload has it before the page's scripts run.
   ipcMain.on(CHANNEL, (event) => {
-    event.returnValue = readUiPrefs()
+    event.returnValue = isTrustedIpcSender(event) ? readUiPrefs() : null
   })
 }

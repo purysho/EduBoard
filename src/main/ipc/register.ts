@@ -154,6 +154,7 @@ import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
 import { cleanFlashcard, cleanPracticeQuestion, PRACTICE_LIMITS } from '@shared/practiceSets'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
+import { isTrustedIpcSender } from './senderValidation'
 import {
   errorLogPath,
   errorReportText,
@@ -185,6 +186,13 @@ function brandShortcuts(): void {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic IPC dispatch boundary; each handler below is fully typed
 function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any[]) => T): void {
   ipcMain.handle(channel, async (event, ...args) => {
+    if (!isTrustedIpcSender(event)) {
+      throw toWindowError(
+        new AppError('EB-0006', tr('This request did not come from an EduBoard window.')),
+        channel
+      )
+    }
+
     // Behind the lock screen the window may only ask about, and try to open, the lock
     // (and report a screen that failed to draw).
     if (
