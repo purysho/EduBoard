@@ -12,7 +12,12 @@ import { tr, trn } from '@shared/i18n'
 export function SchoolPackPanel(): React.JSX.Element {
   const qc = useQueryClient()
   const [message, setMessage] = useState<string | null>(null)
-  const [preview, setPreview] = useState<{ filePath: string; changes: string[] } | null>(null)
+  const [preview, setPreview] = useState<{
+    filePath: string
+    changes: string[]
+    included: string[]
+    excluded: string[]
+  } | null>(null)
   const [busy, setBusy] = useState(false)
 
   return (
@@ -104,15 +109,33 @@ export function SchoolPackPanel(): React.JSX.Element {
         }
       >
         <div className="space-y-2 text-sm">
-          <p>{tr('This will change:')}</p>
-          <ul className="list-disc space-y-1 pl-5">
-            {preview?.changes.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+          <div>
+            <p className="font-medium">{tr('This pack contains:')}</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-[var(--color-text-muted)]">
+              {preview?.included.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium">{tr('This pack never contains:')}</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5 text-[var(--color-text-muted)]">
+              {preview?.excluded.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="font-medium">{tr('This import will change:')}</p>
+            <ul className="mt-1 list-disc space-y-1 pl-5">
+              {preview?.changes.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </div>
           <p className="text-[var(--color-text-muted)]">
             {tr(
-              'Your classes, students and grades aren’t touched. Existing classes keep their own grading scale; terms and student fields are only added, never removed.'
+              'Existing classes keep their own grading scale; terms and student fields are only added, never removed.'
             )}
           </p>
         </div>
