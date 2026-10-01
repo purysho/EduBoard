@@ -77,3 +77,18 @@
 ## Version
 
 **EduBoard v0.7.8 — Lean Core**
+
+
+## Measured release impact
+
+Compared with v0.7.7, v0.7.8 reduced the actual published packages without removing features:
+
+- Windows Setup: **126.34 → 114.49 MiB (-9.38%)**
+- Windows Portable: **126.19 → 114.33 MiB (-9.40%)**
+- Linux AppImage: **192.32 → 181.08 MiB (-5.84%)**
+- macOS arm64 DMG: **191.08 → 170.59 MiB (-10.72%)**
+- macOS x64 DMG: **197.52 → 177.00 MiB (-10.39%)**
+
+The Mac ZIPs fell by roughly 20.74 MiB each as well. All 19 release assets were published successfully and retain SHA-256 digests.
+
+The normal Electron build now establishes a permanent baseline of **3.63 MiB compiled output** and **11 production dependency declarations** so future growth becomes visible in CI.
