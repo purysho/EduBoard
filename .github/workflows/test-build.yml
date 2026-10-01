@@ -70,9 +70,12 @@ jobs:
             --title "Test build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))" \
             --notes "Built from $GITHUB_REF_NAME at $GITHUB_SHA. Installed by Update-EduBoard.cmd."
 
-      # Proves the updater can find and download what was just published, on real Windows
-      # PowerShell, the way the teacher's computer will.
+      # Proves the updater can find and download what was just published on real Windows
+      # PowerShell. CI uses its GitHub token so shared-runner rate limits/network policy do
+      # not make this deterministic product check flaky. Teacher installs remain public
+      # and tokenless unless the teacher already saved an optional token.
       - name: Check Update-EduBoard can download it
-        # No token, as on the teacher's computer: the repository is public.
         shell: powershell
+        env:
+          EDUBOARD_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .\tools\windows\update-desktop.ps1 -Repo "${{ github.repository }}" -DownloadOnly
