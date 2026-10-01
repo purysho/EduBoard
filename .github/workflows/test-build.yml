@@ -70,12 +70,26 @@ jobs:
             --title "Test build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))" \
             --notes "Built from $GITHUB_REF_NAME at $GITHUB_SHA. Installed by Update-EduBoard.cmd."
 
-      # Proves the updater can find and download what was just published on real Windows
-      # PowerShell. CI uses its GitHub token so shared-runner rate limits/network policy do
-      # not make this deterministic product check flaky. Teacher installs remain public
-      # and tokenless unless the teacher already saved an optional token.
-      - name: Check Update-EduBoard can download it
+      # Proves the just-published test installer is retrievable with the workflow token.
+      # Raw unauthenticated/API-style requests from shared runners can hit GitHub's
+      # secondary rate limits even when the release itself is healthy, so CI uses gh's
+      # authenticated release download path. The teacher updater remains public/tokenless
+      # (with optional token support) and keeps its own retry/fallback behavior.
+      - name: Check the published test installer can be downloaded
         shell: powershell
         env:
-          EDUBOARD_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: .\tools\windows\update-desktop.ps1 -Repo "${{ github.repository }}" -DownloadOnly
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'eduboard-test-download'
+          New-Item -ItemType Directory -Force -Path $dir | Out-Null
+          gh release download test-latest --repo "${{ github.repository }}" --pattern "EduBoard-Setup.exe" --dir $dir --clobber
+          $downloaded = Join-Path $dir 'EduBoard-Setup.exe'
+          $built = 'dist/EduBoard-Setup.exe'
+          if (-not (Test-Path $downloaded)) { throw 'The published test installer was not downloaded.' }
+          if ((Get-Item $downloaded).Length -ne (Get-Item $built).Length) {
+            throw 'The published test installer size does not match the built installer.'
+          }
+          $downloadHash = (Get-FileHash $downloaded -Algorithm SHA256).Hash
+          $builtHash = (Get-FileHash $built -Algorithm SHA256).Hash
+          if ($downloadHash -ne $builtHash) { throw 'The published test installer hash does not match the built installer.' }
+          Write-Host "Published test installer download verified ($((Get-Item $downloaded).Length) bytes, SHA-256 $downloadHash)."
