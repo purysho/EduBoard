@@ -849,3 +849,32 @@ The report also exposed cross-platform native-package material inside the Window
 The first v0.7.8 Windows installer test-build produced the installer successfully, reported package composition successfully, uploaded the artifact successfully and published the `test-latest` prerelease successfully. Its final `Update-EduBoard` download check failed on an unauthenticated GitHub request from the shared Actions runner; this was a CI/network validation false negative rather than an installer defect.
 
 PR #48 (`901cc9505732ada4b3c240ed31688219f7161419`) changed only CI validation: the test-build workflow now supplies its ephemeral `GITHUB_TOKEN` to the existing updater test. Normal teacher-facing public updates remain tokenless by default. The follow-up main commit passed tests, dependency checks, CodeQL and private-content guard, and the complete Windows installer workflow rerun finished green: installer build, composition report, artifact upload, `test-latest` publication and `Update-EduBoard` download validation all succeeded.
+
+
+#### Final Windows test-build hardening
+
+The first v0.7.8 test-build false negative came from GitHub returning repeated 403 secondary-rate-limit responses to the updater's raw API/HttpClient path after the installer had already built and published successfully.
+
+PR #48 first made the CI updater probe authenticated with the workflow token and produced a green full Windows test-build. PR #50 then made the CI proof more deterministic still: shared-runner validation no longer depends on the updater's public API retry path at all. The workflow now:
+1. publishes `test-latest`;
+2. downloads `EduBoard-Setup.exe` through authenticated `gh release download`;
+3. compares downloaded and locally built byte sizes;
+4. compares SHA-256 hashes.
+
+The final main-branch Windows workflow passed every step. It verified the published installer at:
+- size: **120,047,912 bytes**;
+- SHA-256: **97A4355CCDD07D4E8BC8FE3853A24CA72D41AB4CE2731099DE402380F5B159F4**.
+
+The teacher-facing updater was not changed by PR #50; public/tokenless update behavior and its retry/fallback logic remain intact.
+
+Final post-merge main checks after PR #50:
+- desktop tests: passed;
+- Portal tests: passed;
+- Electron E2E + size budget: passed;
+- dependency audits: passed;
+- private-content guard: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- CodeQL Actions: passed;
+- Windows installer test-build + publish/download/hash verification: passed.
+
+This closes Loop 5 with no known red deterministic workflow.
