@@ -3,15 +3,6 @@ import { isSameAppDocument } from '../windowSecurity'
 
 type IpcEvent = IpcMainEvent | IpcMainInvokeEvent
 
-interface TrustedWebContents {
-  id: number
-  getURL(): string
-  mainFrame: {
-    frameTreeNodeId: number
-  }
-  once(event: 'destroyed', listener: () => void): unknown
-}
-
 export interface IpcSenderSnapshot {
   senderId: number
   trustedDocument: string | null
@@ -26,7 +17,7 @@ export interface IpcSenderSnapshot {
 const trustedDocuments = new Map<number, string>()
 
 /** Marks a BrowserWindow/WebContents created by EduBoard as an IPC-capable app renderer. */
-export function trustIpcWebContents(contents: WebContents | TrustedWebContents, documentUrl: string): void {
+export function trustIpcWebContents(contents: WebContents, documentUrl: string): void {
   trustedDocuments.set(contents.id, documentUrl)
   contents.once('destroyed', () => trustedDocuments.delete(contents.id))
 }
@@ -51,20 +42,20 @@ export function isTrustedIpcSenderSnapshot(snapshot: IpcSenderSnapshot): boolean
 /** Validates that an IPC request came from a live EduBoard main frame on its app document. */
 export function isTrustedIpcSender(event: IpcEvent): boolean {
   const frame = event.senderFrame
-  let mainFrameTreeNodeId: number | null = null
+  if (!frame) return false
   try {
-    mainFrameTreeNodeId = event.sender.mainFrame.frameTreeNodeId
+    const mainFrame = event.sender.mainFrame
+    return isTrustedIpcSenderSnapshot({
+      senderId: event.sender.id,
+      trustedDocument: trustedDocuments.get(event.sender.id) ?? null,
+      currentDocumentUrl: event.sender.getURL(),
+      senderFrameUrl: frame.url,
+      senderFrameTreeNodeId: frame.frameTreeNodeId,
+      mainFrameTreeNodeId: mainFrame.frameTreeNodeId,
+      senderFrameDestroyed: frame.isDestroyed(),
+      senderFrameDetached: frame.detached
+    })
   } catch {
     return false
   }
-  return isTrustedIpcSenderSnapshot({
-    senderId: event.sender.id,
-    trustedDocument: trustedDocuments.get(event.sender.id) ?? null,
-    currentDocumentUrl: event.sender.getURL(),
-    senderFrameUrl: frame?.url ?? null,
-    senderFrameTreeNodeId: frame?.frameTreeNodeId ?? null,
-    mainFrameTreeNodeId,
-    senderFrameDestroyed: frame ? frame.isDestroyed() : true,
-    senderFrameDetached: frame?.detached ?? true
-  })
 }
