@@ -1,81 +1,62 @@
-# Changes Made — EduBoard v0.7.5 “Sandboxed Renderers”
+# Changes Made — EduBoard v0.7.6 “Native Mac Release Validation”
 
 ## Purpose
 
-v0.7.5 hardens the Electron renderer trust boundary without changing classroom workflows.
-The main and print app-content windows now run in Chromium's renderer sandbox and expose
-only EduBoard's narrow typed preload API.
+v0.7.6 fixes the release regression discovered after v0.7.5. Both Mac architectures
+were built and uploaded, but the release workflow treated an x64 GUI launch through
+Rosetta on an Apple Silicon runner as the authoritative Intel test. After renderer
+sandboxing, that translated launch failed and prevented the final Mac compatibility and
+checksum assets from being produced.
 
-## Security changes
+## Release changes
 
-- Enabled `sandbox: true` for main and print BrowserWindows.
-- Explicitly enforced `contextIsolation: true`, `nodeIntegration: false` and
-  `webSecurity: true` instead of relying on Electron defaults.
-- Removed the unused generic `window.electron` bridge from `@electron-toolkit/preload`.
-- Kept only EduBoard's typed `window.api` bridge plus startup UI preferences.
-- Centralized app-window webPreferences so main and print windows cannot silently drift.
-- Continued denying all renderer-created BrowserWindows.
-- Added top-level navigation containment:
-  - exact reloads of the current EduBoard document are allowed;
-  - hash navigation remains unaffected for React HashRouter;
-  - all other document navigation is prevented;
-  - safe HTTP/HTTPS/mail destinations are handed to the system browser;
-  - unsafe schemes/local-file changes stay blocked.
+- Kept the established dual-architecture Mac build on the Apple Silicon builder.
+- Kept signature and native-module checks for both arm64 and x64 packages.
+- The arm64 builder now GUI-tests the native arm64 app only.
+- Added a native `macos-15-intel` job which downloads the exact published
+  `EduBoard-x64.zip`, extracts it, and runs the full app natively on Intel hardware.
+- The native Intel test validates the shipped renderer sandbox; no `--no-sandbox`
+  workaround is used.
+- Added Bash syntax checking for `tools/mac/smoke-test.sh` to ordinary PR CI.
 
-## Review work
+## Release recovery and completeness
 
-Before coding:
-- reviewed every BrowserWindow constructor and the preload bridge;
-- checked current Electron sandbox/context-isolation/navigation guidance;
-- scanned all 137 renderer TS/JS files;
-- confirmed renderer code uses `window.api` and never uses `window.electron`;
-- identified the deliberate `location.reload()` used by the language switch and designed
-  the navigation policy so it remains functional.
+Added `.github/workflows/release-repair.yml`, which runs after every Release workflow:
 
-The first idea—only flipping `sandbox: false` to `true`—was rejected as incomplete.
-The unused broad toolkit bridge was removed first so the sandboxed preload has a smaller,
-supported capability surface.
+- downloads the exact published arm64/x64 Mac DMG and ZIP assets;
+- recreates the legacy `EduBoard.dmg` alias from the published arm64 DMG;
+- regenerates `SHA256SUMS-macos-latest.txt` from the exact published Mac installers;
+- uploads those derived assets idempotently with `--clobber`;
+- verifies the full expected 19-asset release set;
+- fails explicitly when a core installer is missing instead of leaving a release that
+  merely looks complete.
 
-## Tests added or extended
+This finalizer also gives us a safe path to repair the already-published v0.7.5 release
+without rebuilding or replacing its existing binaries.
 
-- Unit tests for explicit BrowserWindow security preferences.
-- Exact-document navigation matching tests.
-- Different-file, malformed/data URL and external-link cases.
-- Electron E2E now verifies the live BrowserWindow reports:
-  - sandbox enabled;
-  - context isolation enabled;
-  - Node integration disabled;
-  - web security enabled.
-- E2E verifies `window.api` remains available and `window.electron` is absent.
-- E2E verifies the renderer-triggered language reload still works.
-- E2E verifies an unsafe top-level navigation does not replace EduBoard.
+## Review and CI
 
-## CI and security review
+PR #39 passed:
 
-PR #38 passed:
 - lint;
 - TypeScript typecheck;
+- Mac release-script Bash syntax check;
 - desktop unit/integration tests;
 - Portal tests;
 - Electron E2E smoke test;
 - desktop production dependency audit;
 - Portal production dependency audit;
 - private-content guard;
-- CodeQL JavaScript/TypeScript;
-- CodeQL GitHub Actions.
+- CodeQL GitHub Actions;
+- CodeQL JavaScript/TypeScript.
 
-The commit's CodeQL check reports **0 code-scanning annotations**.
+The aggregate CodeQL result reports **0 code-scanning annotations**.
 
-The GitHub connector available in this chat does not expose the private code-scanning,
-Dependabot-alert, or secret-scanning list endpoints behind the repository Security UI, so
-those lists could not be enumerated directly. Their corresponding available automated
-evidence above is green.
-
-GitHub's separate “Code scanning AI findings” job again failed before analysis because
-its service requested `claude-opus-5[ReasoningEffort=medium]` and received
-`400 The requested model is not supported`. It produced no application-security
-finding.
+GitHub's separate “Code scanning AI findings” job failed before code analysis because its
+service requested `claude-opus-5[ReasoningEffort=medium]` and received
+`400 The requested model is not supported`. No application-security finding was
+produced.
 
 ## Version
 
-**EduBoard v0.7.5 — Sandboxed Renderers**
+**EduBoard v0.7.6 — Native Mac Release Validation**
