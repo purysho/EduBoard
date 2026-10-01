@@ -2,6 +2,18 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.6] — 2026-10-01
+
+### Fixed
+
+- **Native Intel Mac release validation:** Intel builds are now GUI-tested on GitHub's native `macos-15-intel` runner instead of treating a Rosetta launch on Apple Silicon as the target environment.
+- **Partial Mac release recovery:** a post-release finalizer recreates the legacy `EduBoard.dmg` compatibility asset and macOS checksum file from the exact published Mac installers, then verifies the complete expected asset set.
+- **v0.7.5 release regression:** the release pipeline no longer stops before derived Mac assets merely because a translated Rosetta GUI smoke test disagrees with the native target environment.
+
+### Security
+
+- Renderer sandboxing remains enabled during native arm64 and native Intel GUI release tests; the release pipeline does not use `--no-sandbox` to bypass validation.
+
 ## [0.7.5] — 2026-10-01
 
 ### Security
