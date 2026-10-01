@@ -77,3 +77,20 @@
 ## Version
 
 **EduBoard v0.7.8 — Lean Core**
+
+
+## Measured release impact
+
+v0.7.8 reduced the primary distributables versus v0.7.7 without removing product features:
+
+- Windows Setup: **126.34 → 114.49 MiB (-9.38%)**
+- Windows Portable: **126.19 → 114.33 MiB (-9.40%)**
+- macOS arm64 DMG: **191.08 → 170.59 MiB (-10.72%)**
+- macOS x64 DMG: **197.52 → 177.00 MiB (-10.39%)**
+- Linux AppImage: **192.32 → 181.08 MiB (-5.84%)**
+
+The compiled application code is only **3.63 MiB**; remaining package weight is dominated by Electron/Chromium and runtime/native dependencies. Production dependency declarations fell from **18 to 11** by moving seven renderer-only packages to build-time dependencies.
+
+The final v0.7.8 Release workflow, native Intel Mac validation and inline release finalizer all passed, and all 19 release assets were published with SHA-256 digests.
+
+A post-release CI-only correction (PR #48) made the Windows `test-latest` updater validation deterministic by using the workflow's ephemeral GitHub token. The subsequent Windows test-build passed installer build, package measurement, publication and updater download validation end-to-end; teacher downloads remain public/tokenless by default.
