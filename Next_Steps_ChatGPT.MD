@@ -2,50 +2,48 @@
 
 ## Next loop target
 
-Return to step 1 on the released post-v0.7.6 `main`.
+Return to step 1 on the released post-v0.7.7 `main`.
 
-### Highest-priority candidate: centralized IPC sender validation
+### First verification
 
-Electron's security checklist recommends validating IPC message senders. EduBoard has a
-large typed IPC surface, so v0.7.7 should solve this at the registration boundary rather
-than adding inconsistent checks to individual handlers.
+Before new code:
+1. Confirm the v0.7.7 tag points to the merged commit.
+2. Confirm Release, native Intel Mac validation, tests, dependency checks and CodeQL are green.
+3. Confirm all 19 expected release assets are uploaded with digests.
+4. Confirm the release-repair finalizer is green/idempotent.
+5. Record those results in `Project_Review.MD`.
 
-Before changing code:
+### Highest-priority candidate: Electron production fuses
 
-1. Inventory every `ipcMain.handle`, `ipcMain.on`, `ipcMain.once` and any wrapper
-   used to register them.
-2. Inventory synchronous IPC, especially `i18n:prefs`.
-3. Define trusted renderer-document rules for:
-   - packaged `file://.../renderer/index.html`;
-   - development `http://127.0.0.1:5173/`;
-   - main and print windows;
-   - exact-document reloads already permitted by the navigation policy.
-4. Centralize validation around `event.senderFrame` / `event.sender`, rejecting
-   unexpected documents before arguments reach repositories or services.
-5. Do not trust an arbitrary URL string alone when a destroyed/missing frame or unrelated
-   webContents can be rejected more strongly.
-6. Add pure tests for trusted/untrusted sender decisions.
-7. Add integration/E2E evidence that normal `window.api` calls, printing, lock/unlock,
-   sample school and offline workflows remain functional.
-8. Review whether `ipcRenderer.sendSync('i18n:prefs')` can be retained safely or should
-   move to a preload-initialization pattern.
-9. Record the complete plan in `Project_Review.MD` before coding.
+Electron's security checklist recommends reviewing Electron fuses. The next narrow
+security loop should evaluate hardening the packaged binary so production builds cannot
+silently regain debugging/Node entry points through environment variables or CLI flags.
+
+Before coding:
+1. Review Electron 44's current fuse set and `@electron/fuses` documentation.
+2. Audit EduBoard launch/update/test workflows for any legitimate dependency on:
+   - `ELECTRON_RUN_AS_NODE`;
+   - `NODE_OPTIONS`;
+   - `--inspect` / `--inspect-brk`;
+   - loading app code outside the packaged ASAR.
+3. Choose only fuses compatible with Windows installer/portable, macOS arm64/x64 and Linux AppImage.
+4. Plan how electron-builder flips/verifies fuses after packaging.
+5. Add packaged-binary verification on all release platforms, not only unit tests.
+6. Record the complete plan in `Project_Review.MD` before implementation.
 
 ### Other queued gaps
 
-- **Remove unused dependency:** `@electron-toolkit/preload` is no longer imported after
-  v0.7.5 and can be removed from dependencies/lockfile.
-- **Electron fuses:** evaluate disabling RunAsNode, NODE_OPTIONS and CLI inspection in
-  packaged builds after IPC sender validation.
-- **Code signing/notarization:** requires production signing credentials/repository
-  secrets.
-- **Branch protection:** select stable deterministic required checks; do not require the
+- **Custom local protocol:** replace packaged `file://` renderer loading with a privileged
+  app protocol in its own loop; preserve hash routing and print routes.
+- **Code signing/notarization:** requires production Windows/macOS credentials and repo secrets.
+- **Branch protection:** choose stable deterministic required checks; do not require the
   currently broken GitHub AI-security service.
-- **Release provenance/SBOM:** add build provenance and a software bill of materials.
-- **GitHub AI-security check:** re-check for service recovery only; do not modify
-  application code to compensate for its unsupported-model configuration.
+- **Release provenance/SBOM:** generate machine-verifiable provenance and an SBOM.
+- **Content Security Policy review:** confirm the packaged renderer has a restrictive CSP
+  appropriate for all offline and Portal-linked features.
 
 ## Loop rule
 
-Keep each release narrow and test the actual trust boundary on the hardware/environment it
-is meant to protect.
+Keep each security release narrow, test the actual packaged binaries on their target
+platforms, and never weaken a production boundary merely to make a translated or synthetic
+CI environment pass.
