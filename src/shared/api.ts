@@ -537,6 +537,8 @@ export interface EduBoardApi {
     listAll(): Promise<HomeworkAssignmentWithClass[]>
     listByClass(classId: string): Promise<HomeworkAssignment[]>
     create(input: CreateHomeworkAssignmentInput): Promise<HomeworkAssignment>
+    /** Copies one assignment, including rubric/attachment/quick-check, as drafts in target classes. */
+    copyToClasses(id: string, classIds: string[]): Promise<HomeworkAssignment[]>
     update(id: string, patch: UpdateHomeworkAssignmentInput): Promise<HomeworkAssignment>
     remove(id: string): Promise<void>
     listSubmissions(
