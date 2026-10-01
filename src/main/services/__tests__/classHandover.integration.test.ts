@@ -82,6 +82,7 @@ describe('class handover export', () => {
       weekLabel: 'Week 5',
       title: 'Discussion strategies',
       objectives: 'Practice discussion strategies.',
+      framework: null,
       materials: null,
       activities: null,
       homework: null,
