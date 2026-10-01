@@ -49,7 +49,7 @@ export function StudyProgressModal({
   }
 
   return (
-    <Modal open title={tr('Offline study progress')} onClose={onClose} size="lg">
+    <Modal open title={tr('Offline study progress')} onClose={onClose} wide>
       <div className="space-y-4">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 text-sm text-[var(--color-text-muted)]">
           {tr(
