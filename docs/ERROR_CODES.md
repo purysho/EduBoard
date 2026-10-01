@@ -26,6 +26,7 @@ after changing either.
 | EB-0003 | The student isn’t (or is no longer) in this class. | Check the class’s roster; re-enrol the student if they should be there. |
 | EB-0004 | Something needed is missing or not valid (nothing chosen, nothing written, a bad date). | Read the message: it names what to fill in or choose. |
 | EB-0005 | The assignment has no rubric linked, so it can’t be marked with one. | Edit the assessment and link a rubric, or enter the score directly. |
+| EB-0006 | EduBoard blocked an IPC request because it did not come from a trusted EduBoard window. | Restart EduBoard. If it repeats in the normal app, copy the error report and report the code. |
 | EB-0900 | Something unexpected went wrong in EduBoard itself. The details (and a reference) are in the error log. | Ask for the error report (Settings → Help and updates → Copy error report) and look up the reference in it. Restarting EduBoard usually clears a one-off. |
 | EB-0901 | A screen failed to draw. The details (and a reference) are in the error log. | Click Reload. If the same screen fails again, get the error report (Settings → Help and updates) and look up the reference. |
 
