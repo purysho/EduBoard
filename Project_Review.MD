@@ -562,3 +562,40 @@ Before v0.7.7 merges, the v0.7.5 historical release is now complete at 19 assets
 ### Loop 4 completion status
 
 The implementation and required handoff documents are complete. A final docs-inclusive PR gate must be green before merge. After merge, verify the v0.7.7 Release workflow, native Intel Mac validation, the full 19-asset release set and GitHub security checks, then begin Loop 5 from released `main`.
+
+
+### v0.7.7 final release verification
+
+v0.7.7 is fully released from merge commit `57eabac34219bacab4f62217717b6789b4a7675a`.
+
+Verified release outcomes:
+- tag `v0.7.7` points directly to the merge commit;
+- Release on version bump: passed;
+- Release workflow: passed;
+- Linux build/publish: passed;
+- Windows build/publish: passed;
+- macOS build/publish: passed;
+- native Intel macOS validation of the exact published x64 ZIP: passed;
+- main-branch tests: passed;
+- Electron E2E: passed;
+- desktop and Portal dependency audits: passed;
+- private-content guard: passed;
+- main-branch CodeQL Actions: passed;
+- main-branch CodeQL JavaScript/TypeScript: passed;
+- Windows installer test build: passed.
+
+The published release is neither draft nor prerelease and contains the complete 19-asset set. Every uploaded asset exposes a GitHub SHA-256 digest, including:
+- Windows installer and portable executable;
+- Linux AppImage;
+- arm64 and x64 Mac DMG/ZIP packages;
+- legacy `EduBoard.dmg` compatibility asset;
+- updater metadata;
+- all three platform checksum files.
+
+The repaired `v0.7.5` historical release also remains complete at 19 assets.
+
+#### Remaining workflow-trigger gap
+
+The `Release asset repair` workflow did **not** automatically start from the completed v0.7.7 Release workflow. Because v0.7.7 already published all 19 expected assets, this did not affect release correctness or completeness. The repair tool itself is proven green/idempotent from the post-v0.7.5 no-op audit and its mocked-GitHub regression test.
+
+Treat the missing automatic `workflow_run` trigger as a release-orchestration gap for the next loop. Do not rebuild or alter the shipped v0.7.7 binaries merely to force the finalizer to run.
