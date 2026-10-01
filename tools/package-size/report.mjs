@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, relative, sep } from 'node:path'
 import process from 'node:process'
