@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
 import { IpcChannels } from '@shared/ipc'
 import type { EduBoardApi } from '@shared/api'
 
@@ -457,19 +456,7 @@ const api: EduBoardApi = {
 // before any screen code runs (src/renderer/src/i18nInit.ts).
 const uiPrefs: unknown = ipcRenderer.sendSync('i18n:prefs')
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('eduboardUiPrefs', uiPrefs)
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
-  // @ts-ignore (define in dts)
-  window.eduboardUiPrefs = uiPrefs
-}
+// Every app-content BrowserWindow explicitly enables context isolation and the Chromium
+// renderer sandbox. Expose only EduBoard's narrow, typed bridge — never raw Electron IPC.
+contextBridge.exposeInMainWorld('eduboardUiPrefs', uiPrefs)
+contextBridge.exposeInMainWorld('api', api)
