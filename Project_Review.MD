@@ -317,3 +317,49 @@ That translated test is no longer a faithful target-environment test after rende
 A tempting workaround was to launch the translated Intel app with `--no-sandbox`. That was rejected: Electron documents `--no-sandbox` as testing-only, and using it here would specifically stop validating the security boundary introduced in v0.7.5.
 
 Another option was rebuilding x64 exclusively on an Intel runner. That is a larger packaging change and duplicates the established two-architecture Mac build path. The amended plan keeps the proven build process, but moves **runtime authority** to a native Intel runner and adds a post-release integrity/repair layer so one validation failure cannot silently omit derived release assets.
+
+
+### Loop 3 implementation review
+
+The implementation kept the established Mac packaging path but changed where runtime
+authority lives. The arm64 builder still proves the x64 native dependencies load under
+Rosetta, but only native arm64 is GUI-launched there. A separate `macos-15-intel` job
+downloads and tests the exact published Intel ZIP natively.
+
+A release finalizer was added rather than merely moving the two skipped commands earlier.
+This is more resilient: it derives the compatibility DMG and macOS checksum from the
+already-published binaries, then checks the complete asset set after any Release outcome.
+
+PR review also added `bash -n tools/mac/smoke-test.sh` to normal test CI so Bash syntax
+is not first exercised during a tagged release.
+
+### Loop 3 CI and security review
+
+PR #39 deterministic results:
+- lint: passed;
+- typecheck: passed;
+- Mac release-script syntax: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E: passed;
+- desktop npm audit: passed;
+- Portal npm audit: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- aggregate CodeQL: passed with 0 code-scanning annotations.
+
+GitHub's optional AI-security run again failed before analysis with
+`400 The requested model is not supported` for
+`claude-opus-5[ReasoningEffort=medium]`; it produced no application finding.
+
+The GitHub connector still does not expose the private Security-tab alert-list endpoints,
+so those lists cannot be directly enumerated. Available code-scanning/dependency/private
+content evidence is green.
+
+### Loop 3 completion status
+
+Code and requested documentation are complete on PR #39. Run the final docs-inclusive
+gate, merge if deterministic checks stay green, re-run the failed v0.7.5 Release workflow
+to trigger the new repair finalizer, verify v0.7.5 has 19 assets, then verify the v0.7.6
+release and native Intel validation before beginning Loop 4.
