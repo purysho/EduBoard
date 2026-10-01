@@ -112,3 +112,144 @@ security checks are green.
 Code and requested documentation are complete on PR #37. A final docs-inclusive CI pass
 must be green before merge. After merge, verify the automatic v0.7.4 release workflow,
 all platform assets, digests and checksums, then begin Loop 2 from the released `main`.
+
+
+## Loop 2 — v0.7.5 “Sandboxed Renderers”
+
+### Baseline reviewed
+
+- Starting point: released `main` at `24a72e855f150272f8f902a3d56ed83598c8655a`.
+- `v0.7.4` release workflow completed successfully.
+- Release `v0.7.4` published 19 Windows/macOS/Linux assets, all with GitHub SHA-256 digests and platform checksum files.
+- Desktop/Portal dependency audits, private-content guard, Electron E2E and both CodeQL analyses were green before the v0.7.4 merge.
+- GitHub's optional AI-security job still fails before code analysis because its configured `claude-opus-5` model is unsupported; that remains an external service issue, not an application finding.
+
+### Current Electron security review
+
+EduBoard is on Electron `^44.4.5`. Electron's current security guidance recommends renderer process sandboxing, context isolation, limited navigation, limited new-window creation and narrowly scoped preload bridges.
+
+Current EduBoard state:
+- both the main and print BrowserWindows explicitly opt out with `sandbox: false`;
+- `contextIsolation` and `nodeIntegration` currently rely on Electron defaults rather than being explicit;
+- `webSecurity` also relies on the default;
+- new-window creation is already denied in the main window, with safe HTTP/HTTPS/mail links opened in the system browser;
+- top-level navigation is not explicitly restricted;
+- the preload exposes the app's typed `window.api` bridge **and** the broad `@electron-toolkit/preload` `electronAPI` bridge as `window.electron`.
+
+### Compatibility audit
+
+A complete scan of all 137 renderer TypeScript/JavaScript files found extensive use of `window.api` and **no use of `window.electron`**.
+
+The preload itself uses only:
+- Electron's `contextBridge` and `ipcRenderer`;
+- bundled/shared EduBoard IPC constants and TypeScript types;
+- the unused `@electron-toolkit/preload` import.
+
+Electron's sandboxed preload environment supports `contextBridge` and `ipcRenderer`, but arbitrary external Node modules are intentionally restricted. Removing the unused `electronAPI` bridge therefore eliminates the only obvious sandbox incompatibility while also reducing exposed renderer capability.
+
+One renderer action intentionally calls `location.reload()` after changing the UI language. Navigation controls must allow reload of the exact current app document while blocking navigation to any other document.
+
+### Gaps and candidates
+
+1. **Renderer sandbox + narrow preload — selected for v0.7.5.**
+2. **Top-level navigation restriction — selected for v0.7.5** because it is part of the same BrowserWindow trust boundary.
+3. **IPC sender validation — deferred to a dedicated loop.**
+   - Electron recommends validating IPC senders.
+   - EduBoard has a large IPC surface; sender validation should be centralized and tested rather than partially patched in this version.
+4. **Electron fuses — deferred.**
+   - Candidate hardening includes disabling RunAsNode/NodeOptions/CLI inspect capabilities at package time.
+5. **Code signing/notarization — deferred/external credentials.**
+6. **Branch protection / required checks — deferred repository-policy work.**
+7. **Release provenance/SBOM — deferred.**
+
+### Detailed implementation plan
+
+1. Remove the unused `@electron-toolkit/preload` import and `window.electron` exposure from the preload.
+2. Remove the matching `Window.electron` type declaration; keep the typed `window.api` bridge.
+3. Define explicit BrowserWindow security preferences for all app-content windows:
+   - `sandbox: true`;
+   - `contextIsolation: true`;
+   - `nodeIntegration: false`;
+   - `webSecurity: true`;
+   - the existing preload path.
+4. Apply those preferences to both main and print windows.
+5. Centralize webContents security setup so main and print windows receive the same navigation/window policy.
+6. Continue denying renderer-created windows. Open only URLs already accepted by `isSafeExternalUrl` through `shell.openExternal`.
+7. Add a `will-navigate` policy:
+   - permit a reload/navigation only when protocol, host, pathname and search match the currently loaded EduBoard document;
+   - ignore hash differences because HashRouter navigation is same-document and does not emit `will-navigate`;
+   - prevent every other top-level document navigation;
+   - when the target is an allowed HTTP/HTTPS/mail URL, hand it to the system browser instead of navigating EduBoard.
+8. Add pure unit tests for exact-document navigation matching, including:
+   - same file/dev URL with a different hash;
+   - same document reload;
+   - different local file;
+   - different dev-server path/origin;
+   - external HTTPS/mailto;
+   - malformed URLs.
+9. Extend Electron E2E to assert:
+   - `process.sandboxed` is true in the preload/renderer environment (through a deliberately narrow diagnostic value if needed);
+   - `window.electron` is absent;
+   - `window.api` still works;
+   - a same-document reload still works;
+   - an attempted top-level navigation does not replace the EduBoard document.
+10. Update `SECURITY.md`, changelog and user-facing technical notes.
+11. Bump desktop version to `0.7.5` and sync Portal desktop version metadata.
+12. Run lint, typecheck, desktop tests, Portal tests, Electron E2E, dependency checks, private-content guard and CodeQL.
+13. Review any CI/security failure, amend code as needed, then write the versioned `Changes_Made.MD` and new `Next_Steps_ChatGPT.MD`.
+14. Merge only after the final docs-inclusive gate is green, then verify the v0.7.5 platform release and return to step 1.
+
+### Plan review and amendment
+
+The first candidate was simply changing `sandbox: false` to `sandbox: true`. Review showed that would be incomplete: the preload also exposes an unused broad Electron bridge from an external package that is unnecessary for EduBoard and can conflict with sandboxed preload constraints. The amended plan removes that bridge first and makes the renderer's only privileged surface the existing typed `window.api`.
+
+A blanket `will-navigate` denial was also rejected because EduBoard intentionally uses `location.reload()` when changing interface language. The navigation policy will therefore allow the exact current app document and deny everything else.
+
+
+### Loop 2 implementation review
+
+The final implementation matched the amended plan:
+- the unused generic Electron bridge was removed;
+- main and print windows share explicit sandbox/isolation webPreferences;
+- renderer-created windows are denied;
+- renderer-triggered top-level navigation is centrally classified;
+- exact-document reloads remain allowed so the UI-language switch continues working.
+
+A post-code review made one non-behavioral cleanup: `windows.ts` imports Electron's
+`WebPreferences` type directly rather than relying on an ambient namespace.
+
+### Loop 2 CI and security review
+
+PR #38 results:
+- lint: passed;
+- typecheck: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron build and E2E smoke test: passed;
+- desktop npm audit: passed;
+- Portal npm audit: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- aggregate CodeQL check: passed with 0 code-scanning annotations.
+
+The E2E result is important for this loop: Electron successfully launched the real app
+with the sandboxed preload, confirmed secure live webPreferences, retained the typed
+`window.api` bridge, omitted `window.electron`, completed a renderer-triggered
+same-document reload, and blocked an unsafe top-level document navigation.
+
+The GitHub connection does not expose the private Security-tab alert-list REST endpoints,
+so open code-scanning/Dependabot/secret-scanning lists could not be enumerated directly.
+This limitation is recorded explicitly rather than inferred away.
+
+GitHub's optional AI-security job failed before reviewing code. Its log again shows
+`COPILOT_AGENT_MODEL: sweagent-capi:claude-opus-5[ReasoningEffort=medium]` followed by
+`400 The requested model is not supported`. No application-security finding was
+produced.
+
+### Loop 2 completion status
+
+Code, tests and requested documentation are complete on PR #38. Run one final
+docs-inclusive gate, merge only if the deterministic checks remain green, verify the
+automatic v0.7.5 release and all platform assets, then begin Loop 3 from released
+`main`.

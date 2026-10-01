@@ -48,8 +48,32 @@ async function go(page, route) {
 
 // 1. Every screen, with a term of made-up data (the sample school).
 {
-  const { page, errors, close } = await launch(['--sample-school', '--sample-school-fresh'])
+  const { app, page, errors, close } = await launch(['--sample-school', '--sample-school-fresh'])
   await page.waitForTimeout(1500)
+
+  const webPreferences = await app.evaluate(({ BrowserWindow }) => {
+    const win = BrowserWindow.getAllWindows()[0]
+    const prefs = win.webContents.getLastWebPreferences()
+    return {
+      sandbox: prefs.sandbox,
+      contextIsolation: prefs.contextIsolation,
+      nodeIntegration: prefs.nodeIntegration,
+      webSecurity: prefs.webSecurity
+    }
+  })
+  check(
+    webPreferences.sandbox === true &&
+      webPreferences.contextIsolation === true &&
+      webPreferences.nodeIntegration === false &&
+      webPreferences.webSecurity === true,
+    'the app renderer is sandboxed, context-isolated and has no Node integration'
+  )
+  const bridges = await page.evaluate(() => ({
+    api: typeof window.api === 'object',
+    electron: 'electron' in window
+  }))
+  check(bridges.api && !bridges.electron, 'only the narrow EduBoard preload bridge is exposed')
+
   const classes = await page.evaluate(() => window.api.classes.list())
   const students = await page.evaluate(() => window.api.students.list())
   check(classes.length > 0 && students.length > 0, 'the sample school has classes and students')
@@ -107,15 +131,25 @@ async function go(page, route) {
 
   // Chinese.
   await page.evaluate(() => window.api.settings.update({ uiLanguage: 'zh' }))
-  await page.reload()
+  await page.evaluate(() => location.reload()).catch(() => {})
   await page.waitForSelector('aside nav')
   check(
     (await page.locator('aside').innerText()).includes('工作台'),
-    'the interface switches to Chinese'
+    'the interface switches to Chinese through an allowed same-document reload'
   )
   await page.evaluate(() => window.api.settings.update({ uiLanguage: '' }))
-  await page.reload()
+  await page.evaluate(() => location.reload()).catch(() => {})
   await page.waitForSelector('aside nav')
+
+  const beforeBlockedNavigation = page.url()
+  await page.evaluate(() => {
+    location.href = 'data:text/html,not-eduboard'
+  })
+  await page.waitForTimeout(400)
+  check(
+    page.url() === beforeBlockedNavigation && (await page.locator('aside nav').count()) === 1,
+    'an unsafe top-level document navigation is blocked'
+  )
 
   // A newsletter draft written here belongs to the sample school (checked in part 2).
   await go(page, '/newsletter')
