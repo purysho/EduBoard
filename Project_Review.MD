@@ -253,3 +253,113 @@ Code, tests and requested documentation are complete on PR #38. Run one final
 docs-inclusive gate, merge only if the deterministic checks remain green, verify the
 automatic v0.7.5 release and all platform assets, then begin Loop 3 from released
 `main`.
+
+
+## Loop 3 — v0.7.6 “Native Mac Release Validation”
+
+### Baseline reviewed
+
+- Starting point: released `main` at `fdcd4abeea1798ff4051b8e8727065b17ad01a08` (v0.7.5).
+- PR #38's application gates passed: lint, typecheck, desktop tests, Portal tests, Electron E2E, dependency audits, private-content guard and both CodeQL analyses.
+- The v0.7.5 release itself did **not** complete successfully.
+- Windows and Linux release jobs succeeded.
+- The macOS builder produced and uploaded both arm64 and x64 DMG/ZIP artifacts successfully.
+- The Mac job then failed while launching the x64 app **under Rosetta on an arm64 GitHub runner**. The app logged `ERR_FAILED (-2)` while loading the packaged renderer document.
+- Because that smoke step failed, later Mac post-build steps were skipped. The public v0.7.5 release therefore has 17 assets rather than the normal 19: `EduBoard.dmg` and `SHA256SUMS-macos-latest.txt` are missing.
+
+### Root-cause review
+
+The release currently builds both Mac architectures on `macos-latest`, which is an arm64 runner, then treats an x64 GUI launch through Rosetta as the Intel runtime test.
+
+That translated test is no longer a faithful target-environment test after renderer sandboxing. GitHub now provides standard native Intel runners (`macos-15-intel` and `macos-26-intel`) for public repositories. Native Intel validation is both more representative and more secure than weakening the app or passing `--no-sandbox` merely to make a Rosetta CI check succeed.
+
+### Gaps and candidates
+
+1. **Native Intel release validation — selected for v0.7.6.**
+2. **Partial-release repair and asset verification — selected for v0.7.6.**
+3. **IPC sender validation — deferred to the next application-security loop.**
+4. **Electron fuses, signing/notarization, branch protection and provenance/SBOM — remain queued.**
+
+### Detailed implementation plan
+
+1. Refactor `tools/mac/smoke-test.sh` so it can validate a specific app/architecture when paths are supplied.
+2. Keep structural/signature/native-module checks for both architectures produced by the arm64 builder.
+3. On the arm64 build runner:
+   - perform the full GUI startup test only for the native arm64 app;
+   - do not treat a translated Rosetta GUI startup as authoritative;
+   - retain the x64 native-module check under Rosetta as a packaging sanity check.
+4. Add a separate `verify-mac-intel` release job on `macos-15-intel`:
+   - wait for the build matrix to finish;
+   - download the exact published `EduBoard-x64.zip` for the release tag;
+   - extract it;
+   - validate signature/native modules;
+   - launch the x64 app natively and require it to stay running without startup errors.
+5. Keep renderer sandboxing enabled. Do **not** add `--no-sandbox` to production validation.
+6. Add a `Release asset repair` workflow triggered after every `Release` workflow completion:
+   - identify the release tag from the completed run;
+   - exit cleanly if no corresponding release exists;
+   - download the published Mac DMG/ZIP assets;
+   - recreate `EduBoard.dmg` from the exact published arm64 DMG when the compatibility alias is missing;
+   - regenerate `SHA256SUMS-macos-latest.txt` from the exact published Mac installers;
+   - upload/replace those two derived assets;
+   - verify the expected core Windows, Mac and Linux assets are present;
+   - fail loudly if a core installer is missing rather than pretending the release is healthy.
+7. Keep the repair workflow idempotent so reruns are safe.
+8. After merging, re-run the failed v0.7.5 Release job. Its expected Rosetta failure will complete the old workflow and trigger the new default-branch repair workflow, allowing v0.7.5 to be repaired without rebuilding or changing its existing binaries.
+9. Verify v0.7.5 returns to the expected 19 assets and that the repaired checksum file/compatibility DMG are uploaded.
+10. Bump app version to v0.7.6 so the new release pipeline is exercised end-to-end.
+11. Run normal PR tests/security gates before merge.
+12. Verify the v0.7.6 Release workflow succeeds, including the new native Intel job, and verify all expected assets/digests.
+13. Update `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review with final outcomes.
+
+### Plan review and amendment
+
+A tempting workaround was to launch the translated Intel app with `--no-sandbox`. That was rejected: Electron documents `--no-sandbox` as testing-only, and using it here would specifically stop validating the security boundary introduced in v0.7.5.
+
+Another option was rebuilding x64 exclusively on an Intel runner. That is a larger packaging change and duplicates the established two-architecture Mac build path. The amended plan keeps the proven build process, but moves **runtime authority** to a native Intel runner and adds a post-release integrity/repair layer so one validation failure cannot silently omit derived release assets.
+
+
+### Loop 3 implementation review
+
+The implementation kept the established Mac packaging path but changed where runtime
+authority lives. The arm64 builder still proves the x64 native dependencies load under
+Rosetta, but only native arm64 is GUI-launched there. A separate `macos-15-intel` job
+downloads and tests the exact published Intel ZIP natively.
+
+A release finalizer was added rather than merely moving the two skipped commands earlier.
+This is more resilient: it derives the compatibility DMG and macOS checksum from the
+already-published binaries, then checks the complete asset set after any Release outcome.
+
+PR review also added `bash -n tools/mac/smoke-test.sh` to normal test CI so Bash syntax
+is not first exercised during a tagged release.
+
+### Loop 3 CI and security review
+
+PR #39 deterministic results:
+- lint: passed;
+- typecheck: passed;
+- Mac release-script syntax: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E: passed;
+- desktop npm audit: passed;
+- Portal npm audit: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- aggregate CodeQL: passed with 0 code-scanning annotations.
+
+GitHub's optional AI-security run again failed before analysis with
+`400 The requested model is not supported` for
+`claude-opus-5[ReasoningEffort=medium]`; it produced no application finding.
+
+The GitHub connector still does not expose the private Security-tab alert-list endpoints,
+so those lists cannot be directly enumerated. Available code-scanning/dependency/private
+content evidence is green.
+
+### Loop 3 completion status
+
+Code and requested documentation are complete on PR #39. Run the final docs-inclusive
+gate, merge if deterministic checks stay green, re-run the failed v0.7.5 Release workflow
+to trigger the new repair finalizer, verify v0.7.5 has 19 assets, then verify the v0.7.6
+release and native Intel validation before beginning Loop 4.

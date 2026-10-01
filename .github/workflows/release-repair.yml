@@ -1,0 +1,107 @@
+name: Release asset repair
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    # Release runs use the v* tag as head_branch. Ignore any non-release invocation.
+    if: startsWith(github.event.workflow_run.head_branch, 'v')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ github.event.workflow_run.head_branch }}
+    steps:
+      - name: Confirm the release exists
+        id: release
+        shell: bash
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No published release exists for $TAG; nothing can be repaired."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download published Mac installers
+        if: steps.release.outputs.exists == 'true'
+        shell: bash
+        run: |
+          mkdir -p dist
+          for asset in \
+            EduBoard-arm64.dmg \
+            EduBoard-arm64.zip \
+            EduBoard-x64.dmg \
+            EduBoard-x64.zip
+          do
+            gh release download "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --pattern "$asset" \
+              --dir dist
+          done
+
+      - name: Recreate derived Mac release assets
+        if: steps.release.outputs.exists == 'true'
+        shell: bash
+        run: |
+          cp dist/EduBoard-arm64.dmg dist/EduBoard.dmg
+          (
+            cd dist
+            sha256sum \
+              EduBoard-arm64.dmg \
+              EduBoard-arm64.zip \
+              EduBoard-x64.dmg \
+              EduBoard-x64.zip \
+              > SHA256SUMS-macos-latest.txt
+          )
+          gh release upload "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            dist/EduBoard.dmg \
+            dist/SHA256SUMS-macos-latest.txt \
+            --clobber
+
+      - name: Verify the complete release asset set
+        if: steps.release.outputs.exists == 'true'
+        shell: bash
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' | sort > /tmp/assets.txt
+
+          missing=0
+          while IFS= read -r asset; do
+            if ! grep -Fxq "$asset" /tmp/assets.txt; then
+              echo "::error::Missing release asset: $asset"
+              missing=1
+            fi
+          done <<'EOF'
+          EduBoard-arm64.dmg
+          EduBoard-arm64.dmg.blockmap
+          EduBoard-arm64.zip
+          EduBoard-arm64.zip.blockmap
+          EduBoard-Portable.exe
+          EduBoard-Setup.exe
+          EduBoard-Setup.exe.blockmap
+          EduBoard-x64.dmg
+          EduBoard-x64.dmg.blockmap
+          EduBoard-x64.zip
+          EduBoard-x64.zip.blockmap
+          EduBoard.AppImage
+          EduBoard.dmg
+          latest-linux.yml
+          latest-mac.yml
+          latest.yml
+          SHA256SUMS-macos-latest.txt
+          SHA256SUMS-ubuntu-latest.txt
+          SHA256SUMS-windows-latest.txt
+          EOF
+
+          if [ "$missing" -ne 0 ]; then
+            echo "Published assets:"
+            cat /tmp/assets.txt
+            exit 1
+          fi
