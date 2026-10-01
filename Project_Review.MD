@@ -562,3 +562,25 @@ Before v0.7.7 merges, the v0.7.5 historical release is now complete at 19 assets
 ### Loop 4 completion status
 
 The implementation and required handoff documents are complete. A final docs-inclusive PR gate must be green before merge. After merge, verify the v0.7.7 Release workflow, native Intel Mac validation, the full 19-asset release set and GitHub security checks, then begin Loop 5 from released `main`.
+
+
+### v0.7.7 post-release verification
+
+v0.7.7 was merged at `57eabac34219bacab4f62217717b6789b4a7675a`; tag `v0.7.7` points to that exact commit.
+
+Release verification:
+- Release workflow: passed;
+- Windows build/publish: passed;
+- Linux build/publish: passed;
+- macOS build/publish: passed;
+- native Intel Mac validation of the exact published x64 ZIP: passed;
+- main-branch tests/E2E: passed;
+- dependency audits: passed;
+- private-content guard: passed;
+- CodeQL Actions and JavaScript/TypeScript: passed;
+- release asset count: 19/19;
+- every published asset reports `state: uploaded` and a SHA-256 digest.
+
+The separate `Release asset repair` workflow did not auto-start from the completed Release run. The release itself was already complete, so this did not affect v0.7.7. To remove cross-workflow trigger ambiguity, release completeness is being moved into an explicit `finalize-release` job in the Release workflow itself. The standalone repair workflow remains only for manual/historical recovery and the path-scoped audit used when repair tooling changes.
+
+This is a post-release tooling correction; it does not rebuild, replace or retag any v0.7.7 binary.
