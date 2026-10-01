@@ -174,6 +174,13 @@ export interface EduBoardApi {
     duplicateForNewTerm(id: string, input: DuplicateClassForNewTermInput): Promise<ClassSection>
     /** Next-term classes for several classes at once. */
     startNextTerm(input: StartNextTermForClassesInput): Promise<StartNextTermForClassesResult>
+    /** Privacy-limited teacher handover ZIP for one or more classes. */
+    exportHandover(classIds: string[]): Promise<{
+      saved: boolean
+      filePath?: string
+      classCount?: number
+      studentCount?: number
+    }>
   }
   gradeCategories: {
     listByClass(classId: string): Promise<GradeCategory[]>

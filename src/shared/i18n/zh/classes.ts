@@ -377,6 +377,14 @@ export const CLASSES: Record<string, string> = {
     '他们的门户账号保持不变：你发布后新班级就会出现，无需重新邀请或注册。',
   'Couldn’t create the class.': '无法创建班级。',
   'Start the next term for your classes': '为你的班级开始新学期',
+  'Teacher handover': '教师交接',
+  'Export handover pack': '导出交接包',
+  'Handover pack saved for {classCount} classes.': '已为 {classCount} 个班级保存交接包。',
+  'Couldn’t export the handover pack.': '无法导出交接包。',
+  'Choose at least one class to export.': '请选择至少一个要导出的班级。',
+  'Those classes no longer exist.': '这些班级已不存在。',
+  'Save setup, active student names, timetable, seating, grade categories and lesson-plan dates/titles for the selected classes. Grades, attendance, contacts, notes, passwords and submissions are not included.':
+    '为所选班级保存班级设置、当前学生姓名、课表、座位、成绩类别以及教案日期/标题。不会包含成绩、考勤记录、联系方式、备注、密码或学生提交内容。',
   'The old classes are archived.': '旧班级已归档。',
   'Already there, so left alone: {join}.': '已存在，未作改动：{join}。',
   'Students keep their Portal logins; the new classes appear for them after you publish.':

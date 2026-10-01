@@ -46,6 +46,9 @@ jobs:
         run: npm run build:win -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+      - name: Report packaged output size
+        run: node tools/package-size/report.mjs dist
+
 
       - uses: actions/upload-artifact@v7
         with:

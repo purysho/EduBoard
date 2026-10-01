@@ -2,6 +2,28 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.8] — 2026-10-01
+
+### Added
+
+- **Today / Next Lesson actions:** the Dashboard now promotes the class happening now, or the next class of the day, with direct links to attendance, the lesson plan and classroom tools while retaining the full daily timetable.
+- **Teacher handover packs:** the existing end-of-term workflow can export the selected classes as a portable ZIP containing class setup, active student names, timetable, seating, grade categories and lesson-plan dates/titles/statuses. Grades, attendance history, guardian contacts, private notes, passwords, secrets and student submissions are deliberately excluded.
+- **Package composition report:** a dependency-free tool reports built bundle size, renderer/main/preload JS, packaged node_modules, locales, app.asar when present, production dependency count and largest files.
+- **CI size budgets:** normal Electron CI now rejects substantial bundle/dependency growth rather than allowing silent bloat.
+
+### Changed
+
+- **Leaner desktop package:** repository-only docs, Portal source, development tools/workflows and handoff/roadmap files are explicitly excluded from the installed desktop application.
+- **Fewer Chromium locales:** packaged Electron keeps English (US/GB) and Simplified Chinese locales instead of every Electron locale.
+- **Renderer dependencies no longer ship twice:** React, React DOM, React Router, TanStack Query, Lucide, Recharts and clsx are renderer-build dependencies rather than production node_modules; Vite continues to bundle them into the renderer.
+- **Release completeness is inline:** the Release workflow itself now runs the idempotent repair/completeness verifier after platform builds and native Intel Mac validation, removing reliance on a second workflow being auto-triggered by repository automation.
+
+### Tests
+
+- Added deterministic current/next lesson selection tests.
+- Added an integration test that opens the handover ZIP and verifies sensitive student/contact fields are absent.
+- Existing desktop, Portal, E2E, release-repair, dependency and CodeQL gates remain required.
+
 ## [0.7.7] — 2026-10-01
 
 ### Security

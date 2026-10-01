@@ -175,3 +175,22 @@ jobs:
 
       - name: Check the Intel app natively
         run: bash tools/mac/smoke-test.sh dist/intel/EduBoard.app x64
+
+
+  # Keep release completeness inside the Release workflow itself. This avoids relying on
+  # a second workflow_run chain, which may not be created for workflow-dispatched runs
+  # started by repository automation. The repair script is idempotent: on a complete
+  # release it verifies and exits; on a partial release it recreates only the derived
+  # Mac compatibility/checksum assets and then requires the full expected asset set.
+  finalize-release:
+    needs: [tag, build, verify-mac-intel]
+    if: ${{ always() && needs.tag.result == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Repair derived assets and verify release completeness
+        shell: bash
+        run: bash tools/release/repair-release-assets.sh --tag "${{ needs.tag.outputs.name }}"

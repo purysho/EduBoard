@@ -599,3 +599,172 @@ The repaired `v0.7.5` historical release also remains complete at 19 assets.
 The `Release asset repair` workflow did **not** automatically start from the completed v0.7.7 Release workflow. Because v0.7.7 already published all 19 expected assets, this did not affect release correctness or completeness. The repair tool itself is proven green/idempotent from the post-v0.7.5 no-op audit and its mocked-GitHub regression test.
 
 Treat the missing automatic `workflow_run` trigger as a release-orchestration gap for the next loop. Do not rebuild or alter the shipped v0.7.7 binaries merely to force the finalizer to run.
+
+
+## Loop 5 — v0.7.8 “Lean Core”
+
+### Baseline reviewed
+
+- Starting point: `main` at `47f43633abe5a710c23be5924f4159958fcdeae2`, released version 0.7.7.
+- v0.7.7 is fully published with all 19 assets and native Intel Mac validation.
+- Dashboard already has `TodayCard` and upcoming lessons.
+- Classes already support single-class and all-class next-term duplication, including optional student/timetable copy and archiving.
+- The repository already has offline packs/export systems, so handover should reuse those patterns instead of introducing a cloud sync subsystem.
+- Current packaged downloads are roughly 132 MB on Windows and 200–207 MB on macOS/Linux; tracked source is only about 5.9 MB, confirming Electron/runtime dependencies dominate.
+- The previous release-repair follow-up exists as stale PR #44; its inline finalizer approach is correct and will be folded into this release.
+
+### Product principles
+
+1. **More workflows, fewer systems.**
+2. New user-facing work must reuse existing domain models and IPC where practical.
+3. No new runtime dependency unless there is a compelling measured need.
+4. Every feature in this release must either reduce teacher friction or reduce/guard software bloat.
+5. Installer/runtime size changes must be measured rather than guessed.
+
+### Selected teacher/school improvements
+
+#### A. Today / Next Lesson workspace
+
+Enhance the existing Dashboard `TodayCard` rather than add another page.
+
+- Determine current / next / finished lesson from the timetable and local clock.
+- Visually promote the current or next lesson.
+- Provide compact one-click actions that route into existing features:
+  - attendance;
+  - lesson plan;
+  - classroom tools / Classroom Hub.
+- Keep the full daily timetable below the promoted lesson.
+- Preserve parent follow-up and watch-list behavior.
+- Add deterministic shared helper tests for lesson-state selection.
+
+No new database tables and no new runtime dependency.
+
+#### B. Term rollover + portable handover
+
+Keep the existing transactional next-term duplication as the source of truth.
+
+Add a **class handover export** that writes a portable JSON/ZIP-style teacher handover file containing only existing, deliberate school data:
+- class identity/configuration;
+- term/course-group references by human-readable labels;
+- grading categories;
+- timetable;
+- active roster summary;
+- seating assignments if present;
+- lesson-plan summary/counts;
+- explicit metadata/version.
+
+Do **not** silently include grades, attendance, parent contacts, passwords, Portal secrets, API keys, private backup contents or student file submissions. The goal is teacher-to-teacher setup/context transfer, not a full database export.
+
+Expose the handover from the existing next-term/classes workflow with a clear privacy summary.
+
+#### C. Release finalizer reliability
+
+Fold PR #44's solution into this branch:
+- run release completeness verification as the final job of the Release workflow itself;
+- retain the repair workflow only for manual/historical recovery and tooling-change audits;
+- close stale superseded PRs after this branch contains the equivalent fixes.
+
+### Anti-bloat / package-size work
+
+#### D. Package composition report
+
+Add a Node script that can inspect an unpacked packaged app / dist tree and report:
+- total bytes;
+- app.asar bytes when present;
+- unpacked native-module bytes;
+- locale bytes/count;
+- largest files/directories;
+- renderer/main/preload bundle bytes;
+- packaged node_modules bytes when present.
+
+The script must work without external dependencies and emit both readable text and optional JSON.
+
+#### E. CI size budget
+
+Add a CI job/script with committed budgets for:
+- renderer initial/built JS total;
+- main/preload built JS total;
+- packaged application payload where a build artifact is available;
+- production dependency count.
+
+PRs should fail only on substantial unexplained regressions, with conservative initial thresholds based on measured current output. Tiny variance should not create noise.
+
+#### F. Safe packaging cuts
+
+1. Explicitly exclude repository-only material from desktop packaging:
+   - docs;
+   - Portal source/public site;
+   - GitHub workflows;
+   - development tools;
+   - roadmaps/handoff/review markdown;
+   - root helper scripts not used at runtime.
+2. Restrict Electron language packs to the UI languages EduBoard actually supports: English and Simplified Chinese, after CI/package smoke tests.
+3. Audit renderer-only dependencies and move only confirmed renderer-bundled packages from production dependencies to devDependencies when that does not affect main/preload code.
+4. Do **not** bundle or alter native dependencies such as SQLite/canvas in this loop.
+5. Do not use UPX, maximum compression tricks, manual Chromium deletion, or other brittle binary modifications.
+
+### Review amendments
+
+- A completely new “Today” page was rejected because the Dashboard already has the right data and navigation context. Enhancing `TodayCard` gives the same teacher benefit with less navigation and less code.
+- A full school-transfer archive was rejected for this loop because it risks duplicating backup/export systems and broadening privacy scope. The handover export will be deliberately limited to setup/context needed by another teacher.
+- A strict package allowlist is deferred until the composition script proves exactly what electron-builder currently requires. This loop will begin with explicit safe exclusions to avoid accidentally dropping runtime files.
+- “Make Electron much smaller” is not a release goal. The goal is **measured safe reduction plus permanent regression budgets**.
+
+### Required gate
+
+Before merge:
+- lint;
+- typecheck;
+- desktop tests;
+- Portal tests;
+- Electron E2E;
+- package-composition/size-budget checks;
+- Windows installer test build;
+- dependency audits;
+- private-content guard;
+- CodeQL Actions + JavaScript/TypeScript;
+- release workflow syntax/regression tests.
+
+After merge:
+- verify v0.7.8 release on Windows/Linux/macOS;
+- verify native Intel Mac package;
+- verify inline finalizer completes successfully;
+- record exact release-size deltas versus v0.7.7;
+- update `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review.
+
+
+### Loop 5 implementation review
+
+The implementation stayed within the planned Lean Core boundary.
+
+Teacher workflow:
+- no new Dashboard route or database table was created;
+- the existing Today card now promotes the current/next scheduled class and links directly into existing attendance, lesson-plan and classroom-tool routes;
+- lesson focus is a pure shared helper with deterministic unit tests.
+
+Rollover/handover:
+- the existing transactional next-term copy/archive path is unchanged;
+- handover is an optional export from the same modal, not a parallel rollover system;
+- one ZIP can contain all selected classes;
+- the integration test verifies sensitive student/contact fields are absent from archive text.
+
+Package trimming:
+- runtime feature code was not removed;
+- native modules were not changed;
+- repository-only files and unneeded Electron locales are excluded;
+- renderer-only libraries remain available to Vite but are no longer declared as shipped runtime dependencies;
+- a permanent build-size report/budget now turns bloat into a measurable regression.
+
+Release orchestration:
+- the inline finalizer from the superseded release follow-up was folded into this branch;
+- the standalone repair workflow remains for explicit/historical recovery.
+
+### Pending validation
+
+Before merge, CI must confirm:
+- npm lock/package dependency placement is accepted by `npm ci`;
+- English/Chinese locale restriction does not break Electron E2E;
+- handover types/API compile and privacy integration test passes;
+- package-size budgets reflect the real current build rather than an estimate;
+- installer packaging succeeds with the new exclusions;
+- CodeQL and dependency audits remain green.
