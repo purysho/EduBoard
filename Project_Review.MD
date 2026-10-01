@@ -365,13 +365,92 @@ to trigger the new repair finalizer, verify v0.7.5 has 19 assets, then verify th
 release and native Intel validation before beginning Loop 4.
 
 
+### Loop 3 post-release amendment — repair trigger recovery
+
+The v0.7.6 release itself completed successfully with native Intel validation and all 19 expected assets. Re-running only the failed v0.7.5 Mac job reproduced the known Rosetta failure as expected, but GitHub did **not** emit a new `workflow_run: completed` event for that failed-job re-run. Therefore the new release-repair workflow did not run and v0.7.5 remained at 17 assets.
+
+This is a workflow-trigger gap, not an application or packaging-integrity failure.
+
+#### Amendment plan
+
+1. Keep `workflow_run` as the normal automatic finalizer after future Release workflows.
+2. Add `workflow_dispatch` with an optional explicit release tag so a specific published release can be repaired without rebuilding it.
+3. Add a narrowly scoped `push` trigger for changes to the repair workflow itself. On that event, audit recent published releases and target any release that:
+   - has all four canonical Mac installer archives (arm64/x64 DMG and ZIP), and
+   - is missing either derived `EduBoard.dmg` or `SHA256SUMS-macos-latest.txt`.
+4. Refactor the repair shell logic to support one explicit tag or an audit-discovered tag list.
+5. Preserve idempotency: derived assets use `--clobber`; releases already complete are verified and otherwise left unchanged.
+6. Never rebuild old installers. Repair only derives files from the exact binaries already published for that tag.
+7. Verify the complete 19-asset set after repair.
+8. Run normal PR CI/CodeQL, merge, confirm the main-push audit repairs v0.7.5, and re-check all v0.7.5 asset digests/states.
+9. Record the outcome in `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review before beginning Loop 4.
+
+#### Amendment review
+
+A broader always-on push audit was considered and rejected because release builds are asynchronous: a routine source push can occur while a release is still assembling assets. Limiting push-triggered auditing to changes of the repair workflow itself avoids racing ordinary releases. Normal release completion remains owned by the `workflow_run` trigger, while `workflow_dispatch` provides an explicit recovery path for future historical repairs.
+
+
+#### Amendment implementation and CI review
+
+The repair logic was extracted to `tools/release/repair-release-assets.sh`. Normal
+`workflow_run` completion remains the default release-finalization path. An explicit
+tagged `workflow_dispatch` path was added for historical recovery, plus a narrow
+`main` push audit that runs only when the repair tooling itself changes.
+
+Audit mode refuses to infer a repair from only the four Mac files. It requires the full
+17-asset canonical core set (the expected v0.7.x release minus the two derived Mac
+assets), skips drafts/non-`v*` tags, and only then reconstructs the derived pair. This
+prevents older or structurally different releases from being silently coerced into the
+current release format.
+
+PR #40 deterministic validation:
+- lint: passed;
+- typecheck: passed;
+- Mac smoke-test Bash syntax: passed;
+- release-repair Bash syntax: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E: passed;
+- desktop and Portal npm audits: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed.
+
+The final docs-inclusive gate must remain green before merge. After merge, the repair
+workflow's path-scoped main-push trigger should audit recent releases, repair v0.7.5,
+and prove the release has all 19 expected assets before Loop 4 begins.
+
+
+#### Repair audit post-merge defect and correction
+
+The path-scoped main-push audit successfully repaired v0.7.5 from 17 to 19 assets. The two derived files were recreated from the already-published Mac binaries:
+- `EduBoard.dmg`;
+- `SHA256SUMS-macos-latest.txt`.
+
+However, the repair workflow itself ended with exit code 1 **after** successful verification. The log showed:
+`tools/release/repair-release-assets.sh: line 104: dir: unbound variable`.
+
+Root cause: `repair_tag()` installed a Bash `RETURN` trap referring to its local `dir`. The trap remained active after `repair_tag()` returned and fired again when `audit_recent()` returned, after the local variable no longer existed under `set -u`.
+
+Correction plan:
+1. Run each `repair_tag()` invocation in a subshell.
+2. Use an `EXIT` cleanup trap local to that subshell, preventing cleanup state from leaking to callers.
+3. Add a fully local regression test with a mocked `gh` command that:
+   - presents a 17-asset v0.7.5-style release;
+   - runs the real `--audit-recent` path;
+   - verifies both derived assets are created and the process exits successfully;
+   - runs the audit again and verifies it is idempotent.
+4. Execute this regression in normal PR CI, not only Bash syntax checking.
+5. Merge only with deterministic tests and CodeQL green, then run the repair workflow explicitly against the now-complete v0.7.5 release and require a green no-op result.
+
+
 ## Loop 4 — v0.7.7 “Trusted IPC Boundary”
 
 ### Baseline reviewed
 
 - Starting point: released `main` at `c6145e3c8ed1888bc3f34485a1198a77f69130c1` (v0.7.6).
 - v0.7.6 Release succeeded across Windows, Linux, native arm64 Mac, and native Intel Mac; all 19 release assets are present.
-- v0.7.5 remains published with 17 assets while its failed legacy Mac Release job is being re-run so the v0.7.6 repair/finalizer can restore the two derived Mac assets.
+- During this loop, the release-repair follow-up completed: v0.7.5 was restored from 17 to the full 19 assets without rebuilding its canonical installers, and the cleanup-trap regression was fixed so a successful no-op repair now exits green.
 - Renderer sandboxing, context isolation, navigation containment, and safe external-link handling are already in place from v0.7.5.
 - All async renderer-to-main calls are registered through the single `handle()` wrapper in `src/main/ipc/register.ts`.
 - The only direct synchronous renderer IPC is `i18n:prefs` in `src/main/i18n.ts`.
@@ -429,3 +508,57 @@ A URL-only allowlist would be weaker than necessary: a renderer not created by E
 Origin-only validation is also insufficient for the packaged `file://` case because unrelated local files can share file-scheme origin characteristics. Until EduBoard moves to a custom local protocol, the packaged check will require the exact renderer file document in addition to a registered `WebContents`.
 
 The synchronous language bootstrap stays synchronous for this loop because changing renderer initialization timing would widen the regression surface. It will receive the same sender gate rather than being redesigned at the same time.
+
+
+### Implementation review
+
+The implementation centralizes trust rather than duplicating checks across roughly 260 typed IPC handlers:
+
+- `src/main/ipc/senderValidation.ts` keeps a registry of EduBoard-created `WebContents` and the exact app document each one may host.
+- Main and print windows register themselves as trusted at creation and are removed from the registry when destroyed.
+- The async `handle()` boundary rejects a request before lock-state checks or handler arguments reach services unless the sender is:
+  - a registered EduBoard `WebContents`;
+  - a live, attached frame;
+  - the window's main frame rather than a child frame;
+  - still on the exact registered app document, with hash-only route differences allowed.
+- Synchronous `i18n:prefs` uses the same gate and returns no preferences to an untrusted sender.
+- Packaged document identity uses the exact `file://.../renderer/index.html` URL; development uses the configured Vite renderer URL.
+- `@electron-toolkit/preload` was removed from the runtime dependency graph because v0.7.5 removed its final import.
+- `EB-0006` identifies blocked async IPC requests and has a Chinese user-facing translation.
+
+The code review tightened live-frame handling so `senderFrame`, `mainFrame`, URL, detached state and destroyed state are captured immediately at the event boundary and any unavailable property fails closed. This matches Electron's warning that a sender frame may become null/detached during navigation.
+
+### Loop 4 tests and security review
+
+Initial PR #41 deterministic gate:
+- lint: passed;
+- typecheck: passed;
+- Mac release-script syntax/regression checks: passed;
+- desktop unit/integration tests: passed;
+- Portal tests: passed;
+- Electron E2E: passed;
+- desktop npm audit: passed;
+- Portal npm audit: passed;
+- private-content guard: passed;
+- CodeQL Actions: passed;
+- CodeQL JavaScript/TypeScript: passed;
+- aggregate CodeQL: passed with 0 code-scanning annotations.
+
+Sender-validation regression coverage includes:
+- registered main frame on the exact app document;
+- development renderer URL;
+- hash-route changes;
+- unknown WebContents;
+- child frames;
+- missing/destroyed/detached frames;
+- a registered window after unexpected document navigation.
+
+GitHub's optional AI-security job again failed in its service path rather than reporting an application finding. The deterministic CodeQL result is green.
+
+### Release-repair prerequisite outcome
+
+Before v0.7.7 merges, the v0.7.5 historical release is now complete at 19 assets. The first successful repair exposed a Bash cleanup-trap leak after verification; PR #42 changed the repair function to a subshell-scoped `EXIT` trap and added a mocked-GitHub regression test. After that merge, the path-scoped repair workflow ran again against the already-complete release and exited successfully as an idempotent no-op.
+
+### Loop 4 completion status
+
+The implementation and required handoff documents are complete. A final docs-inclusive PR gate must be green before merge. After merge, verify the v0.7.7 Release workflow, native Intel Mac validation, the full 19-asset release set and GitHub security checks, then begin Loop 5 from released `main`.
