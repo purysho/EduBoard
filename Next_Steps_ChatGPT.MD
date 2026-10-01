@@ -50,3 +50,16 @@ Use v0.7.8 measurements before changing dependencies.
 
 - Continue evaluating Electron production fuses and custom local protocol in separate narrow loops.
 - Keep signing/notarization, provenance/SBOM and branch-protection work separate from classroom features.
+
+
+### Native-package pruning evidence
+
+The v0.7.8 Windows composition report showed that some native dependencies still carry files for other operating systems/targets inside the packaged app (for example a Linux-musl SQLite prebuild in the Windows package).
+
+For the next size loop:
+1. inventory `app.asar.unpacked/node_modules` per platform;
+2. identify only files that can never be loaded on that target OS/architecture;
+3. use electron-builder packaging rules or package-specific configuration to exclude them;
+4. change one native package at a time;
+5. require Windows installer smoke, native arm64 Mac smoke, native Intel Mac validation and Linux AppImage smoke after each pruning change;
+6. compare installer size before/after each package so unnecessary complexity is rejected when savings are trivial.
