@@ -49,3 +49,11 @@ Before changing code:
 
 Keep each release narrow and test the actual trust boundary on the hardware/environment it
 is meant to protect.
+
+
+## Release-repair handoff
+
+Before beginning the v0.7.7 IPC-sender work, verify the post-v0.7.6 repair-tooling merge
+triggered **Release asset repair** on `main` and that v0.7.5 now contains all 19 expected
+assets. If the audit itself fails, fix the repair tooling first; do not rebuild or replace
+the canonical v0.7.5 installers.
