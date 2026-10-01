@@ -59,6 +59,7 @@ import * as homeworkQuestionsRepo from '../repositories/homeworkQuestions'
 import * as auditLogRepo from '../repositories/auditLog'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
+import * as studyProgressRepo from '../repositories/studyProgressReturns'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
 import { offlineStudyPackHtml } from '../services/offlineStudyPack'
 import {
@@ -154,6 +155,7 @@ import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterSe
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
 import { cleanFlashcard, cleanPracticeQuestion, PRACTICE_LIMITS } from '@shared/practiceSets'
+import { parseStudyProgressReturn } from '@shared/studyProgress'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
 import { isTrustedIpcSender } from './senderValidation'
 import {
@@ -830,6 +832,51 @@ export function registerIpcHandlers(): void {
     await writeFile(filePath, offlineStudyPackHtml(resource), 'utf-8')
     return { saved: true, filePath }
   })
+  handle(IpcChannels.lessonResources.importProgress, async (_e, id: string) => {
+    const resource = lessonResourcesRepo.getLessonResource(id)
+    if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: tr('EduBoard study progress'), extensions: ['json'] }]
+    })
+    if (canceled || !filePaths[0]) return null
+
+    let raw: unknown
+    try {
+      raw = JSON.parse(await readFile(filePaths[0], 'utf-8'))
+    } catch {
+      throw new AppError('EB-0004', tr('That is not a valid EduBoard study progress file.'))
+    }
+    const parsed = parseStudyProgressReturn(raw)
+    if (!parsed.ok) {
+      throw new AppError('EB-0004', tr('That is not a valid EduBoard study progress file.'))
+    }
+    if (parsed.value.resourceId !== id) {
+      throw new AppError(
+        'EB-0004',
+        tr('That progress file belongs to a different resource: {title}.', {
+          title: parsed.value.resourceTitle
+        })
+      )
+    }
+
+    const wanted = parsed.value.studentName.trim().toLocaleLowerCase()
+    const matches = studentsRepo.listStudents().filter((student) => {
+      const full = `${student.firstName} ${student.lastName}`.trim().toLocaleLowerCase()
+      const preferred = student.preferredName
+        ? `${student.preferredName} ${student.lastName}`.trim().toLocaleLowerCase()
+        : ''
+      return full === wanted || preferred === wanted
+    })
+
+    return studyProgressRepo.importStudyProgressReturn(
+      parsed.value,
+      matches.length === 1 ? matches[0].id : null
+    )
+  })
+  handle(IpcChannels.lessonResources.listProgress, (_e, id: string) =>
+    studyProgressRepo.listStudyProgressReturns(id)
+  )
   handle(IpcChannels.lessonResources.openPath, (_e, filePath: string) => shell.openPath(filePath))
   handle(IpcChannels.lessonResources.openExternal, (_e, url: string) => {
     // Only web pages and email: a resource's link may come from a shared Course Pack.
