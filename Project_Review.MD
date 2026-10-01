@@ -363,3 +363,69 @@ Code and requested documentation are complete on PR #39. Run the final docs-incl
 gate, merge if deterministic checks stay green, re-run the failed v0.7.5 Release workflow
 to trigger the new repair finalizer, verify v0.7.5 has 19 assets, then verify the v0.7.6
 release and native Intel validation before beginning Loop 4.
+
+
+## Loop 4 — v0.7.7 “Trusted IPC Boundary”
+
+### Baseline reviewed
+
+- Starting point: released `main` at `c6145e3c8ed1888bc3f34485a1198a77f69130c1` (v0.7.6).
+- v0.7.6 Release succeeded across Windows, Linux, native arm64 Mac, and native Intel Mac; all 19 release assets are present.
+- v0.7.5 remains published with 17 assets while its failed legacy Mac Release job is being re-run so the v0.7.6 repair/finalizer can restore the two derived Mac assets.
+- Renderer sandboxing, context isolation, navigation containment, and safe external-link handling are already in place from v0.7.5.
+- All async renderer-to-main calls are registered through the single `handle()` wrapper in `src/main/ipc/register.ts`.
+- The only direct synchronous renderer IPC is `i18n:prefs` in `src/main/i18n.ts`.
+- The preload exposes only typed `window.api` methods and a boot-time UI preference object.
+
+### Current security guidance reviewed
+
+Electron's current security checklist explicitly recommends validating the sender of every IPC message. The guidance notes that web frames, including child frames in some configurations, can send IPC and recommends validating the frame/origin before privileged work or data access. EduBoard already blocks unexpected top-level navigation, but IPC sender validation should be an independent trust boundary rather than relying on navigation policy alone.
+
+### Gaps and candidates
+
+1. **Central IPC sender validation — selected for v0.7.7.**
+2. **Synchronous `i18n:prefs` sender validation — selected for v0.7.7.**
+3. **Remove unused `@electron-toolkit/preload` dependency — selected as cleanup because v0.7.5 removed its final import.**
+4. **Custom local protocol instead of `file://` — deferred.** Electron recommends it, but this changes renderer loading/build semantics and should be isolated in its own loop.
+5. **Electron fuses — deferred to the next security loop.**
+6. **Signing/notarization, branch protection, provenance/SBOM — remain queued.**
+
+### Detailed implementation plan
+
+1. Add one main-process IPC trust module.
+2. Register each EduBoard app/print `WebContents` as trusted at window creation time, together with the exact app document it is allowed to host.
+3. Remove a trusted entry when its `WebContents` is destroyed.
+4. For every incoming IPC message require all of:
+   - the sending `WebContents` is one EduBoard created and registered;
+   - `senderFrame` still exists and is not destroyed/detached;
+   - the sender is the `WebContents.mainFrame`, not an iframe/child frame;
+   - the frame's exact document matches the registered EduBoard document, ignoring only the hash route.
+5. Keep the trusted document explicit:
+   - packaged builds: the exact built `renderer/index.html` file URL;
+   - development: the exact configured `ELECTRON_RENDERER_URL`.
+6. Add validation at the existing `handle()` wrapper before lock-state checks or handler arguments reach repositories/services. This automatically covers the entire async typed IPC API.
+7. Add the same validation to synchronous `i18n:prefs`; an untrusted sender receives no UI settings.
+8. Return a dedicated `EB-0006` error for blocked async IPC and document it.
+9. Add pure tests for trusted/untrusted sender snapshots, including:
+   - registered main frame + exact app document => allow;
+   - unknown WebContents => deny;
+   - child frame => deny;
+   - missing/destroyed/detached frame => deny;
+   - same trusted window after navigation to another document => deny;
+   - hash-only route differences => allow.
+10. Extend Electron E2E to prove ordinary `window.api` calls still work and, if feasible without weakening the renderer, exercise a rejected child-frame IPC attempt.
+11. Remove the unused `@electron-toolkit/preload` runtime dependency and lockfile entry.
+12. Update README/SECURITY documentation and changelog.
+13. Bump desktop + Portal-advertised version to `0.7.7`.
+14. Run lint, typecheck, desktop/Portal tests, Electron E2E, Mac release-script syntax, dependency checks, private-content guard, and CodeQL.
+15. Review GitHub security results; fix any real finding. Continue to distinguish the known GitHub AI-review unsupported-model service error from application findings.
+16. Write/refresh `Changes_Made.MD`, `Next_Steps_ChatGPT.MD`, and this review with final results.
+17. Merge only with deterministic gates green, verify the v0.7.7 release/assets, then return to step 1.
+
+### Plan review and amendment
+
+A URL-only allowlist would be weaker than necessary: a renderer not created by EduBoard could in principle load the same URL. The plan therefore combines **window identity + main-frame identity + exact document identity**.
+
+Origin-only validation is also insufficient for the packaged `file://` case because unrelated local files can share file-scheme origin characteristics. Until EduBoard moves to a custom local protocol, the packaged check will require the exact renderer file document in addition to a registered `WebContents`.
+
+The synchronous language bootstrap stays synchronous for this loop because changing renderer initialization timing would widen the regression surface. It will receive the same sender gate rather than being redesigned at the same time.
