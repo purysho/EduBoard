@@ -29,11 +29,11 @@
     "size:check": "node tools/package-size/report.mjs out --check"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.128.0",
+    "@anthropic-ai/sdk": "^0.129.0",
     "@electron-toolkit/utils": "^4.0.0",
     "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^13.0.3",
     "date-fns": "^4.1.0",
-    "docx": "^9.7.2",
+    "docx": "^9.8.1",
     "drizzle-orm": "^0.45.3",
     "exceljs": "^4.4.0",
     "jszip": "^3.10.2",
@@ -42,7 +42,7 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
-    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@electron-toolkit/eslint-config-prettier": "^3.0.1",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
     "@tailwindcss/vite": "^4.1.16",
