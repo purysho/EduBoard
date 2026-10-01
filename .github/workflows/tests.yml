@@ -26,7 +26,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - name: Check release script syntax
-        run: bash -n tools/mac/smoke-test.sh
+        run: |
+          bash -n tools/mac/smoke-test.sh
+          bash -n tools/release/repair-release-assets.sh
       # Before the desktop tests: some of them publish to a real test Portal.
       - name: Install Portal dependencies
         working-directory: portal
