@@ -2,6 +2,20 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.5] — 2026-10-01
+
+### Security
+
+- **Sandboxed app renderers:** the main and print windows now explicitly use Chromium's renderer sandbox, context isolation, no Node.js integration and web security.
+- **Narrower preload bridge:** removed the unused generic `window.electron` bridge; renderer code receives only EduBoard's typed `window.api` and startup UI preferences.
+- **Navigation containment:** renderer-created windows remain denied, and top-level document navigation is blocked unless it is an exact reload of the current EduBoard document. Safe HTTP/HTTPS/mail links are handed to the system browser instead of replacing the app.
+- **Shared window policy:** main and print windows now use one central security configuration so later window changes do not silently drift apart.
+
+### Tests
+
+- Added pure navigation-policy tests covering same-document reloads, different files/paths, external links and malformed URLs.
+- Extended Electron smoke testing to verify the live BrowserWindow security preferences, absence of `window.electron`, continued `window.api` functionality, allowed language-switch reloads and blocked unsafe navigation.
+
 ## [0.7.4] — 2026-09-30
 
 ### Security
