@@ -50,3 +50,30 @@ Use v0.7.8 measurements before changing dependencies.
 
 - Continue evaluating Electron production fuses and custom local protocol in separate narrow loops.
 - Keep signing/notarization, provenance/SBOM and branch-protection work separate from classroom features.
+
+
+## Measurements now available
+
+Use these v0.7.8 facts when choosing the next optimization:
+- compiled app output: 3.63 MiB;
+- renderer JS: 2.84 MiB;
+- main/preload JS: 0.74 MiB;
+- packaged Windows `app.asar`: 122.58 MiB;
+- unpacked packaged node_modules: 67.86 MiB;
+- production dependency count: 11;
+- Electron locales: already reduced to 3 files / 1.68 MiB.
+
+This means further meaningful savings are unlikely to come from minifying EduBoard UI code.
+
+### Next safe size investigations
+
+1. Verify whether `@electron-toolkit/utils` and `date-fns` are still used at runtime; remove only if repository-wide import scans and full CI confirm they are unused.
+2. Inspect `app.asar` by package and file type, not just total size.
+3. Check native packages for safely excludable **wrong-platform** prebuilds/source trees after electron-builder has selected the target architecture. Add platform-specific packaging tests before excluding anything.
+4. Evaluate selective electron-vite bundling of pure-JS main-process dependencies one at a time. Measure each change and keep it only if exports, startup, tests and all platform packages remain correct.
+5. Treat route-level lazy loading as startup/RAM work rather than installer-size work.
+6. Do not attempt UPX, manual Chromium deletion, native-module replacement or other brittle binary tricks.
+
+### Next product priority
+
+The strongest low-bloat product candidate remains **Offline Student Progress Return**: extend existing exported Study Packs so a student can export a small progress file and a teacher can import it without accounts, a server or classroom internet. It reuses the current offline-pack architecture and fits the Lean Core feature-admission rule.
