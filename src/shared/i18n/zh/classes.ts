@@ -893,4 +893,19 @@ export const CLASSES: Record<string, string> = {
   'Worksheet': '练习单',
   'Projector-ready PowerPoint practice deck': '可直接投影使用的 PowerPoint 练习演示文稿',
   'Practice deck': '练习演示',
+  'That assignment no longer exists.': '该作业已不存在。',
+  'One of the selected classes is no longer active.': '所选班级中有一个已不再处于活动状态。',
+  'Bulk archive': '批量归档',
+  'Archive selected ({n})': '归档已选班级（{n}）',
+  'Select for archive': '选择归档',
+  'Archive selected classes?': '归档所选班级？',
+  'Archive {n} selected classes? Their data stays available under Show archived.':
+    '归档已选择的 {n} 个班级？其数据仍可在“显示已归档”中查看。',
+  'Copy to classes': '复制到其他班级',
+  'Copy assignment to classes': '将作业复制到其他班级',
+  'Copying…': '正在复制…',
+  'Copy to {n} classes': '复制到 {n} 个班级',
+  'There are no other active classes to copy this assignment to.': '没有其他活动班级可复制此作业。',
+  'Copies keep the title, instructions, attachment, rubric and quick-check questions. Each copy is a draft with no due date so you can review it before publishing.':
+    '副本会保留标题、说明、附件、评分量表和快速检测题。每个副本都会保存为无截止日期的草稿，便于发布前检查。',
 }

@@ -148,6 +148,7 @@ import * as importExportService from '../services/importExport'
 import { resolveBackupsDir } from '../db/path'
 import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
+import { copyHomeworkToClasses } from '../services/homeworkCopy'
 import { getSetupProgress } from '../services/setupProgress'
 import { applyWindowIcon, createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr, uiLanguage } from '@shared/i18n'
@@ -1340,6 +1341,11 @@ export function registerIpcHandlers(): void {
     IpcChannels.homeworkAssignments.create,
     (_e, input: homeworkRepo.CreateHomeworkAssignmentInput) =>
       homeworkRepo.createHomeworkAssignment(input)
+  )
+  handle(
+    IpcChannels.homeworkAssignments.copyToClasses,
+    (_e, id: string, classIds: string[]) =>
+      copyHomeworkToClasses(String(id), (classIds ?? []).map(String))
   )
   handle(
     IpcChannels.homeworkAssignments.update,

@@ -256,6 +256,19 @@ export function useExportClassHandover() {
   })
 }
 
+export function useBulkArchiveClasses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      Promise.all(ids.map((id) => api().classes.update(id, { archived: true }))),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.classes })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      scheduleAutoPublishToPortal()
+    }
+  })
+}
+
 export function useUpdateClass() {
   const qc = useQueryClient()
   return useMutation({
@@ -1528,6 +1541,20 @@ export function useCreateHomeworkAssignment(classId: string) {
       qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
       qc.invalidateQueries({ queryKey: queryKeys.allHomeworkAssignments })
       scheduleAutoPublishToPortal()
+    }
+  })
+}
+
+export function useCopyHomeworkToClasses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, classIds }: { id: string; classIds: string[] }) =>
+      api().homeworkAssignments.copyToClasses(id, classIds),
+    onSuccess: (_copies, vars) => {
+      for (const classId of vars.classIds) {
+        qc.invalidateQueries({ queryKey: queryKeys.homeworkAssignments(classId) })
+      }
+      qc.invalidateQueries({ queryKey: queryKeys.allHomeworkAssignments })
     }
   })
 }

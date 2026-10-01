@@ -281,6 +281,7 @@ export const IpcChannels = {
     listAll: 'homeworkAssignments:listAll',
     listByClass: 'homeworkAssignments:listByClass',
     create: 'homeworkAssignments:create',
+    copyToClasses: 'homeworkAssignments:copyToClasses',
     update: 'homeworkAssignments:update',
     remove: 'homeworkAssignments:remove',
     listSubmissions: 'homeworkAssignments:listSubmissions',

@@ -326,6 +326,8 @@ const api: EduBoardApi = {
     listAll: () => invoke(IpcChannels.homeworkAssignments.listAll),
     listByClass: (classId) => invoke(IpcChannels.homeworkAssignments.listByClass, classId),
     create: (input) => invoke(IpcChannels.homeworkAssignments.create, input),
+    copyToClasses: (id, classIds) =>
+      invoke(IpcChannels.homeworkAssignments.copyToClasses, id, classIds),
     update: (id, patch) => invoke(IpcChannels.homeworkAssignments.update, id, patch),
     remove: (id) => invoke(IpcChannels.homeworkAssignments.remove, id),
     listSubmissions: (homeworkAssignmentId, classId) =>
