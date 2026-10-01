@@ -5,7 +5,6 @@ set -euo pipefail
 
 REPO=${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}
 CORE_MAC=(EduBoard-arm64.dmg EduBoard-arm64.zip EduBoard-x64.dmg EduBoard-x64.zip)
-DERIVED_MAC=(EduBoard.dmg SHA256SUMS-macos-latest.txt)
 EXPECTED=(
   EduBoard-arm64.dmg
   EduBoard-arm64.dmg.blockmap
@@ -112,7 +111,10 @@ audit_recent() {
       repair_tag "$tag"
       repaired=$((repaired + 1))
     fi
-  done < <(gh api "repos/$REPO/releases?per_page=20" --jq '.[].tag_name')
+  done < <(
+    gh api "repos/$REPO/releases?per_page=20" \
+      --jq '.[] | select(.draft == false and (.tag_name | startswith("v"))) | .tag_name'
+  )
 
   if [ "$repaired" -eq 0 ]; then
     echo "No recent release has the complete core set with missing derived Mac assets."
