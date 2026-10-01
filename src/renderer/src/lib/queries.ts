@@ -250,6 +250,12 @@ export function useStartNextTerm() {
   })
 }
 
+export function useExportClassHandover() {
+  return useMutation({
+    mutationFn: (classIds: string[]) => api().classes.exportHandover(classIds)
+  })
+}
+
 export function useUpdateClass() {
   const qc = useQueryClient()
   return useMutation({
