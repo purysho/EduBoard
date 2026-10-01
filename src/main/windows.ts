@@ -1,11 +1,18 @@
 import { is } from '@electron-toolkit/utils'
 import { app, BrowserWindow, nativeImage, shell, type WebPreferences } from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { isSafeExternalUrl } from '@shared/externalUrl'
 import { APP_WINDOW_WEB_PREFERENCES, navigationDecision } from './windowSecurity'
+import { trustIpcWebContents } from './ipc/senderValidation'
 import icon from '../../resources/icon.png?asset'
 
 const preloadPath = join(__dirname, '../preload/index.js')
+
+function appDocumentUrl(): string {
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) return process.env['ELECTRON_RENDERER_URL']
+  return pathToFileURL(join(__dirname, '../renderer/index.html')).href
+}
 
 function appWebPreferences(): WebPreferences {
   return {
@@ -15,6 +22,8 @@ function appWebPreferences(): WebPreferences {
 }
 
 function installWindowSecurity(win: BrowserWindow): void {
+  trustIpcWebContents(win.webContents, appDocumentUrl())
+
   // A renderer can request a new window through window.open(), target=_blank, etc. Never
   // create one. Safe web/email destinations leave EduBoard and open in the system app.
   win.webContents.setWindowOpenHandler((details) => {
