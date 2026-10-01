@@ -63,3 +63,8 @@ For the next size loop:
 4. change one native package at a time;
 5. require Windows installer smoke, native arm64 Mac smoke, native Intel Mac validation and Linux AppImage smoke after each pruning change;
 6. compare installer size before/after each package so unnecessary complexity is rejected when savings are trivial.
+
+
+## Lean Core baseline now closed
+
+v0.7.8 has a complete measured baseline and no known red deterministic workflow. Future size work should compare against the published v0.7.8 artifacts and the Windows composition baseline rather than reopening the already-validated locale/dependency-placement cuts.
