@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, nativeImage, shell } from 'electron'
+import { app, BrowserWindow, nativeImage, shell, type WebPreferences } from 'electron'
 import { join } from 'path'
 import { isSafeExternalUrl } from '@shared/externalUrl'
 import { APP_WINDOW_WEB_PREFERENCES, navigationDecision } from './windowSecurity'
@@ -7,7 +7,7 @@ import icon from '../../resources/icon.png?asset'
 
 const preloadPath = join(__dirname, '../preload/index.js')
 
-function appWebPreferences(): Electron.WebPreferences {
+function appWebPreferences(): WebPreferences {
   return {
     preload: preloadPath,
     ...APP_WINDOW_WEB_PREFERENCES
