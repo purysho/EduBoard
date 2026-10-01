@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import {
   ClipboardList,
   Copy,
+  CopyPlus,
   ListChecks,
   Paperclip,
   Plus,
@@ -29,6 +30,8 @@ import { EmptyState, Spinner } from '@renderer/components/ui/EmptyState'
 import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { cn } from '@renderer/lib/cn'
 import {
+  useClasses,
+  useCopyHomeworkToClasses,
   useDraftSubmissionFeedback,
   usePullSubmissionsFromPortal,
   useSettings,
@@ -93,6 +96,7 @@ export function HomeworkTab(): React.JSX.Element {
   const [selected, setSelected] = useState<HomeworkAssignment | null>(null)
   const [pendingDelete, setPendingDelete] = useState<HomeworkAssignment | null>(null)
   const [reuseFrom, setReuseFrom] = useState<HomeworkAssignment | null>(null)
+  const [copyToClassesFrom, setCopyToClassesFrom] = useState<HomeworkAssignment | null>(null)
   const [editingQuestions, setEditingQuestions] = useState<HomeworkAssignment | null>(null)
 
   if (isLoading) return <Spinner />
@@ -216,6 +220,14 @@ export function HomeworkTab(): React.JSX.Element {
                         <Copy size={13} className="mr-1 inline" aria-hidden />
                         {tr('Reuse')}
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCopyToClassesFrom(a)}
+                      >
+                        <CopyPlus size={13} className="mr-1 inline" aria-hidden />
+                        {tr('Copy to classes')}
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => setPendingDelete(a)}>
                         <Trash2 size={13} className="mr-1 inline" aria-hidden />
                         {tr('Delete')}
@@ -238,6 +250,13 @@ export function HomeworkTab(): React.JSX.Element {
         classId={classSection.id}
         reuseFrom={reuseFrom}
       />
+      {copyToClassesFrom && (
+        <CopyToClassesModal
+          assignment={copyToClassesFrom}
+          currentClassId={classSection.id}
+          onClose={() => setCopyToClassesFrom(null)}
+        />
+      )}
       {editingQuestions && (
         <QuestionsEditorModal
           assignment={editingQuestions}
@@ -266,6 +285,87 @@ export function HomeworkTab(): React.JSX.Element {
         onCancel={() => setPendingDelete(null)}
       />
     </div>
+  )
+}
+
+function CopyToClassesModal({
+  assignment,
+  currentClassId,
+  onClose
+}: {
+  assignment: HomeworkAssignment
+  currentClassId: string
+  onClose: () => void
+}): React.JSX.Element {
+  const { data: classes, isLoading } = useClasses()
+  const copyToClasses = useCopyHomeworkToClasses()
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const targets = (classes ?? []).filter((c) => !c.archived && c.id !== currentClassId)
+
+  async function handleCopy(): Promise<void> {
+    await copyToClasses.mutateAsync({ id: assignment.id, classIds: selectedIds })
+    onClose()
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={tr('Copy assignment to classes')}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {tr('Cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleCopy}
+            disabled={!selectedIds.length || copyToClasses.isPending}
+          >
+            {copyToClasses.isPending
+              ? tr('Copying…')
+              : tr('Copy to {n} classes', { n: selectedIds.length })}
+          </Button>
+        </>
+      }
+    >
+      {isLoading ? (
+        <Spinner />
+      ) : !targets.length ? (
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {tr('There are no other active classes to copy this assignment to.')}
+        </p>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {tr(
+              'Copies keep the title, instructions, attachment, rubric and quick-check questions. Each copy is a draft with no due date so you can review it before publishing.'
+            )}
+          </p>
+          <div className="space-y-2">
+            {targets.map((target) => (
+              <label
+                key={target.id}
+                className="flex items-center gap-2 rounded-md border border-[var(--color-border)] p-2.5 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(target.id)}
+                  onChange={(e) =>
+                    setSelectedIds((prev) =>
+                      e.target.checked
+                        ? [...prev, target.id]
+                        : prev.filter((id) => id !== target.id)
+                    )
+                  }
+                />
+                <span>{target.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </Modal>
   )
 }
 
