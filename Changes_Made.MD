@@ -96,7 +96,7 @@ The normal Electron build now establishes a permanent baseline of **3.63 MiB com
 
 ## Post-release CI follow-up
 
-The v0.7.8 Windows installer itself built and published correctly. The first post-merge test-build run failed only at its final unauthenticated GitHub updater-download check. PR #48 made that CI check deterministic by passing the workflow's ephemeral GitHub token to the existing updater test; this does not change public teacher update behavior.
+The v0.7.8 Windows installer itself built and published correctly. The first post-merge test-build run failed only at its final unauthenticated GitHub updater-download check. PR #48 made that CI check deterministic by passing the workflow's ephemeral GitHub token to the existing updater test; this does not change public teacher update behavior. The complete workflow was then rerun successfully, including the final `Update-EduBoard` download validation.
 
 The packaged Windows composition report also established:
 - `app.asar`: **122.58 MiB**;
