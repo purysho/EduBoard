@@ -419,3 +419,29 @@ PR #40 deterministic validation:
 The final docs-inclusive gate must remain green before merge. After merge, the repair
 workflow's path-scoped main-push trigger should audit recent releases, repair v0.7.5,
 and prove the release has all 19 expected assets before Loop 4 begins.
+
+
+#### Repair execution follow-up
+
+The main-push audit found v0.7.5, recreated both missing derived assets, and verified the
+release had all 19 expected assets. The job then failed **after successful repair** because
+the Bash `RETURN` trap created inside `repair_tag()` remained installed after that
+function returned. When the audit called another helper, the stale trap fired under
+`set -u` after the local `dir` variable had gone out of scope, producing
+`dir: unbound variable`.
+
+Fix plan:
+1. Keep the successful audit/repair selection logic unchanged.
+2. Run `repair_tag` in a Bash subshell and use an `EXIT` trap scoped to that subshell.
+3. This guarantees temporary download cleanup on both success and failure without leaking
+   trap state into later audit iterations.
+4. Re-run Bash syntax, full tests, dependency checks and CodeQL.
+5. Merge the correction and verify the path-scoped audit exits successfully now that
+   v0.7.5 is already complete.
+6. Re-verify v0.7.5 remains at 19 uploaded assets.
+
+Review note: the earlier failed-job re-run rebuilt/re-published the v0.7.5 Mac artifacts
+before reaching its known Rosetta failure, so the currently published Mac asset digests
+differ from the first v0.7.5 publication. Windows and Linux assets were not rerun. Future
+historical repairs must use the repair workflow and must not re-run packaging jobs merely
+to trigger finalization.
