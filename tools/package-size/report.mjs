@@ -62,6 +62,7 @@ const result = {
 }
 
 const violations = []
+if (check && files.length === 0) violations.push(`no files found under ${root}; build first`)
 for (const key of ['outTotalBytes', 'rendererJsBytes', 'mainPreloadJsBytes', 'productionDependencyCount']) {
   const limit = budgets[key]
   if (typeof limit === 'number' && result[key] > limit) {
