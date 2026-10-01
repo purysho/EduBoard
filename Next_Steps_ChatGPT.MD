@@ -47,3 +47,17 @@ Before coding:
 Keep each security release narrow, test the actual packaged binaries on their target
 platforms, and never weaken a production boundary merely to make a translated or synthetic
 CI environment pass.
+
+
+## Release-finalizer trigger follow-up
+
+The v0.7.7 Release workflow completed successfully and published all 19 expected assets, but the `Release asset repair` workflow did not receive/start its expected automatic `workflow_run` finalizer event.
+
+At the start of the next loop:
+1. Confirm whether GitHub suppresses this workflow chain because the Release workflow was itself dispatched by the repository's `GITHUB_TOKEN`.
+2. If so, replace the fragile chained trigger with a deterministic mechanism that still preserves least privilege, such as:
+   - calling the repair/verify script as the final job of the Release workflow itself; or
+   - dispatching the repair workflow explicitly with a token/event that is allowed to start a second workflow.
+3. Keep `workflow_dispatch` for historical/manual recovery.
+4. Preserve the existing mocked-GitHub repair regression and 19-asset completeness check.
+5. Do not change already-published v0.7.7 artifacts unless a genuine completeness/integrity problem is found.
