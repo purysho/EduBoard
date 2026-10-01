@@ -68,13 +68,13 @@ verify_complete() {
   fi
 }
 
-repair_tag() {
+repair_tag() (
   local tag=$1 dir asset
   [[ "$tag" == v* ]] || { echo "::error::Refusing non-version release tag: $tag"; return 1; }
   gh release view "$tag" --repo "$REPO" >/dev/null
 
   dir=$(mktemp -d)
-  trap 'rm -rf "$dir"' RETURN
+  trap 'rm -rf "$dir"' EXIT
 
   for asset in "${CORE_MAC[@]}"; do
     gh release download "$tag" --repo "$REPO" --pattern "$asset" --dir "$dir"
@@ -99,7 +99,7 @@ repair_tag() {
 
   verify_complete "$tag"
   echo "Release $tag has the complete expected asset set."
-}
+)
 
 audit_recent() {
   local tag list repaired=0
