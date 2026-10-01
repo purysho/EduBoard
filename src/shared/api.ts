@@ -5,6 +5,7 @@ import type { GroupChat, GroupRouteResult } from './groupChats'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 import type { UsagePing } from './usagePing'
 import type { CssCheck } from './cssCheck'
+import type { StudyProgressReturn } from './studyProgress'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
 // the renderer in src/preload/index.d.ts. Keeping the contract here means both sides are
 // checked against the same interface instead of preload's object literal being trusted.
@@ -380,6 +381,10 @@ export interface EduBoardApi {
     pickFile(): Promise<string | null>
     /** Saves a standalone student HTML pack that works without EduBoard or internet. */
     exportOfflinePack(id: string): Promise<{ saved: boolean; filePath?: string }>
+    /** Imports one student-exported offline progress JSON for this resource. */
+    importProgress(id: string): Promise<StudyProgressReturn | null>
+    /** Returned offline progress, newest export first. */
+    listProgress(id: string): Promise<StudyProgressReturn[]>
     openPath(filePath: string): Promise<void>
     openExternal(url: string): Promise<void>
   }
