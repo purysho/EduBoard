@@ -42,6 +42,44 @@ const mainPreloadJsBytes = sum(
 const locales = files.filter((row) => normalized(row.path).split('/').includes('locales'))
 const asar = files.find((row) => basename(row.path) === 'app.asar')
 const nodeModulesBytes = sum(files, (row) => normalized(row.path).includes('node_modules/'))
+
+const appResourceRows = files.filter((row) => {
+  const path = normalized(row.path)
+  return (
+    path.includes('/resources/') ||
+    path.startsWith('resources/') ||
+    path.includes('/Resources/') ||
+    path.startsWith('Resources/')
+  )
+})
+const electronRuntimeBytes = sum(
+  files,
+  (row) => !appResourceRows.includes(row) && !normalized(row.path).split('/').includes('locales')
+)
+
+const unpackedMarker = 'app.asar.unpacked/node_modules/'
+const unpackedRows = files.filter((row) => normalized(row.path).includes(unpackedMarker))
+function packageNameFromUnpackedPath(path) {
+  const rest = path.slice(path.indexOf(unpackedMarker) + unpackedMarker.length)
+  const parts = rest.split('/').filter(Boolean)
+  if (!parts.length) return null
+  return parts[0].startsWith('@') && parts[1] ? `${parts[0]}/${parts[1]}` : parts[0]
+}
+const unpackedByPackage = new Map()
+for (const row of unpackedRows) {
+  const name = packageNameFromUnpackedPath(normalized(row.path))
+  if (!name) continue
+  unpackedByPackage.set(name, (unpackedByPackage.get(name) ?? 0) + row.size)
+}
+const unpackedNodeModulesByPackage = [...unpackedByPackage.entries()]
+  .map(([name, bytes]) => ({ name, bytes }))
+  .sort((a, b) => b.bytes - a.bytes)
+
+const nativeBinaries = files
+  .filter((row) => /\.(?:node|dll|dylib|so(?:\.\d+)*)$/i.test(row.path))
+  .sort((a, b) => b.size - a.size)
+  .map((row) => ({ path: normalized(row.path), bytes: row.size }))
+const nativeBinaryBytes = nativeBinaries.reduce((total, row) => total + row.bytes, 0)
 const largest = [...files]
   .sort((a, b) => b.size - a.size)
   .slice(0, 15)
@@ -55,7 +93,12 @@ const result = {
   rendererJsBytes,
   mainPreloadJsBytes,
   nodeModulesBytes,
+  electronRuntimeBytes,
   appAsarBytes: asar?.size ?? 0,
+  asarUnpackedNodeModulesBytes: sum(unpackedRows),
+  unpackedNodeModulesByPackage,
+  nativeBinaryBytes,
+  nativeBinaries,
   localeBytes: sum(locales),
   localeFileCount: locales.length,
   productionDependencyCount,
@@ -82,8 +125,19 @@ if (jsonOnly) {
   console.log(`  renderer JS: ${mb(rendererJsBytes)} MB`)
   console.log(`  main + preload JS: ${mb(mainPreloadJsBytes)} MB`)
   console.log(`  packaged node_modules: ${mb(nodeModulesBytes)} MB`)
+  console.log(`  Electron/runtime support: ${mb(result.electronRuntimeBytes)} MB`)
   console.log(`  app.asar: ${mb(result.appAsarBytes)} MB`)
+  console.log(
+    `  app.asar.unpacked node_modules: ${mb(result.asarUnpackedNodeModulesBytes)} MB`
+  )
+  console.log(`  native binaries: ${mb(result.nativeBinaryBytes)} MB across ${nativeBinaries.length} files`)
   console.log(`  locales: ${mb(result.localeBytes)} MB across ${result.localeFileCount} files`)
+  if (unpackedNodeModulesByPackage.length) {
+    console.log('  app.asar.unpacked packages:')
+    for (const row of unpackedNodeModulesByPackage) {
+      console.log(`    ${mb(row.bytes)} MB  ${row.name}`)
+    }
+  }
   console.log(`  production dependencies: ${productionDependencyCount}`)
   if (largest.length) {
     console.log('  largest files:')

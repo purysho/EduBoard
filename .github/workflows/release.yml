@@ -111,6 +111,24 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      - name: Report packaged composition
+        shell: bash
+        run: |
+          found=0
+          for target in dist/win-unpacked dist/linux-unpacked; do
+            if [ -d "$target" ]; then
+              node tools/package-size/report.mjs "$target"
+              found=1
+            fi
+          done
+          while IFS= read -r app_dir; do
+            node tools/package-size/report.mjs "$app_dir"
+            found=1
+          done < <(find dist -type d -name '*.app' -prune 2>/dev/null || true)
+          if [ "$found" -eq 0 ]; then
+            echo "No unpacked package directory found; installer artifacts were still built normally."
+          fi
+
       - name: Check Mac packages (native arm64 GUI; x64 modules via Rosetta)
         if: runner.os == 'macOS'
         run: bash tools/mac/smoke-test.sh
