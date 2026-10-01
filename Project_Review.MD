@@ -768,3 +768,66 @@ Before merge, CI must confirm:
 - package-size budgets reflect the real current build rather than an estimate;
 - installer packaging succeeds with the new exclusions;
 - CodeQL and dependency audits remain green.
+
+
+### v0.7.8 final validation and measured Lean Core results
+
+v0.7.8 shipped successfully from merge commit `09e64ec8e8929b8dc2b0039a74a9db59efef6069`.
+
+Release validation:
+- Release on version bump: passed;
+- Linux build/publish: passed;
+- Windows build/publish: passed;
+- macOS arm64/x64 build/publish: passed;
+- native Intel macOS check of the published x64 ZIP: passed;
+- inline `finalize-release` completeness/repair job: passed;
+- release contains the full 19 expected assets, all uploaded with SHA-256 digests;
+- main tests: passed;
+- Electron E2E: passed;
+- desktop and Portal dependency audits: passed;
+- private-content guard: passed;
+- CodeQL Actions and JavaScript/TypeScript: passed.
+
+The first post-release Windows installer test-build successfully built, measured and published the installer but its final updater check timed out on an unauthenticated GitHub request from the shared Actions runner. This did not affect the v0.7.8 release. PR #48 changed **CI only** to provide the workflow's ephemeral GitHub token to the existing updater script. Public teacher updates remain tokenless by default. The post-fix main run then passed all steps:
+- unsigned installer build;
+- packaged composition report;
+- artifact upload;
+- `test-latest` prerelease publication;
+- `Update-EduBoard` download validation.
+
+#### Exact release-size change from v0.7.7
+
+| Asset | v0.7.7 | v0.7.8 | Saving | Reduction |
+| --- | ---: | ---: | ---: | ---: |
+| Windows Setup EXE | 126.34 MiB | 114.49 MiB | 11.86 MiB | 9.38% |
+| Windows Portable EXE | 126.19 MiB | 114.33 MiB | 11.86 MiB | 9.40% |
+| macOS arm64 DMG | 191.08 MiB | 170.59 MiB | 20.49 MiB | 10.72% |
+| macOS arm64 ZIP | 191.21 MiB | 170.47 MiB | 20.74 MiB | 10.85% |
+| macOS x64 DMG | 197.52 MiB | 177.00 MiB | 20.52 MiB | 10.39% |
+| macOS x64 ZIP | 197.65 MiB | 176.91 MiB | 20.74 MiB | 10.50% |
+| Linux AppImage | 192.32 MiB | 181.08 MiB | 11.24 MiB | 5.84% |
+
+These reductions were achieved without deleting teacher/student capabilities or changing native database/canvas behavior.
+
+#### Measured composition baseline
+
+The normal Electron build reports:
+- compiled `out/`: 3.63 MiB;
+- renderer JavaScript: 2.84 MiB;
+- main + preload JavaScript: 0.74 MiB;
+- production dependency count: **11**, down from **18** in v0.7.7.
+
+The Windows packaged `dist` inspection reports:
+- `app.asar`: 122.58 MiB;
+- unpacked packaged node_modules: 67.86 MiB;
+- Electron locales: 1.68 MiB across 3 files;
+- Windows Setup: 114.49 MiB;
+- Windows Portable: 114.33 MiB.
+
+The full `dist` total is not an installed-app size because it contains the unpacked app and multiple installers simultaneously. Its composition is still useful for finding the next safe targets.
+
+Largest actionable packaged items include native/runtime material rather than EduBoard UI code. Future size work should therefore focus on proving whether unnecessary source files, wrong-platform native prebuilds, or selectively bundleable pure-JS main dependencies can be omitted. Do not remove native/runtime files without package-specific cross-platform tests.
+
+### Loop 5 completion status
+
+**Complete.** v0.7.8 improved teacher workflow and added portable teacher handover while making every primary release package materially smaller. Size regression budgets and composition reporting are now permanent CI controls, and release finalization no longer depends on GitHub chaining a second workflow.
