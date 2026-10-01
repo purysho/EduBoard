@@ -1,9 +1,6 @@
 name: Release asset repair
 
 on:
-  workflow_run:
-    workflows: [Release]
-    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -21,13 +18,10 @@ permissions:
 
 jobs:
   repair:
-    # Release runs use the v* tag as head_branch. Ignore non-release workflow_run events.
-    if: github.event_name != 'workflow_run' || startsWith(github.event.workflow_run.head_branch, 'v')
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       EVENT_NAME: ${{ github.event_name }}
-      WORKFLOW_RUN_TAG: ${{ github.event.workflow_run.head_branch }}
       INPUT_TAG: ${{ inputs.tag }}
     steps:
       - name: Check out repair tooling
@@ -37,9 +31,6 @@ jobs:
         shell: bash
         run: |
           case "$EVENT_NAME" in
-            workflow_run)
-              bash tools/release/repair-release-assets.sh --tag "$WORKFLOW_RUN_TAG"
-              ;;
             workflow_dispatch)
               bash tools/release/repair-release-assets.sh --tag "$INPUT_TAG"
               ;;
