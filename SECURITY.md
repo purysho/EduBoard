@@ -35,7 +35,11 @@ public demo login (username `demo`) is shared, so leave it usable for others.
 
 EduBoard has two parts:
 
-- **The desktop app** keeps a teacher's data in a database on their own computer. It
+- **The desktop app** keeps a teacher's data in a database on their own computer. Its
+  app and print renderers run in Chromium's OS-level sandbox with context isolation,
+  Node.js integration disabled, and a narrow typed preload bridge. Renderer-created
+  windows are denied and unexpected top-level document navigation is blocked; allowed
+  web/email destinations are opened by the system instead of inside EduBoard. It
   connects to the network only for what the teacher sets up: publishing to their Portal,
   AI suggestions with their own key, DingTalk / WeCom group posts, update checks, and an
   anonymous weekly count that is off unless turned on. The **Exit ticket** feature runs a
