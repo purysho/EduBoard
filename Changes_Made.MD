@@ -103,3 +103,11 @@ The packaged Windows composition report also established:
 - packaged unpacked node_modules: **67.86 MiB**;
 - Electron locales: **1.68 MiB / 3 files**;
 - 11 production dependency declarations.
+
+
+## Final CI hardening
+
+- PR #50 replaced the shared-runner updater API probe with authenticated `gh release download` verification for the `test-latest` installer.
+- CI now verifies the downloaded test installer matches the just-built file by **both byte size and SHA-256**.
+- Final verification: **120,047,912 bytes**, SHA-256 `97A4355CCDD07D4E8BC8FE3853A24CA72D41AB4CE2731099DE402380F5B159F4`.
+- The teacher-facing updater remains unchanged and continues to support public/tokenless GitHub downloads with optional token and retry behavior.
