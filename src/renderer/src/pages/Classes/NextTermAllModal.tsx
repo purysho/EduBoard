@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
+import { Download } from 'lucide-react'
 import type { ClassSection, Term } from '@shared/types'
 import type { StartNextTermForClassesResult } from '@shared/inputs'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Select } from '@renderer/components/ui/Field'
-import { useStartNextTerm, useTerms } from '@renderer/lib/queries'
+import { useExportClassHandover, useStartNextTerm, useTerms } from '@renderer/lib/queries'
 import { ipcErrorMessage } from '@renderer/lib/format'
 import { tr, trn } from '@shared/i18n'
 
@@ -36,6 +37,7 @@ export function NextTermAllModal({
 }): React.JSX.Element {
   const { data: terms } = useTerms()
   const start = useStartNextTerm()
+  const exportHandover = useExportClassHandover()
   const current = useMemo(() => classes.filter((c) => !c.archived), [classes])
 
   const [fromTerm, setFromTerm] = useState<string | null>(null)
@@ -184,6 +186,39 @@ export function NextTermAllModal({
               )}
             </div>
           </fieldset>
+
+          <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">{tr('Teacher handover')}</p>
+                <p className="mt-0.5 max-w-2xl text-xs text-[var(--color-text-muted)]">
+                  {tr(
+                    'Save setup, active student names, timetable, seating, grade categories and lesson-plan dates/titles for the selected classes. Grades, attendance, contacts, notes, passwords and submissions are not included.'
+                  )}
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                disabled={!chosen.length || exportHandover.isPending}
+                onClick={() => exportHandover.mutate(chosen.map((c) => c.id))}
+              >
+                <Download size={14} className="mr-1 inline" aria-hidden />
+                {exportHandover.isPending ? tr('Exporting…') : tr('Export handover pack')}
+              </Button>
+            </div>
+            {exportHandover.data?.saved && (
+              <p className="mt-2 text-xs text-[var(--color-success)]">
+                {tr('Handover pack saved for {classCount} classes.', {
+                  classCount: exportHandover.data.classCount ?? chosen.length
+                })}
+              </p>
+            )}
+            {exportHandover.isError && (
+              <p className="mt-2 text-xs text-[var(--color-danger)]">
+                {ipcErrorMessage(exportHandover.error, tr('Couldn’t export the handover pack.'))}
+              </p>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <label className="flex items-start gap-2">
