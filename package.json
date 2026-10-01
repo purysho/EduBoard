@@ -1,6 +1,6 @@
 {
   "name": "eduboard",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "A local-first teacher dashboard for tracking students, classes, lesson plans, grades, attendance, and reports across K-12, university, and club sections.",
   "main": "./out/main/index.js",
   "author": "Purysho",
@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
-    "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@tanstack/react-query": "^5.104.0",
     "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^13.0.3",
