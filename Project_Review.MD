@@ -768,3 +768,84 @@ Before merge, CI must confirm:
 - package-size budgets reflect the real current build rather than an estimate;
 - installer packaging succeeds with the new exclusions;
 - CodeQL and dependency audits remain green.
+
+
+### v0.7.8 final release verification
+
+The Lean Core release is published from merge commit `09e64ec8e8929b8dc2b0039a74a9db59efef6069`.
+
+Verified:
+- Release on version bump: passed;
+- Windows release build/publish: passed;
+- Linux release build/publish: passed;
+- macOS arm64/x64 build/publish: passed;
+- native Intel validation of the published x64 Mac ZIP: passed;
+- **inline `finalize-release` completeness/repair job: passed**;
+- main tests: passed;
+- Electron E2E + Lean Core size budget: passed;
+- Mac non-release smoke: passed;
+- desktop and Portal production dependency audits: passed;
+- private-content guard: passed;
+- CodeQL Actions and JavaScript/TypeScript: passed.
+
+The published v0.7.8 release is neither draft nor prerelease and contains all 19 expected assets, each with a GitHub SHA-256 digest.
+
+#### Measured size change from v0.7.7
+
+| Artifact | v0.7.7 | v0.7.8 | Saved | Change |
+| --- | ---: | ---: | ---: | ---: |
+| Windows Setup EXE | 126.34 MiB | 114.49 MiB | 11.86 MiB | **-9.38%** |
+| Windows Portable EXE | 126.19 MiB | 114.33 MiB | 11.86 MiB | **-9.40%** |
+| Linux AppImage | 192.32 MiB | 181.08 MiB | 11.24 MiB | **-5.84%** |
+| macOS arm64 DMG | 191.08 MiB | 170.59 MiB | 20.49 MiB | **-10.72%** |
+| macOS arm64 ZIP | 191.21 MiB | 170.47 MiB | 20.74 MiB | **-10.85%** |
+| macOS x64 DMG | 197.52 MiB | 177.00 MiB | 20.52 MiB | **-10.39%** |
+| macOS x64 ZIP | 197.65 MiB | 176.91 MiB | 20.74 MiB | **-10.50%** |
+
+This exceeds the initial 10% reduction target on all four Mac artifacts and lands just under it on Windows, while preserving application capability.
+
+#### Built-code baseline
+
+The new CI composition report measured the electron-vite `out/` build at:
+- total compiled output: **3.63 MiB**;
+- renderer JavaScript: **2.84 MiB**;
+- main + preload JavaScript: **0.74 MiB**;
+- production dependency declarations: **11**.
+
+This confirms the remaining installer footprint is dominated by Electron/Chromium and necessary native/runtime dependencies rather than EduBoard's own compiled UI code.
+
+#### Functional regression evidence
+
+The final PR gate passed:
+- 467 desktop tests (with one deliberate skipped test);
+- the generated handover ZIP privacy integration test;
+- current/next lesson selection tests;
+- Chinese translation coverage;
+- Portal tests;
+- Electron smoke/E2E;
+- size budgets;
+- CodeQL with zero aggregate code-scanning annotations.
+
+No classroom feature, export format or native runtime dependency was removed to obtain the size reduction.
+
+GitHub's optional AI-security job continued to fail before analysis because its configured `claude-opus-5[ReasoningEffort=medium]` model is unsupported. Deterministic CodeQL remained green.
+
+
+#### Packaged Windows composition evidence
+
+The Windows installer test-build composition report measured the complete `dist/` tree at **740.19 MiB**. That number intentionally includes both installers and the unpacked application, so it is not itself an installer-size target. Its breakdown is useful for the next optimization pass:
+
+- packaged `app.asar`: **122.58 MiB**;
+- unpacked packaged `node_modules`: **67.86 MiB**;
+- retained Electron locales: **1.68 MiB across 3 files**;
+- Windows Setup: **114.49 MiB**;
+- Windows Portable: **114.33 MiB**;
+- largest fixed Electron runtime binary: `EduBoard.exe` at **234.64 MiB**.
+
+The report also exposed cross-platform native-package material inside the Windows package, including a Linux-musl SQLite prebuild. This is a measured candidate for a future package-specific pruning pass, but it was deliberately **not** changed after the v0.7.8 release because native-module packaging should be optimized only with per-platform smoke tests.
+
+#### Post-release Windows CI validation follow-up
+
+The first v0.7.8 Windows installer test-build produced the installer successfully, reported package composition successfully, uploaded the artifact successfully and published the `test-latest` prerelease successfully. Its final `Update-EduBoard` download check failed on an unauthenticated GitHub request from the shared Actions runner; this was a CI/network validation false negative rather than an installer defect.
+
+PR #48 (`901cc9505732ada4b3c240ed31688219f7161419`) changed only CI validation: the test-build workflow now supplies its ephemeral `GITHUB_TOKEN` to the existing updater test. Normal teacher-facing public updates remain tokenless by default. The follow-up main commit passed tests, dependency checks, CodeQL and private-content guard, and the complete Windows installer workflow rerun finished green: installer build, composition report, artifact upload, `test-latest` publication and `Update-EduBoard` download validation all succeeded.

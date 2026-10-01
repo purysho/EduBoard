@@ -77,3 +77,29 @@
 ## Version
 
 **EduBoard v0.7.8 — Lean Core**
+
+
+## Measured release impact
+
+Compared with v0.7.7, v0.7.8 reduced the actual published packages without removing features:
+
+- Windows Setup: **126.34 → 114.49 MiB (-9.38%)**
+- Windows Portable: **126.19 → 114.33 MiB (-9.40%)**
+- Linux AppImage: **192.32 → 181.08 MiB (-5.84%)**
+- macOS arm64 DMG: **191.08 → 170.59 MiB (-10.72%)**
+- macOS x64 DMG: **197.52 → 177.00 MiB (-10.39%)**
+
+The Mac ZIPs fell by roughly 20.74 MiB each as well. All 19 release assets were published successfully and retain SHA-256 digests.
+
+The normal Electron build now establishes a permanent baseline of **3.63 MiB compiled output** and **11 production dependency declarations** so future growth becomes visible in CI.
+
+
+## Post-release CI follow-up
+
+The v0.7.8 Windows installer itself built and published correctly. The first post-merge test-build run failed only at its final unauthenticated GitHub updater-download check. PR #48 made that CI check deterministic by passing the workflow's ephemeral GitHub token to the existing updater test; this does not change public teacher update behavior. The complete workflow was then rerun successfully, including the final `Update-EduBoard` download validation.
+
+The packaged Windows composition report also established:
+- `app.asar`: **122.58 MiB**;
+- packaged unpacked node_modules: **67.86 MiB**;
+- Electron locales: **1.68 MiB / 3 files**;
+- 11 production dependency declarations.
