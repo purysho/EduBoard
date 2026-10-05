@@ -2,6 +2,7 @@ import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
 import type { AiApproval, ExitTicketQuestion } from '@shared/types'
 import type { StudyProgressCounts, StudyQuizCounts } from '@shared/studyProgress'
+import type { ClassAiProfile } from '@shared/classAiProfile'
 
 // NOTE: this file defines the Drizzle ORM shape of the database for typed queries.
 // The actual DDL used to create/evolve the tables lives in ./migrations.ts — the two
@@ -660,6 +661,14 @@ export const studyProgressReturns = sqliteTable(
     studentIdx: index('study_progress_returns_student_idx').on(t.studentId)
   })
 )
+
+export const classAiProfiles = sqliteTable('class_ai_profiles', {
+  classId: text('class_id')
+    .primaryKey()
+    .references(() => classes.id, { onDelete: 'cascade' }),
+  profile: text('profile', { mode: 'json' }).notNull().$type<ClassAiProfile>(),
+  updatedAt: text('updated_at').notNull()
+})
 
 export const lessonPlanResources = sqliteTable(
   'lesson_plan_resources',

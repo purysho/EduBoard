@@ -1,3 +1,4 @@
+import type { ClassAiProfile } from './classAiProfile'
 import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
@@ -182,6 +183,9 @@ export interface EduBoardApi {
       classCount?: number
       studentCount?: number
     }>
+    /** How the teacher teaches this class, used by every AI draft for it. */
+    getAiProfile(classId: string): Promise<ClassAiProfile>
+    setAiProfile(classId: string, profile: ClassAiProfile): Promise<ClassAiProfile>
   }
   gradeCategories: {
     listByClass(classId: string): Promise<GradeCategory[]>

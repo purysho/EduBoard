@@ -920,6 +920,19 @@ const migrations: Migration[] = [
           ON study_progress_returns(student_id);
       `)
     }
+  },
+  {
+    id: 41,
+    name: 'class_ai_profiles',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE class_ai_profiles (
+          class_id TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+          profile TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      `)
+    }
   }
 ]
 

@@ -25,7 +25,9 @@ export const IpcChannels = {
     remove: 'classes:remove',
     duplicateForNewTerm: 'classes:duplicateForNewTerm',
     startNextTerm: 'classes:startNextTerm',
-    exportHandover: 'classes:exportHandover'
+    exportHandover: 'classes:exportHandover',
+    getAiProfile: 'classes:getAiProfile',
+    setAiProfile: 'classes:setAiProfile'
   },
   gradeCategories: {
     listByClass: 'gradeCategories:listByClass',

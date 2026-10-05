@@ -1320,6 +1320,8 @@ export interface NotebookAnswer {
 // --- AI drafting (optional, requires a teacher-supplied API key) -------------------------
 
 export interface DraftLessonPlanInput {
+  /** The class the plan is for: its teaching profile shapes the draft. */
+  classId?: string
   className: string
   subject: string | null
   gradeLevel: string | null

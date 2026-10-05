@@ -28,6 +28,7 @@ import {
 import { ClassFormModal } from './ClassFormModal'
 import { CategoryFormModal } from './CategoryFormModal'
 import { NewTermClassModal } from './NewTermClassModal'
+import { ClassAiProfileCard } from './ClassAiProfileCard'
 import { GradeScaleEditor } from '@renderer/components/GradeScaleEditor'
 import { gradeScaleIsValid } from '@shared/gradeScales'
 import { tr } from '@shared/i18n'
@@ -354,6 +355,8 @@ export function ClassSettingsTab(): React.JSX.Element {
           )}
         </CardBody>
       </Card>
+
+      <ClassAiProfileCard classId={classSection.id} />
 
       <Card className="col-span-2 h-fit">
         <CardHeader>

@@ -29,7 +29,9 @@ const api: EduBoardApi = {
     remove: (id) => invoke(IpcChannels.classes.remove, id),
     duplicateForNewTerm: (id, input) => invoke(IpcChannels.classes.duplicateForNewTerm, id, input),
     startNextTerm: (input) => invoke(IpcChannels.classes.startNextTerm, input),
-    exportHandover: (classIds) => invoke(IpcChannels.classes.exportHandover, classIds)
+    exportHandover: (classIds) => invoke(IpcChannels.classes.exportHandover, classIds),
+    getAiProfile: (classId) => invoke(IpcChannels.classes.getAiProfile, classId),
+    setAiProfile: (classId, profile) => invoke(IpcChannels.classes.setAiProfile, classId, profile)
   },
   gradeCategories: {
     listByClass: (classId) => invoke(IpcChannels.gradeCategories.listByClass, classId),

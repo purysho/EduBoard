@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import {
   Archive,
   CopyPlus,
@@ -20,10 +20,12 @@ import { ConfirmDialog } from '@renderer/components/ui/ConfirmDialog'
 import { Input } from '@renderer/components/ui/Field'
 import {
   useAssessments,
+  useClassAiProfile,
   useDeleteLessonPlan,
   useDraftLessonPlan,
   useLessonPlans
 } from '@renderer/lib/queries'
+import { isEmptyClassAiProfile } from '@shared/classAiProfile'
 import { formatDate, ipcErrorMessage, todayIso } from '@renderer/lib/format'
 import { LessonPlanFormModal, type LessonPlanDraft } from './LessonPlanFormModal'
 import { useQueryClient } from '@tanstack/react-query'
@@ -120,10 +122,12 @@ export function LessonPlannerTab(): React.JSX.Element {
   const [showAiTopic, setShowAiTopic] = useState(false)
   const [topic, setTopic] = useState('')
   const draftPlan = useDraftLessonPlan()
+  const { data: aiProfile } = useClassAiProfile(classSection.id)
 
   async function handleDraft(): Promise<void> {
     if (!topic.trim()) return
     const drafted = await draftPlan.mutateAsync({
+      classId: classSection.id,
       className: classSection.name,
       subject: classSection.subject,
       gradeLevel: classSection.gradeLevel,
@@ -198,6 +202,20 @@ export function LessonPlannerTab(): React.JSX.Element {
           {tr('Lesson plan')}
         </Button>
       </div>
+      {showAiTopic && aiProfile && (
+        <p className="mb-4 text-right text-xs text-[var(--color-text-muted)]">
+          {isEmptyClassAiProfile(aiProfile) ? (
+            <>
+              {tr('Drafts are generic until you describe how you teach this class.')}{' '}
+              <Link to="../settings" className="underline">
+                {tr('Add a teaching profile')}
+              </Link>
+            </>
+          ) : (
+            tr("The draft follows this class's teaching profile (Settings).")
+          )}
+        </p>
+      )}
       {copyMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{copyMessage}</p>}
       {packMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{packMessage}</p>}
       {draftPlan.isError && (

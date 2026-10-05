@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
+import type { ClassAiProfile } from '@shared/classAiProfile'
 import type {
   PostReplySlip,
   AiMaterialKind,
@@ -1504,6 +1505,21 @@ export function useExitTicketServerInfo(enabled: boolean) {
 export const useClassroomServerInfo = useExitTicketServerInfo
 
 // ---- AI drafting (optional, requires a teacher-supplied API key) --------------------------
+
+export function useClassAiProfile(classId: string) {
+  return useQuery({
+    queryKey: ['classes', classId, 'aiProfile'],
+    queryFn: () => api().classes.getAiProfile(classId)
+  })
+}
+
+export function useSaveClassAiProfile(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (profile: ClassAiProfile) => api().classes.setAiProfile(classId, profile),
+    onSuccess: (saved) => qc.setQueryData(['classes', classId, 'aiProfile'], saved)
+  })
+}
 
 export function useDraftLessonPlan() {
   return useMutation({

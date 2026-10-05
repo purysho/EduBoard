@@ -1,3 +1,5 @@
+import { buildLessonPlanPrompt, type LessonDraftContext } from './lessonDraftPrompt'
+import { EMPTY_CLASS_AI_PROFILE } from '@shared/classAiProfile'
 import { AppError } from '@shared/errorCodes'
 import Anthropic from '@anthropic-ai/sdk'
 import { getSettings } from '../repositories/settingsRepo'
@@ -278,18 +280,11 @@ function writeIn(): string {
     : 'Write the text in English.'
 }
 
-export async function draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan> {
-  const system =
-    'You draft lesson plans for teachers. Respond with ONLY a JSON object — no prose, ' +
-    'no markdown fence — matching exactly this shape: ' +
-    '{"title": string, "objectives": string, "materials": string, "activities": string, "homework": string}. ' +
-    'Each field is plain text a teacher can edit directly (use "- " line prefixes for lists, not markdown). ' +
-    writeIn()
-  const user =
-    `Class: ${input.className}` +
-    (input.subject ? ` (${input.subject})` : '') +
-    (input.gradeLevel ? `, grade ${input.gradeLevel}` : '') +
-    `\nTopic for this lesson: ${input.topic}`
+export async function draftLessonPlan(
+  input: DraftLessonPlanInput,
+  context: LessonDraftContext = { profile: EMPTY_CLASS_AI_PROFILE }
+): Promise<DraftedLessonPlan> {
+  const { system, user } = buildLessonPlanPrompt(input, context, writeIn())
 
   const text = await complete(system, user, 2048, { json: true })
   const parsed = JSON.parse(stripCodeFence(text))

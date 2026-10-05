@@ -60,6 +60,7 @@ import * as auditLogRepo from '../repositories/auditLog'
 import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as studyProgressRepo from '../repositories/studyProgressReturns'
+import * as classAiProfilesRepo from '../repositories/classAiProfiles'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
 import { offlineStudyPackHtml } from '../services/offlineStudyPack'
 import {
@@ -157,6 +158,7 @@ import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterSe
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
 import { cleanFlashcard, cleanPracticeQuestion, PRACTICE_LIMITS } from '@shared/practiceSets'
+import { EMPTY_CLASS_AI_PROFILE } from '@shared/classAiProfile'
 import {
   normalizeStudentName,
   parseStudyProgressReturn,
@@ -346,6 +348,15 @@ export function registerIpcHandlers(): void {
       return newTermClassRepo.startNextTermForClasses(input)
     }
   )
+  handle(IpcChannels.classes.getAiProfile, (_e, classId: string) =>
+    classAiProfilesRepo.getClassAiProfile(String(classId))
+  )
+  handle(IpcChannels.classes.setAiProfile, (_e, classId: string, profile: unknown) => {
+    if (!classesRepo.getClass(String(classId))) {
+      throw new AppError('EB-0002', tr('That class no longer exists.'))
+    }
+    return classAiProfilesRepo.setClassAiProfile(String(classId), profile)
+  })
   handle(IpcChannels.classes.exportHandover, async (_e, classIds: string[]) => {
     if (!Array.isArray(classIds) || !classIds.every((id) => typeof id === 'string')) {
       throw new AppError('EB-0004', tr('Choose at least one class to export.'))
@@ -1323,7 +1334,11 @@ export function registerIpcHandlers(): void {
 
   // --- AI (optional, requires a teacher-supplied API key) --------------------------------
   handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
-    aiService.draftLessonPlan(input)
+    aiService.draftLessonPlan(input, {
+      profile: input.classId
+        ? classAiProfilesRepo.getClassAiProfile(String(input.classId))
+        : EMPTY_CLASS_AI_PROFILE
+    })
   )
   handle(IpcChannels.ai.suggestCommentPhrases, (_e, input: SuggestCommentPhrasesInput) =>
     aiService.suggestCommentPhrases(input)

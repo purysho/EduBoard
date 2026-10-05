@@ -129,6 +129,19 @@ async function go(page, route) {
   const percents = await page.getByText(/^\d{1,3}\.\d%$/).count()
   check(percents >= 5, `the gradebook shows students' grades (${percents} seen)`)
 
+  // A class's teaching profile for AI drafts saves, and its card is on the class settings.
+  const savedProfile = await page.evaluate(
+    (c) => window.api.classes.setAiProfile(c, { level: 'A1–B1', lessonShape: '45 + 10 + 45' }),
+    cls
+  )
+  await go(page, `/classes/${cls}/settings`)
+  check(
+    savedProfile.level === 'A1–B1' &&
+      (await page.getByText('Teaching profile for AI drafts').count()) === 1 &&
+      (await page.getByText('45 + 10 + 45').count()) === 1,
+    'a class teaching profile for AI drafts is saved and shown in class settings'
+  )
+
   // Chinese.
   await page.evaluate(() => window.api.settings.update({ uiLanguage: 'zh' }))
   await page.evaluate(() => location.reload()).catch(() => {})
