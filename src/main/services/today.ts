@@ -11,7 +11,7 @@ import { getClassGrades, gradeTrendsByStudent } from './reports'
 import { watchReasons } from '@shared/watchList'
 import type { TodayOverview, WatchListEntry } from '@shared/types'
 
-function localDateIso(d: Date): string {
+export function localDateIso(d: Date): string {
   const pad = (n: number): string => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }

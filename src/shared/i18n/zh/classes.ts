@@ -948,5 +948,7 @@ export const CLASSES: Record<string, string> = {
     '在你描述如何教这个班之前，草稿只是通用版本。',
   'Add a teaching profile': '添加教学设定',
   "The draft follows this class's teaching profile (Settings).":
-    '草稿会按这个班的教学设定（设置）来写。'
+    '草稿会按这个班的教学设定（设置）来写。',
+  'It also builds on recent lessons, ladder marks, scores and exit tickets (counts only, no student names).':
+    '草稿还会参考最近的课、阶梯评分、成绩和课堂小测（只用统计数字，不含学生姓名）。'
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cleanClassAiProfile, EMPTY_CLASS_AI_PROFILE } from '@shared/classAiProfile'
-import { buildLessonPlanPrompt } from '../lessonDraftPrompt'
+import { buildLessonPlanPrompt, classEvidencePrompt } from '../lessonDraftPrompt'
 
 const input = {
   className: 'English 1',
@@ -36,5 +36,34 @@ describe('lesson plan prompt', () => {
     expect(user).toContain("The teacher's profile of this class")
     expect(user).toContain("- Students' level and background: A1–B1 first-years, several near zero")
     expect(user).toContain("- Use of the students' first language: Chinese for planning only")
+  })
+})
+
+describe('classEvidencePrompt', () => {
+  const none = { recentLessons: [], ladder: [], assessments: [], reteach: [] }
+
+  it('is empty when the class has no record yet', () => {
+    expect(classEvidencePrompt(none)).toBe('')
+  })
+
+  it('lists only the parts that have something in them', () => {
+    const text = classEvidencePrompt({
+      ...none,
+      ladder: [
+        {
+          date: '2026-10-01',
+          title: 'Greetings',
+          marked: 5,
+          median: null,
+          atLeast3: 0,
+          complete: 5,
+          missing: 0
+        }
+      ]
+    })
+    expect(text).toContain('- 2026-10-01 Greetings: 5 marked, 5 complete')
+    expect(text).not.toContain('median')
+    expect(text).not.toContain('Recent lessons')
+    expect(text).not.toContain('assessments')
   })
 })

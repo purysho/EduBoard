@@ -126,7 +126,7 @@ import * as backupService from '../services/backup'
 import * as security from '../services/security'
 import * as behaviourPointsRepo from '../repositories/behaviourPoints'
 import * as reportCommentsRepo from '../repositories/reportComments'
-import { getTodayOverview, getWatchList } from '../services/today'
+import { getTodayOverview, getWatchList, localDateIso } from '../services/today'
 import { buildClassHandoverBundle } from '../services/classHandover'
 import { getCompetencyMatrix } from '../services/competencyMatrix'
 import { getCurriculumMap } from '../services/curriculumMap'
@@ -150,6 +150,7 @@ import { resolveBackupsDir } from '../db/path'
 import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { copyHomeworkToClasses } from '../services/homeworkCopy'
+import { classEvidenceFor } from '../services/classEvidence'
 import { getSetupProgress } from '../services/setupProgress'
 import { applyWindowIcon, createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr, uiLanguage } from '@shared/i18n'
@@ -545,7 +546,10 @@ export function registerIpcHandlers(): void {
     if (!plan) throw new AppError('EB-0002', tr('That lesson plan no longer exists.'))
     const result = await offlineLessonPackZip(plan.id)
     const safeName =
-      plan.title.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 80) || 'EduBoard Lesson'
+      plan.title
+        .replace(/[^\p{L}\p{N} ._-]/gu, '')
+        .trim()
+        .slice(0, 80) || 'EduBoard Lesson'
     const { canceled, filePath } = await showSaveDialogOnTop({
       defaultPath: `${safeName} - Offline Lesson Pack.zip`,
       filters: [{ name: tr('ZIP archive'), extensions: ['zip'] }]
@@ -840,7 +844,10 @@ export function registerIpcHandlers(): void {
     const resource = lessonResourcesRepo.getLessonResource(id)
     if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
     const safeName =
-      resource.title.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 80) || 'EduBoard Study Pack'
+      resource.title
+        .replace(/[^\p{L}\p{N} ._-]/gu, '')
+        .trim()
+        .slice(0, 80) || 'EduBoard Study Pack'
     const { canceled, filePath } = await showSaveDialogOnTop({
       defaultPath: `${safeName} - Study Pack.html`,
       filters: [{ name: tr('Web page'), extensions: ['html'] }]
@@ -1167,7 +1174,9 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.coursePack.preview, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: tr('EduBoard Course Pack or Bundle'), extensions: ['json', 'coursebundle'] }]
+      filters: [
+        { name: tr('EduBoard Course Pack or Bundle'), extensions: ['json', 'coursebundle'] }
+      ]
     })
     if (canceled || !filePaths[0]) return null
     const source = await loadCoursePackSource(filePaths[0])
@@ -1310,7 +1319,8 @@ export function registerIpcHandlers(): void {
     projector.webContents.setWindowOpenHandler(({ url: target }) => {
       try {
         const parsed = new URL(target)
-        if (parsed.protocol === 'https:' || parsed.protocol === 'http:') void shell.openExternal(target)
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:')
+          void shell.openExternal(target)
       } catch {
         // Invalid links stay closed.
       }
@@ -1334,11 +1344,15 @@ export function registerIpcHandlers(): void {
 
   // --- AI (optional, requires a teacher-supplied API key) --------------------------------
   handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
-    aiService.draftLessonPlan(input, {
-      profile: input.classId
-        ? classAiProfilesRepo.getClassAiProfile(String(input.classId))
-        : EMPTY_CLASS_AI_PROFILE
-    })
+    aiService.draftLessonPlan(
+      input,
+      input.classId
+        ? {
+            profile: classAiProfilesRepo.getClassAiProfile(String(input.classId)),
+            evidence: classEvidenceFor(String(input.classId), localDateIso(new Date()))
+          }
+        : { profile: EMPTY_CLASS_AI_PROFILE }
+    )
   )
   handle(IpcChannels.ai.suggestCommentPhrases, (_e, input: SuggestCommentPhrasesInput) =>
     aiService.suggestCommentPhrases(input)
@@ -1357,10 +1371,8 @@ export function registerIpcHandlers(): void {
     (_e, input: homeworkRepo.CreateHomeworkAssignmentInput) =>
       homeworkRepo.createHomeworkAssignment(input)
   )
-  handle(
-    IpcChannels.homeworkAssignments.copyToClasses,
-    (_e, id: string, classIds: string[]) =>
-      copyHomeworkToClasses(String(id), (classIds ?? []).map(String))
+  handle(IpcChannels.homeworkAssignments.copyToClasses, (_e, id: string, classIds: string[]) =>
+    copyHomeworkToClasses(String(id), (classIds ?? []).map(String))
   )
   handle(
     IpcChannels.homeworkAssignments.update,
@@ -1611,7 +1623,11 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.office.resourceSlides, async (_e, resourceId: string) => {
     const resource = lessonResourcesRepo.getLessonResource(String(resourceId))
     if (!resource) throw new AppError('EB-0002', tr('That resource no longer exists.'))
-    return saveOffice(await resourcePracticePptx(resource.id), `${resource.title} - Practice`, 'pptx')
+    return saveOffice(
+      await resourcePracticePptx(resource.id),
+      `${resource.title} - Practice`,
+      'pptx'
+    )
   })
   handle(IpcChannels.usagePing.preview, () => usagePingPreview())
   handle(IpcChannels.errorReport.get, () => {

@@ -213,6 +213,9 @@ export function LessonPlannerTab(): React.JSX.Element {
             </>
           ) : (
             tr("The draft follows this class's teaching profile (Settings).")
+          )}{' '}
+          {tr(
+            'It also builds on recent lessons, ladder marks, scores and exit tickets (counts only, no student names).'
           )}
         </p>
       )}
@@ -314,10 +317,13 @@ export function LessonPlannerTab(): React.JSX.Element {
                         const result = await window.api.lessonPlans.exportOfflinePack(plan.id)
                         if (result.saved) {
                           setPackMessage(
-                            tr('Offline Lesson Pack saved with {resources} resources and {files} original files.', {
-                              resources: result.resources ?? 0,
-                              files: result.files ?? 0
-                            })
+                            tr(
+                              'Offline Lesson Pack saved with {resources} resources and {files} original files.',
+                              {
+                                resources: result.resources ?? 0,
+                                files: result.files ?? 0
+                              }
+                            )
                           )
                         }
                       } catch (e) {
