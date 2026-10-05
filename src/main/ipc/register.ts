@@ -157,7 +157,11 @@ import { draftNewsletter, gatherNewsletterFacts } from '../services/newsletterSe
 import { sendToGroupChat, sendToSavedGroupChat } from '../services/groupChat'
 import { groupRouteMode, safeJoinUrl } from '@shared/groupChats'
 import { cleanFlashcard, cleanPracticeQuestion, PRACTICE_LIMITS } from '@shared/practiceSets'
-import { parseStudyProgressReturn } from '@shared/studyProgress'
+import {
+  normalizeStudentName,
+  parseStudyProgressReturn,
+  studentNameKeys
+} from '@shared/studyProgress'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
 import { isTrustedIpcSender } from './senderValidation'
 import {
@@ -862,14 +866,10 @@ export function registerIpcHandlers(): void {
       )
     }
 
-    const wanted = parsed.value.studentName.trim().toLocaleLowerCase()
-    const matches = studentsRepo.listStudents().filter((student) => {
-      const full = `${student.firstName} ${student.lastName}`.trim().toLocaleLowerCase()
-      const preferred = student.preferredName
-        ? `${student.preferredName} ${student.lastName}`.trim().toLocaleLowerCase()
-        : ''
-      return full === wanted || preferred === wanted
-    })
+    const wanted = normalizeStudentName(parsed.value.studentName)
+    const matches = studentsRepo
+      .listStudents()
+      .filter((student) => studentNameKeys(student).includes(wanted))
 
     return studyProgressRepo.importStudyProgressReturn(
       parsed.value,

@@ -10,6 +10,7 @@ import { getSqlite } from '../db/client'
 import { recordAudit } from '../repositories/auditLog'
 import { listBackups } from './backup'
 import { tr } from '@shared/i18n'
+import { normalizeStudentName, studentNameKeys } from '@shared/studyProgress'
 
 type Row = Record<string, unknown>
 
@@ -47,6 +48,21 @@ function unlinkedExitTicketAnswers(student: Row): Row[] {
     .all(name) as Row[]
 }
 
+/** Offline Study Pack progress returns are linked to a student only when exactly one
+ * roster name matches; the rest keep just the typed name, which is still theirs. */
+function unlinkedStudyProgress(student: Row): Row[] {
+  const keys = studentNameKeys({
+    firstName: String(student.first_name ?? ''),
+    lastName: String(student.last_name ?? ''),
+    preferredName: student.preferred_name as string | null
+  })
+  return (
+    getSqlite()
+      .prepare('SELECT * FROM study_progress_returns WHERE student_id IS NULL')
+      .all() as Row[]
+  ).filter((row) => keys.includes(normalizeStudentName(String(row.student_name ?? ''))))
+}
+
 export interface StudentDataExport {
   exportedAt: string
   student: Row
@@ -67,6 +83,9 @@ export function exportStudentData(studentId: string): StudentDataExport {
   const typed = unlinkedExitTicketAnswers(student)
   if (typed.length)
     records.exit_ticket_responses = [...(records.exit_ticket_responses ?? []), ...typed]
+  const progress = unlinkedStudyProgress(student)
+  if (progress.length)
+    records.study_progress_returns = [...(records.study_progress_returns ?? []), ...progress]
   return { exportedAt: new Date().toISOString(), student, records }
 }
 
@@ -85,6 +104,11 @@ export function eraseStudent(studentId: string): EraseResult {
     const typedIds = unlinkedExitTicketAnswers(student).map((r) => r.id as string)
     for (const id of typedIds) {
       rowsErased += sqlite.prepare('DELETE FROM exit_ticket_responses WHERE id = ?').run(id).changes
+    }
+    for (const row of unlinkedStudyProgress(student)) {
+      rowsErased += sqlite
+        .prepare('DELETE FROM study_progress_returns WHERE id = ?')
+        .run(row.id).changes
     }
     for (const table of tablesWithStudentId()) {
       rowsErased += sqlite

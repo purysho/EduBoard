@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { parseStudyProgressReturn } from '@shared/studyProgress'
+import {
+  normalizeStudentName,
+  parseStudyProgressReturn,
+  studentNameKeys
+} from '@shared/studyProgress'
 
 describe('study progress return parser', () => {
   it('accepts and normalizes a valid progress return', () => {
@@ -35,5 +39,17 @@ describe('study progress return parser', () => {
       }).ok
     ).toBe(false)
     expect(parseStudyProgressReturn({ format: 'other', version: 1 }).ok).toBe(false)
+  })
+})
+
+describe('student name keys', () => {
+  it('match a typed name regardless of case and spacing, by full or preferred name', () => {
+    const keys = studentNameKeys({ firstName: 'Wei', lastName: 'Li', preferredName: 'David' })
+    expect(keys).toContain(normalizeStudentName('  WEI   li '))
+    expect(keys).toContain(normalizeStudentName('David Li'))
+    expect(keys).not.toContain(normalizeStudentName('Wei Lin'))
+    expect(studentNameKeys({ firstName: 'Wei', lastName: 'Li', preferredName: ' ' })).toHaveLength(
+      1
+    )
   })
 })

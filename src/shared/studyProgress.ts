@@ -109,3 +109,23 @@ export function parseStudyProgressReturn(
     }
   }
 }
+
+/** How a typed name on a progress return is compared with the roster: trimmed, inner
+ * spaces collapsed, case-insensitive. Shared by the import (to link a return to a student)
+ * and by student erase/export (to find returns that were never linked). */
+export function normalizeStudentName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+}
+
+/** The names a student's progress returns may carry: full name, and preferred + last name. */
+export function studentNameKeys(student: {
+  firstName: string
+  lastName: string
+  preferredName?: string | null
+}): string[] {
+  const keys = [normalizeStudentName(`${student.firstName} ${student.lastName}`)]
+  if (student.preferredName?.trim()) {
+    keys.push(normalizeStudentName(`${student.preferredName} ${student.lastName}`))
+  }
+  return keys
+}

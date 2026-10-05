@@ -33,11 +33,14 @@ import {
   submitExitTicketResponse,
   upsertExitTicket
 } from '../../repositories/exitTickets'
+import { createLessonResource } from '../../repositories/lessonResources'
+import { importStudyProgressReturn } from '../../repositories/studyProgressReturns'
 import { createBackup } from '../backup'
 import { eraseStudent, exportStudentData } from '../studentErase'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 const dbFile = (): string => join(state.dir, 'eduboard.db')
+type Row = Record<string, unknown>
 
 function student(firstName: string, lastName: string, notes: string): string {
   return createStudent({
@@ -100,6 +103,35 @@ beforeEach(() => {
     studentName: 'quillon vantasse ',
     answers: { q1: 'typed answer' }
   })
+  // Offline Study Pack progress that was never linked to a student (no unique match):
+  // only the typed name says whose it is.
+  const resource = createLessonResource({
+    title: 'Museum vocabulary',
+    type: 'note',
+    url: null,
+    filePath: null,
+    notes: null,
+    tags: [],
+    standardId: null,
+    classId: null,
+    shareWithStudents: false,
+    studyGuide: null
+  })
+  for (const studentName of ['QUILLON  Vantasse', 'Mai Chen']) {
+    importStudyProgressReturn(
+      {
+        format: 'eduboard-study-progress',
+        version: 1,
+        resourceId: resource.id,
+        resourceTitle: resource.title,
+        studentName,
+        exportedAt: '2026-10-02T08:00:00.000Z',
+        cards: { got: 3, again: 1, total: 5 },
+        quiz: { correct: 2, answered: 3, total: 4 }
+      },
+      null
+    )
+  }
 })
 
 afterEach(() => {
@@ -121,6 +153,9 @@ describe('a student’s data', () => {
       ])
     )
     expect(data.records.exit_ticket_responses).toHaveLength(2)
+    expect(data.records.study_progress_returns).toMatchObject([
+      { student_name: 'QUILLON  Vantasse' }
+    ])
     expect(JSON.stringify(data)).not.toContain('Mai')
   })
 
@@ -143,6 +178,12 @@ describe('a student’s data', () => {
       expect(count(`SELECT count(*) c FROM ${table} WHERE student_id = ?`, kept)).toBeGreaterThan(0)
     }
     expect(count('SELECT count(*) c FROM exit_ticket_responses')).toBe(0)
+    // The unlinked progress return is theirs and goes; the other student's stays.
+    expect(
+      (getSqlite().prepare('SELECT student_name FROM study_progress_returns').all() as Row[]).map(
+        (r) => r.student_name
+      )
+    ).toEqual(['Mai Chen'])
 
     const log = listAuditLog({}).map((e) => e.summary)
     expect(log.some((s) => /Quillon|Vantasse/.test(s))).toBe(false)
