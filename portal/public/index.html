@@ -932,7 +932,8 @@ function aiChatHtml(studentId, homeworkId, withPrompts = false) {
               (m) => `<button type="button" class="chip" role="radio" aria-checked="${m.id === 'help'}" data-ai-mode="${m.id}">${esc(t(m.label))}</button>`
             ).join('')}</div>
             <p class="field-note" data-ai-mode-about style="margin:6px 0 8px">${esc(t(HELPER_MODES[0].about))}</p>
-            <p class="field-note" data-field-of-study style="margin:0 0 8px"></p>`
+            <p class="field-note" data-field-of-study style="margin:0 0 8px"></p>
+            <div class="field-note" data-helper-settings style="margin:0 0 8px"></div>`
           : ''
       }
       <div class="ai-chat" data-ai-log></div>
@@ -966,11 +967,14 @@ async function wireFieldOfStudy(chat) {
   if (!line) return
   const studentId = chat.dataset.student
   let current = ''
+  let profile = null
   try {
-    current = (await api('/me/profiles')).find((p) => p.studentId === studentId)?.fieldOfStudy || ''
+    profile = (await api('/me/profiles')).find((p) => p.studentId === studentId) || null
+    current = profile?.fieldOfStudy || ''
   } catch {
     // Offline: shown as not set; it can still be typed.
   }
+  wireHelperSettings(chat, studentId, profile)
   const show = () => {
     line.innerHTML = current
       ? `${esc(t('Examples from: {field}', { field: current }))} · <a href="#" class="linklike" data-edit-field>${t('Change')}</a>`
@@ -997,6 +1001,78 @@ async function wireFieldOfStudy(chat) {
     }
   }
   show()
+}
+
+// How the Study Helper talks to this student: their level in their own words, how strong
+// a hint they want first, and whether it replies in English. Saved in their profile; a
+// teacher's rules for a class come first (services/helperRules.js).
+const HINT_CHOICES = [
+  ['', 'Let it decide'],
+  ['light', 'Small hints: I want to work it out'],
+  ['steps', 'Step by step'],
+  ['example', 'Show me a worked example first']
+]
+const REPLY_CHOICES = [
+  ['', 'My Portal language'],
+  ['english', 'Simple English'],
+  ['english-gloss', 'Simple English, hard words explained in my language']
+]
+
+function wireHelperSettings(chat, studentId, profile) {
+  const box = chat.querySelector('[data-helper-settings]')
+  if (!box) return
+  let saved = {
+    studyLevel: profile?.studyLevel || '',
+    hintStrength: profile?.hintStrength || '',
+    replyStyle: profile?.replyStyle || ''
+  }
+  const options = (choices, value) =>
+    choices
+      .map(([v, label]) => `<option value="${v}"${v === value ? ' selected' : ''}>${esc(t(label))}</option>`)
+      .join('')
+  const closed = () => {
+    box.innerHTML = `<a href="#" class="linklike" data-open-helper-settings>${t('How the Study Helper talks to you')}</a>`
+    box.querySelector('[data-open-helper-settings]').onclick = (e) => {
+      e.preventDefault()
+      open()
+    }
+  }
+  const open = () => {
+    box.innerHTML = `
+      <label>${t('Your level, in your own words')}
+        <input maxlength="200" data-study-level value="${esc(saved.studyLevel)}" placeholder="${esc(t('e.g. About B1. Reading is fine, listening is hard.'))}" />
+      </label>
+      <label>${t('Hints')}<select data-hint-strength>${options(HINT_CHOICES, saved.hintStrength)}</select></label>
+      <label>${t('Replies in')}<select data-reply-style>${options(REPLY_CHOICES, saved.replyStyle)}</select></label>
+      <p class="muted" style="margin:4px 0">${t('Your level and goals go to the AI with your questions. Your teacher’s rules for a class come first.')}</p>
+      <div class="chip-row" style="margin-top:4px">
+        <button type="button" class="chip" data-save-helper-settings>${t('Save')}</button>
+        <button type="button" class="chip" data-close-helper-settings>${t('Cancel')}</button>
+      </div>
+      <p class="error" role="alert"></p>`
+    box.querySelector('[data-close-helper-settings]').onclick = closed
+    box.querySelector('[data-save-helper-settings]').onclick = async () => {
+      try {
+        const res = await api(`/me/profiles/${encodeURIComponent(studentId)}`, {
+          method: 'PUT',
+          body: {
+            studyLevel: box.querySelector('[data-study-level]').value.trim(),
+            hintStrength: box.querySelector('[data-hint-strength]').value,
+            replyStyle: box.querySelector('[data-reply-style]').value
+          }
+        })
+        saved = {
+          studyLevel: res.studyLevel || '',
+          hintStrength: res.hintStrength || '',
+          replyStyle: res.replyStyle || ''
+        }
+        closed()
+      } catch (err) {
+        box.querySelector('.error').textContent = err.message
+      }
+    }
+  }
+  closed()
 }
 
 async function loadAiHistory(root) {

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type { ClassAiProfile } from '@shared/classAiProfile'
+import type { StudyHelperRules } from '@shared/studyHelperRules'
 import type { CreateUnitLessonsInput, DraftUnitPlanInput } from '@shared/unitPlan'
 import type {
   PostReplySlip,
@@ -1519,6 +1520,25 @@ export function useSaveClassAiProfile(classId: string) {
   return useMutation({
     mutationFn: (profile: ClassAiProfile) => api().classes.setAiProfile(classId, profile),
     onSuccess: (saved) => qc.setQueryData(['classes', classId, 'aiProfile'], saved)
+  })
+}
+
+export function useClassHelperRules(classId: string) {
+  return useQuery({
+    queryKey: ['classes', classId, 'helperRules'],
+    queryFn: () => api().classes.getHelperRules(classId)
+  })
+}
+
+export function useSaveClassHelperRules(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (rules: StudyHelperRules) => api().classes.setHelperRules(classId, rules),
+    onSuccess: (saved) => {
+      qc.setQueryData(['classes', classId, 'helperRules'], saved)
+      // The Portal doesn't have the new rules until the next publish.
+      qc.invalidateQueries({ queryKey: ['publishStatus'] })
+    }
   })
 }
 

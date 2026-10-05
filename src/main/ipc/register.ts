@@ -61,6 +61,7 @@ import * as studentLogEntriesRepo from '../repositories/studentLogEntries'
 import * as lessonResourcesRepo from '../repositories/lessonResources'
 import * as studyProgressRepo from '../repositories/studyProgressReturns'
 import * as classAiProfilesRepo from '../repositories/classAiProfiles'
+import * as classHelperRulesRepo from '../repositories/classHelperRules'
 import * as resourceChunksRepo from '../repositories/resourceChunks'
 import { offlineStudyPackHtml } from '../services/offlineStudyPack'
 import {
@@ -364,6 +365,15 @@ export function registerIpcHandlers(): void {
       throw new AppError('EB-0002', tr('That class no longer exists.'))
     }
     return classAiProfilesRepo.setClassAiProfile(String(classId), profile)
+  })
+  handle(IpcChannels.classes.getHelperRules, (_e, classId: string) =>
+    classHelperRulesRepo.getClassHelperRules(String(classId))
+  )
+  handle(IpcChannels.classes.setHelperRules, (_e, classId: string, rules: unknown) => {
+    if (!classesRepo.getClass(String(classId))) {
+      throw new AppError('EB-0002', tr('That class no longer exists.'))
+    }
+    return classHelperRulesRepo.setClassHelperRules(String(classId), rules)
   })
   handle(IpcChannels.classes.exportHandover, async (_e, classIds: string[]) => {
     if (!Array.isArray(classIds) || !classIds.every((id) => typeof id === 'string')) {
@@ -1371,7 +1381,7 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.ai.draftUnitPlan, (_e, input: DraftUnitPlanInput) => {
     if (!classesRepo.getClass(String(input?.classId))) {
-      throw new AppError('EB-0002', 'Class not found.')
+      throw new AppError('EB-0002', tr('That class no longer exists.'))
     }
     return aiService.draftUnitPlan(input, draftContext(input.classId))
   })

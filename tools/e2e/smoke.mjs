@@ -134,12 +134,29 @@ async function go(page, route) {
     (c) => window.api.classes.setAiProfile(c, { level: 'A1–B1', lessonShape: '45 + 10 + 45' }),
     cls
   )
+  // Saved before the settings screen first loads them (a later save from here would
+  // bypass the screen's cache; in the app, saving always goes through the screen).
+  const savedRules = await page.evaluate(
+    (c) =>
+      window.api.classes.setHelperRules(c, {
+        replyLanguage: 'english',
+        vocabulary: 'A2 words',
+        rules: ''
+      }),
+    cls
+  )
   await go(page, `/classes/${cls}/settings`)
   check(
     savedProfile.level === 'A1–B1' &&
       (await page.getByText('Teaching profile for AI drafts').count()) === 1 &&
       (await page.getByText('45 + 10 + 45').count()) === 1,
     'a class teaching profile for AI drafts is saved and shown in class settings'
+  )
+  check(
+    savedRules.replyLanguage === 'english' &&
+      (await page.getByText('Study Helper rules (Portal)').count()) === 1 &&
+      (await page.locator('input[value="A2 words"]').count()) === 1,
+    "a class's Study Helper rules are saved and shown in class settings"
   )
 
   // A unit's lessons go on the class's next free days, labelled with the unit.

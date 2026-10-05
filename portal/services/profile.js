@@ -1,3 +1,5 @@
+const { HINT_STRENGTHS, REPLY_STYLES } = require('./helperRules')
+
 // Validation for a student's profile edits. Every field is optional; an empty value
 // clears it. Unknown fields are ignored, so a client can't write columns it shouldn't.
 
@@ -10,8 +12,13 @@ const TEXT_LIMITS = {
   preferredLanguage: 40,
   privateNotes: 5000,
   // Their subject or major, so the Study Helper takes examples from it.
-  fieldOfStudy: 80
+  fieldOfStudy: 80,
+  // Their level in their own words, for the Study Helper (services/helperRules.js).
+  studyLevel: 200
 }
+
+// Study Helper choices from a fixed list; anything else is refused.
+const CHOICES = { hintStrength: HINT_STRENGTHS, replyStyle: REPLY_STYLES }
 
 /** 'YYYY-MM-DD' for a real calendar date between 1900 and today, else null. */
 function parseBirthDate(value, today = new Date()) {
@@ -51,6 +58,13 @@ function validateProfilePatch(body, today = new Date()) {
     }
   }
   if ('shareBirthday' in body) value.shareBirthday = body.shareBirthday === true
+  for (const [field, allowed] of Object.entries(CHOICES)) {
+    if (!(field in body)) continue
+    const choice = body[field]
+    if (choice === null || choice === '') value[field] = null
+    else if (allowed.includes(choice)) value[field] = choice
+    else return { ok: false, reason: `${field} must be one of ${allowed.join(', ')}` }
+  }
   return { ok: true, value }
 }
 
@@ -64,7 +78,10 @@ const COLUMNS = {
   teacherNote: 'teacher_note',
   preferredLanguage: 'preferred_language',
   privateNotes: 'private_notes',
-  fieldOfStudy: 'field_of_study'
+  fieldOfStudy: 'field_of_study',
+  studyLevel: 'study_level',
+  hintStrength: 'hint_strength',
+  replyStyle: 'reply_style'
 }
 
 /** The student's own view of their profile: everything. */
@@ -81,6 +98,9 @@ function toOwnerView(studentId, row) {
     preferredLanguage: row?.preferred_language ?? null,
     privateNotes: row?.private_notes ?? null,
     fieldOfStudy: row?.field_of_study ?? null,
+    studyLevel: row?.study_level ?? null,
+    hintStrength: row?.hint_strength ?? null,
+    replyStyle: row?.reply_style ?? null,
     hasPhoto: !!row?.photo_file,
     updatedAt: row?.updated_at ?? null
   }

@@ -27,7 +27,9 @@ export const IpcChannels = {
     startNextTerm: 'classes:startNextTerm',
     exportHandover: 'classes:exportHandover',
     getAiProfile: 'classes:getAiProfile',
-    setAiProfile: 'classes:setAiProfile'
+    setAiProfile: 'classes:setAiProfile',
+    getHelperRules: 'classes:getHelperRules',
+    setHelperRules: 'classes:setHelperRules'
   },
   gradeCategories: {
     listByClass: 'gradeCategories:listByClass',

@@ -5,6 +5,7 @@ import { tmpdir } from 'os'
 import { basename, join } from 'path'
 import type { PortalAiInteraction, PortalReviewStats } from '@shared/aiUsage'
 import { getSqlite } from '../db/client'
+import { listClassHelperRules } from '../repositories/classHelperRules'
 import { listClasses } from '../repositories/classes'
 import { mergeStudents } from '../repositories/studentMerge'
 import {
@@ -359,12 +360,15 @@ function buildPublishPayload(): {
   }
 
   const settings = getSettings()
+  const helperRules = listClassHelperRules()
   const body = {
     classes: classes.map((c) => ({
       id: c.id,
       name: c.name,
       levelType: c.levelType,
-      finished: c.archived
+      finished: c.archived,
+      // How the Study Helper talks to this class's students; absent when not set.
+      ...(helperRules.has(c.id) ? { helperRules: helperRules.get(c.id) } : {})
     })),
     students: [...studentsById.values()].map((s) => ({
       id: s.id,

@@ -3,6 +3,7 @@ import { sqliteTable, text, integer, real, uniqueIndex, index } from 'drizzle-or
 import type { AiApproval, ExitTicketQuestion } from '@shared/types'
 import type { StudyProgressCounts, StudyQuizCounts } from '@shared/studyProgress'
 import type { ClassAiProfile } from '@shared/classAiProfile'
+import type { StudyHelperRules } from '@shared/studyHelperRules'
 
 // NOTE: this file defines the Drizzle ORM shape of the database for typed queries.
 // The actual DDL used to create/evolve the tables lives in ./migrations.ts — the two
@@ -667,6 +668,14 @@ export const classAiProfiles = sqliteTable('class_ai_profiles', {
     .primaryKey()
     .references(() => classes.id, { onDelete: 'cascade' }),
   profile: text('profile', { mode: 'json' }).notNull().$type<ClassAiProfile>(),
+  updatedAt: text('updated_at').notNull()
+})
+
+export const classHelperRules = sqliteTable('class_helper_rules', {
+  classId: text('class_id')
+    .primaryKey()
+    .references(() => classes.id, { onDelete: 'cascade' }),
+  rules: text('rules', { mode: 'json' }).notNull().$type<StudyHelperRules>(),
   updatedAt: text('updated_at').notNull()
 })
 

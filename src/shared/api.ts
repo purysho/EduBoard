@@ -1,4 +1,5 @@
 import type { ClassAiProfile } from './classAiProfile'
+import type { StudyHelperRules } from './studyHelperRules'
 import type { CreateUnitLessonsInput, DraftedUnitPlan, DraftUnitPlanInput } from './unitPlan'
 import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
@@ -187,6 +188,9 @@ export interface EduBoardApi {
     /** How the teacher teaches this class, used by every AI draft for it. */
     getAiProfile(classId: string): Promise<ClassAiProfile>
     setAiProfile(classId: string, profile: ClassAiProfile): Promise<ClassAiProfile>
+    /** The class's rules for the Study Helper on the Portal; sent with each publish. */
+    getHelperRules(classId: string): Promise<StudyHelperRules>
+    setHelperRules(classId: string, rules: StudyHelperRules): Promise<StudyHelperRules>
   }
   gradeCategories: {
     listByClass(classId: string): Promise<GradeCategory[]>

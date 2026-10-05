@@ -31,7 +31,9 @@ const api: EduBoardApi = {
     startNextTerm: (input) => invoke(IpcChannels.classes.startNextTerm, input),
     exportHandover: (classIds) => invoke(IpcChannels.classes.exportHandover, classIds),
     getAiProfile: (classId) => invoke(IpcChannels.classes.getAiProfile, classId),
-    setAiProfile: (classId, profile) => invoke(IpcChannels.classes.setAiProfile, classId, profile)
+    setAiProfile: (classId, profile) => invoke(IpcChannels.classes.setAiProfile, classId, profile),
+    getHelperRules: (classId) => invoke(IpcChannels.classes.getHelperRules, classId),
+    setHelperRules: (classId, rules) => invoke(IpcChannels.classes.setHelperRules, classId, rules)
   },
   gradeCategories: {
     listByClass: (classId) => invoke(IpcChannels.gradeCategories.listByClass, classId),

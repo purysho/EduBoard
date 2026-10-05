@@ -972,5 +972,20 @@ export const CLASSES: Record<string, string> = {
   'Also draft each lesson in full: materials, timed activities, a floor and a stretch version of the main task, homework. Takes a minute or two.':
     '同时完整起草每一课：材料、带时间的活动、主要任务的基础版和提高版、作业。需要一两分钟。',
   'Added {n} lessons from {date}.': '已从 {date} 起添加 {n} 节课。',
-  'Add {n} lessons': '添加 {n} 节课'
+  'Add {n} lessons': '添加 {n} 节课',
+  'Choose a start date.': '请选择开始日期。',
+  'Let each student choose': '让每个学生自己选',
+  'Simple English': '简单英语',
+  "Simple English, hard words explained in the student's language":
+    '简单英语，难词用学生的语言解释',
+  "The student's own language": '学生自己的语言',
+  'Study Helper rules (Portal)': '学习助手规则（学生门户）',
+  "How the Study Helper talks to this class's students on the Portal. Your rules come before each student's own choices. They reach the Portal when you next publish.":
+    '学习助手在学生门户上怎样跟这个班的学生说话。你的规则优先于每个学生自己的选择。下次发布后才会生效。',
+  'Reply language': '回复语言',
+  'Vocabulary and sentence level': '词汇和句子难度',
+  'e.g. A2: short sentences, common words': '例如：A2，短句，常用词',
+  'Your rules': '你的规则',
+  'e.g. Never write sentences for their speaking script; ask them to say it first.':
+    '例如：不要替学生写口语稿的句子，先让他们自己说。'
 }

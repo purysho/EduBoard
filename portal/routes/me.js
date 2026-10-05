@@ -29,6 +29,7 @@ const {
 } = require('../services/aiUsage')
 const { buildStudyHelperRequest, cleanFieldOfStudy, isMode } = require('../services/studyHelper')
 const { learningStateFor, learningStateText } = require('../services/learningState')
+const { helperSettings, parseHelperRules } = require('../services/helperRules')
 const { ftsQuery } = require('../services/searchText')
 const review = require('../services/review')
 const { rateLimit, LIMITS } = require('../rateLimit')
@@ -899,8 +900,33 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
   const materialMatches = searchMaterials(classIds, text, 6)
   const helperMode = isMode(mode) ? mode : 'help'
   const profile = db
-    .prepare('SELECT field_of_study FROM student_profiles WHERE student_id = ?')
+    .prepare(
+      `SELECT field_of_study, study_level, goals, hint_strength, reply_style
+       FROM student_profiles WHERE student_id = ?`
+    )
     .get(studentId)
+  // The teacher's rules for the assignment's class, or for every class the student is in.
+  const ruleClassIds = homework ? [homework.class_id] : classIds
+  const classRules = ruleClassIds.length
+    ? db
+        .prepare(
+          `SELECT name, helper_rules FROM classes
+           WHERE id IN (${ruleClassIds.map(() => '?').join(',')}) AND helper_rules IS NOT NULL
+           ORDER BY name`
+        )
+        .all(...ruleClassIds)
+        .map((c) => ({ className: c.name, rules: parseHelperRules(c.helper_rules) }))
+    : []
+  const settings = helperSettings(
+    classRules,
+    {
+      level: profile?.study_level,
+      goals: profile?.goals,
+      hintStrength: profile?.hint_strength,
+      replyStyle: profile?.reply_style
+    },
+    isLanguage(language) ? language : null
+  )
   const { system, messages } = buildStudyHelperRequest({
     context: buildStudyContext(studentId),
     homework,
@@ -908,7 +934,9 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
     earlier: recentConversation(studentId, homework?.id, helperMode === 'help' ? 4 : 8, helperMode),
     materials: materialMatches.map((m) => ({ title: m.title, text: m.text })),
     question: text,
-    language: isLanguage(language) ? language : null,
+    languageRule: settings.language,
+    rules: settings.system,
+    studentProfile: settings.profile,
     mode: helperMode,
     fieldOfStudy: cleanFieldOfStudy(profile?.field_of_study),
     learningState: learningStateText(

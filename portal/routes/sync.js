@@ -28,6 +28,8 @@ function validatedJson(validate, value) {
   return result.ok ? JSON.stringify(result.value) : null
 }
 
+const { cleanHelperRules } = require('../services/helperRules')
+
 const router = express.Router()
 router.use(requireSyncSecret)
 router.use('/report-cards', reportCards.teacher)
@@ -259,10 +261,17 @@ router.post('/', (req, res) => {
     db.prepare('DELETE FROM materials WHERE class_id NOT IN (SELECT id FROM classes)').run()
 
     const insertClass = db.prepare(
-      'INSERT INTO classes (id, teacher_id, name, level_type, finished) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO classes (id, teacher_id, name, level_type, finished, helper_rules) VALUES (?, ?, ?, ?, ?, ?)'
     )
     for (const c of classes) {
-      insertClass.run(c.id, teacherId, c.name, c.levelType, c.finished ? 1 : 0)
+      insertClass.run(
+        c.id,
+        teacherId,
+        c.name,
+        c.levelType,
+        c.finished ? 1 : 0,
+        cleanHelperRules(c.helperRules)
+      )
     }
 
     // A student the desktop now sends (including one that joined through a link and has
@@ -434,7 +443,9 @@ router.post('/', (req, res) => {
     for (const m of materials.filter(inPushedClass)) {
       const sourceType = ['link', 'file', 'note'].includes(m.sourceType) ? m.sourceType : null
       const sourceUrl =
-        sourceType === 'link' && typeof m.sourceUrl === 'string' && /^https?:\/\//i.test(m.sourceUrl)
+        sourceType === 'link' &&
+        typeof m.sourceUrl === 'string' &&
+        /^https?:\/\//i.test(m.sourceUrl)
           ? m.sourceUrl.slice(0, 4000)
           : null
       const sourceText =

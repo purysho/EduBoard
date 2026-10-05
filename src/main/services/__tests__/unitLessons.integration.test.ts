@@ -114,6 +114,6 @@ describe('unit lessons', () => {
         startDate: '2026-10-05',
         lessons: [{ title: 'a', objectives: '' }]
       })
-    ).toThrow(/Class not found/)
+    ).toThrow(/That class no longer exists/)
   })
 })

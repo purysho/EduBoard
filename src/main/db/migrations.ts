@@ -933,6 +933,19 @@ const migrations: Migration[] = [
         );
       `)
     }
+  },
+  {
+    id: 42,
+    name: 'class_helper_rules',
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE class_helper_rules (
+          class_id TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+          rules TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        );
+      `)
+    }
   }
 ]
 

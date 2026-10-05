@@ -325,6 +325,12 @@ if (
   })()
 }
 ensureColumn('student_profiles', 'field_of_study', 'field_of_study TEXT')
+// The Study Helper's settings (services/helperRules.js): the teacher's rules per class,
+// sent with each publish, and the student's own level, hint strength and reply language.
+ensureColumn('classes', 'helper_rules', 'helper_rules TEXT')
+ensureColumn('student_profiles', 'study_level', 'study_level TEXT')
+ensureColumn('student_profiles', 'hint_strength', 'hint_strength TEXT')
+ensureColumn('student_profiles', 'reply_style', 'reply_style TEXT')
 // Spaced review (services/review.js): each student's Leitner box for each flashcard and
 // practice question they've answered.
 db.exec(`

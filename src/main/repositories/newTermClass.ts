@@ -2,6 +2,7 @@ import { AppError } from '@shared/errorCodes'
 import { getDb } from '../db/client'
 import { getClass, createClass } from './classes'
 import { getClassAiProfile, setClassAiProfile } from './classAiProfiles'
+import { getClassHelperRules, setClassHelperRules } from './classHelperRules'
 import { createGradeCategory, listGradeCategories } from './gradeCategories'
 import { enrollStudent, getRosterForClass } from './enrollments'
 import { createScheduleSlot, listScheduleSlotsByClass } from './classScheduleSlots'
@@ -50,6 +51,7 @@ export function duplicateClassForNewTerm(
     })
     // How the teacher teaches the class carries over; the students' level may need a tweak.
     setClassAiProfile(created.id, getClassAiProfile(classId))
+    setClassHelperRules(created.id, getClassHelperRules(classId))
     for (const cat of listGradeCategories(classId)) {
       createGradeCategory({
         classId: created.id,

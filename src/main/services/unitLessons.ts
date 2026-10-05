@@ -3,6 +3,7 @@
 // have a lesson, so a unit never lands on top of what the teacher has planned.
 import { AppError } from '@shared/errorCodes'
 import { addDays } from '@shared/dates'
+import { tr } from '@shared/i18n'
 import { UNIT_MAX_LESSONS, unitLessonLabel, type CreateUnitLessonsInput } from '@shared/unitPlan'
 import type { LessonPlan } from '@shared/types'
 import { getSqlite } from '../db/client'
@@ -17,7 +18,7 @@ const SEARCH_DAYS = 730
 /** The class's next `count` teaching days from `from` (inclusive) that have no lesson yet.
  * A class without a timetable gets one lesson a week, on `from`'s weekday. */
 export function nextTeachingDates(classId: string, from: string, count: number): string[] {
-  if (!DATE.test(from)) throw new AppError('EB-0002', 'Invalid start date.')
+  if (!DATE.test(from)) throw new AppError('EB-0002', tr('Choose a start date.'))
   const weekdays = new Set(listScheduleSlotsByClass(classId).map((s) => s.dayOfWeek))
   if (!weekdays.size) weekdays.add(new Date(`${from}T00:00:00Z`).getUTCDay())
   const taken = new Set(listLessonPlansByClass(classId).map((p) => p.date))
@@ -38,7 +39,7 @@ const clean = (value: unknown, max: number): string | null => {
 
 /** Adds a unit's lessons to the class, all or none. */
 export function createUnitLessons(input: CreateUnitLessonsInput): LessonPlan[] {
-  if (!getClass(input.classId)) throw new AppError('EB-0002', 'Class not found.')
+  if (!getClass(input.classId)) throw new AppError('EB-0002', tr('That class no longer exists.'))
   const lessons = (Array.isArray(input.lessons) ? input.lessons : [])
     .filter((l) => clean(l?.title, 200))
     .slice(0, UNIT_MAX_LESSONS)
