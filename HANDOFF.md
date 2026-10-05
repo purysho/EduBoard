@@ -52,6 +52,16 @@ The dependency-removal experiment inside this loop also produced a useful negati
 
 Both were restored and the final deterministic gates passed. Do **not** retry those removals unless their importing code is intentionally replaced.
 
+### AI personalisation (after Mr. Ranedeer-style ideas)
+
+All on `main`, each with unit/integration tests and e2e checks; see CHANGELOG "Unreleased".
+
+- desktop: class teaching profile (`src/shared/classAiProfile.ts`, migration 41), class evidence (`src/main/services/classEvidence.ts`), unit planner (`src/shared/unitPlan.ts`, `src/main/services/unitLessons.ts`, `UnitPlannerModal.tsx`), per-class Study Helper rules (`src/shared/studyHelperRules.ts`, migration 42, sent in each publish's `classes[].helperRules`);
+- prompts live apart from the network calls so they can be tested (`src/main/services/lessonDraftPrompt.ts`);
+- Portal: learning state (`portal/services/learningState.js`), helper settings (`portal/services/helperRules.js`), revision plans (`portal/services/revisionPlan.js`);
+- rule: the teacher's own words may go in the system prompt; anything from students or class materials goes in the user turn inside a fenced block (`<class_materials>`, `<learning_state>`, `<student_profile>`, `<revision_inputs>`) with closing tags stripped;
+- the desktop `publishStatus` integration test starts a real Portal and can pass 5 s under heavy parallel load (0.7 s alone); it is not flaky in isolation.
+
 ## Reusable-content architecture decision
 
 The old handoff listed “teacher templates” for lessons, worksheets, quizzes, rubrics, comments and homework as if a new subsystem was required.

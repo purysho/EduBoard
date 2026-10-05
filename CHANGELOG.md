@@ -2,6 +2,28 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Class teaching profile for AI drafts:** each class has a short profile in the teacher's own words (level, lesson shape, use of the first language, routines, what to avoid). Every AI lesson draft for the class follows it, and it carries into a new term.
+- **Class evidence in lesson drafts:** drafts build on the class's recent record: the last lessons, speaking-ladder marks, recent assessment averages and exit-ticket questions that suggested re-teaching. Counts and the teacher's own titles only; no student is named.
+- **Plan a unit with AI:** prerequisites first, then a sequence of lessons with aims and an end-of-lesson check each. The lessons go on the class's next free timetable days, labelled with the unit, as outlines or each drafted in full from the unit.
+- **Floor and stretch in every AI lesson draft:** the support and stretch versions of the main task are filled in.
+- **Study Helper knows what the student finds hard:** a nameless summary of the cards and quick-check questions they keep missing and their week's goal, sent as data.
+- **Study Helper settings:** students describe their level in their own words and choose hint strength and reply language; teachers set per-class rules (reply language, vocabulary level, own rules) in the desktop app, which reach the Portal with the next publish and come first.
+- **"Make me a revision plan"** on the Portal's week plan: a few timed tasks a day from the student's homework, review cards and weak spots, kept until it's over or cleared.
+
+### Fixed
+
+- Study-progress returns not linked to a student are now included in that student's data export and erased with them.
+- Copying homework to several classes is all-or-nothing.
+- Test builds retry publishing when the upload fails.
+
+### Privacy
+
+- The privacy notice and data-processing terms (EN/ZH) describe what the Study Helper and revision plans send to the AI provider.
+
 ## [0.7.8] — 2026-10-01
 
 ### Added
