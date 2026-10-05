@@ -1816,6 +1816,92 @@ async function loadMaterials() {
 // card up a box (1, 2, 4, 8, 16 days), wrong sends it back to box 1. A day's review mixes
 // topics. What's due is worked out on the server, so it follows the student to any device.
 
+// ---- "Make me a revision plan" ---------------------------------------------------------------
+// The AI arranges the student's homework, review cards and what they keep missing into a
+// few timed tasks a day (services/revisionPlan.js). The plan stays on the week card until
+// it's over, replaced or cleared.
+const REVISION_SPANS = [
+  [3, 'The next 3 days'],
+  [7, 'The next week'],
+  [14, 'The next 2 weeks']
+]
+
+function revisionPlanHtml(plan) {
+  const days = plan.days
+    .map(
+      (d) => `<div class="week-row"><span class="week-day">${esc(d.date === localToday() ? t('Today') : formatDay(d.date))}</span><span class="week-items">${d.tasks
+        .map((task) => `<span style="display:block">${esc(task.task)} <span class="muted">· ${esc(t('{n} min', { n: task.minutes }))}</span></span>`)
+        .join('')}</span></div>`
+    )
+    .join('')
+  return `
+    <p style="margin:0 0 6px"><strong>${plan.focus ? esc(t('My revision plan: {focus}', { focus: plan.focus })) : t('My revision plan')}</strong></p>
+    <div class="week-list">${days}</div>
+    ${plan.tip ? `<p class="muted" style="margin:6px 0 0">${esc(plan.tip)}</p>` : ''}
+    <p class="muted" style="margin:6px 0 0; font-size:.75rem">${t('Made by AI from your homework, review cards and what you keep missing. It may contain mistakes.')}</p>
+    <div class="chip-row"><button type="button" class="chip" data-new-revision-plan>${t('Make a new one')}</button><button type="button" class="chip" data-clear-revision-plan>${t('Clear')}</button></div>`
+}
+
+function wireRevisionPlan(box, studentId, plan, reload) {
+  if (!box) return
+  const showForm = () => {
+    box.innerHTML = `
+      <form data-revision-form style="margin:0">
+        <label>${t('What are you revising for? (optional)')}
+          <input maxlength="120" placeholder="${esc(t('e.g. the Unit 3 test on Friday'))}" />
+        </label>
+        <label>${t('Plan for')}
+          <select>${REVISION_SPANS.map(([n, label]) => `<option value="${n}"${n === 7 ? ' selected' : ''}>${t(label)}</option>`).join('')}</select>
+        </label>
+        <div class="chip-row"><button type="submit" class="chip">${t('Make the plan')}</button>${plan ? `<button type="button" class="chip" data-cancel-revision>${t('Cancel')}</button>` : ''}</div>
+        <p class="error" role="alert"></p>
+      </form>`
+    const form = box.querySelector('[data-revision-form]')
+    box.querySelector('[data-cancel-revision]')?.addEventListener('click', showPlan)
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      const button = form.querySelector('[type=submit]')
+      button.disabled = true
+      button.textContent = t('Making your plan…')
+      try {
+        await api('/me/week/revision-plan', {
+          method: 'POST',
+          body: {
+            studentId,
+            today: localToday(),
+            focus: form.querySelector('input').value.trim(),
+            days: Number(form.querySelector('select').value),
+            language: readingLanguage
+          }
+        })
+        reload()
+      } catch (err) {
+        button.disabled = false
+        button.textContent = t('Make the plan')
+        form.querySelector('.error').textContent = tError(err.message)
+      }
+    }
+  }
+  const showPlan = () => {
+    if (!plan) {
+      box.innerHTML = `<button type="button" class="chip" data-start-revision>${t('Make me a revision plan')}</button>`
+      box.querySelector('[data-start-revision]').onclick = showForm
+      return
+    }
+    box.innerHTML = revisionPlanHtml(plan)
+    box.querySelector('[data-new-revision-plan]').onclick = showForm
+    box.querySelector('[data-clear-revision-plan]').onclick = async () => {
+      try {
+        await api('/me/week/revision-plan', { method: 'DELETE', body: { studentId } })
+      } catch {
+        return
+      }
+      reload()
+    }
+  }
+  showPlan()
+}
+
 // ---- The student's week plan -------------------------------------------------------------
 // The next seven days: homework due, a day to start each piece (two days ahead, so it
 // isn't all left to the night before), and the spaced-review cards coming up. Plus one goal
@@ -1883,7 +1969,11 @@ async function loadWeekPlan(root, allHomework) {
           : goalForm('')
       }
     </div>
-    <div class="week-list">${rows}</div>`
+    <div class="week-list">${rows}</div>
+    <div class="week-goal" data-revision-box style="margin-top:12px"></div>`
+  wireRevisionPlan(root.querySelector('[data-revision-box]'), studentId, week.revisionPlan, () =>
+    loadWeekPlan(root, allHomework)
+  )
 
   const save = async (body) => {
     try {

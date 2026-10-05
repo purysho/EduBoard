@@ -30,6 +30,15 @@ const {
 const { buildStudyHelperRequest, cleanFieldOfStudy, isMode } = require('../services/studyHelper')
 const { learningStateFor, learningStateText } = require('../services/learningState')
 const { helperSettings, parseHelperRules } = require('../services/helperRules')
+const {
+  planDays,
+  revisionInputs,
+  buildRevisionPlanRequest,
+  parseRevisionPlan,
+  revisionPlanText,
+  currentRevisionPlan,
+  saveRevisionPlan
+} = require('../services/revisionPlan')
 const { ftsQuery } = require('../services/searchText')
 const review = require('../services/review')
 const { rateLimit, LIMITS } = require('../rateLimit')
@@ -1035,8 +1044,55 @@ router.get('/week', (req, res) => {
     weekStart,
     review: review.reviewSchedule(studentId, day, 7),
     goal: goalFor(weekStart),
-    lastWeek: goalFor(review.addDays(weekStart, -7))
+    lastWeek: goalFor(review.addDays(weekStart, -7)),
+    revisionPlan: currentRevisionPlan(studentId, day)
   })
+})
+
+// "Make me a revision plan" (services/revisionPlan.js): the next days, arranged by the AI
+// from the student's homework, review cards and what they keep missing. Kept until it's
+// over or replaced, and logged with the Study Helper chats the teacher can see.
+router.post('/week/revision-plan', aiLimits, async (req, res) => {
+  const { studentId, focus, days, language } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  if (isDemoAccount(req.accountId)) return demoRefusal(res)
+  const today = review.studentToday(req.body.today)
+  const profile = db
+    .prepare('SELECT study_level FROM student_profiles WHERE student_id = ?')
+    .get(studentId)
+  const inputs = revisionInputs(studentId, today, planDays(days), focus, profile?.study_level)
+  const { system, user } = buildRevisionPlanRequest(inputs, isLanguage(language) ? language : null)
+  const student = db.prepare('SELECT teacher_id FROM students WHERE id = ?').get(studentId)
+  let plan
+  try {
+    plan = parseRevisionPlan(await complete(student.teacher_id, system, user, 1500), inputs)
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError)
+      return res.status(503).json({ error: err.message, code: 'PT-4001' })
+    return res
+      .status(502)
+      .json({ error: 'AI request failed. Try again in a moment.', code: 'PT-4002' })
+  }
+  saveRevisionPlan(studentId, plan)
+  recordInteraction({
+    accountId: req.accountId,
+    studentId,
+    question: `Make me a revision plan${inputs.focus ? `: ${inputs.focus}` : ''}`,
+    reply: revisionPlanText(plan),
+    mode: 'revision-plan'
+  })
+  res.json(plan)
+})
+
+router.delete('/week/revision-plan', (req, res) => {
+  const { studentId } = req.body
+  if (!studentId || !getLinkedStudentIds(req.accountId).includes(studentId)) {
+    return res.status(403).json({ error: 'Not your student', code: 'PT-3001' })
+  }
+  db.prepare('DELETE FROM revision_plans WHERE student_id = ?').run(studentId)
+  res.json({ ok: true })
 })
 
 router.put('/week/goal', (req, res) => {
@@ -1293,6 +1349,10 @@ router.get('/export', (req, res) => {
         `SELECT m.title AS material, r.kind, r.box, r.due_on AS dueOn, r.times_right AS timesRight,
            r.times_wrong AS timesWrong FROM review_items r LEFT JOIN materials m ON m.id = r.material_id
          WHERE r.student_id = ?`,
+        studentId
+      ),
+      revisionPlan: all(
+        'SELECT plan, created_at AS madeAt FROM revision_plans WHERE student_id = ?',
         studentId
       ),
       weeklyGoals: all(

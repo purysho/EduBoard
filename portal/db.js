@@ -331,6 +331,15 @@ ensureColumn('classes', 'helper_rules', 'helper_rules TEXT')
 ensureColumn('student_profiles', 'study_level', 'study_level TEXT')
 ensureColumn('student_profiles', 'hint_strength', 'hint_strength TEXT')
 ensureColumn('student_profiles', 'reply_style', 'reply_style TEXT')
+// The student's latest revision plan (services/revisionPlan.js): one per student, replaced
+// when they make a new one.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS revision_plans (
+    student_id TEXT PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
+    plan TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+`)
 // Spaced review (services/review.js): each student's Leitner box for each flashcard and
 // practice question they've answered.
 db.exec(`

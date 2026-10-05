@@ -175,6 +175,7 @@ router.delete('/teachers/:id', (req, res) => {
       `DELETE FROM student_profiles WHERE student_id IN (${OWN_STUDENTS})`,
       `DELETE FROM review_items WHERE student_id IN (${OWN_STUDENTS})`,
       `DELETE FROM study_goals WHERE student_id IN (${OWN_STUDENTS})`,
+      `DELETE FROM revision_plans WHERE student_id IN (${OWN_STUDENTS})`,
       `DELETE FROM account_students WHERE student_id IN (${OWN_STUDENTS})`
     ]
     for (const sql of statements) db.prepare(sql).run(p)
