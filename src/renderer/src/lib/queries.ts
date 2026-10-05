@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Flashcard, PracticeQuestion } from '@shared/practiceSets'
 import type { ClassAiProfile } from '@shared/classAiProfile'
+import type { CreateUnitLessonsInput, DraftUnitPlanInput } from '@shared/unitPlan'
 import type {
   PostReplySlip,
   AiMaterialKind,
@@ -1524,6 +1525,25 @@ export function useSaveClassAiProfile(classId: string) {
 export function useDraftLessonPlan() {
   return useMutation({
     mutationFn: (input: DraftLessonPlanInput) => api().ai.draftLessonPlan(input)
+  })
+}
+
+export function useDraftUnitPlan() {
+  return useMutation({
+    mutationFn: (input: DraftUnitPlanInput) => api().ai.draftUnitPlan(input)
+  })
+}
+
+export function useCreateUnitLessons(classId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: CreateUnitLessonsInput) => api().lessonPlans.createUnit(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.lessonPlans(classId) })
+      qc.invalidateQueries({ queryKey: queryKeys.upcomingLessonPlans })
+      qc.invalidateQueries({ queryKey: queryKeys.dashboardStats })
+      qc.invalidateQueries({ queryKey: ['curriculumMap'] })
+    }
   })
 }
 

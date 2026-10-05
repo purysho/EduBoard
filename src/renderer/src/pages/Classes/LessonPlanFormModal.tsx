@@ -29,6 +29,8 @@ export interface LessonPlanDraft {
   objectives: string
   materials: string
   activities: string
+  support?: string
+  stretch?: string
   homework: string
 }
 
@@ -65,8 +67,8 @@ export function LessonPlanFormModal({
   const [materials, setMaterials] = useState(plan?.materials ?? initialDraft?.materials ?? '')
   const [activities, setActivities] = useState(plan?.activities ?? initialDraft?.activities ?? '')
   const [homework, setHomework] = useState(plan?.homework ?? initialDraft?.homework ?? '')
-  const [support, setSupport] = useState(plan?.support ?? '')
-  const [stretch, setStretch] = useState(plan?.stretch ?? '')
+  const [support, setSupport] = useState(plan?.support ?? initialDraft?.support ?? '')
+  const [stretch, setStretch] = useState(plan?.stretch ?? initialDraft?.stretch ?? '')
   const [linkedAssessmentId, setLinkedAssessmentId] = useState(plan?.linkedAssessmentId ?? '')
   const [status, setStatus] = useState<LessonPlanStatus>(plan?.status ?? 'planned')
   const [resourceIdsOverride, setResourceIdsOverride] = useState<string[] | null>(null)

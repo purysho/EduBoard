@@ -950,5 +950,27 @@ export const CLASSES: Record<string, string> = {
   "The draft follows this class's teaching profile (Settings).":
     '草稿会按这个班的教学设定（设置）来写。',
   'It also builds on recent lessons, ladder marks, scores and exit tickets (counts only, no student names).':
-    '草稿还会参考最近的课、阶梯评分、成绩和课堂小测（只用统计数字，不含学生姓名）。'
+    '草稿还会参考最近的课、阶梯评分、成绩和课堂小测（只用统计数字，不含学生姓名）。',
+  'Plan a unit': '规划单元',
+  'The AI draft failed. Try again.': 'AI 草稿生成失败，请重试。',
+  'Drafting lesson {n} of {total}…': '正在起草第 {n} 课（共 {total} 课）…',
+  'Plan a unit with AI': '用 AI 规划单元',
+  'Planning…': '正在规划…',
+  'Plan the unit': '规划这个单元',
+  'What is the unit about?': '这个单元讲什么？',
+  'e.g. Talking about university life': '例如：谈论大学生活',
+  'Number of lessons': '课数',
+  'First lesson on or after': '第一课不早于',
+  "Lessons go on this class's timetable days that have no lesson yet.":
+    '课会排在这个班课表上还没有安排课的日子。',
+  "The AI first works out what students need to know already, then plans the lessons in order, each ending with a quick check. It uses this class's teaching profile and recent record (counts only, no student names).":
+    'AI 会先确定学生需要预先掌握什么，再按顺序规划每一课，每课结尾都有一个简短检测。它会参考这个班的教学设定和近期记录（只用统计数字，不含学生姓名）。',
+  'Unit title': '单元标题',
+  'Students need first': '学生需要先掌握',
+  'Lesson {n} title': '第 {n} 课标题',
+  'Check: {check}': '检测：{check}',
+  'Also draft each lesson in full: materials, timed activities, a floor and a stretch version of the main task, homework. Takes a minute or two.':
+    '同时完整起草每一课：材料、带时间的活动、主要任务的基础版和提高版、作业。需要一两分钟。',
+  'Added {n} lessons from {date}.': '已从 {date} 起添加 {n} 节课。',
+  'Add {n} lessons': '添加 {n} 节课'
 }

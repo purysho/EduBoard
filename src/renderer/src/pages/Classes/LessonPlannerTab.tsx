@@ -4,6 +4,7 @@ import {
   Archive,
   CopyPlus,
   FileText,
+  ListOrdered,
   NotebookPen,
   Pencil,
   Plus,
@@ -28,6 +29,7 @@ import {
 import { isEmptyClassAiProfile } from '@shared/classAiProfile'
 import { formatDate, ipcErrorMessage, todayIso } from '@renderer/lib/format'
 import { LessonPlanFormModal, type LessonPlanDraft } from './LessonPlanFormModal'
+import { UnitPlannerModal } from './UnitPlannerModal'
 import { useQueryClient } from '@tanstack/react-query'
 import { addDays, mondayOf } from '@shared/dates'
 import { tr, trn } from '@shared/i18n'
@@ -120,6 +122,7 @@ export function LessonPlannerTab(): React.JSX.Element {
   const [pendingDelete, setPendingDelete] = useState<LessonPlan | null>(null)
   const [aiDraft, setAiDraft] = useState<LessonPlanDraft | undefined>(undefined)
   const [showAiTopic, setShowAiTopic] = useState(false)
+  const [showUnit, setShowUnit] = useState(false)
   const [topic, setTopic] = useState('')
   const draftPlan = useDraftLessonPlan()
   const { data: aiProfile } = useClassAiProfile(classSection.id)
@@ -187,6 +190,10 @@ export function LessonPlannerTab(): React.JSX.Element {
           <CopyPlus size={15} className="mr-1 inline" aria-hidden />
           {tr('Copy last week')}
         </Button>
+        <Button variant="secondary" onClick={() => setShowUnit(true)}>
+          <ListOrdered size={15} className="mr-1 inline" aria-hidden />
+          {tr('Plan a unit')}
+        </Button>
         <Button variant="secondary" onClick={() => setShowAiTopic((v) => !v)}>
           <Sparkles size={15} className="mr-1 inline" aria-hidden />
           {tr('Draft with AI')}
@@ -219,6 +226,12 @@ export function LessonPlannerTab(): React.JSX.Element {
           )}
         </p>
       )}
+      <UnitPlannerModal
+        open={showUnit}
+        onClose={() => setShowUnit(false)}
+        classSection={classSection}
+        onAdded={setCopyMessage}
+      />
       {copyMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{copyMessage}</p>}
       {packMessage && <p className="mb-4 text-sm text-[var(--color-text-muted)]">{packMessage}</p>}
       {draftPlan.isError && (

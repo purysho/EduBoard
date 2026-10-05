@@ -1326,6 +1326,8 @@ export interface DraftLessonPlanInput {
   subject: string | null
   gradeLevel: string | null
   topic: string
+  /** Where the lesson sits in a unit the teacher planned (see @shared/unitPlan). */
+  unitContext?: string
 }
 
 export interface DraftedLessonPlan {
@@ -1333,6 +1335,9 @@ export interface DraftedLessonPlan {
   objectives: string
   materials: string
   activities: string
+  /** The main task made easier (the floor) and harder (the stretch). */
+  support: string
+  stretch: string
   homework: string
 }
 

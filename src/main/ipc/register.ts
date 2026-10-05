@@ -151,6 +151,13 @@ import { isSafeToOpen } from '../services/untrustedFiles'
 import { draftSubmissionFeedback } from '../services/feedbackDraft'
 import { copyHomeworkToClasses } from '../services/homeworkCopy'
 import { classEvidenceFor } from '../services/classEvidence'
+import type { LessonDraftContext } from '../services/lessonDraftPrompt'
+import { createUnitLessons, nextTeachingDates } from '../services/unitLessons'
+import {
+  clampLessonCount,
+  type CreateUnitLessonsInput,
+  type DraftUnitPlanInput
+} from '@shared/unitPlan'
 import { getSetupProgress } from '../services/setupProgress'
 import { applyWindowIcon, createPrintWindow, loadAppRoute, waitForPrintReady } from '../windows'
 import { tr, uiLanguage } from '@shared/i18n'
@@ -507,6 +514,14 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.lessonPlans.create, (_e, input: lessonPlansRepo.CreateLessonPlanInput) =>
     lessonPlansRepo.createLessonPlan(input)
+  )
+  handle(
+    IpcChannels.lessonPlans.teachingDates,
+    (_e, classId: string, from: string, count: number) =>
+      nextTeachingDates(String(classId), String(from), clampLessonCount(count))
+  )
+  handle(IpcChannels.lessonPlans.createUnit, (_e, input: CreateUnitLessonsInput) =>
+    createUnitLessons(input)
   )
   handle(
     IpcChannels.lessonPlans.update,
@@ -1343,17 +1358,23 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.classroomHub.close, (_e, classId: string) => closeClassroomHub(classId))
 
   // --- AI (optional, requires a teacher-supplied API key) --------------------------------
+  // A class's teaching profile and recent record, for drafting its lessons and units.
+  const draftContext = (classId: unknown): LessonDraftContext =>
+    classId
+      ? {
+          profile: classAiProfilesRepo.getClassAiProfile(String(classId)),
+          evidence: classEvidenceFor(String(classId), localDateIso(new Date()))
+        }
+      : { profile: EMPTY_CLASS_AI_PROFILE }
   handle(IpcChannels.ai.draftLessonPlan, (_e, input: DraftLessonPlanInput) =>
-    aiService.draftLessonPlan(
-      input,
-      input.classId
-        ? {
-            profile: classAiProfilesRepo.getClassAiProfile(String(input.classId)),
-            evidence: classEvidenceFor(String(input.classId), localDateIso(new Date()))
-          }
-        : { profile: EMPTY_CLASS_AI_PROFILE }
-    )
+    aiService.draftLessonPlan(input, draftContext(input.classId))
   )
+  handle(IpcChannels.ai.draftUnitPlan, (_e, input: DraftUnitPlanInput) => {
+    if (!classesRepo.getClass(String(input?.classId))) {
+      throw new AppError('EB-0002', 'Class not found.')
+    }
+    return aiService.draftUnitPlan(input, draftContext(input.classId))
+  })
   handle(IpcChannels.ai.suggestCommentPhrases, (_e, input: SuggestCommentPhrasesInput) =>
     aiService.suggestCommentPhrases(input)
   )

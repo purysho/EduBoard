@@ -1,6 +1,9 @@
 import type { DraftLessonPlanInput } from '@shared/types'
 import { classAiProfilePrompt, type ClassAiProfile } from '@shared/classAiProfile'
 import type { ClassEvidence } from './classEvidence'
+import type { DraftUnitPlanInput } from '@shared/unitPlan'
+
+const UNIT_CONTEXT_MAX = 2000
 
 // What the AI is told when it drafts a lesson plan for a class. Kept apart from the
 // network call so the exact prompt can be tested.
@@ -69,9 +72,14 @@ export function buildLessonPlanPrompt(
   const system =
     'You draft lesson plans for teachers. Respond with ONLY a JSON object — no prose, ' +
     'no markdown fence — matching exactly this shape: ' +
-    '{"title": string, "objectives": string, "materials": string, "activities": string, "homework": string}. ' +
+    '{"title": string, "objectives": string, "materials": string, "activities": string, ' +
+    '"support": string, "stretch": string, "homework": string}. ' +
     'Each field is plain text a teacher can edit directly (use "- " line prefixes for lists, not markdown). ' +
     'In "activities", give each step its minutes, e.g. "- Warm-up (5): ...". ' +
+    'Everyone does the same main task: "support" is its floor (the same task made easier for ' +
+    'students who need it: frames, model language, fewer items, more time) and "stretch" is ' +
+    'its stretch (the same task made harder for those ready: less scaffolding, a twist, a ' +
+    'harder audience). ' +
     languageInstruction
 
   const parts = [
@@ -79,6 +87,42 @@ export function buildLessonPlanPrompt(
       (input.subject ? ` (${input.subject})` : '') +
       (input.gradeLevel ? `, grade ${input.gradeLevel}` : ''),
     `Topic for this lesson: ${input.topic}`
+  ]
+  const unit = (input.unitContext ?? '').trim().slice(0, UNIT_CONTEXT_MAX)
+  if (unit) parts.push(unit)
+  const profile = classAiProfilePrompt(context.profile)
+  if (profile) parts.push(profile)
+  const evidence = context.evidence ? classEvidencePrompt(context.evidence) : ''
+  if (evidence) parts.push(evidence)
+  return { system, user: parts.join('\n\n') }
+}
+
+/** The prompt for planning a unit: prerequisites first, then lessons that each build on
+ * the last and end with a check. Same class profile and record as a single lesson. */
+export function buildUnitPlanPrompt(
+  input: DraftUnitPlanInput,
+  context: LessonDraftContext,
+  languageInstruction: string
+): { system: string; user: string } {
+  const system =
+    'You plan teaching units for teachers. Respond with ONLY a JSON object, no prose, no ' +
+    'markdown fence, matching exactly this shape: {"title": string, "prerequisites": ' +
+    '[string], "lessons": [{"title": string, "objectives": string, "check": string}]}. ' +
+    'First work out what students must already know or be able to do for this unit ' +
+    '("prerequisites", at most 5, short). Then sequence exactly the number of lessons asked ' +
+    'for: each builds on the one before, starts from what the class can already do, and ' +
+    'ends in something students produce. "objectives" says what students will be able to ' +
+    'do by the end (one or two lines). "check" is a quick end-of-lesson check that shows ' +
+    'whether the aim was met (e.g. a 3-question exit ticket, a pair task the teacher ' +
+    'listens to). Plain text only. ' +
+    languageInstruction
+
+  const parts = [
+    `Class: ${input.className}` +
+      (input.subject ? ` (${input.subject})` : '') +
+      (input.gradeLevel ? `, grade ${input.gradeLevel}` : ''),
+    `Unit topic: ${input.topic}`,
+    `Number of lessons: ${input.lessonCount}`
   ]
   const profile = classAiProfilePrompt(context.profile)
   if (profile) parts.push(profile)

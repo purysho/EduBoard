@@ -89,7 +89,9 @@ export const IpcChannels = {
     shiftPlanned: 'lessonPlans:shiftPlanned',
     resourceIds: 'lessonPlans:resourceIds',
     setResources: 'lessonPlans:setResources',
-    exportOfflinePack: 'lessonPlans:exportOfflinePack'
+    exportOfflinePack: 'lessonPlans:exportOfflinePack',
+    teachingDates: 'lessonPlans:teachingDates',
+    createUnit: 'lessonPlans:createUnit'
   },
   scheduleSlots: {
     listByClass: 'scheduleSlots:listByClass',
@@ -276,6 +278,7 @@ export const IpcChannels = {
   },
   ai: {
     draftLessonPlan: 'ai:draftLessonPlan',
+    draftUnitPlan: 'ai:draftUnitPlan',
     suggestCommentPhrases: 'ai:suggestCommentPhrases',
     testConnection: 'ai:testConnection'
   },

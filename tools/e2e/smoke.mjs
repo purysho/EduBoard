@@ -142,6 +142,33 @@ async function go(page, route) {
     'a class teaching profile for AI drafts is saved and shown in class settings'
   )
 
+  // A unit's lessons go on the class's next free days, labelled with the unit.
+  await go(page, `/classes/${cls}/lessons`)
+  await page.getByRole('button', { name: 'Plan a unit' }).click()
+  const unitForm = (await page.getByText('What is the unit about?').count()) === 1
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  const unitLessons = await page.evaluate(async (c) => {
+    const lessons = await window.api.lessonPlans.createUnit({
+      classId: c,
+      unitTitle: 'Smoke unit',
+      startDate: '2030-01-01',
+      lessons: [
+        { title: 'Smoke lesson one', objectives: 'Aim', support: 'Frames', stretch: 'Twist' },
+        { title: 'Smoke lesson two', objectives: 'Aim' }
+      ]
+    })
+    return lessons.map((l) => ({ date: l.date, label: l.weekLabel, support: l.support }))
+  }, cls)
+  check(
+    unitForm &&
+      unitLessons.length === 2 &&
+      unitLessons[0].date >= '2030-01-01' &&
+      unitLessons[0].date < unitLessons[1].date &&
+      unitLessons[1].label === 'Smoke unit 2/2' &&
+      unitLessons[0].support === 'Frames',
+    'the unit planner opens, and a unit adds its lessons on the next free days'
+  )
+
   // Chinese.
   await page.evaluate(() => window.api.settings.update({ uiLanguage: 'zh' }))
   await page.evaluate(() => location.reload()).catch(() => {})

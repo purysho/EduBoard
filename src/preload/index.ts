@@ -102,7 +102,10 @@ const api: EduBoardApi = {
     setResources: (lessonPlanId, resourceIds) =>
       invoke(IpcChannels.lessonPlans.setResources, lessonPlanId, resourceIds),
     exportOfflinePack: (lessonPlanId) =>
-      invoke(IpcChannels.lessonPlans.exportOfflinePack, lessonPlanId)
+      invoke(IpcChannels.lessonPlans.exportOfflinePack, lessonPlanId),
+    teachingDates: (classId, from, count) =>
+      invoke(IpcChannels.lessonPlans.teachingDates, classId, from, count),
+    createUnit: (input) => invoke(IpcChannels.lessonPlans.createUnit, input)
   },
   scheduleSlots: {
     listByClass: (classId) => invoke(IpcChannels.scheduleSlots.listByClass, classId),
@@ -321,6 +324,7 @@ const api: EduBoardApi = {
   },
   ai: {
     draftLessonPlan: (input) => invoke(IpcChannels.ai.draftLessonPlan, input),
+    draftUnitPlan: (input) => invoke(IpcChannels.ai.draftUnitPlan, input),
     suggestCommentPhrases: (input) => invoke(IpcChannels.ai.suggestCommentPhrases, input),
     testConnection: (config) => invoke(IpcChannels.ai.testConnection, config)
   },
@@ -445,8 +449,7 @@ const api: EduBoardApi = {
   },
   groupChats: {
     send: (groupId, text, title) => invoke(IpcChannels.groupChats.send, groupId, text, title),
-    route: (groupId, text, title) =>
-      invoke(IpcChannels.groupChats.route, groupId, text, title),
+    route: (groupId, text, title) => invoke(IpcChannels.groupChats.route, groupId, text, title),
     test: (group) => invoke(IpcChannels.groupChats.test, group),
     pickQr: () => invoke(IpcChannels.groupChats.pickQr),
     makeQr: (joinUrl) => invoke(IpcChannels.groupChats.makeQr, joinUrl)

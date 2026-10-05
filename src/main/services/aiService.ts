@@ -1,5 +1,15 @@
-import { buildLessonPlanPrompt, type LessonDraftContext } from './lessonDraftPrompt'
+import {
+  buildLessonPlanPrompt,
+  buildUnitPlanPrompt,
+  type LessonDraftContext
+} from './lessonDraftPrompt'
 import { EMPTY_CLASS_AI_PROFILE } from '@shared/classAiProfile'
+import {
+  clampLessonCount,
+  parseUnitPlan,
+  type DraftUnitPlanInput,
+  type DraftedUnitPlan
+} from '@shared/unitPlan'
 import { AppError } from '@shared/errorCodes'
 import Anthropic from '@anthropic-ai/sdk'
 import { getSettings } from '../repositories/settingsRepo'
@@ -293,8 +303,20 @@ export async function draftLessonPlan(
     objectives: String(parsed.objectives ?? ''),
     materials: String(parsed.materials ?? ''),
     activities: String(parsed.activities ?? ''),
+    support: String(parsed.support ?? ''),
+    stretch: String(parsed.stretch ?? ''),
     homework: String(parsed.homework ?? '')
   }
+}
+
+export async function draftUnitPlan(
+  input: DraftUnitPlanInput,
+  context: LessonDraftContext = { profile: EMPTY_CLASS_AI_PROFILE }
+): Promise<DraftedUnitPlan> {
+  const request = { ...input, lessonCount: clampLessonCount(input.lessonCount) }
+  const { system, user } = buildUnitPlanPrompt(request, context, writeIn())
+  const text = await complete(system, user, 3000, { json: true })
+  return parseUnitPlan(JSON.parse(stripCodeFence(text)), input.topic, request.lessonCount)
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { ClassAiProfile } from './classAiProfile'
+import type { CreateUnitLessonsInput, DraftedUnitPlan, DraftUnitPlanInput } from './unitPlan'
 import type { ManagedBranding } from './branding'
 import type { PhraseSuggestion } from './commentBank'
 import type { PointSummaryItem } from './pointCategories'
@@ -254,6 +255,10 @@ export interface EduBoardApi {
     exportOfflinePack(
       lessonPlanId: string
     ): Promise<{ saved: boolean; filePath?: string; resources?: number; files?: number }>
+    /** The class's next free teaching days from a date: where a unit's lessons would go. */
+    teachingDates(classId: string, from: string, count: number): Promise<string[]>
+    /** Adds a unit's lessons on the class's next free teaching days, all or none. */
+    createUnit(input: CreateUnitLessonsInput): Promise<LessonPlan[]>
   }
   scheduleSlots: {
     listByClass(classId: string): Promise<ClassScheduleSlot[]>
@@ -537,6 +542,8 @@ export interface EduBoardApi {
   }
   ai: {
     draftLessonPlan(input: DraftLessonPlanInput): Promise<DraftedLessonPlan>
+    /** Prerequisites and a sequence of lessons, each with a check. Needs the internet. */
+    draftUnitPlan(input: DraftUnitPlanInput): Promise<DraftedUnitPlan>
     /** A few short phrases for a report comment, each tied to the data it rests on.
      * Never a whole comment. Needs the internet. */
     suggestCommentPhrases(input: SuggestCommentPhrasesInput): Promise<PhraseSuggestion[]>
