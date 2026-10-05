@@ -98,4 +98,27 @@ describe('copyHomeworkToClasses', () => {
 
     expect(() => copyHomeworkToClasses(source.id, [targetClass.id])).toThrow(/no longer active/i)
   })
+
+  it('copies to no class when any selected class is archived', () => {
+    const sourceClass = makeClass('5A')
+    const activeClass = makeClass('5B')
+    const archivedClass = makeClass('5C')
+    classesRepo.updateClass(archivedClass.id, { archived: true })
+    const source = homeworkRepo.createHomeworkAssignment({
+      classId: sourceClass.id,
+      title: 'Review',
+      description: null,
+      dueDate: null,
+      filePath: null,
+      fileName: null,
+      topic: null,
+      status: 'draft',
+      rubricId: null
+    })
+
+    expect(() => copyHomeworkToClasses(source.id, [activeClass.id, archivedClass.id])).toThrow(
+      /no longer active/i
+    )
+    expect(homeworkRepo.listHomeworkAssignmentsByClass(activeClass.id)).toEqual([])
+  })
 })
