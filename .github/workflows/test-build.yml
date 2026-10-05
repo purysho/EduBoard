@@ -63,12 +63,23 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Delete-then-create leaves no test-latest at all if the create fails, and
+        # Update-EduBoard.cmd then has nothing to install until the next push. So retry the
+        # create, clearing any half-made release (one without both installers) each time.
         run: |
-          gh release delete test-latest --yes --cleanup-tag || true
-          gh release create test-latest dist/EduBoard-Setup.exe dist/EduBoard-Portable.exe \
-            --prerelease --target "$GITHUB_SHA" \
-            --title "Test build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))" \
-            --notes "Built from $GITHUB_REF_NAME at $GITHUB_SHA. Installed by Update-EduBoard.cmd."
+          for attempt in 1 2 3 4; do
+            gh release delete test-latest --yes --cleanup-tag || true
+            if gh release create test-latest dist/EduBoard-Setup.exe dist/EduBoard-Portable.exe \
+                --prerelease --target "$GITHUB_SHA" \
+                --title "Test build ${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))" \
+                --notes "Built from $GITHUB_REF_NAME at $GITHUB_SHA. Installed by Update-EduBoard.cmd."; then
+              exit 0
+            fi
+            echo "Publishing test-latest failed (attempt $attempt of 4); retrying."
+            sleep $((attempt * 15))
+          done
+          echo "::error::Could not publish the test-latest pre-release after 4 attempts."
+          exit 1
 
       # Proves the just-published test installer is retrievable with the workflow token.
       # Raw unauthenticated/API-style requests from shared runners can hit GitHub's
