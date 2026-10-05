@@ -44,10 +44,17 @@ describe('database key file', () => {
   })
 
   it('refuses a tampered file', () => {
+    // Flip every bit of the first byte: setting it to a fixed value would leave the file
+    // unchanged whenever the random ciphertext already started with that value.
+    const first = parseInt(file.password.data.slice(0, 2), 16) ^ 0xff
     const tampered = {
       ...file,
-      password: { ...file.password, data: '00' + file.password.data.slice(2) }
+      password: {
+        ...file.password,
+        data: first.toString(16).padStart(2, '0') + file.password.data.slice(2)
+      }
     }
+    expect(tampered.password.data).not.toBe(file.password.data)
     expect(unlockKeyFile(tampered, pw('a'))).toBeNull()
   })
 
