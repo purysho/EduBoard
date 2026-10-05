@@ -28,6 +28,7 @@ const {
   aiUsageSummary
 } = require('../services/aiUsage')
 const { buildStudyHelperRequest, cleanFieldOfStudy, isMode } = require('../services/studyHelper')
+const { learningStateFor, learningStateText } = require('../services/learningState')
 const { ftsQuery } = require('../services/searchText')
 const review = require('../services/review')
 const { rateLimit, LIMITS } = require('../rateLimit')
@@ -909,7 +910,10 @@ router.post('/ai/chat', aiLimits, async (req, res) => {
     question: text,
     language: isLanguage(language) ? language : null,
     mode: helperMode,
-    fieldOfStudy: cleanFieldOfStudy(profile?.field_of_study)
+    fieldOfStudy: cleanFieldOfStudy(profile?.field_of_study),
+    learningState: learningStateText(
+      learningStateFor(studentId, review.studentToday(req.body.today))
+    )
   })
   const citations = materialMatches.map((m, i) => ({
     number: i + 1,

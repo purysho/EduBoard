@@ -245,6 +245,7 @@ module.exports = {
   studentToday,
   nextState,
   interleave,
+  itemsForStudent,
   todaysReview,
   recordAnswer,
   teacherReviewStats
