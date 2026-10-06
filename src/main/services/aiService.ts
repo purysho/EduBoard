@@ -68,6 +68,59 @@ function stripCodeFence(text: string): string {
   return match ? match[1] : text
 }
 
+/** One JSON object from a model's reply. Takes it out of a code fence, or out of a
+ * sentence around it, when the model added one despite being asked not to; a reply
+ * with no readable object gives the teacher a plain message rather than a parser error. */
+export function parseJsonReply(text: string): Record<string, unknown> {
+  const tryParse = (candidate: string): Record<string, unknown> | null => {
+    try {
+      const value = JSON.parse(candidate)
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : null
+    } catch {
+      return null
+    }
+  }
+  const unfenced = stripCodeFence(text).trim()
+  const start = unfenced.indexOf('{')
+  const end = unfenced.lastIndexOf('}')
+  const parsed =
+    tryParse(unfenced) ??
+    (start >= 0 && end > start ? tryParse(unfenced.slice(start, end + 1)) : null)
+  if (!parsed) throw new AiRequestError(tr('The AI reply could not be read. Try again.'))
+  return parsed
+}
+
+/** A drafted field as editable text: a list the model sent instead of text becomes
+ * "- " lines, as the prompt asks for lists. */
+export function fieldText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number') return String(value)
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => fieldText(item).trim())
+      .filter(Boolean)
+      .map((line) => (line.startsWith('- ') ? line : `- ${line}`))
+      .join('\n')
+  }
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .map((v) => fieldText(v).trim())
+      .filter(Boolean)
+      .join(': ')
+  }
+  return ''
+}
+
+/** A drafting request: provider failures in the same plain words as everywhere else. */
+async function completeDraft(system: string, user: string, maxTokens: number): Promise<string> {
+  try {
+    return await complete(system, user, maxTokens, { json: true })
+  } catch (err) {
+    if (err instanceof AiNotConfiguredError) throw err
+    throw new AiRequestError(describeAiFailure(err))
+  }
+}
+
 /** How a request is made. `json`: the reply must be one JSON object; providers that
  * support it are asked for JSON mode, which stops replies with prose around the JSON. */
 export interface CompleteOptions {
@@ -296,16 +349,15 @@ export async function draftLessonPlan(
 ): Promise<DraftedLessonPlan> {
   const { system, user } = buildLessonPlanPrompt(input, context, writeIn())
 
-  const text = await complete(system, user, 2048, { json: true })
-  const parsed = JSON.parse(stripCodeFence(text))
+  const parsed = parseJsonReply(await completeDraft(system, user, 2048))
   return {
-    title: String(parsed.title ?? input.topic),
-    objectives: String(parsed.objectives ?? ''),
-    materials: String(parsed.materials ?? ''),
-    activities: String(parsed.activities ?? ''),
-    support: String(parsed.support ?? ''),
-    stretch: String(parsed.stretch ?? ''),
-    homework: String(parsed.homework ?? '')
+    title: fieldText(parsed.title) || input.topic,
+    objectives: fieldText(parsed.objectives),
+    materials: fieldText(parsed.materials),
+    activities: fieldText(parsed.activities),
+    support: fieldText(parsed.support),
+    stretch: fieldText(parsed.stretch),
+    homework: fieldText(parsed.homework)
   }
 }
 
@@ -315,8 +367,12 @@ export async function draftUnitPlan(
 ): Promise<DraftedUnitPlan> {
   const request = { ...input, lessonCount: clampLessonCount(input.lessonCount) }
   const { system, user } = buildUnitPlanPrompt(request, context, writeIn())
-  const text = await complete(system, user, 3000, { json: true })
-  return parseUnitPlan(JSON.parse(stripCodeFence(text)), input.topic, request.lessonCount)
+  const parsed = parseJsonReply(await completeDraft(system, user, 3000))
+  try {
+    return parseUnitPlan(parsed, input.topic, request.lessonCount)
+  } catch {
+    throw new AiRequestError(tr('The AI reply had no lessons in it. Try again.'))
+  }
 }
 
 /**

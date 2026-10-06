@@ -51,8 +51,19 @@ export interface CreateUnitLessonsInput {
 
 const MAX_FIELD = 600
 
+/** A field as one clean string. Models sometimes send a list where text was asked for;
+ * its items are joined rather than the field being lost. */
+const asString = (value: unknown): string =>
+  typeof value === 'string'
+    ? value
+    : typeof value === 'number'
+      ? String(value)
+      : Array.isArray(value)
+        ? value.map(asString).filter(Boolean).join('; ')
+        : ''
+
 const text = (value: unknown, max = MAX_FIELD): string =>
-  (typeof value === 'string' ? value : '')
+  asString(value)
     .replace(/[^\P{Cc}\n\t]/gu, '')
     .trim()
     .slice(0, max)

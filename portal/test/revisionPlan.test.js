@@ -72,6 +72,14 @@ test('a plan keeps only days in the window, sorted, with short timed tasks', () 
   assert.equal(plan.days[0].tasks.length, 4)
   assert.equal(plan.tip, 'Little and often.')
   assert.equal(plan.focus, 'Unit 3 test')
+  const plain = parseRevisionPlan(
+    'Here you go: {"days":[{"date":"2026-10-06","tasks":["Review cards (20 min)","Read notes"]}]}',
+    inputs
+  )
+  assert.deepEqual(plain.days[0].tasks, [
+    { minutes: 20, task: 'Review cards (20 min)' },
+    { minutes: 15, task: 'Read notes' }
+  ])
   assert.throws(() => parseRevisionPlan('Sorry, I cannot.', inputs), /could not be read/)
   assert.throws(
     () => parseRevisionPlan('{"days":[{"date":"2020-01-01","tasks":[{"task":"x"}]}]}', inputs),

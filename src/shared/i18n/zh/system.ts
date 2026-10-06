@@ -330,5 +330,7 @@ export const SYSTEM: Record<string, string> = {
   'Families can message you, and you them, with a translation if you need one.':
     '家长可以给你发消息，你也可以回复，需要时还可以翻译。',
   'Only web (http/https) and email links can be opened.':
-    '只能打开网页（http/https）和电子邮件链接。'
+    '只能打开网页（http/https）和电子邮件链接。',
+  'The AI reply could not be read. Try again.': '无法读取 AI 的回复，请重试。',
+  'The AI reply had no lessons in it. Try again.': 'AI 的回复里没有课程，请重试。'
 }

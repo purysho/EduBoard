@@ -125,6 +125,11 @@ function parseRevisionPlan(text, inputs) {
     const date = String(day?.date || '')
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < inputs.today || date > inputs.lastDay) continue
     const tasks = (Array.isArray(day.tasks) ? day.tasks : [])
+      // A task the model sent as plain text instead of { minutes, task } is kept, at the
+      // minutes it names ("… (20 min)") or 15.
+      .map((t) =>
+        typeof t === 'string' ? { minutes: Number(/(\d+)\s*min/i.exec(t)?.[1]), task: t } : t
+      )
       .map((t) => ({
         minutes: Math.min(90, Math.max(5, Math.round(Number(t?.minutes) || 15))),
         task: clean(t?.task, MAX_TASK_CHARS)

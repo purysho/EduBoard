@@ -18,15 +18,15 @@ const unit = {
 }
 
 describe('unit plans', () => {
-  it('keeps the lessons asked for, cleans every field and drops untitled lessons', () => {
+  it('keeps the lessons asked for, cleans every field, joins lists and drops untitled lessons', () => {
     const plan = parseUnitPlan(
       {
         title: '  Unit\u0007 one ',
-        prerequisites: ['A', 7, ''],
+        prerequisites: ['A', null, ['B', 'C'], ''],
         lessons: [
           { title: 'One', objectives: 'Aim 1', check: 'Check 1' },
           { title: '', objectives: 'No title' },
-          { title: 'Two', objectives: 5 },
+          { title: 'Two', objectives: ['Ask', 'Answer'] },
           { title: 'Three' }
         ]
       },
@@ -34,10 +34,10 @@ describe('unit plans', () => {
       2
     )
     expect(plan.title).toBe('Unit one')
-    expect(plan.prerequisites).toEqual(['A'])
+    expect(plan.prerequisites).toEqual(['A', 'B; C'])
     expect(plan.lessons).toEqual([
       { title: 'One', objectives: 'Aim 1', check: 'Check 1' },
-      { title: 'Two', objectives: '', check: '' }
+      { title: 'Two', objectives: 'Ask; Answer', check: '' }
     ])
   })
 
