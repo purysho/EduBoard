@@ -23,6 +23,7 @@ import {
 } from '@renderer/lib/queries'
 import { tr } from '@shared/i18n'
 import { trNodes } from '@renderer/lib/trNodes'
+import { ClassGraphSeating } from './ClassGraphSeating'
 
 export function SeatingChartTab(): React.JSX.Element {
   const { classSection } = useOutletContext<{ classSection: ClassSection }>()
@@ -133,7 +134,7 @@ export function SeatingChartTab(): React.JSX.Element {
             />
           </label>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div
             role="group"
             aria-label={tr('Seating chart mode')}
@@ -164,10 +165,13 @@ export function SeatingChartTab(): React.JSX.Element {
             ))}
           </div>
           {mode === 'arrange' ? (
-            <Button variant="secondary" size="sm" onClick={() => setConfirmClear(true)}>
-              <RotateCcw size={13} className="mr-1 inline" aria-hidden />
-              {tr('Clear chart')}
-            </Button>
+            <>
+              <Button variant="secondary" size="sm" onClick={() => setConfirmClear(true)}>
+                <RotateCcw size={13} className="mr-1 inline" aria-hidden />
+                {tr('Clear chart')}
+              </Button>
+              {!presenting && <ClassGraphSeating classSection={classSection} />}
+            </>
           ) : (
             <Button
               variant="ghost"

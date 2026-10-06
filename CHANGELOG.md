@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **ClassGraph round trip on the Seating tab.** **Export for ClassGraph** saves the class's roster names and seating grid as a ClassGraph project (no grades, attendance, notes or contact details). **Import from ClassGraph…** reads ClassGraph's EduBoard hand-back, shows who will sit where, and replaces the seating chart in one step only after the teacher confirms. Students are matched by EduBoard's own IDs; a plan with students from another class is refused (EB-2010), and the grid is only enlarged if the teacher ticks the box.
+
 ## [0.7.10] — 2026-10-07
 
 ### Fixed

@@ -341,6 +341,11 @@ export const IpcChannels = {
     read: 'scoreImport:read',
     apply: 'scoreImport:apply'
   },
+  classGraph: {
+    exportClass: 'classGraph:exportClass',
+    previewSeating: 'classGraph:previewSeating',
+    applySeating: 'classGraph:applySeating'
+  },
   reportCards: {
     send: 'reportCards:send',
     progress: 'reportCards:progress',
