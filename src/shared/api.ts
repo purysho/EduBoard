@@ -144,6 +144,7 @@ import type {
 } from './inputs'
 import type { RosterImportResult } from './importExportTypes'
 import type { ScoreImportRequest, ScoreImportResult, ScoreSheet } from './scoreImport'
+import type { ClassGraphSeatingPreview } from './classGraphHandback'
 import type { NewsletterFact, NewsletterStructure } from './newsletter'
 import type { NewsletterSourceChoice, WeeklySummary } from './summaries'
 
@@ -631,6 +632,22 @@ export interface EduBoardApi {
   scoreImport: {
     read(filePath: string, sheetIndex?: number): Promise<ScoreSheet>
     apply(request: ScoreImportRequest): Promise<ScoreImportResult>
+  }
+  /** The ClassGraph round trip: send a class's roster and seating out, bring ClassGraph's
+   * approved seating plan back after the teacher has seen and confirmed it. */
+  classGraph: {
+    /** Saves the class as a ClassGraph project where the teacher chooses. */
+    exportClass(classId: string): Promise<{ saved: boolean; filePath?: string }>
+    /** Asks for a hand-back file and previews it against the class; null if cancelled. */
+    previewSeating(
+      classId: string
+    ): Promise<(ClassGraphSeatingPreview & { filePath: string }) | null>
+    /** Re-reads the file and replaces the class's seating chart with the plan. */
+    applySeating(
+      classId: string,
+      filePath: string,
+      resizeGrid: boolean
+    ): Promise<{ seated: number; gridResized: boolean }>
   }
   /** Report cards sent privately to families on the Portal (one PDF per student). */
   reportCards: {

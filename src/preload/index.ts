@@ -403,6 +403,12 @@ const api: EduBoardApi = {
     read: (filePath, sheetIndex) => invoke(IpcChannels.scoreImport.read, filePath, sheetIndex),
     apply: (request) => invoke(IpcChannels.scoreImport.apply, request)
   },
+  classGraph: {
+    exportClass: (classId) => invoke(IpcChannels.classGraph.exportClass, classId),
+    previewSeating: (classId) => invoke(IpcChannels.classGraph.previewSeating, classId),
+    applySeating: (classId, filePath, resizeGrid) =>
+      invoke(IpcChannels.classGraph.applySeating, classId, filePath, resizeGrid)
+  },
   reportCards: {
     send: (classId, title) => invoke(IpcChannels.reportCards.send, classId, title),
     progress: () => invoke(IpcChannels.reportCards.progress),

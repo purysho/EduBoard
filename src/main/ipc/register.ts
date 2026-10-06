@@ -3,6 +3,12 @@ import { isSampleSchool, leaveSampleSchool, openSampleSchool } from '../services
 import { applyShortcutBranding } from '../services/shortcutBranding'
 import { studentTimeline } from '../services/studentTimeline'
 import { applyScoreImport, readScoreSheet } from '../services/scoreImport'
+import {
+  applyClassGraphSeating,
+  exportClassForClassGraph,
+  previewClassGraphSeatingForClass,
+  readClassGraphHandback
+} from '../services/classGraphSeating'
 import type { ScoreImportRequest } from '@shared/scoreImport'
 import { reportCardSendProgress, sendReportCards } from '../services/reportCardDelivery'
 import {
@@ -1551,6 +1557,38 @@ export function registerIpcHandlers(): void {
   )
   handle(IpcChannels.scoreImport.apply, (_e, request: ScoreImportRequest) =>
     applyScoreImport(request)
+  )
+
+  // --- ClassGraph round trip ------------------------------------------------------------
+  handle(IpcChannels.classGraph.exportClass, async (_e, classId: string) => {
+    const { fileName, project } = exportClassForClassGraph(String(classId))
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      title: tr('Export for ClassGraph'),
+      defaultPath: fileName,
+      filters: [{ name: tr('ClassGraph project'), extensions: ['json'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, `${JSON.stringify(project, null, 2)}\n`, 'utf-8')
+    return { saved: true, filePath }
+  })
+  handle(IpcChannels.classGraph.previewSeating, async (_e, classId: string) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: tr('ClassGraph hand-back'), extensions: ['json'] }]
+    })
+    if (canceled || !filePaths[0]) return null
+    const handback = await readClassGraphHandback(filePaths[0])
+    return {
+      ...previewClassGraphSeatingForClass(String(classId), handback),
+      filePath: filePaths[0]
+    }
+  })
+  handle(
+    IpcChannels.classGraph.applySeating,
+    async (_e, classId: string, filePath: string, resizeGrid: boolean) => {
+      const handback = await readClassGraphHandback(String(filePath))
+      return applyClassGraphSeating(String(classId), handback, { resizeGrid: resizeGrid === true })
+    }
   )
   handle(IpcChannels.reportCards.send, (_e, classId: string, title: string) =>
     sendReportCards(classId, title)

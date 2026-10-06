@@ -47,7 +47,8 @@ export const APP_ERROR_CODES = {
   },
   'EB-0006': {
     area: 'General',
-    meaning: 'EduBoard blocked an IPC request because it did not come from a trusted EduBoard window.',
+    meaning:
+      'EduBoard blocked an IPC request because it did not come from a trusted EduBoard window.',
     fix: 'Restart EduBoard. If it repeats in the normal app, copy the error report and report the code.'
   },
   'EB-0900': {
@@ -167,6 +168,18 @@ export const APP_ERROR_CODES = {
     meaning:
       'The Course Pack can’t be installed as chosen: a term has no class or no first class date, the same class was chosen for two terms, a chosen class no longer exists, or one of the pack’s student fields clashes with a field already set up.',
     fix: 'Read the message: it names the term or field. Choose a class and first date for every term (a different class each), or rename the clashing student field in Settings → Class lists. Nothing was changed.'
+  },
+  'EB-2009': {
+    area: 'Files',
+    meaning:
+      'The chosen file isn’t a ClassGraph seating hand-back EduBoard can read (not ClassGraph’s hand-back format, a newer version, too large, or something in it is missing or contradictory).',
+    fix: 'In ClassGraph, open the class and export Reports → EduBoard Hand-back JSON again, then import that file. Nothing was changed.'
+  },
+  'EB-2010': {
+    area: 'Files',
+    meaning:
+      'The ClassGraph seating plan doesn’t fit the chosen class: it seats students who aren’t in this class, or needs a bigger grid than the class has and resizing wasn’t allowed.',
+    fix: 'Check the right class is open. Export the class from EduBoard to ClassGraph again so the student IDs match, or allow EduBoard to enlarge the seating grid. Nothing was changed.'
   },
 
   // --- Updates ------------------------------------------------------------------------------
