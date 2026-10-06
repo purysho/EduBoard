@@ -987,5 +987,41 @@ export const CLASSES: Record<string, string> = {
   'e.g. A2: short sentences, common words': '例如：A2，短句，常用词',
   'Your rules': '你的规则',
   'e.g. Never write sentences for their speaking script; ask them to say it first.':
-    '例如：不要替学生写口语稿的句子，先让他们自己说。'
+    '例如：不要替学生写口语稿的句子，先让他们自己说。',
+  // ClassGraph round trip (Seating tab)
+  'Export for ClassGraph': '导出到 ClassGraph',
+  'ClassGraph project': 'ClassGraph 班级文件',
+  'ClassGraph hand-back': 'ClassGraph 回传文件',
+  'That file isn’t a ClassGraph seating hand-back EduBoard can use.':
+    '这个文件不是 EduBoard 能使用的 ClassGraph 座位回传文件。',
+  '{n} students in the ClassGraph plan aren’t in this class.':
+    'ClassGraph 方案中有 {n} 名学生不在这个班里。',
+  'The ClassGraph plan needs a {rows} × {cols} grid; this class’s grid is smaller.':
+    'ClassGraph 方案需要 {rows} × {cols} 的座位网格，但这个班的网格更小。',
+  'The ClassGraph plan needs a bigger seating grid than EduBoard supports.':
+    'ClassGraph 方案需要的座位网格超出了 EduBoard 支持的大小。',
+  'The class couldn’t be exported for ClassGraph.': '无法将这个班导出到 ClassGraph。',
+  'Import from ClassGraph…': '从 ClassGraph 导入…',
+  'Use ClassGraph’s seating plan?': '使用 ClassGraph 的座位方案？',
+  'The seating plan couldn’t be imported.': '无法导入座位方案。',
+  'Replace seating chart': '替换座位表',
+  'From ClassGraph class “{title}”, saved {date}.':
+    '来自 ClassGraph 班级“{title}”，保存于 {date}。',
+  '(untitled)': '（未命名）',
+  'The plan needs a {rows} × {cols} grid. Enlarge this class’s seating grid to fit it.':
+    '这个方案需要 {rows} × {cols} 的座位网格。扩大这个班的座位网格以容纳它。',
+  Row: '排',
+  Seat: '座位',
+  'Only seats come back from ClassGraph. Grades, attendance and student details aren’t changed.':
+    '从 ClassGraph 只带回座位。成绩、考勤和学生信息都不会改变。',
+  'Seating replaced: {n} students seated from ClassGraph.':
+    '座位表已替换：按 ClassGraph 安排了 {n} 名学生的座位。',
+  '{n} students will be seated.': '将为 {n} 名学生安排座位。',
+  'All {n} seats filled now will be replaced.': '现在已安排的 {n} 个座位将全部被替换。',
+  '{n} students in this class aren’t in the plan and will be unseated.':
+    '这个班有 {n} 名学生不在方案中，将被取消座位。',
+  '{n} ClassGraph seats have no grid position and are left out.':
+    '有 {n} 个 ClassGraph 座位没有网格位置，将被忽略。',
+  '{n} students in the plan aren’t in this class, so it can’t be used here. Check the right class is open, or export the class to ClassGraph again so the students match. (EB-2010)':
+    '方案中有 {n} 名学生不在这个班里，所以不能在这里使用。请确认打开的是正确的班级，或重新把这个班导出到 ClassGraph，让学生对应上。（EB-2010）'
 }
