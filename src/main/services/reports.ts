@@ -1,3 +1,4 @@
+import { localDateIso } from '@shared/dates'
 import { getClass, listClasses } from '../repositories/classes'
 import { listGradeCategories } from '../repositories/gradeCategories'
 import { listAssessmentsByClass } from '../repositories/assessments'
@@ -313,7 +314,7 @@ export function getDashboardStats(): DashboardStats {
     averageAttendanceRate: classAttendanceRates.length
       ? classAttendanceRates.reduce((a, b) => a + b, 0) / classAttendanceRates.length
       : null,
-    upcomingLessons: listUpcomingLessonPlans(new Date().toISOString().slice(0, 10), 5),
+    upcomingLessons: listUpcomingLessonPlans(localDateIso(new Date()), 5),
     ungradedAssessmentCount
   }
 }

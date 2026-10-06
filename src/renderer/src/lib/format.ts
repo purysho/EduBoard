@@ -1,3 +1,4 @@
+import { localDateIso } from '@shared/dates'
 import { differenceInCalendarDays, format, parseISO, isValid } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { tr, trMaybe, trn, uiLanguage } from '@shared/i18n'
@@ -70,8 +71,10 @@ export function studentFullName(student: { firstName: string; lastName: string }
   return `${student.firstName} ${student.lastName}`
 }
 
-export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10)
+/** Today's date where the teacher is, as 'YYYY-MM-DD'. Not the UTC date: in China that
+ * would still be yesterday until 8:00, so an early register would land on the wrong day. */
+export function todayIso(now: Date = new Date()): string {
+  return localDateIso(now)
 }
 
 /** Electron's ipcMain.handle rejects with "Error invoking remote method '<channel>':

@@ -12,3 +12,10 @@ export function mondayOf(dateIso: string): string {
   const d = new Date(`${dateIso}T00:00:00Z`)
   return addDays(dateIso, -((d.getUTCDay() + 6) % 7))
 }
+
+/** A moment's calendar date where this computer is, as 'YYYY-MM-DD'. Not the UTC date:
+ * in China that is still yesterday until 8:00. */
+export function localDateIso(d: Date): string {
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
