@@ -2,7 +2,7 @@
 
 ## Current state
 
-EduBoard **v0.7.9** (2026-10-06) is the latest release: the AI personalisation work below, on top of the v0.7.8 Lean Core baseline. Size measurements are still compared with v0.7.8.
+EduBoard **v0.7.10** (2026-10-07) is the latest release: v0.7.9's AI personalisation work below plus a local-date fix for registers taken before 8:00, on top of the v0.7.8 Lean Core baseline. Size measurements are still compared with v0.7.8.
 
 The v0.7.8 release is complete, documented and closed. Its measured reductions versus v0.7.7 were:
 

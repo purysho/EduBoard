@@ -2,6 +2,12 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.10] — 2026-10-07
+
+### Fixed
+
+- **"Today" is the teacher's own date, not UTC.** In China the app thought it was still yesterday until 8:00, so a register taken or QR check-in opened before then was recorded on the previous day, and new lessons, assessments, enrolments and unit plans started from yesterday. The Dashboard's upcoming lessons had the same slip.
+
 ## [0.7.9] — 2026-10-06
 
 ### Added
