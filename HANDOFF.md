@@ -2,7 +2,7 @@
 
 ## Current state
 
-EduBoard **v0.7.8 — Lean Core** remains the latest published measured release baseline.
+EduBoard **v0.7.9** (2026-10-06) is the latest release: the AI personalisation work below, on top of the v0.7.8 Lean Core baseline. Size measurements are still compared with v0.7.8.
 
 The v0.7.8 release is complete, documented and closed. Its measured reductions versus v0.7.7 were:
 
@@ -54,7 +54,7 @@ Both were restored and the final deterministic gates passed. Do **not** retry th
 
 ### AI personalisation (after Mr. Ranedeer-style ideas)
 
-All on `main`, each with unit/integration tests and e2e checks; see CHANGELOG "Unreleased".
+Released in v0.7.9, each with unit/integration tests and e2e checks; see CHANGELOG 0.7.9.
 
 - desktop: class teaching profile (`src/shared/classAiProfile.ts`, migration 41), class evidence (`src/main/services/classEvidence.ts`), unit planner (`src/shared/unitPlan.ts`, `src/main/services/unitLessons.ts`, `UnitPlannerModal.tsx`), per-class Study Helper rules (`src/shared/studyHelperRules.ts`, migration 42, sent in each publish's `classes[].helperRules`);
 - prompts live apart from the network calls so they can be tested (`src/main/services/lessonDraftPrompt.ts`);

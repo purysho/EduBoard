@@ -2,7 +2,7 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.7.9] — 2026-10-06
 
 ### Added
 
@@ -19,6 +19,12 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 - Study-progress returns not linked to a student are now included in that student's data export and erased with them.
 - Copying homework to several classes is all-or-nothing.
 - Test builds retry publishing when the upload fails.
+- AI lesson and unit drafts read replies with a sentence around the JSON or a list where text was asked for, and report failures in plain words; Portal revision plans keep tasks sent as plain text.
+- A test of the encrypted key file no longer fails one run in 256.
+
+### Security
+
+- Build tools: `http-cache-semantics` 4.3.0 (Dependabot alert: shared-cache Set-Cookie leak) and `source-map-js` 1.2.2. Neither is in the installed app or the Portal. Remaining moderate findings in electron-builder's download chain need electron-builder 27.
 
 ### Privacy
 
