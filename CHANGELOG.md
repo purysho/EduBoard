@@ -16,6 +16,11 @@ All notable changes to EduBoard are documented here. Format loosely follows [Kee
 
 - In pilot mode the Getting started checklist leaves out the Portal, invite, publish, shared-material and AI steps, so a teacher reaches 100% without a Portal. The sample-school button stays.
 
+### Security
+
+- Portal: `nodemailer` 10.3.1 (address-parsing advisories that could add or redirect recipients, and an SMTP AUTH slowdown), `qs` 6.17.1 and `ip-address` 10.7.5.
+- Desktop app: `undici` 7.30.1 (used by Electron's downloader), `zod` 4.6.7 (used by the AI SDK) and Electron 44.10.1. Remaining moderate findings are in build tools only and need electron-builder 27.
+
 ## [0.7.10] — 2026-10-07
 
 ### Fixed

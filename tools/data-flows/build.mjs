@@ -5,7 +5,11 @@
 import { DATA_FLOWS } from '../../src/shared/dataFlows.ts'
 import { PILOT } from '../../src/shared/i18n/zh/pilot.ts'
 
-const cell = (s) => String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ')
+const cell = (s) =>
+  String(s)
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\n/g, ' ')
 const zh = (s) => {
   const t = PILOT[s]
   if (!t) throw new Error(`No Chinese for: ${s} (add it to src/shared/i18n/zh/pilot.ts)`)
