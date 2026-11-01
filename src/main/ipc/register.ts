@@ -85,6 +85,9 @@ import {
   getExitTicketServerInfo,
   openAttendanceCheckIn,
   openClassroomHub,
+  openExitTicketSession,
+  closeExitTicketSession,
+  exitTicketStudentUrl,
   startExitTicketServer
 } from '../services/exitTicketServer'
 import QRCode from 'qrcode'
@@ -1334,7 +1337,12 @@ export function registerIpcHandlers(): void {
     IpcChannels.exitTickets.setOpen,
     (_e, id: string, isOpen: boolean, autoCloseMinutes?: number | null) => {
       if (isOpen) startExitTicketServer()
-      return exitTicketsRepo.setExitTicketOpen(id, isOpen, autoCloseMinutes ?? null)
+      const ticket = exitTicketsRepo.setExitTicketOpen(id, isOpen, autoCloseMinutes ?? null)
+      // A new link each time it opens; closing it forgets the link, and stops the
+      // classroom server if nothing else is open.
+      if (isOpen) openExitTicketSession(ticket.classId)
+      else closeExitTicketSession(ticket.classId)
+      return ticket
     }
   )
   handle(IpcChannels.exitTickets.listResponses, (_e, exitTicketId: string) =>
@@ -1343,7 +1351,12 @@ export function registerIpcHandlers(): void {
   handle(IpcChannels.exitTickets.clearResponses, (_e, exitTicketId: string) =>
     exitTicketsRepo.clearExitTicketResponses(exitTicketId)
   )
-  handle(IpcChannels.exitTickets.getServerInfo, () => getExitTicketServerInfo())
+  handle(IpcChannels.exitTickets.getServerInfo, (_e, classId?: unknown) => {
+    const info = getExitTicketServerInfo()
+    return typeof classId === 'string'
+      ? { ...info, studentUrl: exitTicketStudentUrl(classId) }
+      : info
+  })
   handle(IpcChannels.exitTickets.getQrDataUrl, (_e, url: string) => QRCode.toDataURL(url))
 
   // --- Classroom Hub (local classroom Wi-Fi only) -----------------------------------------

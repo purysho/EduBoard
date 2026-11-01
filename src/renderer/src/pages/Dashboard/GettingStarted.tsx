@@ -21,8 +21,11 @@ export function GettingStarted(): React.JSX.Element | null {
   const essentials = steps.filter((s) => !s.optional)
   const doneCount = essentials.filter((s) => s.done).length
   const complete = setupComplete(steps)
-  const nextStep =
-    steps.find((s) => !s.done && !s.optional) ?? steps.find((s) => !s.done && s.recommended)
+  // In a pilot, before any class exists: suggest the sample school before real data.
+  const pilotStart = progress.pilotMode && progress.classCount === 0
+  const nextStep = pilotStart
+    ? undefined
+    : (steps.find((s) => !s.done && !s.optional) ?? steps.find((s) => !s.done && s.recommended))
   const hide = (): void => updateSettings.mutate({ onboardingDismissed: true })
 
   return (
@@ -37,7 +40,7 @@ export function GettingStarted(): React.JSX.Element | null {
             {complete
               ? progress.pilotMode
                 ? tr(
-                    'Your classes are ready, and everything stays on this computer. The extras below are there when you want them.'
+                    'Your classes are ready, and they’re saved on this computer. The extras below are there when you want them.'
                   )
                 : tr(
                     'Your class is live on the Portal. The optional extras below are there when you want them.'
@@ -53,7 +56,34 @@ export function GettingStarted(): React.JSX.Element | null {
         </Button>
       </CardHeader>
       <CardBody className="pt-0">
-        {!complete && (
+        {pilotStart && (
+          <div className="mb-4 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-3 text-sm">
+            <p className="font-medium">{tr('Start with the sample school')}</p>
+            <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'Try EduBoard with made-up classes first. They’re kept apart from your own, and you can leave the sample school any time.'
+              )}
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void window.api.sampleSchool.open()}
+              >
+                {tr('Try it with the sample school')}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate(steps[0].to)}>
+                {tr('Use my real classes')}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+              {tr(
+                'Using real student data in a pilot needs your school’s approval first. Ask whoever runs the pilot at your school.'
+              )}
+            </p>
+          </div>
+        )}
+        {!complete && !pilotStart && (
           <p className="mb-3 text-xs text-[var(--color-text-muted)]">
             {tr('Want to look around first?')}{' '}
             <button

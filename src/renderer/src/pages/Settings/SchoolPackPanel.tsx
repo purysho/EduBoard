@@ -36,7 +36,7 @@ export function SchoolPackPanel(): React.JSX.Element {
         </p>
         <p className="text-[var(--color-text-muted)]">
           {tr(
-            'For a pilot, export the pilot pack: it also sets the interface language and turns on local-only pilot mode, so no student data leaves the computers it’s installed on.'
+            'For a pilot, export the pilot pack: it also sets the interface language and turns on local-only pilot mode, so nothing about students goes to the internet from the computers it’s installed on.'
           )}
         </p>
         <div className="flex flex-wrap gap-2">

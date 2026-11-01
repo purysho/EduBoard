@@ -388,7 +388,7 @@ export function auditSchoolPack(pack: SchoolPack): SchoolPackAudit {
     )
   }
   if (pack.pilotMode === true) {
-    included.push(tr('Local-only pilot mode: no student data leaves the computer'))
+    included.push(tr('Local-only pilot mode: nothing about students goes to the internet'))
   }
 
   return {

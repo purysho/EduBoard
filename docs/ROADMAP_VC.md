@@ -195,7 +195,7 @@ nothing outside the teacher's computer, so most of this applies only to the host
 
 - Investors are funding AI tools that save teachers time. MagicSchool raised a $45M Series B and Brisk a $15M Series A in early 2025; SchoolAI raised a $25M Series A, and in APAC Teacher's Buddy raised seed rounds for AI lesson and report tools ([New Market Pitch deal list](https://newmarketpitch.com/blogs/news/edtech-funding-analysis)).
 - Edtech funding overall is low: Q1 2025 was about $410M, down 35% year on year ([EdWeek via OpenVC](https://www.openvc.app/investor-lists/edtech-investors)); Crunchbase says edtech funding "stays low" ([Crunchbase News](https://news.crunchbase.com/venture/edtech-funding-stays-low/)). The bar is traction and a clear wedge, not a feature list.
-- Trust in AI and student data is a real concern for schools. "The AI suggests, the teacher decides, the data never leaves your computer" is an easy position to explain.
+- Trust in AI and student data is a real concern for schools. "The AI suggests, the teacher decides, and student records stay on your computer unless you choose to publish them" is an easy position to explain.
 
 ### The wedge and the business model
 

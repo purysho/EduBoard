@@ -46,7 +46,13 @@ import {
 import { GroupChatsPanel } from './GroupChatsPanel'
 import { UsagePingPanel } from './UsagePingPanel'
 import { HelpPanel } from './HelpPanel'
-import { DataFlowsCard, PilotModeCard, PilotOffNotice, PilotSummaryCard } from './DataFlowsPanel'
+import {
+  DataFlowsCard,
+  PilotModeCard,
+  PilotOffNotice,
+  PilotSummaryCard,
+  SharedScreenNamesCard
+} from './DataFlowsPanel'
 import { SampleSchoolCard } from './SampleSchoolCard'
 import { SchoolPackPanel } from './SchoolPackPanel'
 import { CoursePackPanel } from './CoursePackPanel'
@@ -168,12 +174,13 @@ const SECTIONS: Section[] = [
     label: tr('What leaves this computer'),
     blurb: tr('Every connection, local-only pilot, pilot summary'),
     keywords: tr(
-      'privacy network internet data flows connections pilot local only offline summary export it'
+      'privacy network internet data flows connections pilot local only offline summary export it names shared screens wi-fi qr'
     ),
     icon: Network,
     content: () => (
       <>
         <PilotModeCard />
+        <SharedScreenNamesCard />
         <DataFlowsCard />
         <PilotSummaryCard />
       </>

@@ -107,7 +107,7 @@ after changing either.
 
 | Code | What happened | What to do |
 | --- | --- | --- |
-| EB-7001 | This computer is in a local-only pilot, so EduBoard refused something that would send data off it (the Portal, AI, email, group chats or the usage count). Nothing was sent. | Nothing to fix: it’s how the pilot keeps student data on this computer. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack. |
+| EB-7001 | This computer is in a local-only pilot, so EduBoard refused something that would send data to the internet (the Portal, AI, email, group chats or the usage count). Nothing was sent. | Nothing to fix: it’s how the pilot keeps student data off the internet. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack. |
 
 ## Portal (PT)
 

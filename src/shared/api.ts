@@ -544,7 +544,8 @@ export interface EduBoardApi {
     setOpen(id: string, isOpen: boolean, autoCloseMinutes?: number | null): Promise<ExitTicket>
     listResponses(exitTicketId: string): Promise<ExitTicketResponse[]>
     clearResponses(exitTicketId: string): Promise<void>
-    getServerInfo(): Promise<ExitTicketServerInfo>
+    /** The classroom server, and with a class id, the link for that class's exit ticket. */
+    getServerInfo(classId?: string): Promise<ExitTicketServerInfo>
     getQrDataUrl(url: string): Promise<string>
   }
   ai: {

@@ -2,6 +2,21 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Names on shared screens** (Settings → What leaves this computer): how students' names appear on the pages exit tickets, QR check-in and the classroom screen serve on the school Wi-Fi. Full name, first name + last initial, or student number only (a student without a number is shown by their initials, and names that would look the same are numbered). By default first name + last initial in a local-only pilot, and the full name otherwise, as before. The teacher's own screens and exit ticket results keep full names.
+- **An update mirror for mainland China:** when there's no Portal, EduBoard asks GitHub first with a short wait, then a static `latest.json` and installers on an update mirror (`UPDATE_MIRROR_URL` in `src/shared/updateMirror.ts`, empty until one is set up; it must be https). Installers from either source are used only if their SHA-256 checksum matches.
+- **In a pilot, the first run suggests the sample school** ("Try it with the sample school", then "Use my real classes"), with a note that real student data needs the school's approval. `docs/SCHOOL_DEPLOYMENT.md` has a "Before using real student data" checklist (approval, which computer, password protection, who keeps backups, names on shared screens), in English and Chinese.
+
+### Changed
+
+- **Every classroom-tool link carries a random session token** (`/k/<token>/t/<class>`), made when the teacher opens the tool and forgotten when it closes. The server refuses requests without the right token for that tool and class, so an old, guessed or other-class link shows nothing.
+- **The classroom server stops when the last tool closes** (and within half a minute of an exit ticket closing on its timer), dropping open connections, instead of running until EduBoard quits.
+- **Honest wording about what leaves the computer.** The pilot agreement (section 3, both languages), Settings → What leaves this computer, the pilot badge, `docs/DATA_FLOWS.md`, `docs/SCHOOL_DEPLOYMENT.md`, the User Guide, the download page and other app text no longer say that nothing leaves the computer. They now say that nothing goes to the internet, to EduBoard or to any outside company, and that while a classroom tool is open the class list (in the chosen names format) is shown to devices on the school's own Wi-Fi that have the session link, over plain http. The download page no longer says data is always encrypted: it is once a password is set.
+- `ROADMAP.md` matches the README: features that exist are listed as such, and only work not yet built is listed as future.
+
 ## [0.8.0] — 2026-11-01
 
 ### Added
