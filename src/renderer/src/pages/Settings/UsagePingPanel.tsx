@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { HeartHandshake } from 'lucide-react'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { useSettings, useUpdateSettings } from '@renderer/lib/queries'
+import { pilotOffReason } from '@renderer/lib/pilot'
 import { tr } from '@shared/i18n'
 
 /** Settings → Help improve EduBoard: the opt-in anonymous weekly ping, with exactly
@@ -29,8 +30,9 @@ export function UsagePingPanel(): React.JSX.Element | null {
           <input
             type="checkbox"
             className="mt-1"
-            checked={on}
-            disabled={update.isPending}
+            checked={on && !settings.pilotMode}
+            disabled={update.isPending || settings.pilotMode}
+            title={settings.pilotMode ? pilotOffReason() : undefined}
             onChange={(e) => update.mutate({ usagePing: e.target.checked })}
           />
           <span>
@@ -42,6 +44,9 @@ export function UsagePingPanel(): React.JSX.Element | null {
             </span>
           </span>
         </label>
+        {settings.pilotMode && (
+          <p className="text-xs text-[var(--color-text-muted)]">{pilotOffReason()}</p>
+        )}
         {preview && (
           <div>
             <p className="mb-1 text-xs font-medium text-[var(--color-text-muted)]">

@@ -1,3 +1,4 @@
+import { portalConnected } from '@renderer/lib/pilot'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Merge, Pencil, Trash2, Users } from 'lucide-react'
@@ -213,7 +214,7 @@ const MONTHS = [
  * when no Portal is configured or the student hasn't made a profile yet. */
 function PortalProfileCard({ studentId }: { studentId: string }): React.JSX.Element | null {
   const { data: settings } = useSettings()
-  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const portalConfigured = portalConnected(settings)
   const { data: profile, isError } = usePortalProfile(studentId, { enabled: portalConfigured })
   if (!portalConfigured || isError || !profile) return null
 

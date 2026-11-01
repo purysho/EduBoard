@@ -9,6 +9,7 @@ import { getSettings } from './repositories/settingsRepo'
 import { applyWindowIcon, createMainWindow } from './windows'
 import { applyShortcutBranding } from './services/shortcutBranding'
 import { applyManagedSchoolPack } from './services/managedSchoolPack'
+import { applyPilotSpellcheck } from './services/pilotMode'
 import { createAutoBackupOnLaunch, startDailyAutoBackups } from './services/backup'
 import { checkAndRecordDeviceSync } from './services/deviceSync'
 import { stopExitTicketServer } from './services/exitTicketServer'
@@ -41,6 +42,9 @@ app.whenReady().then(() => {
   })
 
   initUiLanguage()
+  // A local-only pilot keeps Electron from fetching a spelling dictionary from the
+  // internet, from the first window on (the copy of the setting beside the database).
+  applyPilotSpellcheck()
   registerIpcHandlers()
 
   // Everything that needs the database open.
@@ -51,6 +55,8 @@ app.whenReady().then(() => {
     if (syncUiPrefsWithSettings(getSettings())) {
       for (const win of BrowserWindow.getAllWindows()) win.webContents.reload()
     }
+    // Now the setting itself can be read (a school pack may have just turned it on).
+    applyPilotSpellcheck()
     if (!isSampleSchool()) createAutoBackupOnLaunch()
     // An update downloaded last session installs now, before anything else opens;
     // EduBoard then reopens as the new version.

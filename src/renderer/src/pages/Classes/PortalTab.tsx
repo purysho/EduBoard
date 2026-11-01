@@ -1,3 +1,4 @@
+import { portalConnected } from '@renderer/lib/pilot'
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -30,7 +31,7 @@ export function PortalTab(): React.JSX.Element {
   const qc = useQueryClient()
   const [printing, setPrinting] = useState<string | null>(null)
   const { data: settings } = useSettings()
-  const connected = !!settings?.portalUrl.trim() && !!settings?.portalSyncSecret.trim()
+  const connected = portalConnected(settings)
 
   async function handlePrint(batchId: string): Promise<void> {
     setPrinting(batchId)

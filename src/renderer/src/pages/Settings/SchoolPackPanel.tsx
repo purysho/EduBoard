@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, PackageOpen, Upload } from 'lucide-react'
+import { Download, PackageOpen, ShieldCheck, Upload } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardBody, CardHeader } from '@renderer/components/ui/Card'
 import { Button } from '@renderer/components/ui/Button'
@@ -34,6 +34,11 @@ export function SchoolPackPanel(): React.JSX.Element {
             'One file with your school’s name, logo, colour, grading scale, pass mark, terms, log buttons, student fields and stylesheet. Set EduBoard up once, export the pack, and colleagues import it to match. It contains no students or grades.'
           )}
         </p>
+        <p className="text-[var(--color-text-muted)]">
+          {tr(
+            'For a pilot, export the pilot pack: it also sets the interface language and turns on local-only pilot mode, so no student data leaves the computers it’s installed on.'
+          )}
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="secondary"
@@ -49,6 +54,24 @@ export function SchoolPackPanel(): React.JSX.Element {
           >
             <Download size={13} className="mr-1 inline" aria-hidden />
             {tr('Export school pack')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            title={tr(
+              'The same pack, set to turn on local-only pilot mode on every computer it’s installed on: no Portal, AI, email or group chats.'
+            )}
+            onClick={async () => {
+              try {
+                const r = await window.api.schoolPack.export('pilot')
+                setMessage(r.saved ? tr('Saved to {path}', { path: r.filePath }) : null)
+              } catch (err) {
+                setMessage(ipcErrorMessage(err, tr('The school pack couldn’t be saved.')))
+              }
+            }}
+          >
+            <ShieldCheck size={13} className="mr-1 inline" aria-hidden />
+            {tr('Export pilot pack')}
           </Button>
           <Button
             variant="secondary"

@@ -1,3 +1,4 @@
+import { useOutbound } from '@renderer/lib/pilot'
 import { useState } from 'react'
 import { BookOpenText, Sparkles } from 'lucide-react'
 import type { NotebookAnswer } from '@shared/types'
@@ -15,6 +16,7 @@ export function NotebookPage(): React.JSX.Element {
   const { data: resources, isLoading } = useLessonResources()
   const indexAll = useIndexAllResources()
   const ask = useAskNotebook()
+  const ai = useOutbound('desktopAi')
 
   const [question, setQuestion] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null) // null = all
@@ -124,7 +126,8 @@ export function NotebookPage(): React.JSX.Element {
                 <Button
                   variant="primary"
                   onClick={handleAsk}
-                  disabled={!question.trim() || ask.isPending}
+                  disabled={!question.trim() || ask.isPending || ai.blocked}
+                  title={ai.reason}
                 >
                   {ask.isPending ? tr('Thinking…') : tr('Ask')}
                 </Button>

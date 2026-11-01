@@ -5,6 +5,7 @@ import { CODES } from './zh/codes'
 import { COMMON } from './zh/common'
 import { DIGEST } from './zh/digest'
 import { PAGES } from './zh/pages'
+import { PILOT } from './zh/pilot'
 import { SETTINGS } from './zh/settings'
 import { SYSTEM } from './zh/system'
 import { TEMPLATES } from './zh/templates'
@@ -15,6 +16,7 @@ export const ZH: Record<string, string> = {
   ...COMMON,
   ...DIGEST,
   ...PAGES,
+  ...PILOT,
   ...SETTINGS,
   ...SYSTEM,
   ...TEMPLATES

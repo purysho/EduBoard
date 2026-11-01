@@ -1,3 +1,4 @@
+import { assertOutboundAllowed } from './pilotMode'
 import {
   buildLessonPlanPrompt,
   buildUnitPlanPrompt,
@@ -116,7 +117,9 @@ async function completeDraft(system: string, user: string, maxTokens: number): P
   try {
     return await complete(system, user, maxTokens, { json: true })
   } catch (err) {
-    if (err instanceof AiNotConfiguredError) throw err
+    // A missing key, or a local-only pilot's refusal, reaches the teacher as it is.
+    if (err instanceof AiNotConfiguredError || (err instanceof AppError && err.code === 'EB-7001'))
+      throw err
     throw new AiRequestError(describeAiFailure(err))
   }
 }
@@ -206,6 +209,8 @@ async function completeWith(
   maxTokens: number,
   options: CompleteOptions = {}
 ): Promise<string> {
+  // Local-only pilot: no AI provider is ever called, from any feature.
+  assertOutboundAllowed('desktopAi')
   const provider = config.provider
   const apiKey = config.apiKey.trim()
 
@@ -331,7 +336,9 @@ export async function askAi(
   try {
     return await complete(system, user, maxTokens, options)
   } catch (err) {
-    if (err instanceof AiNotConfiguredError) throw err
+    // A missing key, or a local-only pilot's refusal, reaches the teacher as it is.
+    if (err instanceof AiNotConfiguredError || (err instanceof AppError && err.code === 'EB-7001'))
+      throw err
     throw new AiRequestError(describeAiFailure(err))
   }
 }

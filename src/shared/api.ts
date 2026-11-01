@@ -1,3 +1,4 @@
+import type { SchoolPackPreset } from './schoolPack'
 import type { ClassAiProfile } from './classAiProfile'
 import type { StudyHelperRules } from './studyHelperRules'
 import type { CreateUnitLessonsInput, DraftedUnitPlan, DraftUnitPlanInput } from './unitPlan'
@@ -7,6 +8,7 @@ import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat, GroupRouteResult } from './groupChats'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 import type { UsagePing } from './usagePing'
+import type { PilotSummary } from './pilotSummary'
 import type { CssCheck } from './cssCheck'
 import type { StudyProgressReturn } from './studyProgress'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
@@ -467,8 +469,9 @@ export interface EduBoardApi {
     summary(classId: string, studentId: string): Promise<PointSummaryItem[]>
   }
   schoolPack: {
-    /** Saves this computer's school-wide settings and terms as a school pack file. */
-    export(): Promise<{ saved: boolean; filePath?: string }>
+    /** Saves this computer's school-wide settings and terms as a school pack file. A
+     * 'pilot' pack also turns on local-only pilot mode and sets the interface language. */
+    export(preset?: SchoolPackPreset): Promise<{ saved: boolean; filePath?: string }>
     /** Asks for a pack file and lists what importing it would change (nothing applied). */
     preview(): Promise<{
       filePath: string
@@ -686,6 +689,13 @@ export interface EduBoardApi {
   usagePing: {
     /** Exactly what the anonymous weekly ping sends (the id is blank while it's off). */
     preview(): Promise<UsagePing>
+  }
+  pilotSummary: {
+    /** The privacy-safe pilot summary as it would be saved now: counts and bands only. */
+    preview(): Promise<PilotSummary>
+    /** Saves exactly the summary last shown by preview() as a JSON file where the
+     * teacher chooses. Sends nothing anywhere. */
+    save(): Promise<{ saved: boolean; filePath?: string }>
   }
   groupChats: {
     /** Legacy robot-only send. Prefer route() for capability-aware destinations. */

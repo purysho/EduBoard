@@ -6,6 +6,7 @@ import {
   FileBarChart,
   Globe,
   LifeBuoy,
+  Network,
   Search,
   ShieldCheck,
   Sparkles,
@@ -45,6 +46,7 @@ import {
 import { GroupChatsPanel } from './GroupChatsPanel'
 import { UsagePingPanel } from './UsagePingPanel'
 import { HelpPanel } from './HelpPanel'
+import { DataFlowsCard, PilotModeCard, PilotOffNotice, PilotSummaryCard } from './DataFlowsPanel'
 import { SampleSchoolCard } from './SampleSchoolCard'
 import { SchoolPackPanel } from './SchoolPackPanel'
 import { CoursePackPanel } from './CoursePackPanel'
@@ -162,6 +164,22 @@ const SECTIONS: Section[] = [
     )
   },
   {
+    id: 'privacy',
+    label: tr('What leaves this computer'),
+    blurb: tr('Every connection, local-only pilot, pilot summary'),
+    keywords: tr(
+      'privacy network internet data flows connections pilot local only offline summary export it'
+    ),
+    icon: Network,
+    content: () => (
+      <>
+        <PilotModeCard />
+        <DataFlowsCard />
+        <PilotSummaryCard />
+      </>
+    )
+  },
+  {
     id: 'help',
     label: tr('Help and updates'),
     blurb: tr('Version, updates, sample school, error report'),
@@ -179,7 +197,11 @@ const SECTIONS: Section[] = [
 ]
 
 /** Older links used other names for some sections. */
-const ALIASES: Record<string, string> = { updates: 'help' }
+const ALIASES: Record<string, string> = { updates: 'help', dataFlows: 'privacy' }
+
+/** Sections whose every setting sends data off the computer: shown greyed out, with the
+ * reason, in a local-only pilot. */
+const OFF_IN_PILOT = new Set(['portal', 'ai'])
 
 export function SettingsPage(): React.JSX.Element {
   const { data: settings, isLoading } = useSettings()
@@ -283,7 +305,16 @@ export function SettingsPage(): React.JSX.Element {
           <h2 id="settings-section-title" className="text-lg font-semibold">
             {current.label}
           </h2>
-          <Content />
+          {settings.pilotMode && OFF_IN_PILOT.has(current.id) ? (
+            <>
+              <PilotOffNotice what={current.label} />
+              <fieldset disabled aria-disabled className="space-y-6 opacity-60">
+                <Content />
+              </fieldset>
+            </>
+          ) : (
+            <Content />
+          )}
         </section>
       </div>
     </div>

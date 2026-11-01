@@ -5,7 +5,13 @@ import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 import { Modal } from '@renderer/components/ui/Modal'
 import { Button } from '@renderer/components/ui/Button'
 import { FormRow, Input, Select } from '@renderer/components/ui/Field'
-import { useCreateClass, useSettings, useTerms, useUpdateClass } from '@renderer/lib/queries'
+import {
+  useCreateClass,
+  useSettings,
+  useTerms,
+  useUpdateClass,
+  useUpdateSettings
+} from '@renderer/lib/queries'
 import { tr } from '@shared/i18n'
 
 const LEVEL_OPTIONS: { value: LevelType; label: string }[] = [
@@ -30,6 +36,7 @@ export function ClassFormModal({
   const { data: terms } = useTerms()
   const { data: settings } = useSettings()
   const createClass = useCreateClass()
+  const updateSettings = useUpdateSettings()
   const navigate = useNavigate()
   const updateClass = useUpdateClass()
 
@@ -66,6 +73,10 @@ export function ClassFormModal({
       await updateClass.mutateAsync({ id: classSection.id, patch: payload })
     } else {
       const created = await createClass.mutateAsync(payload)
+      // The very first class: offer once to protect the classes with a password
+      // (components/security/PasswordPrompt.tsx).
+      const all = await window.api.classes.list(true)
+      if (all.length === 1) updateSettings.mutate({ passwordPromptDue: true })
       onClose()
       // Straight into the new class: adding students is the next step.
       navigate(`/classes/${created.id}`)

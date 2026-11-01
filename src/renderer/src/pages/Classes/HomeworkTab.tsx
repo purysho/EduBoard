@@ -1,3 +1,5 @@
+import { useOutbound } from '@renderer/lib/pilot'
+import { portalConnected } from '@renderer/lib/pilot'
 import { FormEvent, useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import {
@@ -220,11 +222,7 @@ export function HomeworkTab(): React.JSX.Element {
                         <Copy size={13} className="mr-1 inline" aria-hidden />
                         {tr('Reuse')}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setCopyToClassesFrom(a)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => setCopyToClassesFrom(a)}>
                         <CopyPlus size={13} className="mr-1 inline" aria-hidden />
                         {tr('Copy to classes')}
                       </Button>
@@ -542,7 +540,7 @@ function SubmissionsModal({
   const { data: submissions, isLoading } = useHomeworkSubmissions(assignment.id, classId)
   const [exporting, setExporting] = useState(false)
   const { data: settings } = useSettings()
-  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const portalConfigured = portalConnected(settings)
   const pull = usePullSubmissionsFromPortal()
   const { mutate: pullNow } = pull
 
@@ -830,13 +828,15 @@ function AiDraftButton({
   onDraft: (draft: FeedbackDraft) => void
 }): React.JSX.Element {
   const draft = useDraftSubmissionFeedback()
+  const ai = useOutbound('desktopAi')
   return (
     <div className="space-y-1">
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        disabled={draft.isPending}
+        disabled={draft.isPending || ai.blocked}
+        title={ai.reason}
         onClick={() =>
           draft.mutate({ homeworkAssignmentId, studentId }, { onSuccess: (d) => onDraft(d) })
         }

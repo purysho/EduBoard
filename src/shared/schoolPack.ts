@@ -43,7 +43,16 @@ export interface SchoolPack {
   terminology?: Terminology
   reportCard?: Partial<ReportCardLayout>
   savedTemplates?: SavedTemplate[]
+  /** Local-only pilot (shared/dataFlows.ts). Installed for the whole computer, it's
+   * locked: a teacher can't turn it off. */
+  pilotMode?: boolean
+  /** The interface language to start in. A teacher can still change it. */
+  uiLanguage?: 'en' | 'zh'
 }
+
+/** Which kind of pack Settings → School pack → Export makes. A pilot pack also turns on
+ * local-only pilot mode and carries the interface language. */
+export type SchoolPackPreset = 'standard' | 'pilot'
 
 const MAX_LOGO_CHARS = 700_000
 export const MAX_CSS_CHARS = 50_000
@@ -277,11 +286,18 @@ export function parseSchoolPack(json: string): SchoolPack {
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     pack.customCss = sanitizeCss(raw.customCss)
   }
+  if (typeof raw.pilotMode === 'boolean') pack.pilotMode = raw.pilotMode
+  if (raw.uiLanguage === 'en' || raw.uiLanguage === 'zh') pack.uiLanguage = raw.uiLanguage
   return pack
 }
 
 /** What this computer would share: the school-wide parts of its settings and terms. */
-export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack {
+export function makeSchoolPack(
+  settings: AppSettings,
+  terms: Term[],
+  preset: SchoolPackPreset = 'standard'
+): SchoolPack {
+  const language = settings.uiLanguage === 'en' || settings.uiLanguage === 'zh'
   return {
     kind: 'eduboard-school-pack',
     version: 1,
@@ -314,7 +330,12 @@ export function makeSchoolPack(settings: AppSettings, terms: Term[]): SchoolPack
     ...(settings.savedTemplates?.length ? { savedTemplates: settings.savedTemplates } : {}),
     ...(settings.terminology && Object.keys(settings.terminology).length
       ? { terminology: settings.terminology }
-      : {})
+      : {}),
+    // A pilot pack starts every teacher in the school's language and keeps their
+    // classes on their own computer. A standard pack carries the language only if one
+    // was chosen here, and never turns pilot mode on or off.
+    ...(language ? { uiLanguage: settings.uiLanguage as 'en' | 'zh' } : {}),
+    ...(preset === 'pilot' ? { pilotMode: true } : {})
   }
 }
 
@@ -327,7 +348,13 @@ export interface SchoolPackAudit {
  * Operational classroom data is deliberately never part of this format. */
 export function auditSchoolPack(pack: SchoolPack): SchoolPackAudit {
   const included: string[] = []
-  if (pack.schoolName || pack.appName || pack.schoolLogo || pack.accentColor !== undefined || pack.customCss) {
+  if (
+    pack.schoolName ||
+    pack.appName ||
+    pack.schoolLogo ||
+    pack.accentColor !== undefined ||
+    pack.customCss
+  ) {
     included.push(tr('School branding and appearance'))
   }
   if (
@@ -353,6 +380,16 @@ export function auditSchoolPack(pack: SchoolPack): SchoolPackAudit {
   if (pack.savedTemplates?.length)
     included.push(tr('{n} saved teacher templates', { n: pack.savedTemplates.length }))
   if (pack.terminology) included.push(tr('School terminology'))
+  if (pack.uiLanguage) {
+    included.push(
+      tr('Interface language: {language}', {
+        language: pack.uiLanguage === 'zh' ? '中文' : 'English'
+      })
+    )
+  }
+  if (pack.pilotMode === true) {
+    included.push(tr('Local-only pilot mode: no student data leaves the computer'))
+  }
 
   return {
     included,
@@ -383,6 +420,24 @@ export function planSchoolPack(
 ): SchoolPackPlan {
   const patch: Partial<AppSettings> = {}
   const changes: string[] = []
+  if (pack.pilotMode !== undefined && pack.pilotMode !== settings.pilotMode) {
+    patch.pilotMode = pack.pilotMode
+    changes.push(
+      pack.pilotMode
+        ? tr(
+            'Local-only pilot mode turned on: the Portal, AI, email and group chats are turned off'
+          )
+        : tr('Local-only pilot mode turned off')
+    )
+  }
+  if (pack.uiLanguage && pack.uiLanguage !== settings.uiLanguage) {
+    patch.uiLanguage = pack.uiLanguage
+    changes.push(
+      tr('Interface language: {language}', {
+        language: pack.uiLanguage === 'zh' ? '中文' : 'English'
+      })
+    )
+  }
   if (pack.schoolName && pack.schoolName !== settings.schoolName) {
     patch.schoolName = pack.schoolName
     changes.push(tr('School name: {name}', { name: pack.schoolName }))

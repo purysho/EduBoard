@@ -131,6 +131,52 @@ describe('school pack', () => {
   })
 })
 
+describe('pilot school pack', () => {
+  it('turns on local-only pilot mode and sets the language, from the pilot preset', () => {
+    const from = settings({ schoolName: 'Synthetic Bilingual School', uiLanguage: 'zh' })
+    const made = makeSchoolPack(from, [], 'pilot')
+    expect(made).toMatchObject({ pilotMode: true, uiLanguage: 'zh' })
+    const pack = parseSchoolPack(JSON.stringify(made))
+    const plan = planSchoolPack(pack, settings({ uiLanguage: 'en' }), [])
+    expect(plan.settings).toMatchObject({
+      pilotMode: true,
+      uiLanguage: 'zh',
+      schoolName: 'Synthetic Bilingual School'
+    })
+    expect(plan.changes.join('\n')).toMatch(/Local-only pilot mode turned on/)
+    expect(auditSchoolPack(pack).included.join('\n')).toMatch(/Local-only pilot mode/)
+  })
+
+  it('leaves pilot mode alone in an ordinary pack', () => {
+    const made = makeSchoolPack(settings({ pilotMode: true }), [])
+    expect(made.pilotMode).toBeUndefined()
+    const plan = planSchoolPack(parseSchoolPack(JSON.stringify(made)), settings(), [])
+    expect(plan.settings.pilotMode).toBeUndefined()
+  })
+
+  it('accepts a hand-written pilot pack, ignoring a pilotMode that isn’t true or false', () => {
+    const pack = parseSchoolPack(
+      JSON.stringify({
+        kind: 'eduboard-school-pack',
+        version: 1,
+        pilotMode: true,
+        uiLanguage: 'en'
+      })
+    )
+    expect(pack).toMatchObject({ pilotMode: true, uiLanguage: 'en' })
+    const odd = parseSchoolPack(
+      JSON.stringify({
+        kind: 'eduboard-school-pack',
+        version: 1,
+        pilotMode: 'yes',
+        uiLanguage: 'fr'
+      })
+    )
+    expect(odd.pilotMode).toBeUndefined()
+    expect(odd.uiLanguage).toBeUndefined()
+  })
+})
+
 describe('school stylesheet', () => {
   it('can restyle EduBoard but never fetch anything', () => {
     const css = sanitizeCss(`@import url("https://evil.example/x.css");

@@ -10,13 +10,15 @@ export const DATA_FOLDER_NAME = 'EduBoard'
 export const MAX_APP_NAME = 40
 
 /** The settings a computer-wide school pack locks: re-applied at every start, and not
- * changeable in Settings. Everything else in the pack is only a starting point. */
+ * changeable in Settings. Everything else in the pack is only a starting point. Besides
+ * the branding, that's local-only pilot mode, so a teacher can't turn a pilot off. */
 export const BRANDING_KEYS = [
   'appDisplayName',
   'schoolName',
   'schoolLogo',
   'accentColor',
-  'customCss'
+  'customCss',
+  'pilotMode'
 ] as const
 export type BrandingKey = (typeof BRANDING_KEYS)[number]
 

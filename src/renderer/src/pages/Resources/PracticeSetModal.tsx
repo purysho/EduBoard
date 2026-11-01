@@ -1,3 +1,4 @@
+import { useOutbound } from '@renderer/lib/pilot'
 import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import type { PortalReviewStats } from '@shared/aiUsage'
@@ -110,6 +111,7 @@ export function PracticeSetModal({
   const exists = !!(guide || cards?.length || questions?.length)
   const approved = exists && !!resource.aiApproved?.[approvalKey[kind]]
   const drafting = draftSet.isPending || draftGuide.isPending
+  const ai = useOutbound('desktopAi')
   const aiError = draftSet.error ?? draftGuide.error
 
   function beginManual(): void {
@@ -206,7 +208,12 @@ export function PracticeSetModal({
             </Button>
           )}
           {!editing && (
-            <Button variant="secondary" disabled={drafting} onClick={generateWithAi}>
+            <Button
+              variant="secondary"
+              disabled={drafting || ai.blocked}
+              title={ai.reason}
+              onClick={generateWithAi}
+            >
               {drafting
                 ? tr('Generating…')
                 : exists
@@ -396,9 +403,7 @@ function ManualFlashcardEditor({
       {cards.map((card, index) => (
         <div key={index} className="rounded-lg border border-[var(--color-border)] p-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium">
-              {tr('Card {n}', { n: index + 1 })}
-            </span>
+            <span className="text-xs font-medium">{tr('Card {n}', { n: index + 1 })}</span>
             {cards.length > 1 && (
               <button
                 type="button"
@@ -461,7 +466,9 @@ function ManualQuizEditor({
   onCancel: () => void
 }): React.JSX.Element {
   const patch = (index: number, update: Partial<PracticeQuestion>): void =>
-    setQuestions(questions.map((question, i) => (i === index ? { ...question, ...update } : question)))
+    setQuestions(
+      questions.map((question, i) => (i === index ? { ...question, ...update } : question))
+    )
 
   return (
     <div className="space-y-3">
@@ -473,9 +480,7 @@ function ManualQuizEditor({
       {questions.map((question, index) => (
         <div key={index} className="space-y-2 rounded-lg border border-[var(--color-border)] p-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium">
-              {tr('Question {n}', { n: index + 1 })}
-            </span>
+            <span className="text-xs font-medium">{tr('Question {n}', { n: index + 1 })}</span>
             {questions.length > 1 && (
               <button
                 type="button"

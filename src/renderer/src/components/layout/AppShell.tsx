@@ -10,6 +10,7 @@ import { SampleSchoolBanner } from './SampleSchoolBanner'
 import { HiddenWhilePresenting, PresentingBanner } from './PresentingBanner'
 import { isShownWhilePresenting, usePresenting } from '@renderer/lib/presenting'
 import { useThemeEffect } from '@renderer/lib/useTheme'
+import { PasswordPrompt } from '../security/PasswordPrompt'
 
 export function AppShell(): React.JSX.Element {
   useThemeEffect()
@@ -40,6 +41,7 @@ export function AppShell(): React.JSX.Element {
           )}
         </div>
       </main>
+      {!presenting && <PasswordPrompt />}
     </div>
   )
 }

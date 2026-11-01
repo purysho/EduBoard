@@ -47,7 +47,8 @@ export const APP_ERROR_CODES = {
   },
   'EB-0006': {
     area: 'General',
-    meaning: 'EduBoard blocked an IPC request because it did not come from a trusted EduBoard window.',
+    meaning:
+      'EduBoard blocked an IPC request because it did not come from a trusted EduBoard window.',
     fix: 'Restart EduBoard. If it repeats in the normal app, copy the error report and report the code.'
   },
   'EB-0900': {
@@ -297,6 +298,14 @@ export const APP_ERROR_CODES = {
     area: 'Group chats',
     meaning: 'That destination does not support EduBoard robot posting.',
     fix: 'Use EduBoard’s copy-routing action, then paste the prepared message into the WeChat or QQ group.'
+  },
+
+  // --- Local-only pilot ---------------------------------------------------------------------
+  'EB-7001': {
+    area: 'Local-only pilot',
+    meaning:
+      'This computer is in a local-only pilot, so EduBoard refused something that would send data off it (the Portal, AI, email, group chats or the usage count). Nothing was sent.',
+    fix: 'Nothing to fix: it’s how the pilot keeps student data on this computer. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack.'
   }
 } as const satisfies Record<string, ErrorCodeInfo>
 

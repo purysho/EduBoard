@@ -1,3 +1,4 @@
+import { useOutbound } from '@renderer/lib/pilot'
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import {
@@ -122,6 +123,7 @@ export function LessonPlannerTab(): React.JSX.Element {
   const [pendingDelete, setPendingDelete] = useState<LessonPlan | null>(null)
   const [aiDraft, setAiDraft] = useState<LessonPlanDraft | undefined>(undefined)
   const [showAiTopic, setShowAiTopic] = useState(false)
+  const ai = useOutbound('desktopAi')
   const [showUnit, setShowUnit] = useState(false)
   const [topic, setTopic] = useState('')
   const draftPlan = useDraftLessonPlan()
@@ -190,11 +192,21 @@ export function LessonPlannerTab(): React.JSX.Element {
           <CopyPlus size={15} className="mr-1 inline" aria-hidden />
           {tr('Copy last week')}
         </Button>
-        <Button variant="secondary" onClick={() => setShowUnit(true)}>
+        <Button
+          variant="secondary"
+          onClick={() => setShowUnit(true)}
+          disabled={ai.blocked}
+          title={ai.reason}
+        >
           <ListOrdered size={15} className="mr-1 inline" aria-hidden />
           {tr('Plan a unit')}
         </Button>
-        <Button variant="secondary" onClick={() => setShowAiTopic((v) => !v)}>
+        <Button
+          variant="secondary"
+          onClick={() => setShowAiTopic((v) => !v)}
+          disabled={ai.blocked}
+          title={ai.reason}
+        >
           <Sparkles size={15} className="mr-1 inline" aria-hidden />
           {tr('Draft with AI')}
         </Button>

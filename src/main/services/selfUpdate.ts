@@ -1,3 +1,4 @@
+import { pilotModeOn } from './pilotMode'
 import { AppError } from '@shared/errorCodes'
 import { app, BrowserWindow, Notification } from 'electron'
 import { spawn } from 'child_process'
@@ -87,6 +88,8 @@ function macAppBundle(): string | null {
 }
 
 function portalUrl(): string | null {
+  // A local-only pilot has no Portal: the version check goes straight to GitHub.
+  if (pilotModeOn()) return null
   const url = normalizePortalUrl(getSettings().portalUrl)
   return url && !portalUrlProblem(url) ? url : null
 }
@@ -210,7 +213,8 @@ export async function checkForUpdateInBackground(): Promise<void> {
       clearPending(pendingDir())
       return
     }
-    if (!('kind' in where) || !getSettings().autoUpdate) return
+    // A local-only pilot only checks: it downloads when the teacher presses Update now.
+    if (!('kind' in where) || !getSettings().autoUpdate || pilotModeOn()) return
     const pending = usablePending()
     if (pending?.version === release.version) return
     const ready = await downloadToPending(where.kind)

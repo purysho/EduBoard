@@ -21,7 +21,8 @@ export function GettingStarted(): React.JSX.Element | null {
   const essentials = steps.filter((s) => !s.optional)
   const doneCount = essentials.filter((s) => s.done).length
   const complete = setupComplete(steps)
-  const nextStep = steps.find((s) => !s.done && !s.optional)
+  const nextStep =
+    steps.find((s) => !s.done && !s.optional) ?? steps.find((s) => !s.done && s.recommended)
   const hide = (): void => updateSettings.mutate({ onboardingDismissed: true })
 
   return (
@@ -34,9 +35,13 @@ export function GettingStarted(): React.JSX.Element | null {
           </h2>
           <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
             {complete
-              ? tr(
-                  'Your class is live on the Portal. The optional extras below are there when you want them.'
-                )
+              ? progress.pilotMode
+                ? tr(
+                    'Your classes are ready, and everything stays on this computer. The extras below are there when you want them.'
+                  )
+                : tr(
+                    'Your class is live on the Portal. The optional extras below are there when you want them.'
+                  )
               : tr(
                   "{doneCount} of {length} essentials done. Each step ticks itself once it's done.",
                   { doneCount, length: essentials.length }
@@ -99,10 +104,16 @@ export function GettingStarted(): React.JSX.Element | null {
                   }
                 >
                   {step.title}
-                  {step.optional && (
-                    <span className="ml-1.5 text-xs font-normal text-[var(--color-text-muted)]">
-                      {tr('optional')}
+                  {step.recommended ? (
+                    <span className="ml-1.5 text-xs font-medium text-[var(--color-warning)]">
+                      {tr('recommended')}
                     </span>
+                  ) : (
+                    step.optional && (
+                      <span className="ml-1.5 text-xs font-normal text-[var(--color-text-muted)]">
+                        {tr('optional')}
+                      </span>
+                    )
                   )}
                 </p>
                 {!step.done && (
