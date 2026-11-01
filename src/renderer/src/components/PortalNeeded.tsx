@@ -16,7 +16,7 @@ export function PortalNeeded({ what }: { what: string }): React.JSX.Element {
         icon={ShieldCheck}
         title={tr('Turned off in this local-only pilot')}
         description={tr(
-          '{what} This goes through the Portal, which is turned off here so that no student data leaves this computer. Everything else in EduBoard works as usual.',
+          '{what} This goes through the Portal, which is turned off here so that nothing about your students goes to the internet. Everything else in EduBoard works as usual.',
           { what }
         )}
         action={

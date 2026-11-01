@@ -26,12 +26,21 @@ import {
 import {
   getClassroomHubProjectorUrl,
   getExitTicketServerInfo,
+  closeAttendanceCheckIn,
+  closeClassroomHub,
+  closeExitTicketSession,
+  exitTicketStudentUrl,
+  getAttendanceCheckInStatus,
   openAttendanceCheckIn,
   openClassroomHub,
+  openExitTicketSession,
   overSubmitLimit,
+  sessionPath,
   startExitTicketServer,
-  stopExitTicketServer
+  stopExitTicketServer,
+  stopExitTicketServerIfIdle
 } from '../exitTicketServer'
+import { updateSettings } from '../../repositories/settingsRepo'
 import { DEFAULT_GRADE_THRESHOLDS } from '@shared/types'
 
 let tempDir: string
@@ -44,6 +53,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Each test starts with no tool open (sessions live in the server module).
+  stopExitTicketServer()
   closeDb()
   rmSync(tempDir, { recursive: true, force: true })
 })
@@ -121,7 +132,8 @@ describe('exit ticket local HTTP server', () => {
 
     expect(openClassroomHub(classId, lesson.id).open).toBe(true)
     const projectorUrl = getClassroomHubProjectorUrl(classId)
-    expect(projectorUrl).toBe(`${base}/h/${encodeURIComponent(classId)}`)
+    expect(projectorUrl).toBe(`${base}${sessionPath('h', classId)}`)
+    expect(projectorUrl).toMatch(/\/k\/[a-f0-9]{32}\/h\//)
 
     const page = await fetch(projectorUrl!)
     expect(page.status).toBe(200)
@@ -187,31 +199,28 @@ describe('exit ticket local HTTP server', () => {
     linkLessonResource(lesson.id, resource.id)
     openClassroomHub(classId, lesson.id)
 
-    const hub = await (await fetch(`${base}/h/${classId}`)).text()
+    const hub = await (await fetch(`${base}${sessionPath('h', classId)}`)).text()
     expect(hub).toContain('/flashcards')
     expect(hub).toContain('/quiz')
 
     const cards = await (
-      await fetch(`${base}/h/${classId}/practice/${resource.id}/flashcards`)
+      await fetch(`${base}${sessionPath('h', classId)}/practice/${resource.id}/flashcards`)
     ).text()
     expect(cards).toContain('Exhibit')
     expect(cards).toContain('Show answer')
 
     const quiz = await (
-      await fetch(`${base}/h/${classId}/practice/${resource.id}/quiz`)
+      await fetch(`${base}${sessionPath('h', classId)}/practice/${resource.id}/quiz`)
     ).text()
     expect(quiz).toContain('What is an exhibit?')
     expect(quiz).toContain('Question ')
   })
 
-  it('serves a "closed" page when no ticket is open for the class', async () => {
-    const base = await waitForServer()
+  it('has no link for a class with no exit ticket open', async () => {
+    await waitForServer()
     const classId = makeClass()
-
-    const res = await fetch(`${base}/t/${classId}`)
-    expect(res.status).toBe(200)
-    const html = await res.text()
-    expect(html).toContain('No exit ticket is open')
+    expect(sessionPath('t', classId)).toBeNull()
+    expect(exitTicketStudentUrl(classId)).toBeNull()
   })
 
   it('serves the question page once open, accepts a submission, and rejects once closed', async () => {
@@ -223,14 +232,15 @@ describe('exit ticket local HTTP server', () => {
       questions: [{ id: 'q1', prompt: 'What did you learn?', type: 'text' }]
     })
     setExitTicketOpen(ticket.id, true)
+    openExitTicketSession(classId)
 
-    const page = await fetch(`${base}/t/${classId}`)
+    const page = await fetch(`${base}${sessionPath('t', classId)}`)
     expect(page.status).toBe(200)
     const html = await page.text()
     expect(html).toContain('What did you learn?')
     expect(html).toContain('Today&#39;s Exit Ticket')
 
-    const submitRes = await fetch(`${base}/t/${classId}/submit`, {
+    const submitRes = await fetch(`${base}${sessionPath('t', classId)}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ studentName: 'Ada', answers: { q1: 'Fractions' } })
@@ -243,7 +253,7 @@ describe('exit ticket local HTTP server', () => {
     expect(responses[0].answers.q1).toBe('Fractions')
 
     setExitTicketOpen(ticket.id, false)
-    const rejected = await fetch(`${base}/t/${classId}/submit`, {
+    const rejected = await fetch(`${base}${sessionPath('t', classId)}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ studentName: 'Bob', answers: { q1: 'Late submission' } })
@@ -261,8 +271,9 @@ describe('exit ticket local HTTP server', () => {
       questions: [{ id: 'q1', prompt: 'What did you learn?', type: 'text' }]
     })
     setExitTicketOpen(ticket.id, true)
+    openExitTicketSession(classId)
 
-    const res = await fetch(`${base}/t/${classId}/submit`, {
+    const res = await fetch(`${base}${sessionPath('t', classId)}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ studentName: '', answers: {} })
@@ -282,29 +293,46 @@ describe('exit ticket local HTTP server', () => {
       questions: [{ id: 'q1', prompt: 'What did you learn?', type: 'text' }]
     })
     setExitTicketOpen(ticket.id, true)
+    openExitTicketSession(classId)
 
-    const html = await (await fetch(`${base}/t/${classId}`)).text()
+    const html = await (await fetch(`${base}${sessionPath('t', classId)}`)).text()
     expect(html).toContain('<select')
     expect(html).toContain(`value="${ada}"`)
     expect(html).toContain('Bob Test')
 
     // A made-up id or a bare typed name isn't accepted once there's a roster.
     expect(
-      (await post(`${base}/t/${classId}/submit`, { studentId: 'nope', answers: { q1: 'x' } }))
-        .status
+      (
+        await post(`${base}${sessionPath('t', classId)}/submit`, {
+          studentId: 'nope',
+          answers: { q1: 'x' }
+        })
+      ).status
     ).toBe(400)
     expect(
-      (await post(`${base}/t/${classId}/submit`, { studentName: 'Ada', answers: { q1: 'x' } }))
-        .status
+      (
+        await post(`${base}${sessionPath('t', classId)}/submit`, {
+          studentName: 'Ada',
+          answers: { q1: 'x' }
+        })
+      ).status
     ).toBe(400)
 
     expect(
-      (await post(`${base}/t/${classId}/submit`, { studentId: ada, answers: { q1: 'First' } }))
-        .status
+      (
+        await post(`${base}${sessionPath('t', classId)}/submit`, {
+          studentId: ada,
+          answers: { q1: 'First' }
+        })
+      ).status
     ).toBe(200)
     expect(
-      (await post(`${base}/t/${classId}/submit`, { studentId: ada, answers: { q1: 'Second' } }))
-        .status
+      (
+        await post(`${base}${sessionPath('t', classId)}/submit`, {
+          studentId: ada,
+          answers: { q1: 'Second' }
+        })
+      ).status
     ).toBe(200)
     const responses = listExitTicketResponses(ticket.id)
     expect(responses).toHaveLength(1)
@@ -321,6 +349,7 @@ describe('exit ticket local HTTP server', () => {
       questions: [{ id: 'q1', prompt: 'Q', type: 'text' }]
     })
     const opened = setExitTicketOpen(ticket.id, true, 10)
+    openExitTicketSession(classId)
     expect(opened.closesAt).not.toBeNull()
     expect(getExitTicketByClass(classId)?.isOpen).toBe(true)
 
@@ -329,7 +358,7 @@ describe('exit ticket local HTTP server', () => {
       .set({ closesAt: new Date(Date.now() - 1000).toISOString() })
       .where(eq(exitTickets.id, ticket.id))
       .run()
-    const late = await post(`${base}/t/${classId}/submit`, {
+    const late = await post(`${base}${sessionPath('t', classId)}/submit`, {
       studentName: 'Ada',
       answers: { q1: 'x' }
     })
@@ -344,24 +373,31 @@ describe('exit ticket local HTTP server', () => {
     const bob = makeStudent(classId, 'Bob')
     openAttendanceCheckIn(classId, '2026-09-28')
 
-    const page = await fetch(`${base}/a/${classId}`)
+    const page = await fetch(`${base}${sessionPath('a', classId)}`)
     const cookie = (page.headers.get('set-cookie') ?? '').split(';')[0]
     expect(cookie).toMatch(/^eb_device=[a-f0-9]{32}$/)
 
-    expect((await post(`${base}/a/${classId}/checkin`, { studentId: ada })).status).toBe(400) // no cookie
-    expect((await post(`${base}/a/${classId}/checkin`, { studentId: ada }, cookie)).status).toBe(
-      200
+    expect(
+      (await post(`${base}${sessionPath('a', classId)}/checkin`, { studentId: ada })).status
+    ).toBe(400) // no cookie
+    expect(
+      (await post(`${base}${sessionPath('a', classId)}/checkin`, { studentId: ada }, cookie)).status
+    ).toBe(200)
+    expect(
+      (await post(`${base}${sessionPath('a', classId)}/checkin`, { studentId: ada }, cookie)).status
+    ).toBe(200) // again: fine
+    const friend = await post(
+      `${base}${sessionPath('a', classId)}/checkin`,
+      { studentId: bob },
+      cookie
     )
-    expect((await post(`${base}/a/${classId}/checkin`, { studentId: ada }, cookie)).status).toBe(
-      200
-    ) // again: fine
-    const friend = await post(`${base}/a/${classId}/checkin`, { studentId: bob }, cookie)
     expect(friend.status).toBe(409)
     expect(await friend.text()).toContain('already checked in Ada Test')
 
     const otherPhone = `eb_device=${'b'.repeat(32)}`
     expect(
-      (await post(`${base}/a/${classId}/checkin`, { studentId: bob }, otherPhone)).status
+      (await post(`${base}${sessionPath('a', classId)}/checkin`, { studentId: bob }, otherPhone))
+        .status
     ).toBe(200)
     const present = listAttendanceByClass(classId).filter((r) => r.status === 'present')
     expect(present.map((r) => r.studentId).sort()).toEqual([ada, bob].sort())
@@ -375,7 +411,7 @@ describe('exit ticket local HTTP server', () => {
     const statuses = await Promise.all(
       ids.map((id, i) =>
         post(
-          `${base}/a/${classId}/checkin`,
+          `${base}${sessionPath('a', classId)}/checkin`,
           { studentId: id },
           `eb_device=${i.toString(16).padStart(32, '0')}`
         ).then((r) => r.status)
@@ -384,10 +420,10 @@ describe('exit ticket local HTTP server', () => {
     expect(statuses.every((st) => st === 200)).toBe(true)
   })
 
-  it('404s on an unrelated path', async () => {
+  it('refuses an unrelated path', async () => {
     const base = await waitForServer()
     const res = await fetch(`${base}/definitely-not-a-real-path`)
-    expect(res.status).toBe(404)
+    expect(res.status).toBe(403)
   })
 
   it('logs an EADDRINUSE retry at most once, not once per listener', async () => {
@@ -425,5 +461,190 @@ describe('submission limit', () => {
     expect(overSubmitLimit('device:a', 12, t0 + 100)).toBe(true)
     expect(overSubmitLimit('device:b', 12, t0 + 100)).toBe(false)
     expect(overSubmitLimit('device:a', 12, t0 + 61_000)).toBe(false)
+  })
+})
+
+describe('session links', () => {
+  it('serves a page only with the token made for that tool and class', async () => {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const other = makeClass()
+    makeStudent(classId, 'Ada')
+    openAttendanceCheckIn(classId, '2026-09-28')
+    openAttendanceCheckIn(other, '2026-09-28')
+    const path = sessionPath('a', classId)!
+    expect(path).toMatch(/^\/k\/[a-f0-9]{32}\/a\//)
+    expect(getAttendanceCheckInStatus(classId).url).toBe(
+      `${base.replace('127.0.0.1', getExitTicketServerInfo().lanIp ?? '127.0.0.1')}${path}`
+    )
+
+    expect((await fetch(`${base}${path}`)).status).toBe(200)
+    // No token, a made-up one, or another class's token: refused, and no names shown.
+    for (const wrong of [
+      `/a/${classId}`,
+      `/k/${'0'.repeat(32)}/a/${classId}`,
+      sessionPath('a', other)!.replace(encodeURIComponent(other), encodeURIComponent(classId))
+    ]) {
+      const res = await fetch(`${base}${wrong}`)
+      expect(res.status, wrong).toBe(403)
+      expect(await res.text()).not.toContain('Ada')
+    }
+    // A token for check-in doesn't open the exit ticket or classroom screen.
+    const token = path.split('/')[2]
+    expect((await fetch(`${base}/k/${token}/t/${classId}`)).status).toBe(403)
+    expect((await fetch(`${base}/k/${token}/h/${classId}`)).status).toBe(403)
+  })
+
+  it('makes a new link each time a tool opens, and the old one stops working', async () => {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const ticket = upsertExitTicket({
+      classId,
+      title: 'Exit Ticket',
+      questions: [{ id: 'q1', prompt: 'Q', type: 'text' }]
+    })
+    setExitTicketOpen(ticket.id, true)
+    openExitTicketSession(classId)
+    const first = sessionPath('t', classId)!
+    expect((await fetch(`${base}${first}`)).status).toBe(200)
+
+    openAttendanceCheckIn(makeClass(), '2026-09-28') // keeps the server up
+    closeExitTicketSession(classId)
+    expect(sessionPath('t', classId)).toBeNull()
+    expect((await fetch(`${base}${first}`)).status).toBe(403)
+    expect(
+      (await post(`${base}${first}/submit`, { studentName: 'A', answers: { q1: 'x' } })).status
+    ).toBe(403)
+
+    openExitTicketSession(classId)
+    const second = sessionPath('t', classId)!
+    expect(second).not.toBe(first)
+    expect((await fetch(`${base}${second}`)).status).toBe(200)
+    expect((await fetch(`${base}${first}`)).status).toBe(403)
+  })
+})
+
+describe('server shutdown', () => {
+  const reachable = (url: string): Promise<boolean> =>
+    fetch(url).then(
+      () => true,
+      () => false
+    )
+
+  it('stops when the last tool is closed, and serves nothing after', async () => {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const lesson = createLessonPlan({
+      classId,
+      date: '2026-09-30',
+      weekLabel: null,
+      title: 'Lesson',
+      objectives: null,
+      framework: null,
+      materials: null,
+      activities: null,
+      homework: null,
+      linkedAssessmentId: null,
+      standards: null
+    })
+    openAttendanceCheckIn(classId, '2026-09-28')
+    openClassroomHub(classId, lesson.id)
+    const checkIn = `${base}${sessionPath('a', classId)}`
+
+    closeAttendanceCheckIn(classId)
+    expect(getExitTicketServerInfo().running).toBe(true) // the classroom screen is still open
+    closeClassroomHub(classId)
+    expect(getExitTicketServerInfo()).toMatchObject({ running: false, port: null, url: null })
+    expect(await reachable(checkIn)).toBe(false)
+  })
+
+  it('stays up while an exit ticket takes answers, and stops once its time is up', async () => {
+    await waitForServer()
+    const classId = makeClass()
+    const ticket = upsertExitTicket({
+      classId,
+      title: 'Exit Ticket',
+      questions: [{ id: 'q1', prompt: 'Q', type: 'text' }]
+    })
+    setExitTicketOpen(ticket.id, true, 10)
+    openExitTicketSession(classId)
+    expect(stopExitTicketServerIfIdle()).toBe(false)
+    expect(getExitTicketServerInfo().running).toBe(true)
+
+    getDb()
+      .update(exitTickets)
+      .set({ closesAt: new Date(Date.now() - 1000).toISOString() })
+      .where(eq(exitTickets.id, ticket.id))
+      .run()
+    expect(stopExitTicketServerIfIdle()).toBe(true) // what the half-minute check does
+    expect(getExitTicketServerInfo().running).toBe(false)
+  })
+
+  it('stops with nothing open', async () => {
+    await waitForServer()
+    expect(stopExitTicketServerIfIdle()).toBe(true)
+    expect(getExitTicketServerInfo().running).toBe(false)
+  })
+})
+
+describe('names on shared screens', () => {
+  async function checkInPage(): Promise<string> {
+    const base = await waitForServer()
+    const classId = makeClass()
+    const id = createStudent({
+      firstName: 'Xanthippe',
+      lastName: 'Quillfeather',
+      preferredName: null,
+      studentNumber: 'SYN-042',
+      dateOfBirth: null,
+      gradeLevel: null,
+      guardianName: null,
+      guardianContact: null,
+      email: null,
+      notes: null
+    }).id
+    enrollStudent({ studentId: id, classId, enrolledOn: '2026-09-01' })
+    openAttendanceCheckIn(classId, '2026-09-28')
+    return (await fetch(`${base}${sessionPath('a', classId)}`)).text()
+  }
+
+  it('shows full names by default outside a pilot', async () => {
+    expect(await checkInPage()).toContain('Xanthippe Quillfeather')
+  })
+
+  it('shows first name and last initial by default in a pilot', async () => {
+    updateSettings({ pilotMode: true })
+    const html = await checkInPage()
+    expect(html).toContain('Xanthippe Q.')
+    expect(html).not.toContain('Quillfeather')
+  })
+
+  it('shows only the student number when chosen', async () => {
+    updateSettings({ sharedScreenNames: 'number' })
+    const html = await checkInPage()
+    expect(html).toContain('SYN-042')
+    expect(html).not.toContain('Xanthippe')
+  })
+
+  it('keeps the full name in the teacher’s exit ticket results', async () => {
+    updateSettings({ sharedScreenNames: 'firstInitial' })
+    const base = await waitForServer()
+    const classId = makeClass()
+    const ada = makeStudent(classId, 'Ada')
+    const ticket = upsertExitTicket({
+      classId,
+      title: 'Exit Ticket',
+      questions: [{ id: 'q1', prompt: 'Q', type: 'text' }]
+    })
+    setExitTicketOpen(ticket.id, true)
+    openExitTicketSession(classId)
+    const html = await (await fetch(`${base}${sessionPath('t', classId)}`)).text()
+    expect(html).toContain('Ada T.')
+    expect(html).not.toContain('Ada Test')
+    await post(`${base}${sessionPath('t', classId)}/submit`, {
+      studentId: ada,
+      answers: { q1: 'x' }
+    })
+    expect(listExitTicketResponses(ticket.id)[0].studentName).toBe('Ada Test')
   })
 })

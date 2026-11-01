@@ -173,7 +173,9 @@ export function Sidebar(): React.JSX.Element {
       {settings?.pilotMode && (
         <Link
           to={DATA_FLOWS_ROUTE}
-          title={tr('Nothing about your classes leaves this computer. See what is turned off.')}
+          title={tr(
+            'Local-only pilot: nothing about your classes goes to the internet. Exit tickets, QR check-in and the classroom screen show the class list on the school Wi-Fi only while open. See what is turned off.'
+          )}
           className="mx-4 mb-3 flex items-center gap-1.5 rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-2.5 py-1 text-xs font-medium text-[var(--color-success)] hover:opacity-90"
         >
           <ShieldCheck size={13} aria-hidden />
@@ -234,7 +236,7 @@ export function Sidebar(): React.JSX.Element {
       </nav>
       <div className="mt-auto flex items-center gap-1.5 px-5 py-4 text-xs text-[var(--color-text-muted)]">
         <ShieldCheck size={14} aria-hidden />
-        <span className="flex-1">{tr('Your data stays on this device')}</span>
+        <span className="flex-1">{tr('Your data is saved on this device')}</span>
         <button
           onClick={async () => {
             await window.api.settings.update({ uiLanguage: uiLanguage() === 'zh' ? 'en' : 'zh' })

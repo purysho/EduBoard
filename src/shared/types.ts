@@ -12,6 +12,7 @@ import {
   defaultLetterTemplate
 } from './letters'
 import { uiLanguage, type Terminology } from './i18n'
+import type { SharedScreenNameSetting } from './sharedScreenNames'
 import type { AttendanceCode } from './attendanceCodes'
 import type { PointCategory } from './pointCategories'
 import type { GroupChat } from './groupChats'
@@ -499,6 +500,9 @@ export interface ExitTicketServerInfo {
   url: string | null
   port: number | null
   lanIp: string | null
+  /** When asked for a class: the link students open for its exit ticket (with this
+   * session's token), or null if none is open. */
+  studentUrl?: string | null
 }
 
 /** One teacher-opened, read-only lesson page served only on the classroom LAN. */
@@ -783,6 +787,8 @@ export interface AttendanceCheckInStatus {
   open: boolean
   date: string | null
   checkedInStudentIds: string[]
+  /** The link students open (with this session's token), while it's open. */
+  url: string | null
 }
 
 export interface AttendanceRecord {
@@ -942,6 +948,10 @@ export interface AppSettings {
   digestFromName: string
   /** The teacher hid the Dashboard's Getting started checklist. */
   onboardingDismissed: boolean
+  /** How students' names appear on the classroom tools' pages on the school Wi-Fi (exit
+   * tickets, QR check-in, the classroom screen). '' = the default: first name + last
+   * initial in a local-only pilot, the full name otherwise (shared/sharedScreenNames.ts). */
+  sharedScreenNames: SharedScreenNameSetting
   /** Set when the first class is created: ask once whether to protect the classes with a
    * password. Cleared when the teacher answers (Turn on or Later). */
   passwordPromptDue: boolean
@@ -1170,6 +1180,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestFromName: '',
   onboardingDismissed: false,
   passwordPromptDue: false,
+  sharedScreenNames: '',
   extraBackupFolder: '',
   autoUpdate: true,
   autoLockMinutes: 10,

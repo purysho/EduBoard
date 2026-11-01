@@ -7,6 +7,7 @@ import { createWriteStream, rmSync, statSync } from 'fs'
 import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import { tr } from '@shared/i18n'
+import { GITHUB_TIMEOUT_WITH_MIRROR_MS, UPDATE_MIRROR_URL } from '@shared/updateMirror'
 
 export const REPO = 'purysho/EduBoard'
 
@@ -81,11 +82,14 @@ export function pickAsset(
 /**
  * The newest release. Through the teacher's Portal when there is one: it relays GitHub,
  * which in mainland China is often slow or blocked while the Portal's server isn't.
- * Otherwise straight from GitHub.
+ * Otherwise from GitHub, and if GitHub doesn't answer quickly, from the update mirror
+ * (shared/updateMirror.ts) when one is set up. Only the version number goes to any of
+ * them; downloads are checked against their SHA-256 whichever one they came from.
  */
 export async function fetchLatestRelease(
   portalUrl: string | null,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
+  mirrorUrl: string = UPDATE_MIRROR_URL
 ): Promise<Release> {
   if (portalUrl) {
     const res = await fetchImpl(`${portalUrl}/api/app-release`, {
@@ -110,9 +114,28 @@ export async function fetchLatestRelease(
       }))
     }
   }
+  const mirror = usableMirror(mirrorUrl)
+  if (!mirror) return fetchFromGitHub(fetchImpl, 20_000)
+  try {
+    return await fetchFromGitHub(fetchImpl, GITHUB_TIMEOUT_WITH_MIRROR_MS)
+  } catch {
+    try {
+      return await fetchFromMirror(mirror, fetchImpl)
+    } catch {
+      throw new AppError(
+        'EB-3002',
+        tr(
+          'Neither GitHub nor the update mirror could be asked for updates. Check the internet connection and try again later.'
+        )
+      )
+    }
+  }
+}
+
+async function fetchFromGitHub(fetchImpl: typeof fetch, timeoutMs: number): Promise<Release> {
   const res = await fetchImpl(`https://api.github.com/repos/${REPO}/releases/latest`, {
     headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'EduBoard-Updater' },
-    signal: AbortSignal.timeout(20_000)
+    signal: AbortSignal.timeout(timeoutMs)
   })
   if (!res.ok)
     throw new AppError(
@@ -136,6 +159,57 @@ export async function fetchLatestRelease(
       digest: normalizeSha256Digest(a.digest),
       url: a.browser_download_url
     }))
+  }
+}
+
+/** The mirror's address without a trailing slash, or null when there's none, or it isn't
+ * https (an installer list must not be open to tampering on the way). */
+export function usableMirror(mirrorUrl: string): string | null {
+  const trimmed = mirrorUrl.trim().replace(/\/+$/, '')
+  if (!trimmed) return null
+  try {
+    return new URL(trimmed).protocol === 'https:' ? trimmed : null
+  } catch {
+    return null
+  }
+}
+
+/** Reads <mirror>/latest.json (see shared/updateMirror.ts for its shape). */
+export async function fetchFromMirror(
+  mirror: string,
+  fetchImpl: typeof fetch = fetch
+): Promise<Release> {
+  const res = await fetchImpl(`${mirror}/latest.json`, {
+    headers: { 'User-Agent': 'EduBoard-Updater' },
+    signal: AbortSignal.timeout(20_000)
+  })
+  if (!res.ok)
+    throw new AppError(
+      'EB-3002',
+      tr('The update mirror couldn’t be asked for updates ({status}).', { status: res.status })
+    )
+  const body = (await res.json()) as {
+    version?: unknown
+    assets?: { name?: unknown; size?: unknown; sha256?: unknown }[]
+  }
+  if (typeof body.version !== 'string' || !Array.isArray(body.assets))
+    throw new AppError('EB-3002', tr('The update mirror’s version list couldn’t be read.'))
+  return {
+    version: body.version.replace(/^v/, ''),
+    assets: body.assets
+      .filter((a) => isSafeReleaseAssetName(a?.name))
+      .map((a) => {
+        const name = a.name as string
+        const sha = typeof a.sha256 === 'string' ? a.sha256.trim() : ''
+        return {
+          name,
+          size: typeof a.size === 'number' && a.size > 0 ? a.size : 0,
+          // A missing or malformed checksum leaves the digest empty, and then
+          // downloadAsset refuses the file.
+          digest: normalizeSha256Digest(sha.startsWith('sha256:') ? sha : `sha256:${sha}`),
+          url: `${mirror}/${encodeURIComponent(name)}`
+        }
+      })
   }
 }
 

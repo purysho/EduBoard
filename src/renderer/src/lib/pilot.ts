@@ -30,5 +30,5 @@ export function useOutbound(flow: DataFlowId): { blocked: boolean; reason: strin
 }
 
 export function pilotOffReason(): string {
-  return tr('Turned off: this computer is in a local-only pilot, so nothing leaves it.')
+  return tr('Turned off: this computer is in a local-only pilot, so nothing goes to the internet.')
 }

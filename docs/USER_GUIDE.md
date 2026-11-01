@@ -474,12 +474,19 @@ IT can read the same list in [DATA_FLOWS.md](DATA_FLOWS.md).
 
 **Local-only pilot.** When your school is trying EduBoard out, it may install a pilot
 pack, and the sidebar then shows a green **Local-only pilot** badge. Nothing about your
-classes or students leaves the computer: the Portal, AI, the weekly email to families,
-group chats and the usage count are turned off and greyed out, with the reason on each.
-Everything else works as usual (classes, attendance, gradebook, lesson plans, report
-cards, seating, exit tickets and QR check-in on the school Wi-Fi, backups). EduBoard still
+classes or students goes to the internet, to EduBoard or to any outside company: the
+Portal, AI, the weekly email to families, group chats and the usage count are turned off
+and greyed out, with the reason on each. Everything else works as usual (classes,
+attendance, gradebook, lesson plans, report cards, seating, backups). EduBoard still
 checks for new versions, which sends only its version number, and downloads one only
-when you press **Update now**. Your Getting started checklist skips the Portal steps, and
+when you press **Update now**.
+
+**Exit tickets, QR check-in and the classroom screen** show the class list on your
+school's own Wi-Fi so students can pick their name: to devices that have that session's
+link, over plain http (not encrypted), and only while the tool is open. Each session
+gets a new link that stops working when you close the tool. Choose how names appear
+under **Names on shared screens** on the same Settings page: full name, first name and
+last initial (the default in a pilot), or student number only. Your Getting started checklist skips the Portal steps, and
 after your first class EduBoard suggests a password; in a pilot we strongly recommend
 one.
 

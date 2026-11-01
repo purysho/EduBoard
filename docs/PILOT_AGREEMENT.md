@@ -23,15 +23,23 @@ mode. **[n]** teachers take part: **[names or "to be agreed"]**.
 **2. Cost.** The pilot is free. Neither side has to buy, pay for or continue anything
 afterwards.
 
-**3. Student information stays on the School's computers.**
+**3. Student information stays inside the School.**
 
 - EduBoard keeps everything in a database file on the teacher's computer. In local-only
-  pilot mode the app does not send any information about students, classes or teachers
-  anywhere: the Portal, AI features, family email, group chats and the usage count are
-  turned off. Installed by the School's IT with the pilot pack, pilot mode is locked on, so teachers cannot turn it off.
-- What still connects: the app checks for a new version (it sends only its version
-  number to GitHub) and downloads one when a teacher presses Update now. Exit tickets
-  and QR check-in work between devices on the School's own Wi-Fi only.
+  pilot mode, nothing about students, classes or teachers goes to the internet, to us or
+  to any outside company: the Portal, AI features, family email, group chats and the
+  usage count are turned off. Installed by the School's IT with the pilot pack, pilot
+  mode is locked on, so teachers cannot turn it off.
+- When a teacher opens an exit ticket, QR check-in or the classroom screen, the class
+  list (with names in the format chosen in Settings → Names on shared screens; in a
+  pilot, first name and last initial unless the School changes it) is shown to devices
+  on the School's own Wi-Fi that have that session's link. It is sent over plain http,
+  which is not encrypted, and only while the tool is open. Each session has its own
+  link, which stops working when the tool is closed.
+- What else connects: the app checks for a new version (it sends only its version
+  number, to GitHub or, if GitHub can't be reached, to our update mirror) and downloads
+  one when a teacher presses Update now. Every installer is checked against its SHA-256
+  checksum.
 - We receive **no personal information** from the pilot. We never have access to the
   teachers' computers or databases.
 - The School decides what information goes into EduBoard and is responsible for it under
@@ -89,10 +97,11 @@ Signed for EduBoard: ________________________ Name: _____________________ Date: 
 
 **二、费用。** 试用免费。试用结束后，双方均无购买、付费或继续使用的义务。
 
-**三、学生信息保存在学校的电脑上。**
+**三、学生信息不离开学校。**
 
-- EduBoard 将所有数据保存在教师电脑上的数据库文件中。在本地试点模式下，应用不会向任何地方发送有关学生、班级或教师的信息：学生门户、AI 功能、家长邮件、群聊和使用统计均已关闭。由学校 IT 人员用试点配置包安装后，试点模式被锁定开启，教师无法关闭。
-- 仍会进行的连接：应用会检查新版本（只向 GitHub 发送版本号），并在教师点击“立即更新”时下载更新。出门条和扫码签到只在学校自己的 Wi-Fi 内的设备之间使用。
+- EduBoard 将所有数据保存在教师电脑上的数据库文件中。在本地试点模式下，有关学生、班级或教师的任何内容都不会发送到互联网、我们或任何外部公司：学生门户、AI 功能、家长邮件、群聊和使用统计均已关闭。由学校 IT 人员用试点配置包安装后，试点模式被锁定开启，教师无法关闭。
+- 当教师打开出门条、扫码签到或课堂大屏时，班级名单（姓名按“设置 → 共享屏幕上的姓名”中选择的格式显示；试点中默认为名字加姓氏首字母，除非学校另行更改）会显示给学校自己的 Wi-Fi 中持有本次链接的设备。名单通过普通 http 发送，未经加密，且仅在工具打开期间发送。每次使用都有新的链接，工具关闭后链接即失效。
+- 其他连接：应用会检查新版本（只发送版本号，发往 GitHub；如果无法连接 GitHub，则发往我们的更新镜像），并在教师点击“立即更新”时下载更新。每个安装文件都会核对 SHA-256 校验值。
 - 我们在试用中**不接收任何个人信息**，也从不接触教师的电脑或数据库。
 - 学校决定哪些信息录入 EduBoard，并依照适用法律对其负责（在中国大陆，依《个人信息保护法》作为个人信息处理者）。由于没有任何个人信息发送给我们，试用期间我们不是学校的受托人。
 - 我们建议每位教师开启密码保护，使其电脑上的数据库加密保存。

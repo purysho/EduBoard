@@ -66,7 +66,7 @@ export const DATA_FLOWS: readonly DataFlow[] = [
     id: 'updateCheck',
     name: 'Checking for updates',
     destination:
-      'GitHub (api.github.com), or your Portal server if you set one up, which asks GitHub for you.',
+      'GitHub (api.github.com), or your Portal server if you set one up, which asks GitHub for you. If GitHub doesn’t answer within a few seconds, EduBoard’s update mirror, when one is set up.',
     sends:
       'An ordinary web request with EduBoard’s version number. Nothing about you, your classes or your students.',
     when: 'Shortly after EduBoard opens, then every 4 hours, and when you press Check for updates.',
@@ -74,15 +74,21 @@ export const DATA_FLOWS: readonly DataFlow[] = [
     defaultNote: 'On.',
     pilot: 'allowed',
     pilotNote:
-      'Stays on, because it sends only the version number. It goes straight to GitHub, not through a Portal.',
+      'Stays on, because it sends only the version number. It goes to GitHub first, then the update mirror, never through a Portal.',
     channels: ['settings:appUpdateInfo', 'settings:appUpdateStatus'],
-    code: ['src/main/services/selfUpdateCore.ts', 'src/main/services/selfUpdate.ts']
+    code: [
+      'src/main/services/selfUpdateCore.ts',
+      'src/main/services/selfUpdate.ts',
+      'src/shared/updateMirror.ts'
+    ]
   },
   {
     id: 'updateDownload',
     name: 'Downloading an update',
-    destination: 'GitHub’s download servers, or your Portal server if you set one up.',
-    sends: 'A request for the new installer file. Nothing about you or your classes.',
+    destination:
+      'GitHub’s download servers, EduBoard’s update mirror when the version list came from there, or your Portal server if you set one up.',
+    sends:
+      'A request for the new installer file. Nothing about you or your classes. The installer is checked against its SHA-256 checksum before it is used.',
     when: 'In the background when automatic updates are on, or when you press Update now.',
     onByDefault: true,
     defaultNote: 'On (Settings → Help and updates → automatic updates).',
@@ -242,14 +248,15 @@ export const DATA_FLOWS: readonly DataFlow[] = [
     id: 'classroomNetwork',
     name: 'Exit tickets, QR check-in and the classroom screen',
     destination:
-      'Phones and the classroom computer on the same Wi-Fi. Nothing goes to the internet.',
+      'Phones and other devices on the school’s own Wi-Fi that have the session link, and the classroom computer. Nothing goes to the internet, to EduBoard or to any outside company.',
     sends:
-      'The question or check-in page, with the class list (full names) to choose from. Students’ answers come back to this computer. The page uses plain http on the school network, so anyone on that Wi-Fi with the link can see the class list.',
-    when: 'Only while you have an exit ticket, a QR check-in or the classroom screen open.',
+      'The question or check-in page, with the class list to choose from, in the names format chosen in Settings → Names on shared screens (in a pilot, first name and last initial unless changed). Students’ answers come back to this computer. It uses plain http (not encrypted), so anyone on that Wi-Fi with the session link can see the list. Each session has its own link, which stops working when the tool closes.',
+    when: 'Only while you have an exit ticket, a QR check-in or the classroom screen open. The classroom server stops when the last one closes.',
     onByDefault: false,
     defaultNote: 'Off until you open one.',
     pilot: 'localNetwork',
-    pilotNote: 'Stays: it never leaves the school’s network.',
+    pilotNote:
+      'Stays on, inside the school’s Wi-Fi only, with names shown as first name and last initial by default.',
     channels: [
       'exitTickets:setOpen',
       'attendanceCheckIn:open',

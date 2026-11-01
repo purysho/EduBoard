@@ -304,8 +304,8 @@ export const APP_ERROR_CODES = {
   'EB-7001': {
     area: 'Local-only pilot',
     meaning:
-      'This computer is in a local-only pilot, so EduBoard refused something that would send data off it (the Portal, AI, email, group chats or the usage count). Nothing was sent.',
-    fix: 'Nothing to fix: it’s how the pilot keeps student data on this computer. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack.'
+      'This computer is in a local-only pilot, so EduBoard refused something that would send data to the internet (the Portal, AI, email, group chats or the usage count). Nothing was sent.',
+    fix: 'Nothing to fix: it’s how the pilot keeps student data off the internet. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack.'
   }
 } as const satisfies Record<string, ErrorCodeInfo>
 

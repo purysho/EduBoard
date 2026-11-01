@@ -4,14 +4,16 @@ import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   downloadAsset,
+  fetchFromMirror,
   fetchLatestRelease,
   localUpdateFileName,
   normalizeSha256Digest,
-  pickAsset
+  pickAsset,
+  usableMirror
 } from '../selfUpdateCore'
+import { UPDATE_MIRROR_URL } from '@shared/updateMirror'
 
-const HELLO_DIGEST =
-  'sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+const HELLO_DIGEST = 'sha256:2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
 const asset = (
   name: string,
   size = 5,
@@ -160,8 +162,150 @@ describe('getting the new version', () => {
       return new Response('hello')
     }) as unknown as typeof fetch
     await expect(
-      downloadAsset(asset('EduBoard-Setup.exe', 5, null), join(dir, 'update.exe'), () => {}, fakeFetch)
+      downloadAsset(
+        asset('EduBoard-Setup.exe', 5, null),
+        join(dir, 'update.exe'),
+        () => {},
+        fakeFetch
+      )
     ).rejects.toThrow(/verified/)
     expect(fetched).toBe(false)
+  })
+})
+
+describe('the update mirror, for when GitHub is slow or blocked', () => {
+  const MIRROR = 'https://mirror.example.invalid/eduboard'
+  const manifest = {
+    version: 'v0.8.1',
+    assets: [
+      { name: 'EduBoard-Setup.exe', size: 5, sha256: HELLO_DIGEST.slice('sha256:'.length) },
+      { name: 'EduBoard.AppImage', size: 7, sha256: 'not-a-checksum' },
+      { name: '../evil.exe', size: 1, sha256: HELLO_DIGEST }
+    ]
+  }
+  const recorder = (
+    answer: (url: string, init?: RequestInit) => Promise<Response>
+  ): { calls: string[]; fetch: typeof fetch } => {
+    const calls: string[] = []
+    return {
+      calls,
+      fetch: (async (url: string, init?: RequestInit) => {
+        calls.push(url)
+        return answer(url, init)
+      }) as unknown as typeof fetch
+    }
+  }
+
+  it('is empty until one is set up, and must be https', () => {
+    expect(UPDATE_MIRROR_URL).toBe('')
+    expect(usableMirror('')).toBeNull()
+    expect(usableMirror('http://mirror.example.invalid')).toBeNull()
+    expect(usableMirror(`${MIRROR}/`)).toBe(MIRROR)
+  })
+
+  it('asks GitHub first, and uses the mirror only when GitHub fails', async () => {
+    const gh = recorder(async (url) =>
+      url.startsWith('https://api.github.com')
+        ? Response.json({
+            tag_name: 'v0.8.1',
+            assets: [
+              {
+                name: 'EduBoard-Setup.exe',
+                size: 5,
+                browser_download_url: 'https://gh/dl',
+                digest: HELLO_DIGEST
+              }
+            ]
+          })
+        : Response.json(manifest)
+    )
+    expect((await fetchLatestRelease(null, gh.fetch, MIRROR)).assets[0].url).toBe('https://gh/dl')
+    expect(gh.calls).toEqual(['https://api.github.com/repos/purysho/EduBoard/releases/latest'])
+
+    const blocked = recorder(async (url) => {
+      if (url.startsWith('https://api.github.com')) throw new TypeError('fetch failed')
+      return Response.json(manifest)
+    })
+    const release = await fetchLatestRelease(null, blocked.fetch, MIRROR)
+    expect(blocked.calls).toEqual([
+      'https://api.github.com/repos/purysho/EduBoard/releases/latest',
+      `${MIRROR}/latest.json`
+    ])
+    expect(release.version).toBe('0.8.1')
+    expect(release.assets).toEqual([
+      {
+        name: 'EduBoard-Setup.exe',
+        size: 5,
+        digest: HELLO_DIGEST,
+        url: `${MIRROR}/EduBoard-Setup.exe`
+      },
+      // A bad checksum is kept as "none", so downloadAsset refuses it.
+      { name: 'EduBoard.AppImage', size: 7, digest: null, url: `${MIRROR}/EduBoard.AppImage` }
+    ])
+  })
+
+  it('falls back when GitHub answers with an error, with a time limit on GitHub', async () => {
+    let githubSignal: AbortSignal | undefined
+    const slow = recorder(async (url, init) => {
+      if (url.startsWith('https://api.github.com')) {
+        githubSignal = init?.signal ?? undefined
+        return new Response('busy', { status: 503 })
+      }
+      return Response.json(manifest)
+    })
+    await fetchLatestRelease(null, slow.fetch, MIRROR)
+    expect(githubSignal).toBeDefined()
+    expect(slow.calls.at(-1)).toBe(`${MIRROR}/latest.json`)
+  })
+
+  it('never asks a mirror when none is set up', async () => {
+    const offline = recorder(async () => {
+      throw new TypeError('fetch failed')
+    })
+    await expect(fetchLatestRelease(null, offline.fetch, '')).rejects.toThrow()
+    expect(offline.calls).toEqual(['https://api.github.com/repos/purysho/EduBoard/releases/latest'])
+  })
+
+  it('says so when neither answers', async () => {
+    const offline = recorder(async () => {
+      throw new TypeError('fetch failed')
+    })
+    await expect(fetchLatestRelease(null, offline.fetch, MIRROR)).rejects.toMatchObject({
+      code: 'EB-3002'
+    })
+  })
+
+  it('keeps the SHA-256 check for installers from the mirror', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'eduboard-mirror-'))
+    try {
+      const release = await fetchFromMirror(MIRROR, (async () =>
+        Response.json(manifest)) as unknown as typeof fetch)
+      const good = release.assets[0]
+      await downloadAsset(
+        good,
+        join(dir, 'ok.exe'),
+        () => {},
+        (async () => new Response('hello')) as unknown as typeof fetch
+      )
+      expect(readFileSync(join(dir, 'ok.exe'), 'utf8')).toBe('hello')
+      await expect(
+        downloadAsset(
+          good,
+          join(dir, 'bad.exe'),
+          () => {},
+          (async () => new Response('xxxxx')) as unknown as typeof fetch
+        )
+      ).rejects.toThrow(/verified/)
+      await expect(
+        downloadAsset(
+          release.assets[1],
+          join(dir, 'none'),
+          () => {},
+          (async () => new Response('1234567')) as unknown as typeof fetch
+        )
+      ).rejects.toThrow(/verified/)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })

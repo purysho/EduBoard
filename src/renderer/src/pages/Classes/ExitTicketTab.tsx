@@ -330,7 +330,7 @@ function SessionPanel({
 }): React.JSX.Element {
   const [autoClose, setAutoClose] = useState<number>(10)
   const { data: roster } = useClassRoster(classId)
-  const { data: serverInfo } = useExitTicketServerInfo(isOpen)
+  const { data: serverInfo } = useExitTicketServerInfo(isOpen, classId)
   const { data: responses } = useExitTicketResponses(ticketId, isOpen)
   const clearResponses = useClearExitTicketResponses(ticketId)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -342,10 +342,8 @@ function SessionPanel({
     .filter((r) => r.enrollment.status === 'active' && !answered.has(r.student.id))
     .map((r) => `${r.student.preferredName?.trim() || r.student.firstName} ${r.student.lastName}`)
 
-  // The server's routes are keyed by class id (getExitTicketByClass), not the ticket's
-  // own id — a class has at most one ticket, so the class id is the stable, natural key
-  // for the URL a student's device hits.
-  const studentUrl = serverInfo?.url ? `${serverInfo.url}/t/${classId}` : null
+  // Made by the main process, with this session's token: a new link each time it opens.
+  const studentUrl = serverInfo?.studentUrl ?? null
 
   // Fetch the QR code once we have a URL to encode — during render, guarded, rather
   // than an effect, since it's a one-shot derived value keyed to the URL string.

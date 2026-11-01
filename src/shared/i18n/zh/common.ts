@@ -44,7 +44,7 @@ export const COMMON: Record<string, string> = {
   EduBoard: 'EduBoard',
   'Present: hide grades, notes and contact details': '演示：隐藏成绩、笔记和联系方式',
   'Present on a projector': '投屏演示',
-  'Your data stays on this device': '数据只保存在这台电脑上',
+  'Your data is saved on this device': '数据保存在这台电脑上',
   'Switch to English': 'Switch to English',
   'Lock EduBoard now': '立即锁定 EduBoard',
   'EduBoard {version} is ready,': 'EduBoard {version} 已准备好，',

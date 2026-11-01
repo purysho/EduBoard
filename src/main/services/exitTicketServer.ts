@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'http'
-import { randomBytes } from 'crypto'
+import { randomBytes, timingSafeEqual } from 'crypto'
 import { createReadStream, statSync } from 'fs'
 import { extname } from 'path'
 import { networkInterfaces } from 'os'
@@ -13,6 +13,8 @@ import { markAttendance } from '../repositories/attendanceRecords'
 import { getLessonPlan, listLessonResourceIds } from '../repositories/lessonPlans'
 import { getLessonResource } from '../repositories/lessonResources'
 import { isSafeExternalUrl } from '@shared/externalUrl'
+import { sharedScreenNameFormat, sharedScreenNames } from '@shared/sharedScreenNames'
+import { getSettings } from '../repositories/settingsRepo'
 import type {
   AttendanceCheckInStatus,
   ClassroomHubStatus,
@@ -27,6 +29,8 @@ const CANDIDATE_PORTS = [51820, 51821, 51822, 51823]
 
 let server: Server | null = null
 let boundPort: number | null = null
+let idleCheck: ReturnType<typeof setInterval> | null = null
+const IDLE_CHECK_MS = 30_000
 const openClassroomHubs = new Map<string, string>()
 
 function getLanIp(): string | null {
@@ -39,20 +43,54 @@ function getLanIp(): string | null {
   return null
 }
 
-/** A student's name as it appears on their device's list. */
-function rosterName(student: {
-  firstName: string
-  lastName: string
-  preferredName?: string | null
-}): string {
-  return `${student.preferredName?.trim() || student.firstName} ${student.lastName}`.trim()
+/** The names format for pages on the school Wi-Fi (Settings → Names on shared screens). */
+function nameFormat(): ReturnType<typeof sharedScreenNameFormat> {
+  try {
+    return sharedScreenNameFormat(getSettings())
+  } catch {
+    return 'firstInitial' // settings unreadable: show less, never more
+  }
 }
 
-function activeRoster(classId: string): { id: string; name: string }[] {
-  return getRosterForClass(classId)
+/** The class list as shared pages show it: each student's name in the chosen format
+ * (`name`) and in full (`fullName`, kept for the teacher's own records only). */
+function activeRoster(classId: string): { id: string; name: string; fullName: string }[] {
+  const students = getRosterForClass(classId)
     .filter((r) => r.enrollment.status === 'active')
-    .map((r) => ({ id: r.student.id, name: rosterName(r.student) }))
+    .map((r) => r.student)
+  const shown = sharedScreenNames(students, nameFormat())
+  const full = sharedScreenNames(students, 'full')
+  return students
+    .map((s, i) => ({ id: s.id, name: shown[i], fullName: full[i] }))
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+// Every page on the school Wi-Fi is reached through a random token made when the teacher
+// opens that tool (an exit ticket, a QR check-in or the classroom screen) and forgotten
+// when it closes: /k/<token>/t/<class> and so on. The server refuses anything else, so a
+// guessed or old link shows nothing.
+type Tool = 't' | 'a' | 'h'
+const sessionTokens = new Map<string, string>()
+const tokenKey = (tool: Tool, classId: string): string => `${tool}:${classId}`
+
+function startSession(tool: Tool, classId: string): void {
+  sessionTokens.set(tokenKey(tool, classId), randomBytes(16).toString('hex'))
+}
+
+function endSession(tool: Tool, classId: string): void {
+  sessionTokens.delete(tokenKey(tool, classId))
+}
+
+function tokenMatches(tool: Tool, classId: string, token: string): boolean {
+  const expected = sessionTokens.get(tokenKey(tool, classId))
+  if (!expected || expected.length !== token.length) return false
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(token))
+}
+
+/** The path a tool's page is served at, with its session token, or null when closed. */
+export function sessionPath(tool: Tool, classId: string): string | null {
+  const token = sessionTokens.get(tokenKey(tool, classId))
+  return token ? `/k/${token}/${tool}/${encodeURIComponent(classId)}` : null
 }
 
 // These limits only stop one device flooding a session. Per device (its cookie) the
@@ -221,16 +259,47 @@ const openCheckIns = new Map<
 
 export function openAttendanceCheckIn(classId: string, date: string): void {
   openCheckIns.set(classId, { date, checkedInStudentIds: new Set(), studentByDevice: new Map() })
+  startSession('a', classId)
 }
 
 export function closeAttendanceCheckIn(classId: string): void {
   openCheckIns.delete(classId)
+  endSession('a', classId)
+  stopExitTicketServerIfIdle()
 }
 
 export function getAttendanceCheckInStatus(classId: string): AttendanceCheckInStatus {
   const session = openCheckIns.get(classId)
-  if (!session) return { open: false, date: null, checkedInStudentIds: [] }
-  return { open: true, date: session.date, checkedInStudentIds: [...session.checkedInStudentIds] }
+  if (!session) return { open: false, date: null, checkedInStudentIds: [], url: null }
+  const info = getExitTicketServerInfo()
+  const path = sessionPath('a', classId)
+  return {
+    open: true,
+    date: session.date,
+    checkedInStudentIds: [...session.checkedInStudentIds],
+    url: info.url && path ? `${info.url}${path}` : null
+  }
+}
+
+/** Called when the teacher opens an exit ticket: a new link for this session. */
+export function openExitTicketSession(classId: string): void {
+  startSession('t', classId)
+}
+
+/** Called when the teacher closes an exit ticket. */
+export function closeExitTicketSession(classId: string): void {
+  endSession('t', classId)
+  stopExitTicketServerIfIdle()
+}
+
+/** The link students open for a class's exit ticket, or null if none is open. A ticket
+ * left open from before EduBoard restarted gets a new link. */
+export function exitTicketStudentUrl(classId: string): string | null {
+  const ticket = getExitTicketByClass(classId)
+  if (!ticket || !isAcceptingResponses(ticket)) return null
+  if (!sessionPath('t', classId)) startSession('t', classId)
+  const info = getExitTicketServerInfo()
+  return info.url ? `${info.url}${sessionPath('t', classId)}` : null
 }
 
 function renderAttendancePage(classId: string): string {
@@ -244,12 +313,11 @@ function renderAttendancePage(classId: string): string {
 </head><body><p>${escapeHtml(tr('No attendance check-in is open right now. Ask your teacher.'))}</p></body></html>`
   }
 
-  const roster = getRosterForClass(classId).filter((r) => r.enrollment.status === 'active')
-  const studentsHtml = roster
-    .map(({ student }) => {
-      const name = escapeHtml(rosterName(student))
+  const studentsHtml = activeRoster(classId)
+    .map((student) => {
+      const name = escapeHtml(student.name)
       const checkedIn = session.checkedInStudentIds.has(student.id)
-      return `<button class="s${checkedIn ? ' done' : ''}" data-id="${student.id}" ${checkedIn ? 'disabled' : ''}>${name}${checkedIn ? ' ✓' : ''}</button>`
+      return `<button class="s${checkedIn ? ' done' : ''}" data-id="${escapeHtml(student.id)}" ${checkedIn ? 'disabled' : ''}>${name}${checkedIn ? ' ✓' : ''}</button>`
     })
     .join('')
 
@@ -301,7 +369,6 @@ document.querySelectorAll('.s').forEach(function (btn) {
 </body></html>`
 }
 
-
 function textBlock(value: string | null): string {
   return value ? escapeHtml(value).replace(/\n/g, '<br>') : ''
 }
@@ -333,13 +400,13 @@ function isAudioFile(filePath: string | null): boolean {
   return !!filePath && !!AUDIO_MIME[extname(filePath).toLowerCase()]
 }
 
-function renderListeningLabPage(classId: string, resourceId: string): string {
+function renderListeningLabPage(classId: string, resourceId: string, base: string): string {
   const resource = classroomHubResource(classId, resourceId)
   if (!resource || resource.type !== 'file' || !isAudioFile(resource.filePath)) {
     return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(tr('Listening Lab'))}</title></head><body><p>${escapeHtml(tr('This listening activity is not available.'))}</p></body></html>`
   }
-  const audioUrl = `/h/${encodeURIComponent(classId)}/audio/${encodeURIComponent(resourceId)}`
+  const audioUrl = `${base}/h/${encodeURIComponent(classId)}/audio/${encodeURIComponent(resourceId)}`
   return `<!doctype html>
 <html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(resource.title)}</title>
@@ -376,7 +443,12 @@ function streamClassroomAudio(
   resourceId: string
 ): void {
   const resource = classroomHubResource(classId, resourceId)
-  if (!resource || resource.type !== 'file' || !isAudioFile(resource.filePath) || !resource.filePath) {
+  if (
+    !resource ||
+    resource.type !== 'file' ||
+    !isAudioFile(resource.filePath) ||
+    !resource.filePath
+  ) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
     res.end(tr('Audio not found.'))
     return
@@ -390,7 +462,14 @@ function streamClassroomAudio(
       const match = /^bytes=(\d*)-(\d*)$/.exec(range)
       const start = match?.[1] ? Number(match[1]) : 0
       const end = match?.[2] ? Math.min(Number(match[2]), stat.size - 1) : stat.size - 1
-      if (!match || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start >= stat.size) {
+      if (
+        !match ||
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        start < 0 ||
+        end < start ||
+        start >= stat.size
+      ) {
         res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` })
         res.end()
         return
@@ -418,7 +497,6 @@ function streamClassroomAudio(
   }
 }
 
-
 function renderPracticePage(
   classId: string,
   resourceId: string,
@@ -428,9 +506,7 @@ function renderPracticePage(
   const cards =
     resource?.aiApproved?.flashcards && resource.flashcards?.length ? resource.flashcards : []
   const quiz =
-    resource?.aiApproved?.practiceQuiz && resource.practiceQuiz?.length
-      ? resource.practiceQuiz
-      : []
+    resource?.aiApproved?.practiceQuiz && resource.practiceQuiz?.length ? resource.practiceQuiz : []
   const available = kind === 'flashcards' ? cards.length > 0 : quiz.length > 0
   if (!resource || !available) {
     return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -550,7 +626,7 @@ render()
 </script></main></body></html>`
 }
 
-function renderClassroomHubPage(classId: string): string {
+function renderClassroomHubPage(classId: string, base: string): string {
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
   if (!lesson || lesson.classId !== classId) {
@@ -588,17 +664,17 @@ function renderClassroomHubPage(classId: string): string {
           const links: string[] = []
           if (resource.type === 'file' && isAudioFile(resource.filePath)) {
             links.push(
-              `<a class="resource" href="/h/${encodeURIComponent(classId)}/listen/${encodeURIComponent(resource.id)}">${title} · ${escapeHtml(tr('Listening Lab'))}</a>`
+              `<a class="resource" href="${base}/h/${encodeURIComponent(classId)}/listen/${encodeURIComponent(resource.id)}">${title} · ${escapeHtml(tr('Listening Lab'))}</a>`
             )
           }
           if (resource.flashcards?.length && resource.aiApproved?.flashcards) {
             links.push(
-              `<a class="resource" href="/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/flashcards">${title} · ${escapeHtml(tr('Flashcards'))}</a>`
+              `<a class="resource" href="${base}/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/flashcards">${title} · ${escapeHtml(tr('Flashcards'))}</a>`
             )
           }
           if (resource.practiceQuiz?.length && resource.aiApproved?.practiceQuiz) {
             links.push(
-              `<a class="resource" href="/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/quiz">${title} · ${escapeHtml(tr('Practice quiz'))}</a>`
+              `<a class="resource" href="${base}/h/${encodeURIComponent(classId)}/practice/${encodeURIComponent(resource.id)}/quiz">${title} · ${escapeHtml(tr('Practice quiz'))}</a>`
             )
           }
           if (resource.type === 'link' && resource.url && isSafeExternalUrl(resource.url)) {
@@ -624,7 +700,7 @@ function renderClassroomHubPage(classId: string): string {
   @media(prefers-color-scheme:dark){body{background:#0b1120;color:#e5e7eb}section{background:#111827;border-color:#263042}.resource{background:#1a2332;border-color:#263042;color:#a5b4fc}h2{color:#94a3b8}}
 </style></head><body><main>
 <header><div class="eyebrow">${escapeHtml(tr("Today's lesson"))}</div><h1>${escapeHtml(lesson.title)}</h1></header>
-<section><h2>${escapeHtml(tr('Speaking practice'))}</h2><a class="resource" href="/h/${encodeURIComponent(classId)}/talk">${escapeHtml(tr('Open Talk Ladder'))}</a></section>
+<section><h2>${escapeHtml(tr('Speaking practice'))}</h2><a class="resource" href="${base}/h/${encodeURIComponent(classId)}/talk">${escapeHtml(tr('Open Talk Ladder'))}</a></section>
 ${sectionHtml}${resourceHtml}
 </main></body></html>`
 }
@@ -635,12 +711,17 @@ export function openClassroomHub(classId: string, lessonId: string): ClassroomHu
     return { open: false, lessonId: null, title: null, url: null }
   }
   startExitTicketServer()
+  if (openClassroomHubs.get(classId) !== lessonId || !sessionPath('h', classId)) {
+    startSession('h', classId)
+  }
   openClassroomHubs.set(classId, lessonId)
   return getClassroomHubStatus(classId)
 }
 
 export function closeClassroomHub(classId: string): ClassroomHubStatus {
   openClassroomHubs.delete(classId)
+  endSession('h', classId)
+  stopExitTicketServerIfIdle()
   return getClassroomHubStatus(classId)
 }
 
@@ -651,8 +732,9 @@ export function getClassroomHubProjectorUrl(classId: string): string | null {
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
   const info = getExitTicketServerInfo()
-  if (!lesson || lesson.classId !== classId || !info.running || !info.port) return null
-  return `http://127.0.0.1:${info.port}/h/${encodeURIComponent(classId)}`
+  const path = sessionPath('h', classId)
+  if (!lesson || lesson.classId !== classId || !info.running || !info.port || !path) return null
+  return `http://127.0.0.1:${info.port}${path}`
 }
 
 export function getClassroomHubStatus(classId: string): ClassroomHubStatus {
@@ -663,8 +745,21 @@ export function getClassroomHubStatus(classId: string): ClassroomHubStatus {
     open: !!lesson && lesson.classId === classId,
     lessonId: lesson?.id ?? null,
     title: lesson?.title ?? null,
-    url: lesson && info.url ? `${info.url}/h/${encodeURIComponent(classId)}` : null
+    url:
+      lesson && info.url && sessionPath('h', classId)
+        ? `${info.url}${sessionPath('h', classId)}`
+        : null
   }
+}
+
+/** The answer to a link that isn't for an open tool: closed, old or guessed. */
+function refuse(res: ServerResponse): void {
+  res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' })
+  res.end(`<!doctype html>
+<html lang="${uiLanguage() === 'zh' ? 'zh-CN' : 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduBoard</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f8fafc;color:#475569;text-align:center;padding:24px}</style>
+</head><body><p>${escapeHtml(tr('This link isn’t open. Scan the QR code your teacher is showing now.'))}</p></body></html>`)
 }
 
 function readBody(req: import('http').IncomingMessage): Promise<string> {
@@ -692,10 +787,25 @@ export function startExitTicketServer(): void {
     // Collapse any accidental repeated slashes (e.g. a trailing-slash page path plus the
     // client's `pathname + '/submit'`) before routing, so a stray "//" never 404s a
     // genuine request.
-    const url = (req.url ?? '/').replace(/\/{2,}/g, '/')
+    const requested = (req.url ?? '/').replace(/\/{2,}/g, '/')
+    // Only links made for an open tool work: /k/<session token>/<tool>/<class>/…
+    const keyed = requested.match(/^\/k\/([a-f0-9]{32})(\/.*)$/)
+    if (!keyed) {
+      refuse(res)
+      return
+    }
+    const token = keyed[1]
+    const base = `/k/${token}`
+    const url = keyed[2]
+    const allowed = (tool: Tool, classId: string): boolean => {
+      if (tokenMatches(tool, classId, token)) return true
+      refuse(res)
+      return false
+    }
 
     const talkMatch = url.match(/^\/h\/([^/]+)\/talk\/?$/)
     if (talkMatch) {
+      if (!allowed('h', decodeURIComponent(talkMatch[1]))) return
       if (req.method === 'GET') {
         const classId = decodeURIComponent(talkMatch[1])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
@@ -709,6 +819,7 @@ export function startExitTicketServer(): void {
 
     const practiceMatch = url.match(/^\/h\/([^/]+)\/practice\/([^/]+)\/(flashcards|quiz)\/?$/)
     if (practiceMatch) {
+      if (!allowed('h', decodeURIComponent(practiceMatch[1]))) return
       if (req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
         res.end(
@@ -727,11 +838,12 @@ export function startExitTicketServer(): void {
 
     const listenMatch = url.match(/^\/h\/([^/]+)\/listen\/([^/]+)\/?$/)
     if (listenMatch) {
+      if (!allowed('h', decodeURIComponent(listenMatch[1]))) return
       if (req.method === 'GET') {
         const classId = decodeURIComponent(listenMatch[1])
         const resourceId = decodeURIComponent(listenMatch[2])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-        res.end(renderListeningLabPage(classId, resourceId))
+        res.end(renderListeningLabPage(classId, resourceId, base))
       } else {
         res.writeHead(405, { 'Content-Type': 'text/plain' })
         res.end('Method not allowed')
@@ -741,6 +853,7 @@ export function startExitTicketServer(): void {
 
     const audioMatch = url.match(/^\/h\/([^/]+)\/audio\/([^/]+)\/?$/)
     if (audioMatch) {
+      if (!allowed('h', decodeURIComponent(audioMatch[1]))) return
       if (req.method === 'GET') {
         streamClassroomAudio(
           req,
@@ -757,10 +870,11 @@ export function startExitTicketServer(): void {
 
     const hubMatch = url.match(/^\/h\/([^/]+)\/?$/)
     if (hubMatch) {
+      if (!allowed('h', decodeURIComponent(hubMatch[1]))) return
       if (req.method === 'GET') {
         const classId = decodeURIComponent(hubMatch[1])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-        res.end(renderClassroomHubPage(classId))
+        res.end(renderClassroomHubPage(classId, base))
       } else {
         res.writeHead(405, { 'Content-Type': 'text/plain' })
         res.end('Method not allowed')
@@ -771,6 +885,7 @@ export function startExitTicketServer(): void {
     const checkInMatch = url.match(/^\/a\/([^/]+)(\/checkin)?\/?$/)
     if (checkInMatch) {
       const classId = decodeURIComponent(checkInMatch[1])
+      if (!allowed('a', classId)) return
       const isCheckIn = !!checkInMatch[2]
 
       if (isCheckIn && req.method === 'POST') {
@@ -815,7 +930,11 @@ export function startExitTicketServer(): void {
               res.end(
                 tr(
                   'This device already checked in {name}. Each student checks in on their own device; ask your teacher if that’s wrong.',
-                  { name: who ? rosterName(who.student) : tr('someone') }
+                  {
+                    name:
+                      activeRoster(classId).find((r) => r.id === who?.student.id)?.name ??
+                      tr('someone')
+                  }
                 )
               )
               return
@@ -854,6 +973,7 @@ export function startExitTicketServer(): void {
     }
 
     const classId = decodeURIComponent(match[1])
+    if (!allowed('t', classId)) return
     const isSubmit = !!match[2]
 
     if (isSubmit && req.method === 'POST') {
@@ -891,7 +1011,7 @@ export function startExitTicketServer(): void {
               return
             }
             studentId = picked.id
-            studentName = picked.name
+            studentName = picked.fullName
           } else if (typeof parsed.studentName === 'string') {
             studentName = parsed.studentName.trim().slice(0, 200)
           }
@@ -930,6 +1050,8 @@ export function startExitTicketServer(): void {
 
   server = s
   tryListen(s, 0)
+  idleCheck = setInterval(stopExitTicketServerIfIdle, IDLE_CHECK_MS)
+  idleCheck.unref?.()
 }
 
 // All bind-error handling — including logging — lives in the single `once('error', ...)`
@@ -969,12 +1091,45 @@ function tryListen(s: Server, portIndex: number): void {
 }
 
 export function stopExitTicketServer(): void {
-  server?.close()
+  if (idleCheck) clearInterval(idleCheck)
+  idleCheck = null
+  if (server) {
+    server.close()
+    // Phones keep connections open; drop them so nothing is served after this.
+    server.closeAllConnections()
+  }
   server = null
   boundPort = null
   openCheckIns.clear()
   openClassroomHubs.clear()
+  sessionTokens.clear()
   recentSubmits.clear()
+}
+
+/** Whether any classroom tool is open: a QR check-in, a classroom screen, or an exit
+ * ticket still taking answers. */
+function anyToolOpen(): boolean {
+  if (openCheckIns.size > 0 || openClassroomHubs.size > 0) return true
+  for (const key of sessionTokens.keys()) {
+    if (!key.startsWith('t:')) continue
+    try {
+      const ticket = getExitTicketByClass(key.slice(2))
+      if (ticket && isAcceptingResponses(ticket)) return true
+    } catch {
+      return true // can't tell (database closed): leave it to the next check
+    }
+  }
+  return false
+}
+
+/** Stops the server once the last tool is closed. Called when a tool closes, and every
+ * half minute while it runs, so an exit ticket that closes on its timer stops it too.
+ * Returns whether the server is now stopped. */
+export function stopExitTicketServerIfIdle(): boolean {
+  if (!server) return true
+  if (anyToolOpen()) return false
+  stopExitTicketServer()
+  return true
 }
 
 export function getExitTicketServerInfo(): ExitTicketServerInfo {

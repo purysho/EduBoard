@@ -1493,11 +1493,14 @@ export function useClearExitTicketResponses(exitTicketId: string) {
   })
 }
 
-export function useExitTicketServerInfo(enabled: boolean) {
+export function useExitTicketServerInfo(enabled: boolean, classId?: string) {
   return useQuery({
-    queryKey: queryKeys.exitTicketServerInfo,
-    queryFn: () => api().exitTickets.getServerInfo(),
-    enabled
+    queryKey: [...queryKeys.exitTicketServerInfo, classId ?? null],
+    queryFn: () => api().exitTickets.getServerInfo(classId),
+    enabled,
+    // The server starts a moment after a tool opens: ask again until the link is ready.
+    refetchInterval: (q) =>
+      enabled && !(classId ? q.state.data?.studentUrl : q.state.data?.url) ? 1000 : false
   })
 }
 

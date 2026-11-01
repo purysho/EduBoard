@@ -4,11 +4,11 @@ export const PILOT: Record<string, string> = {
   'Turned off in this local-only pilot: {what}. Nothing was sent.':
     '本地试点模式下已关闭：{what}。没有发送任何内容。',
   'Turned off in this local-only pilot': '本地试点模式下已关闭',
-  '{what} This goes through the Portal, which is turned off here so that no student data leaves this computer. Everything else in EduBoard works as usual.':
-    '{what}这项功能需要通过学生门户，而本机已关闭门户，以确保学生数据不离开这台电脑。EduBoard 的其他功能照常使用。',
+  '{what} This goes through the Portal, which is turned off here so that nothing about your students goes to the internet. Everything else in EduBoard works as usual.':
+    '{what}这项功能需要通过学生门户，而本机已关闭门户，以确保有关学生的任何内容都不会发送到互联网。EduBoard 的其他功能照常使用。',
   'What leaves this computer': '哪些数据会离开这台电脑',
-  'Nothing about your classes leaves this computer. See what is turned off.':
-    '您的班级数据不会离开这台电脑。点击查看哪些功能已关闭。',
+  'Local-only pilot: nothing about your classes goes to the internet. Exit tickets, QR check-in and the classroom screen show the class list on the school Wi-Fi only while open. See what is turned off.':
+    '本地试点：有关您班级的任何内容都不会发送到互联网。出门条、扫码签到和课堂大屏仅在打开期间于学校 Wi-Fi 内显示班级名单。点击查看哪些功能已关闭。',
   'Local-only pilot': '本地试点',
   'Protect your class data with a password?': '要用密码保护您的班级数据吗？',
   'With a password, your classes are encrypted on this computer and EduBoard asks for it when it opens, so someone else using this computer can’t see your students. You get a recovery key in case you forget it.':
@@ -17,14 +17,14 @@ export const PILOT: Record<string, string> = {
     '在本次试点中强烈建议开启，尤其是在共用电脑或学校电脑上。',
   'You can turn it on any time in Settings → Data and security.':
     '您随时可以在“设置 → 数据与安全”中开启。',
-  'Turned off: this computer is in a local-only pilot, so nothing leaves it.':
-    '已关闭：这台电脑处于本地试点模式，任何数据都不会离开本机。',
-  'Your classes are ready, and everything stays on this computer. The extras below are there when you want them.':
-    '您的班级已准备就绪，所有数据都保存在这台电脑上。下面的额外功能可以在需要时再使用。',
+  'Turned off: this computer is in a local-only pilot, so nothing goes to the internet.':
+    '已关闭：这台电脑处于本地试点模式，任何内容都不会发送到互联网。',
+  'Your classes are ready, and they’re saved on this computer. The extras below are there when you want them.':
+    '您的班级已准备就绪，数据保存在这台电脑上。下面的额外功能可以在需要时再使用。',
   recommended: '建议',
   On: '已开启',
-  'In a local-only pilot, nothing about your classes or students leaves this computer. The Portal, AI, the weekly email to families, group chats and the usage count are turned off, and EduBoard refuses them even if asked. EduBoard still checks for updates (that sends only its version number) and the classroom tools on the school Wi-Fi still work.':
-    '在本地试点模式下，有关您的班级和学生的任何数据都不会离开这台电脑。学生门户、AI、每周家长邮件、群聊和使用统计都会关闭，即使有请求 EduBoard 也会拒绝。EduBoard 仍会检查更新（只发送版本号），在学校 Wi-Fi 上使用的课堂工具也照常可用。',
+  'In a local-only pilot, nothing about your classes or students goes to the internet, to EduBoard or to any outside company. The Portal, AI, the weekly email to families, group chats and the usage count are turned off, and EduBoard refuses them even if asked. EduBoard still checks for updates, which sends only its version number. While you have an exit ticket, QR check-in or the classroom screen open, the class list is shown to devices on the school Wi-Fi that have that session’s link, over plain http, with names as set under Names on shared screens.':
+    '在本地试点模式下，有关您的班级和学生的任何内容都不会发送到互联网、EduBoard 或任何外部公司。学生门户、AI、每周家长邮件、群聊和使用统计都会关闭，即使有请求 EduBoard 也会拒绝。EduBoard 仍会检查更新（只发送版本号）。当您打开出门条、扫码签到或课堂大屏时，班级名单会通过普通 http 显示给学校 Wi-Fi 中持有本次链接的设备，姓名格式按“共享屏幕上的姓名”中的设置。',
   'Your school turned this on for everyone on this computer, so it can’t be changed here (the file is {file}).':
     '您的学校已为这台电脑上的所有用户开启此项，因此无法在这里更改（文件位置：{file}）。',
   'Your school set this for everyone on this computer, so it can’t be changed here (the file is {file}).':
@@ -48,19 +48,19 @@ export const PILOT: Record<string, string> = {
   'not used': '未使用',
   'The pilot summary couldn’t be saved.': '无法保存试点总结。',
   'Save pilot summary…': '保存试点总结…',
-  '{what}: turned off, because this computer is in a local-only pilot, so nothing leaves it. See What leaves this computer.':
-    '{what}：已关闭，因为这台电脑处于本地试点模式，任何数据都不会离开本机。详见“哪些数据会离开这台电脑”。',
-  'For a pilot, export the pilot pack: it also sets the interface language and turns on local-only pilot mode, so no student data leaves the computers it’s installed on.':
-    '用于试点时，请导出试点配置包：它还会设置界面语言并开启本地试点模式，使安装了它的电脑上的学生数据都不会离开本机。',
+  '{what}: turned off, because this computer is in a local-only pilot, so nothing goes to the internet. See What leaves this computer.':
+    '{what}：已关闭，因为这台电脑处于本地试点模式，任何内容都不会发送到互联网。详见“哪些数据会离开这台电脑”。',
+  'For a pilot, export the pilot pack: it also sets the interface language and turns on local-only pilot mode, so nothing about students goes to the internet from the computers it’s installed on.':
+    '用于试点时，请导出试点配置包：它还会设置界面语言并开启本地试点模式，使安装了它的电脑不会把有关学生的任何内容发送到互联网。',
   'The same pack, set to turn on local-only pilot mode on every computer it’s installed on: no Portal, AI, email or group chats.':
     '内容相同的配置包，但会在安装它的每台电脑上开启本地试点模式：不使用学生门户、AI、邮件或群聊。',
   'Export pilot pack': '导出试点配置包',
   'Every connection, local-only pilot, pilot summary': '所有网络连接、本地试点、试点总结',
-  'privacy network internet data flows connections pilot local only offline summary export it':
-    '隐私 网络 互联网 数据流向 连接 试点 本地 离线 总结 导出 IT privacy network pilot offline',
+  'privacy network internet data flows connections pilot local only offline summary export it names shared screens wi-fi qr':
+    '隐私 网络 互联网 数据流向 连接 试点 本地 离线 总结 导出 IT 姓名 共享屏幕 Wi-Fi 二维码 扫码 privacy network pilot offline names qr',
   'Interface language: {language}': '界面语言：{language}',
-  'Local-only pilot mode: no student data leaves the computer':
-    '本地试点模式：学生数据不会离开电脑',
+  'Local-only pilot mode: nothing about students goes to the internet':
+    '本地试点模式：有关学生的任何内容都不会发送到互联网',
   'Local-only pilot mode turned on: the Portal, AI, email and group chats are turned off':
     '开启本地试点模式：学生门户、AI、邮件和群聊将被关闭',
   'Local-only pilot mode turned off': '关闭本地试点模式',
@@ -79,20 +79,20 @@ export const PILOT: Record<string, string> = {
 
   // shared/dataFlows.ts
   'Checking for updates': '检查更新',
-  'GitHub (api.github.com), or your Portal server if you set one up, which asks GitHub for you.':
-    'GitHub（api.github.com）；如果您设置了学生门户服务器，则由门户代您向 GitHub 查询。',
+  'GitHub (api.github.com), or your Portal server if you set one up, which asks GitHub for you. If GitHub doesn’t answer within a few seconds, EduBoard’s update mirror, when one is set up.':
+    'GitHub（api.github.com）；如果您设置了学生门户服务器，则由门户代您向 GitHub 查询。如果 GitHub 几秒内没有响应，则使用 EduBoard 的更新镜像（如已设置）。',
   'An ordinary web request with EduBoard’s version number. Nothing about you, your classes or your students.':
     '一个普通的网络请求，只带有 EduBoard 的版本号。不包含有关您、您的班级或学生的任何信息。',
   'Shortly after EduBoard opens, then every 4 hours, and when you press Check for updates.':
     'EduBoard 打开后不久，之后每 4 小时一次，以及您点击“检查更新”时。',
   'On.': '开启。',
-  'Stays on, because it sends only the version number. It goes straight to GitHub, not through a Portal.':
-    '保持开启，因为它只发送版本号。直接连接 GitHub，不经过学生门户。',
+  'Stays on, because it sends only the version number. It goes to GitHub first, then the update mirror, never through a Portal.':
+    '保持开启，因为它只发送版本号。先连接 GitHub，再连接更新镜像，从不经过学生门户。',
   'Downloading an update': '下载更新',
-  'GitHub’s download servers, or your Portal server if you set one up.':
-    'GitHub 的下载服务器；如果您设置了学生门户服务器，则从门户下载。',
-  'A request for the new installer file. Nothing about you or your classes.':
-    '请求新的安装文件。不包含有关您或您的班级的任何信息。',
+  'GitHub’s download servers, EduBoard’s update mirror when the version list came from there, or your Portal server if you set one up.':
+    'GitHub 的下载服务器；版本信息来自更新镜像时则从镜像下载；如果您设置了学生门户服务器，则从门户下载。',
+  'A request for the new installer file. Nothing about you or your classes. The installer is checked against its SHA-256 checksum before it is used.':
+    '请求新的安装文件，不包含有关您或您班级的任何信息。安装文件在使用前会核对 SHA-256 校验值。',
   'In the background when automatic updates are on, or when you press Update now.':
     '开启自动更新时在后台进行，或在您点击“立即更新”时进行。',
   'On (Settings → Help and updates → automatic updates).': '开启（设置 → 帮助与更新 → 自动更新）。',
@@ -166,14 +166,15 @@ export const PILOT: Record<string, string> = {
   'Only for links you add.': '仅针对您添加的链接。',
   'Stays: it sends nothing about your classes.': '保持：它不会发送有关您班级的任何内容。',
   'Exit tickets, QR check-in and the classroom screen': '出门条、扫码签到和课堂大屏',
-  'Phones and the classroom computer on the same Wi-Fi. Nothing goes to the internet.':
-    '同一 Wi-Fi 下的手机和教室电脑。不会连接到互联网。',
-  'The question or check-in page, with the class list (full names) to choose from. Students’ answers come back to this computer. The page uses plain http on the school network, so anyone on that Wi-Fi with the link can see the class list.':
-    '题目或签到页面，其中包含供选择的班级名单（全名）。学生的回答会返回这台电脑。该页面在学校网络上使用普通 http，因此同一 Wi-Fi 下任何拿到链接的人都能看到班级名单。',
-  'Only while you have an exit ticket, a QR check-in or the classroom screen open.':
-    '仅在您打开出门条、扫码签到或课堂大屏期间。',
+  'Phones and other devices on the school’s own Wi-Fi that have the session link, and the classroom computer. Nothing goes to the internet, to EduBoard or to any outside company.':
+    '学校自己的 Wi-Fi 中持有本次链接的手机等设备，以及教室电脑。不会发送到互联网、EduBoard 或任何外部公司。',
+  'The question or check-in page, with the class list to choose from, in the names format chosen in Settings → Names on shared screens (in a pilot, first name and last initial unless changed). Students’ answers come back to this computer. It uses plain http (not encrypted), so anyone on that Wi-Fi with the session link can see the list. Each session has its own link, which stops working when the tool closes.':
+    '题目或签到页面，其中有供选择的班级名单，姓名按“设置 → 共享屏幕上的姓名”中选择的格式显示（试点模式下默认为名字加姓氏首字母）。学生的回答返回这台电脑。页面使用普通 http（未加密），因此同一 Wi-Fi 下持有本次链接的人都能看到名单。每次使用都有新的链接，工具关闭后链接即失效。',
+  'Only while you have an exit ticket, a QR check-in or the classroom screen open. The classroom server stops when the last one closes.':
+    '仅在您打开出门条、扫码签到或课堂大屏期间。最后一个工具关闭后，课堂服务器随即停止。',
   'Off until you open one.': '在您打开之前保持关闭。',
-  'Stays: it never leaves the school’s network.': '保持：它从不离开学校网络。',
+  'Stays on, inside the school’s Wi-Fi only, with names shown as first name and last initial by default.':
+    '保持开启，仅限学校 Wi-Fi 内，姓名默认显示为名字加姓氏首字母。',
   'Links you open': '您打开的链接',
   'Your web browser.': '您的网页浏览器。',
   'Nothing from EduBoard. Your browser opens the page.':
@@ -189,5 +190,28 @@ export const PILOT: Record<string, string> = {
   'Exit tickets': '出门条',
   'Student log': '学生记录',
   'Rubric marking': '量规评分',
-  'Lesson resources': '课程资源'
+  'Lesson resources': '课程资源',
+  'This link isn’t open. Scan the QR code your teacher is showing now.':
+    '这个链接未开放。请扫描老师现在展示的二维码。',
+  'Neither GitHub nor the update mirror could be asked for updates. Check the internet connection and try again later.':
+    'GitHub 和更新镜像都无法查询更新。请检查网络连接，稍后再试。',
+  'The update mirror couldn’t be asked for updates ({status}).':
+    '无法向更新镜像查询更新（{status}）。',
+  'The update mirror’s version list couldn’t be read.': '无法读取更新镜像的版本清单。',
+  'Start with the sample school': '先从示例学校开始',
+  'Try EduBoard with made-up classes first. They’re kept apart from your own, and you can leave the sample school any time.':
+    '先用虚构的班级试用 EduBoard。它们与您自己的班级分开保存，您可以随时离开示例学校。',
+  'Try it with the sample school': '用示例学校试用',
+  'Use my real classes': '使用我的真实班级',
+  'Using real student data in a pilot needs your school’s approval first. Ask whoever runs the pilot at your school.':
+    '在试点中使用真实学生数据，需要先获得学校的同意。请询问学校的试点负责人。',
+  'Names on shared screens': '共享屏幕上的姓名',
+  'Exit tickets, QR check-in and the classroom screen show the class list so students can pick their name. Anyone on the school Wi-Fi with that session’s link can see it, over plain http, while the tool is open. Your own screens always show full names.':
+    '出门条、扫码签到和课堂大屏会显示班级名单，方便学生选择自己的名字。工具打开期间，学校 Wi-Fi 中持有本次链接的任何人都能通过普通 http 看到名单。您自己的屏幕始终显示全名。',
+  '(default)': '（默认）',
+  'With “Student number only”, a student without a number is shown by their initials. Names that would look the same are numbered.':
+    '选择“仅显示学号”时，没有学号的学生会显示姓名首字母。看起来相同的姓名会加上编号。',
+  'Full name': '全名',
+  'First name + last initial': '名字加姓氏首字母',
+  'Student number only': '仅显示学号'
 }

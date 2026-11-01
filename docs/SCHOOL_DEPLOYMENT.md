@@ -47,8 +47,8 @@ Portal families use stays at the address the school chooses.
 
 ## A local-only pilot
 
-A free pilot where **no student data leaves the teacher's computer**. EduBoard runs as a
-desktop app only: no Portal, no AI, no email to families, no group chats, no usage count.
+A free pilot where **nothing about students goes to the internet, to EduBoard or to any
+outside company**. EduBoard runs as a desktop app only: no Portal, no AI, no email to families, no group chats, no usage count.
 Everything in the app that works on one computer (classes, rosters, attendance,
 gradebook, lesson plans, report cards, backups, the classroom tools on the school Wi-Fi)
 works as usual. The full list of connections, and what pilot mode does with each, is in
@@ -77,9 +77,33 @@ A plain pilot agreement for the school to sign, in English and Chinese, is in
    especially on shared computers. It isn't forced.
 
 **What still connects.** EduBoard checks for new versions (only its version number goes
-to GitHub) and downloads one only when the teacher presses Update now. Exit tickets, QR
-check-in and the classroom screen reach phones on the same Wi-Fi only, never the
-internet; they show the class list to anyone on that network with the link.
+to GitHub or, if GitHub can't be reached, to EduBoard's update mirror) and downloads one
+only when the teacher presses Update now; every installer is checked against its SHA-256
+checksum. When a teacher opens an exit ticket, QR check-in or the classroom screen, the
+class list is shown to devices on the school's own Wi-Fi that have that session's link,
+over plain http (not encrypted), and only while the tool is open. Names appear as chosen
+in Settings → What leaves this computer → Names on shared screens: in a pilot, first name
+and last initial by default. Each session has its own link, which stops working when the
+tool closes, and the classroom server stops when the last tool closes.
+
+**Before using real student data.** Teachers can try everything with the sample school
+first (the Getting started card offers it before their first class). Before anyone
+enters real students:
+
+- [ ] **The school has approved it in writing**, for these teachers and these classes
+  (the [pilot agreement](PILOT_AGREEMENT.md) can be that record).
+- [ ] **Which computer:** each teacher uses one named computer, ideally the school's
+  rather than a personal or shared one, with its own Windows or Mac sign-in.
+- [ ] **Password protection is on** (Settings → Data and security → Password
+  protection), so the classes are encrypted on that computer; the teacher keeps the
+  recovery key somewhere safe and separate.
+- [ ] **Backups:** agree who keeps them and where. EduBoard backs up on the teacher's
+  computer every day; a second copy (Settings → Data and security → Backups → a USB stick
+  or school drive) stays inside the school and is protected by the same password. Not
+  a cloud-synced folder such as OneDrive or Baidu Netdisk: that would copy the backups
+  off the school's computers, which pilot mode can't stop.
+- [ ] **Names on shared screens** is set the way the school wants (first name and last
+  initial by default in a pilot) before the first exit ticket or QR check-in.
 
 **At the end of the pilot.** Each teacher can open Settings → What leaves this computer →
 **Save pilot summary…** and send the file by hand, if they agree. It holds rough counts
@@ -93,7 +117,7 @@ off on every computer at once, edit the installed file to say `"pilotMode": fals
 
 ### 本地试点（中文）
 
-免费试点期间，**学生数据不会离开教师的电脑**。EduBoard 只作为桌面应用运行：不使用学生门户、AI、家长邮件、群聊和使用统计。所有在单台电脑上就能完成的功能（班级、名单、考勤、成绩册、教案、成绩单、备份，以及在学校 Wi-Fi 上使用的课堂工具）照常可用。所有网络连接及试点模式对每项连接的处理，见 [DATA_FLOWS.md](DATA_FLOWS.md)，或应用内的“设置 → 哪些数据会离开这台电脑”。
+免费试点期间，**有关学生的任何内容都不会发送到互联网、EduBoard 或任何外部公司**。EduBoard 只作为桌面应用运行：不使用学生门户、AI、家长邮件、群聊和使用统计。所有在单台电脑上就能完成的功能（班级、名单、考勤、成绩册、教案、成绩单、备份，以及在学校 Wi-Fi 上使用的课堂工具）照常可用。所有网络连接及试点模式对每项连接的处理，见 [DATA_FLOWS.md](DATA_FLOWS.md)，或应用内的“设置 → 哪些数据会离开这台电脑”。
 
 供学校签署的中英文试用协议见 [PILOT_AGREEMENT.md](PILOT_AGREEMENT.md)。
 
@@ -105,7 +129,15 @@ off on every computer at once, edit the installed file to say `"pilotMode": fals
 4. 为每位教师安装 EduBoard（`EduBoard-Setup.exe /S`）。首次启动时，侧边栏会显示**本地试点**，点击即可查看哪些功能已关闭。
 5. 教师的“入门指南”清单会跳过学生门户相关步骤；创建第一个班级后，EduBoard 会建议设置密码保护。建议教师开启，尤其是在共用电脑上，但这不是强制的。
 
-**仍会进行的连接。** EduBoard 会检查新版本（只向 GitHub 发送版本号），只有在教师点击“立即更新”时才会下载。出门条、扫码签到和课堂大屏只连接同一 Wi-Fi 下的手机，从不连接互联网；同一网络中拿到链接的人可以看到班级名单。
+**仍会进行的连接。** EduBoard 会检查新版本（只发送版本号，发往 GitHub；如果无法连接 GitHub，则发往 EduBoard 的更新镜像），只有在教师点击“立即更新”时才会下载，每个安装文件都会核对 SHA-256 校验值。当教师打开出门条、扫码签到或课堂大屏时，班级名单会通过普通 http（未加密）显示给学校自己的 Wi-Fi 中持有本次链接的设备，且仅在工具打开期间。姓名按“设置 → 哪些数据会离开这台电脑 → 共享屏幕上的姓名”中的选择显示：试点中默认为名字加姓氏首字母。每次使用都有新的链接，工具关闭后链接即失效；最后一个工具关闭后，课堂服务器随即停止。
+
+**使用真实学生数据之前。** 教师可以先用示例学校试用所有功能（创建第一个班级之前，“入门指南”卡片会建议这样做）。在任何人录入真实学生信息之前：
+
+- [ ] **学校已书面同意**，并写明哪些教师、哪些班级（[试用协议](PILOT_AGREEMENT.md)可作为这份记录）。
+- [ ] **哪台电脑：** 每位教师使用一台指定的电脑，最好是学校的电脑，而不是个人或共用电脑，并有自己的 Windows 或 Mac 登录账户。
+- [ ] **已开启密码保护**（设置 → 数据与安全 → 密码保护），使班级数据在这台电脑上加密；教师把恢复密钥另外妥善保存。
+- [ ] **备份：** 商定由谁保管、保存在哪里。EduBoard 每天在教师电脑上自动备份；第二份副本（设置 → 数据与安全 → 备份 → U 盘或学校网盘）保存在学校内部，并受同一密码保护。不要使用 OneDrive 或百度网盘等云同步文件夹：那会把备份复制到学校电脑之外，试点模式无法阻止。
+- [ ] 在第一次使用出门条或扫码签到之前，按学校的要求设置好**共享屏幕上的姓名**（试点中默认为名字加姓氏首字母）。
 
 **试点结束时。** 每位教师可以打开“设置 → 哪些数据会离开这台电脑 → **保存试点总结…**”，如果同意，再亲自把文件发出。文件只包含大致数字（班级和学生数量以范围表示、使用过哪些功能、使用天数、应用版本和操作系统），从不包含姓名、成绩或评语，教师保存前可以看到文件的完整内容。
 

@@ -245,7 +245,8 @@ function QrCheckInPanel({ classId }: { classId: string }): React.JSX.Element {
     qc.invalidateQueries({ queryKey: queryKeys.classRoster(classId) })
   }
 
-  const studentUrl = serverInfo?.url ? `${serverInfo.url}/a/${classId}` : null
+  // Made by the main process, with this session's token: a new link each time it opens.
+  const studentUrl = status?.url ?? null
 
   // Fetch the QR code once we have a URL to encode — during render, guarded, rather
   // than an effect, since it's a one-shot derived value keyed to the URL string.
