@@ -1,3 +1,4 @@
+import { portalConnected } from '@renderer/lib/pilot'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown, ChevronRight, RefreshCw, Send } from 'lucide-react'
@@ -30,7 +31,7 @@ export function PortalReportCards({
   studentCount: number
 }): React.JSX.Element {
   const { data: settings } = useSettings()
-  const connected = !!settings?.portalUrl.trim() && !!settings?.portalSyncSecret.trim()
+  const connected = portalConnected(settings)
   const deliveries = useReportCardDeliveries(classSection.id, connected)
   const send = useSendReportCards(classSection.id)
   const withdraw = useWithdrawReportCards(classSection.id)

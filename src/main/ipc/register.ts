@@ -174,6 +174,7 @@ import {
   studentNameKeys
 } from '@shared/studyProgress'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
+import { applyPilotSpellcheck, pilotRefusal } from '../services/pilotMode'
 import { isTrustedIpcSender } from './senderValidation'
 import {
   errorLogPath,
@@ -222,6 +223,10 @@ function handle<T>(channel: string, fn: (event: IpcMainInvokeEvent, ...args: any
     ) {
       throw toWindowError(new AppError('EB-0001', tr('EduBoard is locked.')), channel)
     }
+    // A local-only pilot refuses anything that would send data off this computer
+    // (shared/dataFlows.ts), whatever the window asks for.
+    const refused = pilotRefusal(channel)
+    if (refused) throw refused
     try {
       return await fn(event, ...args)
     } catch (err) {
@@ -654,7 +659,23 @@ export function registerIpcHandlers(): void {
     if (patch && 'appDisplayName' in patch) saveUiPrefs({ appName: saved.appDisplayName })
     if (patch && 'schoolLogo' in patch) applyWindowIcon(saved.schoolLogo)
     if (patch && ('appDisplayName' in patch || 'schoolLogo' in patch)) brandShortcuts()
-    if (patch && 'usagePing' in patch) usagePingSettingChanged(saved.usagePing === true)
+    if (patch && 'pilotMode' in patch) {
+      saveUiPrefs({ pilotMode: saved.pilotMode === true })
+      applyPilotSpellcheck(saved.pilotMode === true)
+      // A pilot sends no usage count: forget its random number too.
+      if (saved.pilotMode && saved.usagePing) {
+        settingsRepo.updateSettings({ usagePing: false })
+        usagePingSettingChanged(false)
+        return settingsRepo.getSettings()
+      }
+    }
+    if (patch && 'usagePing' in patch) {
+      // Pilot mode keeps it off, whatever is asked.
+      if (saved.pilotMode && saved.usagePing) {
+        return settingsRepo.updateSettings({ usagePing: false })
+      }
+      usagePingSettingChanged(saved.usagePing === true)
+    }
     return saved
   })
   handle(IpcChannels.settings.managedBranding, () => managedBranding())
@@ -1127,11 +1148,12 @@ export function registerIpcHandlers(): void {
   )
 
   // --- School pack ----------------------------------------------------------------------
-  handle(IpcChannels.schoolPack.export, async () => {
-    const pack = makeSchoolPack(settingsRepo.getSettings(), termsRepo.listTerms())
+  handle(IpcChannels.schoolPack.export, async (_e, preset?: unknown) => {
+    const kind = preset === 'pilot' ? 'pilot' : 'standard'
+    const pack = makeSchoolPack(settingsRepo.getSettings(), termsRepo.listTerms(), kind)
     const name = (pack.schoolName || 'school').replace(/[^\p{L}\p{N}-]+/gu, '_')
     const { canceled, filePath } = await showSaveDialogOnTop({
-      defaultPath: `${name}.eduboard-school.json`,
+      defaultPath: `${name}${kind === 'pilot' ? '-pilot' : ''}.eduboard-school.json`,
       filters: [{ name: tr('EduBoard school pack'), extensions: ['json'] }]
     })
     if (canceled || !filePath) return { saved: false }
@@ -1162,12 +1184,27 @@ export function registerIpcHandlers(): void {
     if (plan.settings.appDisplayName !== undefined) {
       saveUiPrefs({ appName: plan.settings.appDisplayName })
     }
+    if (plan.settings.uiLanguage) saveUiPrefs({ language: plan.settings.uiLanguage })
+    if (plan.settings.pilotMode !== undefined) {
+      saveUiPrefs({ pilotMode: plan.settings.pilotMode })
+      applyPilotSpellcheck(plan.settings.pilotMode)
+      if (plan.settings.pilotMode && settingsRepo.getSettings().usagePing) {
+        settingsRepo.updateSettings({ usagePing: false })
+        usagePingSettingChanged(false)
+      }
+    }
     if (plan.settings.schoolLogo !== undefined) applyWindowIcon(plan.settings.schoolLogo)
     if (plan.settings.appDisplayName !== undefined || plan.settings.schoolLogo !== undefined) {
       brandShortcuts()
     }
-    // New words only show once screens reload.
-    return { changes: plan.changes, reload: !!plan.settings.terminology }
+    // New words, a new language or pilot mode only show once screens reload.
+    return {
+      changes: plan.changes,
+      reload:
+        !!plan.settings.terminology ||
+        !!plan.settings.uiLanguage ||
+        plan.settings.pilotMode !== undefined
+    }
   })
   handle(IpcChannels.schoolPack.importCss, async () => {
     if (lockedBrandingKeys().includes('customCss')) return null

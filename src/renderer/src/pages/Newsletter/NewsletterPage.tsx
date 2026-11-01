@@ -1,3 +1,4 @@
+import { useOutbound } from '@renderer/lib/pilot'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Copy, FileText, Mail, Megaphone, MessagesSquare, Sparkles, Wand2 } from 'lucide-react'
@@ -83,6 +84,7 @@ export function NewsletterPage(): React.JSX.Element {
       // A draft that isn't kept is only an inconvenience.
     })
   }
+  const ai = useOutbound('desktopAi')
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -272,8 +274,11 @@ export function NewsletterPage(): React.JSX.Element {
               <Button
                 variant="secondary"
                 size="sm"
-                disabled={!keep.length || !!busy}
-                title={tr('Uses your AI provider (Settings), so it needs an internet connection')}
+                disabled={!keep.length || !!busy || ai.blocked}
+                title={
+                  ai.reason ??
+                  tr('Uses your AI provider (Settings), so it needs an internet connection')
+                }
                 onClick={() =>
                   run('ai', async () => {
                     setDraft(

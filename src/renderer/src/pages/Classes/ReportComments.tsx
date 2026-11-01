@@ -1,3 +1,4 @@
+import { useOutbound } from '@renderer/lib/pilot'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -87,6 +88,7 @@ function CommentRow({
   const [bankOpen, setBankOpen] = useState(false)
   const [suggestions, setSuggestions] = useState<PhraseSuggestion[] | null>(null)
   const [suggesting, setSuggesting] = useState(false)
+  const ai = useOutbound('desktopAi')
   const [aiError, setAiError] = useState<string | null>(null)
   const name = row.student.preferredName?.trim() || row.student.firstName
   const fullName = `${name} ${row.student.lastName}`
@@ -165,8 +167,11 @@ function CommentRow({
             variant="ghost"
             size="sm"
             onClick={suggest}
-            disabled={suggesting}
-            title={tr('Uses your AI provider (Settings), so it needs an internet connection')}
+            disabled={suggesting || ai.blocked}
+            title={
+              ai.reason ??
+              tr('Uses your AI provider (Settings), so it needs an internet connection')
+            }
           >
             <Sparkles size={13} className="mr-1 inline" aria-hidden />
             {suggesting ? tr('Thinking…') : tr('Suggest phrases')}

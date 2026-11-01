@@ -964,6 +964,11 @@ export interface AppSettings {
   /** Send an anonymous weekly "still using it" ping (shared/usagePing.ts). Off unless
    * the teacher turns it on. */
   usagePing: boolean
+  /** Local-only pilot: nothing about the teacher's classes leaves this computer. Turns off
+   * the Portal, AI, the email digest, group chats, the usage ping and the spelling
+   * dictionary download, in the main process as well as the window (shared/dataFlows.ts,
+   * main/services/pilotMode.ts). Off unless a school pack turns it on. */
+  pilotMode: boolean
   /** Send this app's name and logo when publishing, for the Portal to show families
    * (portal/services/branding.js). On unless the teacher turns it off. */
   portalBranding: boolean
@@ -1180,6 +1185,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   pointCategories: [],
   groupChats: [],
   usagePing: false,
+  pilotMode: false,
   portalBranding: true,
   teacherEmail: '',
   savedTemplates: [],

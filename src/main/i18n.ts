@@ -30,6 +30,9 @@ interface StoredPrefs {
   language: UiLanguage | ''
   terminology: Terminology
   appName: string
+  /** A copy of the pilotMode setting, so a local-only pilot holds even while an
+   * encrypted database is still locked (main/services/pilotMode.ts). */
+  pilotMode?: boolean
 }
 
 function prefsFile(): string {
@@ -43,13 +46,19 @@ function readStored(): StoredPrefs {
       return {
         language: raw.language === 'en' || raw.language === 'zh' ? raw.language : '',
         terminology: raw.terminology && typeof raw.terminology === 'object' ? raw.terminology : {},
-        appName: cleanAppName(raw.appName)
+        appName: cleanAppName(raw.appName),
+        pilotMode: raw.pilotMode === true
       }
     }
   } catch {
     // Unreadable: fall back to the computer's language and the usual words.
   }
-  return { language: '', terminology: {}, appName: '' }
+  return { language: '', terminology: {}, appName: '', pilotMode: false }
+}
+
+/** The copy of the pilotMode setting, for before the database can be read. */
+export function storedPilotMode(): boolean {
+  return readStored().pilotMode === true
 }
 
 /** The language chosen here (or the computer's own) and the school's words. */
@@ -80,19 +89,21 @@ function applyUiPrefs(): void {
   setTerminology(prefs.terminology)
 }
 
-/** The file is a copy of three settings, kept for before the database opens. Once it's
+/** The file is a copy of four settings, kept for before the database opens. Once it's
  * open (after a restore, say, or an older copy), make the file match the settings.
  * Returns true if anything changed, so open windows can reload. */
 export function syncUiPrefsWithSettings(settings: {
   uiLanguage: UiLanguage | ''
   terminology: Terminology
   appDisplayName?: string
+  pilotMode?: boolean
 }): boolean {
   const stored = readStored()
   const wanted: StoredPrefs = {
     language: settings.uiLanguage,
     terminology: settings.terminology ?? {},
-    appName: cleanAppName(settings.appDisplayName)
+    appName: cleanAppName(settings.appDisplayName),
+    pilotMode: settings.pilotMode === true
   }
   if (JSON.stringify(stored) === JSON.stringify(wanted)) return false
   saveUiPrefs(wanted)

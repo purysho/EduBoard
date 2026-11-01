@@ -1,3 +1,4 @@
+import { assertOutboundAllowed } from './pilotMode'
 import { tr } from '@shared/i18n'
 import { AppError, type AppErrorCode } from '@shared/errorCodes'
 // Turns a failed Portal response into a sentence a teacher can act on. Servers (and
@@ -78,6 +79,8 @@ export async function portalFailure(action: string, res: Response): Promise<AppE
 /** fetch() for the Portal: a failure to connect at all (offline, wrong address, server
  * down, blocked) becomes EB-1003 in plain words instead of "fetch failed". */
 export async function portalFetch(url: string, init?: RequestInit): Promise<Response> {
+  // Local-only pilot: never reaches the Portal, whoever asks.
+  assertOutboundAllowed('portal')
   try {
     return await fetch(url, init)
   } catch (err) {

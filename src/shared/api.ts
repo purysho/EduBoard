@@ -1,3 +1,4 @@
+import type { SchoolPackPreset } from './schoolPack'
 import type { ClassAiProfile } from './classAiProfile'
 import type { StudyHelperRules } from './studyHelperRules'
 import type { CreateUnitLessonsInput, DraftedUnitPlan, DraftUnitPlanInput } from './unitPlan'
@@ -467,8 +468,9 @@ export interface EduBoardApi {
     summary(classId: string, studentId: string): Promise<PointSummaryItem[]>
   }
   schoolPack: {
-    /** Saves this computer's school-wide settings and terms as a school pack file. */
-    export(): Promise<{ saved: boolean; filePath?: string }>
+    /** Saves this computer's school-wide settings and terms as a school pack file. A
+     * 'pilot' pack also turns on local-only pilot mode and sets the interface language. */
+    export(preset?: SchoolPackPreset): Promise<{ saved: boolean; filePath?: string }>
     /** Asks for a pack file and lists what importing it would change (nothing applied). */
     preview(): Promise<{
       filePath: string

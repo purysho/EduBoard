@@ -1,3 +1,4 @@
+import { DATA_FLOWS_ROUTE, portalConnected } from '@renderer/lib/pilot'
 import { appInitials, displayAppName, PRODUCT_NAME } from '@shared/branding'
 import { Link, NavLink } from 'react-router-dom'
 import {
@@ -85,7 +86,7 @@ export function Sidebar(): React.JSX.Element {
   // PortalNotConfiguredError in the main process and floods the dev console. No badge
   // is a perfectly normal state here, not worth surfacing.
   const { data: settings } = useSettings()
-  const portalConfigured = Boolean(settings?.portalUrl.trim() && settings?.portalSyncSecret.trim())
+  const portalConfigured = portalConnected(settings)
   const { data: threads } = usePortalMessageThreads({ enabled: portalConfigured })
   const unreadMessages = threads?.reduce((sum, t) => sum + t.unread, 0) ?? 0
   // Stays until the new version is running: downloading, waiting to install, or (when
@@ -169,6 +170,16 @@ export function Sidebar(): React.JSX.Element {
           </Link>
         )}
       </div>
+      {settings?.pilotMode && (
+        <Link
+          to={DATA_FLOWS_ROUTE}
+          title={tr('Nothing about your classes leaves this computer. See what is turned off.')}
+          className="mx-4 mb-3 flex items-center gap-1.5 rounded-lg border border-[var(--color-success)] bg-[var(--color-success-soft)] px-2.5 py-1 text-xs font-medium text-[var(--color-success)] hover:opacity-90"
+        >
+          <ShieldCheck size={13} aria-hidden />
+          {tr('Local-only pilot')}
+        </Link>
+      )}
       <nav className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3">
         {navGroups.map((group) => (
           <div key={group.heading ?? 'main'} className="flex flex-col gap-0.5">

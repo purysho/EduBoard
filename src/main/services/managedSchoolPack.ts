@@ -53,6 +53,7 @@ function brandingFrom(pack: ReturnType<typeof parseSchoolPack>): Partial<AppSett
   if (pack.schoolLogo) values.schoolLogo = pack.schoolLogo
   if (pack.accentColor !== undefined) values.accentColor = pack.accentColor
   if (pack.customCss !== undefined) values.customCss = pack.customCss
+  if (pack.pilotMode !== undefined) values.pilotMode = pack.pilotMode
   return values
 }
 
@@ -100,10 +101,27 @@ export function applyManagedPackFile(filePath: string): ManagedBranding | null {
  * The sample school is left alone (it's made up, with its own made-up school). */
 export function applyManagedSchoolPack(): ManagedBranding | null {
   current = null
-  if (isSampleSchool()) return null
   const file = managedPackCandidates().find((p) => existsSync(p))
-  if (file) current = applyManagedPackFile(file)
+  if (!file) return null
+  if (isSampleSchool()) {
+    // The sample school keeps its own made-up branding, but a local-only pilot holds
+    // there too: nothing should leave a pilot computer, made-up data or not.
+    current = applyManagedPilotModeOnly(file)
+    return current
+  }
+  current = applyManagedPackFile(file)
   return current
+}
+
+function applyManagedPilotModeOnly(filePath: string): ManagedBranding | null {
+  try {
+    const pack = parseSchoolPack(readFileSync(filePath, 'utf8'))
+    if (pack.pilotMode === undefined) return null
+    if (getSettings().pilotMode !== pack.pilotMode) updateSettings({ pilotMode: pack.pilotMode })
+    return { filePath, locked: ['pilotMode'] }
+  } catch {
+    return null
+  }
 }
 
 export function managedBranding(): ManagedBranding | null {

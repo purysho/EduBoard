@@ -10,6 +10,7 @@ import {
 } from '@shared/groupChats'
 import { getSettings } from '../repositories/settingsRepo'
 import { tr } from '@shared/i18n'
+import { assertOutboundAllowed } from './pilotMode'
 
 /** The address to post to: the webhook, plus DingTalk's timestamp and signature when the
  * robot uses signing (HMAC-SHA256 of "timestamp\nsecret", keyed by the secret). */
@@ -30,6 +31,7 @@ export async function sendToGroupChat(
   doFetch: typeof fetch = fetch,
   now = Date.now()
 ): Promise<void> {
+  assertOutboundAllowed('groupChats')
   const kind = groupChatKind(group.webhook)
   if (!kind) throw new AppError('EB-6001', tr('That isn’t a DingTalk or WeCom robot address.'))
   if (!text.trim()) throw new AppError('EB-6002', tr('There’s nothing to send.'))

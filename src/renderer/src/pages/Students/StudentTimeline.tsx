@@ -1,3 +1,4 @@
+import { portalConnected } from '@renderer/lib/pilot'
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -157,7 +158,7 @@ export function StudentTimeline({ student }: { student: Student }): React.JSX.El
     queryFn: () => window.api.studentTimeline.get(student.id)
   })
   const { data: settings } = useSettings()
-  const connected = !!settings?.portalUrl.trim() && !!settings?.portalSyncSecret.trim()
+  const connected = portalConnected(settings)
   const { data: threads } = usePortalMessageThreads({ enabled: connected })
 
   const [hidden, setHidden] = useState<Set<Group>>(new Set())

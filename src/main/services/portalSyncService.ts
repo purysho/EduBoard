@@ -1,3 +1,4 @@
+import { pilotModeOn } from './pilotMode'
 import { AppError } from '@shared/errorCodes'
 import { createHash } from 'crypto'
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
@@ -96,6 +97,9 @@ function checkHomeworkFile(filePath: string | null): AttachmentCheck | null {
 }
 
 function requirePortalConfig(): { portalUrl: string; portalSyncSecret: string } {
+  // In a local-only pilot there is no Portal: deleting or merging a student, say, does
+  // its local part and skips the Portal's.
+  if (pilotModeOn()) throw new PortalNotConfiguredError()
   const settings = getSettings()
   const portalUrl = normalizePortalUrl(settings.portalUrl)
   const portalSyncSecret = settings.portalSyncSecret.trim()
@@ -198,9 +202,7 @@ function buildPublishPayload(): {
     if (file && !file.ok) {
       skipped.push(
         `${resource.title} (${
-          file.reason === 'too_large'
-            ? tr('over 25 MB')
-            : tr('file not found on this computer')
+          file.reason === 'too_large' ? tr('over 25 MB') : tr('file not found on this computer')
         })`
       )
     }
@@ -216,8 +218,7 @@ function buildPublishPayload(): {
       sourceType: resource.type,
       sourceUrl: resource.type === 'link' ? resource.url : null,
       sourceText: resource.type === 'note' ? resource.notes : null,
-      fileName:
-        resource.type === 'file' && resource.filePath ? basename(resource.filePath) : null,
+      fileName: resource.type === 'file' && resource.filePath ? basename(resource.filePath) : null,
       fileHash: publishedFile?.hash ?? null,
       chunksHash: chunks.length ? sha256(JSON.stringify(chunks)) : null
     })
@@ -466,7 +467,8 @@ function currentFingerprint(): string {
 
 async function publishOnce(): Promise<Omit<PublishResult, 'studentsJoined'>> {
   const { portalUrl, portalSyncSecret } = requirePortalConfig()
-  const { body, attachmentPaths, materialFilePaths, materialChunks, skipped } = buildPublishPayload()
+  const { body, attachmentPaths, materialFilePaths, materialChunks, skipped } =
+    buildPublishPayload()
   const res = await portalFetch(`${portalUrl}/api/sync`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Sync-Secret': portalSyncSecret },

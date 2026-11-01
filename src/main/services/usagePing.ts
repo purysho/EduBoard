@@ -6,6 +6,7 @@ import { listClasses } from '../repositories/classes'
 import { listStudents } from '../repositories/students'
 import { getSettings, getStoredValue, setStoredValue } from '../repositories/settingsRepo'
 import { uiLanguage } from '@shared/i18n'
+import { pilotModeOn } from './pilotMode'
 import {
   USAGE_PING_URL,
   classBand,
@@ -48,6 +49,8 @@ export async function sendUsagePingIfDue(
   doFetch: typeof fetch = fetch
 ): Promise<boolean> {
   try {
+    // Local-only pilot: no usage count leaves this computer, even if it was on before.
+    if (pilotModeOn()) return false
     const on = getSettings().usagePing === true
     if (!usagePingDue(on, getStoredValue<string>(LAST_KEY), now)) return false
     const ping = usagePingPreview()

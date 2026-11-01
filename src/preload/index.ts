@@ -293,7 +293,7 @@ const api: EduBoardApi = {
     summary: (classId, studentId) => invoke(IpcChannels.behaviourPoints.summary, classId, studentId)
   },
   schoolPack: {
-    export: () => invoke(IpcChannels.schoolPack.export),
+    export: (preset) => invoke(IpcChannels.schoolPack.export, preset),
     preview: () => invoke(IpcChannels.schoolPack.preview),
     apply: (filePath) => invoke(IpcChannels.schoolPack.apply, filePath),
     importCss: () => invoke(IpcChannels.schoolPack.importCss),
