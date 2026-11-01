@@ -26,6 +26,7 @@ A complete walkthrough from downloading EduBoard to running your first term with
 - [Word, PowerPoint and Excel](#word-powerpoint-and-excel)
 - [Your school's look and settings](#your-schools-look-and-settings)
 - [Password protection](#password-protection)
+- [What leaves this computer, and local-only pilots](#what-leaves-this-computer-and-local-only-pilots)
 - [Presenting on a projector](#presenting-on-a-projector)
 - [A student's or family's data request](#a-students-or-familys-data-request)
 - [Backing up your data](#backing-up-your-data)
@@ -45,7 +46,7 @@ You have two options:
 - **Portable (recommended for USB use)** — downloads `EduBoard-Portable.exe`. Put it anywhere (Desktop, a folder, a USB stick) and double-click it. Nothing is installed; EduBoard creates a small `EduBoard-data` folder right next to the exe the first time it runs, and that's where your database lives from then on. Copy the exe *and* that data folder together if you move to another computer.
 - **Installer** — downloads `EduBoard-Setup.exe`, from the [Releases page](https://github.com/purysho/EduBoard/releases/latest). Runs a normal Windows install with a Start Menu shortcut. Your data then lives in your Windows user profile instead of next to the app.
 
-The first time you run either one, Windows SmartScreen will likely show **"Windows protected your PC."** This happens because the build isn't code-signed (a signing certificate costs money we don't need to spend for a personal tool) — it does **not** mean anything is wrong with the app. Click **More info**, then **Run anyway**.
+The first time you run either one, Windows SmartScreen will likely show **"Windows protected your PC."** This happens because the build isn't code-signed yet (a Windows signing certificate is on the way) — it does **not** mean anything is wrong with the app. Click **More info**, then **Run anyway**. If your school's computers block unsigned programs, ask IT to allow `EduBoard-Setup.exe`; [School deployment](SCHOOL_DEPLOYMENT.md) has a silent install for them.
 
 ### macOS
 
@@ -463,6 +464,30 @@ After five wrong tries, EduBoard makes you wait 30 seconds between tries.
 **Backups** of a protected database are encrypted too. Each one keeps a copy of the lock it was made with, so a backup still restores after you change your password; EduBoard then asks for the password you had when the backup was made, or that time's recovery key. Backups made **before** you turned protection on can still be read without a password: the Password protection panel counts them and offers **Delete unprotected backups**.
 
 **Change password** keeps the same recovery key. **Turn off** decrypts your data again (it asks for your password first).
+
+## What leaves this computer, and local-only pilots
+
+Settings → **What leaves this computer** lists every connection EduBoard can make: where
+it goes, what it sends, when, whether it's on by default, and what happens to it in a
+local-only pilot. Everything else stays in the database on your computer. Your school's
+IT can read the same list in [DATA_FLOWS.md](DATA_FLOWS.md).
+
+**Local-only pilot.** When your school is trying EduBoard out, it may install a pilot
+pack, and the sidebar then shows a green **Local-only pilot** badge. Nothing about your
+classes or students leaves the computer: the Portal, AI, the weekly email to families,
+group chats and the usage count are turned off and greyed out, with the reason on each.
+Everything else works as usual (classes, attendance, gradebook, lesson plans, report
+cards, seating, exit tickets and QR check-in on the school Wi-Fi, backups). EduBoard still
+checks for new versions, which sends only its version number, and downloads one only
+when you press **Update now**. Your Getting started checklist skips the Portal steps, and
+after your first class EduBoard suggests a password; in a pilot we strongly recommend
+one.
+
+**At the end of a pilot,** the same page has **Save pilot summary…**: a small file with
+rough counts only (how many classes and students as ranges, which features you used,
+roughly how many days), never names, grades or comments. You see the whole file before
+saving it, and you decide whether to send it to whoever runs the pilot. EduBoard never
+sends it.
 
 ## Presenting on a projector
 

@@ -54,6 +54,9 @@ gradebook, lesson plans, report cards, backups, the classroom tools on the schoo
 works as usual. The full list of connections, and what pilot mode does with each, is in
 [DATA_FLOWS.md](DATA_FLOWS.md) and in the app under Settings → What leaves this computer.
 
+A plain pilot agreement for the school to sign, in English and Chinese, is in
+[PILOT_AGREEMENT.md](PILOT_AGREEMENT.md).
+
 **Set it up (about 15 minutes per school)**
 
 1. On one computer, install EduBoard and set it up the way the school wants: Settings →
@@ -91,6 +94,8 @@ off on every computer at once, edit the installed file to say `"pilotMode": fals
 ### 本地试点（中文）
 
 免费试点期间，**学生数据不会离开教师的电脑**。EduBoard 只作为桌面应用运行：不使用学生门户、AI、家长邮件、群聊和使用统计。所有在单台电脑上就能完成的功能（班级、名单、考勤、成绩册、教案、成绩单、备份，以及在学校 Wi-Fi 上使用的课堂工具）照常可用。所有网络连接及试点模式对每项连接的处理，见 [DATA_FLOWS.md](DATA_FLOWS.md)，或应用内的“设置 → 哪些数据会离开这台电脑”。
+
+供学校签署的中英文试用协议见 [PILOT_AGREEMENT.md](PILOT_AGREEMENT.md)。
 
 **设置步骤（每所学校约 15 分钟）**
 

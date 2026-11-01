@@ -1,5 +1,6 @@
 // Asked once, right after the teacher creates their first class: protect the classes
 // with a password? Strongly recommended in a local-only pilot, never forced.
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
 import { Modal } from '@renderer/components/ui/Modal'
@@ -12,13 +13,15 @@ export function PasswordPrompt(): React.JSX.Element | null {
   const { data: status } = useSecurityStatus()
   const update = useUpdateSettings()
   const navigate = useNavigate()
-  if (!settings?.passwordPromptDue || !status || status.locked) return null
-  // Already protected (set from the checklist, say): nothing to ask.
-  if (status.protected) {
-    if (!update.isPending) update.mutate({ passwordPromptDue: false })
-    return null
-  }
-  const pilot = settings.pilotMode === true
+  const due = settings?.passwordPromptDue === true
+  const alreadyProtected = status?.protected === true
+  // Already protected (set from the checklist, say): nothing to ask, so clear it.
+  useEffect(() => {
+    if (due && alreadyProtected) update.mutate({ passwordPromptDue: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [due, alreadyProtected])
+  if (!due || !status || status.locked || status.protected) return null
+  const pilot = settings?.pilotMode === true
   const answer = (turnOn: boolean): void => {
     update.mutate({ passwordPromptDue: false })
     if (turnOn) navigate('/settings?section=data&focus=security')
