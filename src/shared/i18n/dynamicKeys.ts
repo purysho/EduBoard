@@ -2,9 +2,14 @@
 // category stored in English, an action name passed along), so the coverage test can't
 // see it at the call. Listed here so the test checks these have translations too.
 import { COMMENT_CATEGORIES } from '../commentBank'
+import { DATA_FLOW_TEXTS } from '../dataFlows'
+import { PILOT_SUMMARY_TEXTS } from '../pilotSummary'
 
 export const DYNAMIC_KEYS: readonly string[] = [
   ...COMMENT_CATEGORIES,
+  // Settings → What leaves this computer, and the pilot summary.
+  ...DATA_FLOW_TEXTS,
+  ...PILOT_SUMMARY_TEXTS,
   // Month and weekday abbreviations mapped through tr() in lists.
   'Jan',
   'Feb',

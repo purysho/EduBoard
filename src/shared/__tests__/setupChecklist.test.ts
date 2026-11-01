@@ -10,6 +10,8 @@ const fresh: SetupProgress = {
   inviteBatchCount: 0,
   sharedResourceCount: 0,
   aiConfigured: false,
+  passwordProtected: false,
+  pilotMode: false,
   firstClassId: null
 }
 
@@ -50,7 +52,11 @@ describe('setupSteps', () => {
       firstClassId: 'c1'
     })
     expect(setupComplete(steps)).toBe(true)
-    expect(steps.filter((s) => s.optional && !s.done).map((s) => s.id)).toEqual(['materials', 'ai'])
+    expect(steps.filter((s) => s.optional && !s.done).map((s) => s.id)).toEqual([
+      'password',
+      'materials',
+      'ai'
+    ])
   })
 
   it('asks for terms first, and isn’t complete until there is one', () => {
@@ -68,5 +74,42 @@ describe('setupSteps', () => {
     })
     expect(setupComplete(allButTerms)).toBe(false)
     expect(setupSteps({ ...fresh, termCount: 1 })[0].done).toBe(true)
+  })
+
+  it('reaches 100% without a Portal in a local-only pilot', () => {
+    const pilot = { ...fresh, pilotMode: true }
+    const ids = setupSteps(pilot).map((s) => s.id)
+    for (const portalStep of ['portal', 'invites', 'homework', 'materials', 'ai']) {
+      expect(ids).not.toContain(portalStep)
+    }
+    const done = setupSteps({
+      ...pilot,
+      termCount: 1,
+      classCount: 1,
+      activeEnrollmentCount: 20,
+      firstClassId: 'c1'
+    })
+    // No Portal, no invites, nothing published: still all set up.
+    expect(setupComplete(done)).toBe(true)
+    const essentials = done.filter((s) => !s.optional)
+    expect(essentials.every((s) => s.done)).toBe(true)
+    // The password is strongly suggested, but not needed to finish.
+    expect(done.find((s) => s.id === 'password')).toMatchObject({
+      done: false,
+      optional: true,
+      recommended: true
+    })
+  })
+
+  it('still asks for the Portal outside a pilot', () => {
+    const steps = setupSteps({
+      ...fresh,
+      termCount: 1,
+      classCount: 1,
+      activeEnrollmentCount: 20,
+      firstClassId: 'c1'
+    })
+    expect(setupComplete(steps)).toBe(false)
+    expect(steps.find((s) => s.id === 'password')?.recommended).toBe(false)
   })
 })

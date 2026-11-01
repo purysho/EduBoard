@@ -14,6 +14,10 @@ export interface SetupProgress {
   inviteBatchCount: number
   sharedResourceCount: number
   aiConfigured: boolean
+  /** Classes are protected with a password (Settings → Data and security). */
+  passwordProtected: boolean
+  /** Local-only pilot: the Portal and AI are off, so their steps aren't shown. */
+  pilotMode: boolean
   /** Where class-specific steps link to: the first active class, if any. */
   firstClassId: string | null
 }
@@ -24,12 +28,23 @@ export interface SetupStep {
   description: string
   done: boolean
   optional: boolean
+  /** Optional, but strongly suggested (a password in a local-only pilot). */
+  recommended?: boolean
   /** In-app route for the step's button. */
   to: string
   actionLabel: string
 }
 
+/** Steps that need the Portal or AI: not shown in a local-only pilot, where they can't
+ * be done, so a teacher can finish the checklist without them. */
+const NEEDS_INTERNET = new Set(['portal', 'invites', 'homework', 'materials', 'ai'])
+
 export function setupSteps(p: SetupProgress): SetupStep[] {
+  const steps = allSetupSteps(p)
+  return p.pilotMode ? steps.filter((s) => !NEEDS_INTERNET.has(s.id)) : steps
+}
+
+function allSetupSteps(p: SetupProgress): SetupStep[] {
   // Class-specific steps open the first class; until one exists, the Classes page.
   const cls = p.firstClassId ? `/classes/${p.firstClassId}` : null
   // In the order a teacher can do them: the Portal before anything that goes on it.
@@ -63,6 +78,22 @@ export function setupSteps(p: SetupProgress): SetupStep[] {
       optional: false,
       to: cls ?? '/classes',
       actionLabel: tr('Open roster')
+    },
+    {
+      id: 'password',
+      title: tr('Protect your class data with a password'),
+      description: p.pilotMode
+        ? tr(
+            'Strongly recommended in a pilot: your classes are then encrypted on this computer, and EduBoard asks for the password when it opens. You get a recovery key in case you forget it.'
+          )
+        : tr(
+            'Your classes are then encrypted on this computer, and EduBoard asks for the password when it opens. You get a recovery key in case you forget it.'
+          ),
+      done: p.passwordProtected,
+      optional: true,
+      recommended: p.pilotMode,
+      to: '/settings?section=data&focus=security',
+      actionLabel: tr('Set a password')
     },
     {
       id: 'portal',

@@ -112,7 +112,7 @@ async function go(page, route) {
     '/curriculum',
     '/weekly-summary',
     '/newsletter',
-    ...['general', 'appearance', 'grading', 'lists', 'portal', 'ai', 'data', 'help'].map(
+    ...['general', 'appearance', 'grading', 'lists', 'portal', 'ai', 'data', 'privacy', 'help'].map(
       (s) => `/settings?section=${s}`
     )
   ]
@@ -249,6 +249,18 @@ async function go(page, route) {
     /#\/classes\/[^/]+$/.test(page.url()) && (await page.getByText('Form class').count()) > 0,
     'saving a new class opens it'
   )
+  // The first class: EduBoard asks once whether to protect the classes with a password.
+  check(
+    (await page.getByText('Protect your class data with a password?').count()) > 0,
+    'the first class brings the one-time password offer'
+  )
+  await page.getByRole('button', { name: /^Later$/ }).click()
+  await page.waitForTimeout(300)
+  check(
+    (await page.getByText('Protect your class data with a password?').count()) === 0 &&
+      (await page.evaluate(() => window.api.settings.get())).passwordPromptDue === false,
+    'Later closes the password offer for good'
+  )
 
   const grade = await page.evaluate(async () => {
     const api = window.api
@@ -329,6 +341,41 @@ async function go(page, route) {
   check(JSON.stringify(status.on).includes('true'), 'password protection turns on')
   check(status.classes === 2, 'after locking and unlocking, the classes are still there')
   check(JSON.stringify(status.off) !== JSON.stringify(status.on), 'password protection turns off')
+
+  // Local-only pilot: the badge shows, Portal settings are greyed out, and the main
+  // process refuses a Portal call even when asked directly.
+  await page.evaluate(() =>
+    window.api.settings.update({
+      pilotMode: true,
+      portalUrl: 'https://portal.example.invalid',
+      portalSyncSecret: 'synthetic'
+    })
+  )
+  // Changed behind the window's back, so let it read the settings afresh.
+  await page.evaluate(() => window.location.reload())
+  await page.waitForTimeout(1500)
+  await go(page, '/settings?section=portal')
+  check(
+    (await page.getByRole('link', { name: /Local-only pilot/ }).count()) > 0 &&
+      (await page.locator('fieldset[disabled]').count()) > 0,
+    'pilot mode shows its badge and greys out the Portal settings'
+  )
+  const refused = await page.evaluate(() =>
+    window.api.portalSync.publish().then(
+      () => 'sent',
+      (e) => String(e?.message ?? e)
+    )
+  )
+  check(/EB-7001/.test(refused), 'pilot mode refuses publishing in the main process')
+  await page.getByRole('link', { name: /Local-only pilot/ }).first().click()
+  await page.waitForTimeout(500)
+  check(
+    (await page.getByText('Every connection EduBoard can make').count()) > 0 &&
+      (await page.getByText('Exactly what the file contains').count()) > 0,
+    'the badge opens What leaves this computer, with the pilot summary'
+  )
+  await page.evaluate(() => window.api.settings.update({ pilotMode: false, portalUrl: '' }))
+
   check(errors.length === 0, 'no script errors in the window')
   if (errors.length) console.log('     ', errors.join(' | '))
   await close()

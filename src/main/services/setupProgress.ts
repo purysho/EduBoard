@@ -2,6 +2,7 @@ import { getSqlite } from '../db/client'
 import { getSettings } from '../repositories/settingsRepo'
 import { portalUrlProblem } from '@shared/portalUrl'
 import type { SetupProgress } from '@shared/setupChecklist'
+import { isProtected } from './security'
 
 /** The facts behind the Dashboard's "Getting started" checklist, read straight from the
  * database and settings so each step reflects what's really been done. */
@@ -42,6 +43,8 @@ export function getSetupProgress(): SetupProgress {
       'SELECT COUNT(*) AS n FROM lesson_resources WHERE share_with_students = 1 AND class_id IS NOT NULL'
     ),
     aiConfigured,
+    passwordProtected: isProtected(),
+    pilotMode: settings.pilotMode === true,
     firstClassId: firstClass?.id ?? null
   }
 }

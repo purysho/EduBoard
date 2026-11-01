@@ -2,6 +2,20 @@
 
 All notable changes to EduBoard are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- **Local-only pilot mode,** for free desktop pilots where no student data leaves the teacher's computer. A pilot school pack turns it on (off by default). The Portal (publishing, syncing and every Portal screen), all AI (in the app and, since nothing is published, on the Portal), the weekly email to families, DingTalk and WeCom posts and the usage count are turned off and greyed out with the reason. It's enforced in the main process: every IPC call for a turned-off connection is refused with the new code EB-7001, and the Portal, AI and group-chat code checks again before sending. Electron's spelling-dictionary download from Google is pointed away from the internet too. A copy of the setting is kept beside the database, so it holds while an encrypted database is still locked. The update check stays on (it sends only the version number), goes straight to GitHub instead of through a Portal, and downloads only when the teacher presses Update now. A **Local-only pilot** badge in the sidebar opens the list of what's off.
+- **Settings → What leaves this computer** (English and Chinese): every network connection EduBoard can make, with where it goes, what it sends, when, the default and what pilot mode does with it, from one list in `src/shared/dataFlows.ts`. `docs/DATA_FLOWS.md`, for school IT, is generated from the same list (`npm run data-flows`), and a test fails if they differ or if an IPC handler that calls a network service is missing from it.
+- **Pilot summary:** one button saves a JSON file with counts only (classes and students as ranges, which features were used as ranges, days active as a range, app version, system, language). No names, grades or free text, and the teacher sees the whole file before saving and sends it by hand.
+- **Pilot pack:** Settings → School pack → Export pilot pack makes a school pack that also turns on pilot mode and sets the interface language. Installed with Install-School-Pack.cmd, pilot mode is locked on, like the school's name and logo. `docs/SCHOOL_DEPLOYMENT.md` has a one-page pilot setup guide in English and Chinese.
+- **Password protection on first run:** the Getting started checklist has a password step (marked recommended in a pilot), and after the first class is created EduBoard asks once, "Protect your class data with a password?" (Turn on / Later). It's never forced.
+
+### Changed
+
+- In pilot mode the Getting started checklist leaves out the Portal, invite, publish, shared-material and AI steps, so a teacher reaches 100% without a Portal. The sample-school button stays.
+
 ## [0.7.10] — 2026-10-07
 
 ### Fixed

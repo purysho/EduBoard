@@ -942,6 +942,9 @@ export interface AppSettings {
   digestFromName: string
   /** The teacher hid the Dashboard's Getting started checklist. */
   onboardingDismissed: boolean
+  /** Set when the first class is created: ask once whether to protect the classes with a
+   * password. Cleared when the teacher answers (Turn on or Later). */
+  passwordPromptDue: boolean
   /** A second place backups are copied to (a cloud-synced folder or USB stick), so a
    * lost or broken computer doesn't take the backups with it. Empty means none. */
   extraBackupFolder: string
@@ -1166,6 +1169,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   digestFromEmail: '',
   digestFromName: '',
   onboardingDismissed: false,
+  passwordPromptDue: false,
   extraBackupFolder: '',
   autoUpdate: true,
   autoLockMinutes: 10,

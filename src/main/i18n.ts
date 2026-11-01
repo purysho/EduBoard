@@ -107,7 +107,9 @@ export function syncUiPrefsWithSettings(settings: {
   }
   if (JSON.stringify(stored) === JSON.stringify(wanted)) return false
   saveUiPrefs(wanted)
-  return true
+  // Only the window's words need a reload; the pilot copy is read by the main process.
+  const shown = (p: StoredPrefs): string => JSON.stringify([p.language, p.terminology, p.appName])
+  return shown(stored) !== shown(wanted)
 }
 
 export function initUiLanguage(): void {

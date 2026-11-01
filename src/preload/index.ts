@@ -449,6 +449,10 @@ const api: EduBoardApi = {
   usagePing: {
     preview: () => invoke(IpcChannels.usagePing.preview)
   },
+  pilotSummary: {
+    preview: () => invoke(IpcChannels.pilotSummary.preview),
+    save: () => invoke(IpcChannels.pilotSummary.save)
+  },
   groupChats: {
     send: (groupId, text, title) => invoke(IpcChannels.groupChats.send, groupId, text, title),
     route: (groupId, text, title) => invoke(IpcChannels.groupChats.route, groupId, text, title),

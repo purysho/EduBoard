@@ -38,7 +38,7 @@ export function SecurityPanel(): React.JSX.Element {
   }
 
   return (
-    <Card>
+    <Card id="settings-security" className="scroll-mt-4">
       <CardHeader className="flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
           <ShieldCheck size={15} className="text-[var(--color-text-muted)]" aria-hidden />

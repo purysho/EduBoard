@@ -373,6 +373,10 @@ export const IpcChannels = {
   usagePing: {
     preview: 'usagePing:preview'
   },
+  pilotSummary: {
+    preview: 'pilotSummary:preview',
+    save: 'pilotSummary:save'
+  },
   errorReport: {
     get: 'errorReport:get',
     recent: 'errorReport:recent',

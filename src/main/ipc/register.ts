@@ -174,6 +174,8 @@ import {
   studentNameKeys
 } from '@shared/studyProgress'
 import { usagePingPreview, usagePingSettingChanged } from '../services/usagePing'
+import { pilotSummaryNow } from '../services/pilotSummary'
+import type { PilotSummary } from '@shared/pilotSummary'
 import { applyPilotSpellcheck, pilotRefusal } from '../services/pilotMode'
 import { isTrustedIpcSender } from './senderValidation'
 import {
@@ -1698,6 +1700,19 @@ export function registerIpcHandlers(): void {
     )
   })
   handle(IpcChannels.usagePing.preview, () => usagePingPreview())
+  // The pilot summary is saved exactly as the teacher last saw it.
+  let shownPilotSummary: PilotSummary | null = null
+  handle(IpcChannels.pilotSummary.preview, () => (shownPilotSummary = pilotSummaryNow()))
+  handle(IpcChannels.pilotSummary.save, async () => {
+    const summary = shownPilotSummary ?? pilotSummaryNow()
+    const { canceled, filePath } = await showSaveDialogOnTop({
+      defaultPath: `eduboard-pilot-summary-${summary.madeOn}.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    })
+    if (canceled || !filePath) return { saved: false }
+    await writeFile(filePath, JSON.stringify(summary, null, 2))
+    return { saved: true, filePath }
+  })
   handle(IpcChannels.errorReport.get, () => {
     const s = settingsRepo.getSettings()
     return errorReportText({ language: uiLanguage(), portal: !!s.portalUrl })

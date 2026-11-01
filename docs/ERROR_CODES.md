@@ -103,6 +103,12 @@ after changing either.
 | EB-6008 | EduBoard routing is muted for that communication destination. | Unmute the destination in Settings → Portal and families → Class group chats before routing a message. |
 | EB-6009 | That destination does not support EduBoard robot posting. | Use EduBoard’s copy-routing action, then paste the prepared message into the WeChat or QQ group. |
 
+### Local-only pilot
+
+| Code | What happened | What to do |
+| --- | --- | --- |
+| EB-7001 | This computer is in a local-only pilot, so EduBoard refused something that would send data off it (the Portal, AI, email, group chats or the usage count). Nothing was sent. | Nothing to fix: it’s how the pilot keeps student data on this computer. Settings → What leaves this computer lists what is off. The school turns pilot mode off by changing its school pack. |
+
 ## Portal (PT)
 
 ### Signing in

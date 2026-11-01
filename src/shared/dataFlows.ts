@@ -292,11 +292,15 @@ export function blockedInPilot(id: DataFlowId): boolean {
 }
 
 /** Every piece of text above, for the translation coverage test (i18n/dynamicKeys.ts). */
-export const DATA_FLOW_TEXTS: readonly string[] = DATA_FLOWS.flatMap((f) => [
-  f.name,
-  f.destination,
-  f.sends,
-  f.when,
-  f.defaultNote,
-  f.pilotNote
-])
+/** How each treatment is shown, in Settings and in docs/DATA_FLOWS.md. */
+export const PILOT_TREATMENT_LABELS: Record<PilotTreatment, string> = {
+  blocked: 'Off',
+  allowed: 'Stays on',
+  askFirst: 'Only when you ask',
+  localNetwork: 'Stays on (school Wi-Fi only)'
+}
+
+export const DATA_FLOW_TEXTS: readonly string[] = [
+  ...Object.values(PILOT_TREATMENT_LABELS),
+  ...DATA_FLOWS.flatMap((f) => [f.name, f.destination, f.sends, f.when, f.defaultNote, f.pilotNote])
+]

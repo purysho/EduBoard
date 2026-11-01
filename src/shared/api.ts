@@ -8,6 +8,7 @@ import type { PointSummaryItem } from './pointCategories'
 import type { GroupChat, GroupRouteResult } from './groupChats'
 import type { Flashcard, PracticeQuestion } from './practiceSets'
 import type { UsagePing } from './usagePing'
+import type { PilotSummary } from './pilotSummary'
 import type { CssCheck } from './cssCheck'
 import type { StudyProgressReturn } from './studyProgress'
 // The typed shape of window.api, implemented by src/preload/index.ts and declared for
@@ -688,6 +689,13 @@ export interface EduBoardApi {
   usagePing: {
     /** Exactly what the anonymous weekly ping sends (the id is blank while it's off). */
     preview(): Promise<UsagePing>
+  }
+  pilotSummary: {
+    /** The privacy-safe pilot summary as it would be saved now: counts and bands only. */
+    preview(): Promise<PilotSummary>
+    /** Saves exactly the summary last shown by preview() as a JSON file where the
+     * teacher chooses. Sends nothing anywhere. */
+    save(): Promise<{ saved: boolean; filePath?: string }>
   }
   groupChats: {
     /** Legacy robot-only send. Prefer route() for capability-aware destinations. */
