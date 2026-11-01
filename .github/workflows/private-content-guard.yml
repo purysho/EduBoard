@@ -11,7 +11,7 @@ jobs:
   private-content:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
       - name: Refuse tracked secrets and private course artifacts
