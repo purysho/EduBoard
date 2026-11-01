@@ -205,7 +205,7 @@ describe('the update mirror, for when GitHub is slow or blocked', () => {
 
   it('asks GitHub first, and uses the mirror only when GitHub fails', async () => {
     const gh = recorder(async (url) =>
-      url.startsWith('https://api.github.com')
+      new URL(url).host === 'api.github.com'
         ? Response.json({
             tag_name: 'v0.8.1',
             assets: [
@@ -223,7 +223,7 @@ describe('the update mirror, for when GitHub is slow or blocked', () => {
     expect(gh.calls).toEqual(['https://api.github.com/repos/purysho/EduBoard/releases/latest'])
 
     const blocked = recorder(async (url) => {
-      if (url.startsWith('https://api.github.com')) throw new TypeError('fetch failed')
+      if (new URL(url).host === 'api.github.com') throw new TypeError('fetch failed')
       return Response.json(manifest)
     })
     const release = await fetchLatestRelease(null, blocked.fetch, MIRROR)
@@ -247,7 +247,7 @@ describe('the update mirror, for when GitHub is slow or blocked', () => {
   it('falls back when GitHub answers with an error, with a time limit on GitHub', async () => {
     let githubSignal: AbortSignal | undefined
     const slow = recorder(async (url, init) => {
-      if (url.startsWith('https://api.github.com')) {
+      if (new URL(url).host === 'api.github.com') {
         githubSignal = init?.signal ?? undefined
         return new Response('busy', { status: 503 })
       }

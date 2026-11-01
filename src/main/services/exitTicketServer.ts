@@ -87,6 +87,12 @@ function tokenMatches(tool: Tool, classId: string, token: string): boolean {
   return timingSafeEqual(Buffer.from(expected), Buffer.from(token))
 }
 
+/** The start of a tool's links, from the token stored here (never from the request). */
+function sessionBase(tool: Tool, classId: string): string {
+  const token = sessionTokens.get(tokenKey(tool, classId))
+  return token ? `/k/${token}` : ''
+}
+
 /** The path a tool's page is served at, with its session token, or null when closed. */
 export function sessionPath(tool: Tool, classId: string): string | null {
   const token = sessionTokens.get(tokenKey(tool, classId))
@@ -400,7 +406,8 @@ function isAudioFile(filePath: string | null): boolean {
   return !!filePath && !!AUDIO_MIME[extname(filePath).toLowerCase()]
 }
 
-function renderListeningLabPage(classId: string, resourceId: string, base: string): string {
+function renderListeningLabPage(classId: string, resourceId: string): string {
+  const base = sessionBase('h', classId)
   const resource = classroomHubResource(classId, resourceId)
   if (!resource || resource.type !== 'file' || !isAudioFile(resource.filePath)) {
     return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -626,7 +633,8 @@ render()
 </script></main></body></html>`
 }
 
-function renderClassroomHubPage(classId: string, base: string): string {
+function renderClassroomHubPage(classId: string): string {
+  const base = sessionBase('h', classId)
   const lessonId = openClassroomHubs.get(classId)
   const lesson = lessonId ? getLessonPlan(lessonId) : undefined
   if (!lesson || lesson.classId !== classId) {
@@ -795,7 +803,6 @@ export function startExitTicketServer(): void {
       return
     }
     const token = keyed[1]
-    const base = `/k/${token}`
     const url = keyed[2]
     const allowed = (tool: Tool, classId: string): boolean => {
       if (tokenMatches(tool, classId, token)) return true
@@ -843,7 +850,7 @@ export function startExitTicketServer(): void {
         const classId = decodeURIComponent(listenMatch[1])
         const resourceId = decodeURIComponent(listenMatch[2])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-        res.end(renderListeningLabPage(classId, resourceId, base))
+        res.end(renderListeningLabPage(classId, resourceId))
       } else {
         res.writeHead(405, { 'Content-Type': 'text/plain' })
         res.end('Method not allowed')
@@ -874,7 +881,7 @@ export function startExitTicketServer(): void {
       if (req.method === 'GET') {
         const classId = decodeURIComponent(hubMatch[1])
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-        res.end(renderClassroomHubPage(classId, base))
+        res.end(renderClassroomHubPage(classId))
       } else {
         res.writeHead(405, { 'Content-Type': 'text/plain' })
         res.end('Method not allowed')
